@@ -16,8 +16,6 @@ use_archive=yes
 
 cppflags="${cppflags} -I.."
 
-#cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
-
 use_geant4=yes
 use_inlib=yes
 
@@ -36,7 +34,14 @@ fi
 cppflags="${cppflags} -I${osc_home}/osc_batch/17.1/Resources/AIDA/src/cpp"
 libs="${libs} -L${osc_home}/osc_batch/17.1/lib"
 libs="${libs} -lBatchLabAIDA -lLibUtils -lourex_zlib -losc_Minuit -ldl"
-#libs="${libs} -lBatchLabRio -lLibUtils -losc_Rio"
+
+no_plugin=no
+if [ `uname` = Darwin ] ; then no_plugin=yes; fi
+
+if [ ${no_plugin} = yes ] ; then
+  cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"    
+  libs="${libs} -lBatchLabRio -lLibUtils -losc_Rio"
+fi
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////

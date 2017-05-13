@@ -12,8 +12,14 @@ build_shlib=no
 if [ ${build_compile} = "yes" ] ; then
 
 cppflags="${cppflags} -I.."
-#cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
-    
+
+no_plugin=no
+if [ `uname` = Darwin ] ; then no_plugin=yes; fi    
+
+if [ ${no_plugin} = yes ] ; then
+  cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
+fi
+ 
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cxx"
 cppfiles="${cppfiles} ../source/DetectorConstruction.cxx"
