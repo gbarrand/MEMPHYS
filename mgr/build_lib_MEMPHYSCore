@@ -39,18 +39,11 @@ cppfiles="${cppfiles} ../source/WCSD.cxx"
 #////////////////////////////////////
 #////////////////////////////////////
 #////////////////////////////////////
-use_inlib=yes
 use_AIDA=yes
-
-use_CoinGL=yes
-use_HEPVis=yes
 
 use_geant4=yes
 
-. ${bush_home}/use/inlib
 . ${bush_home}/use/AIDA
-. ${bush_home}/use/HEPVis
-. ${bush_home}/use/CoinGL
 . ${bush_home}/use/geant4_82
 
 #////////////////////////////////////
