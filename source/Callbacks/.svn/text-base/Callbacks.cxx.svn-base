@@ -1,0 +1,275 @@
+//
+//  All functions here should be OnX callbacks, that is to say
+// functions with signature :
+//   extern "C" {
+//     void callback_without_arguments(Slash::UI::IUI&);
+//     void callback_with_arguments(Slash::UI::IUI&,const std::vector<std::string>&);
+//   }
+//
+
+#include <OnX/Helpers/OnX.h>
+#include <OnX/Helpers/Inventor.h>
+
+// Slash :
+#include <Slash/Core/ISession.h>
+#include <Slash/UI/IUI.h>
+
+// Lib :
+#include <Lib/Manager.h>
+#include <Lib/Out.h>
+
+// BatchLab :
+#include <BatchLab/Helpers/AIDA.h>
+
+// OnXLab :
+#include <OnXLab/Helpers/OnXLab.h>
+
+// G4Lab :
+#include <G4Lab/Interfaces/IGeant4Manager.h>
+
+// MEMPHYS :
+#include <MEMPHYS/IAppManager.hh>
+
+extern "C" {
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_Initialize(
+ Slash::UI::IUI& aUI
+) 
+//////////////////////////////////////////////////////////////////////////////
+// Should be executed (in a widget create callback) 
+// when the GUI is constructed 
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+  aUI.setCallback("OnX_File_exit","activate","DLD","G4Lab G4Lab_exit");
+  //StoreTrajectory customized in TrackingAction.
+  //aUI.executeScript("G4","/tracking/storeTrajectory 1");
+
+  Slash::UI::ISoViewer* soViewer = ui_SoViewer(aUI);
+  if(soViewer) {
+    soViewer->setDecoration(true);
+    soViewer->setViewing(true);
+  }
+
+  Slash::Core::ISession& session = aUI.session();
+
+  session.setParameter("event.scan","yes");//Used in MEMPHYS_eventEnd callback.
+    
+  IGeant4Manager* g4Manager = 
+    Lib_findManager(session,"Geant4Manager",IGeant4Manager);
+  if(!g4Manager) {
+    Lib::Out out(session.printer());
+    out << "MEMPHYS_Initialize :"
+        << " Geant4Manager not found."
+        << Lib::endl;
+  } else {
+    // Declare a callback executed at each end of event :
+    g4Manager->setEventEndScript("DLD","MEMPHYS MEMPHYS_eventEnd");
+  }  
+    
+  MEMPHYS::IAppManager* appManager = 
+    Lib_findManager(session,"MEMPHYS::AppManager",MEMPHYS::IAppManager);
+  if(!appManager) {
+    Lib::Out out(session.printer());
+    out << "MEMPHYS_Initialize :"
+        << " MEMPHYS::AppManager not found."
+        << Lib::endl;
+  } else {
+    // Create the Types. Initialize G4Lab SoNodes.
+    appManager->initialize();
+  }
+}
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_Finalize(
+ Slash::UI::IUI&
+) 
+//////////////////////////////////////////////////////////////////////////////
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+}
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_Geant4_detector(
+ Slash::UI::IUI& aUI
+) 
+//////////////////////////////////////////////////////////////////////////////
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+  Slash::Core::ISession& session = aUI.session();
+  
+  //  data_collect(session,"PV","name==\"expHall\"");
+  //data_visualize(session);
+
+  //data_collect(session,"PV","name==\"WCBox\"");
+  //data_visualize(session);
+
+  data_collect(session,"PV","name==\"WC\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCFrontCap\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCBackCap\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCBarrel\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCBackOD\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCFrontOD\"");
+  data_visualize(session);
+
+  data_collect(session,"PV","name==\"WCFrontCap\"");
+  data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCBarrelAnnulus\""); //JEC FIXME PV->Replica
+//   data_visualize(session);
+//   data_collect(session,"PV","name==\"WCBarrelCell\""); //JEC FIXME PV->Replica
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCCapPolygon\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCCapPMTGlass\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCBarrelCellBlackSheet\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCCapBlackSheet\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCCapBarrelBlackSheet\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCBarrelPMT\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"WCBarrelPMTGlass\"");
+//   data_visualize(session);
+
+
+//   data_collect(session,"PV","name==\"RockMother_phys\"");
+//   data_visualize(session);
+
+//   data_collect(session,"PV","name==\"RockCeiling_phys\"");
+//   data_visualize(session);
+
+
+}
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_analysis_closeTree(
+ Slash::UI::IUI& aUI
+) 
+//////////////////////////////////////////////////////////////////////////////
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+  Slash::Core::ISession& session = aUI.session();
+  
+  MEMPHYS::IAppManager* appManager = 
+    Lib_findManager(session,"MEMPHYS::AppManager",MEMPHYS::IAppManager);
+  if(!appManager) {
+    Lib::Out out(session.printer());
+    out << "MEMPHYS_analysis_closeTree :"
+        << " MEMPHYS::AnalysisManager not found."
+        << Lib::endl;
+    return;
+  }
+
+  appManager->closeTree();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_plot_hits_times(
+ Slash::UI::IUI& aUI
+) 
+//////////////////////////////////////////////////////////////////////////////
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+  Slash::Core::ISession& session = aUI.session();
+
+  AIDA::IAnalysisFactory* aida = find_aida(session);
+  if(!aida) return;
+
+  AIDA::ITree* memoryTree = find_memoryTree(*aida);
+  if(!memoryTree) return;
+
+  std::string hname = "h_hits_times";
+  if(memoryTree->find(hname)) memoryTree->rm(hname);
+
+  AIDA::IHistogram1D* h = 
+    create_histogram1D(*aida,*memoryTree,hname,"Hits times.",100,0,3000);
+  if(!h) return;
+
+  // Fill histogram with a data_collect :
+  data_collect(session,"WCPMT","");
+  data_number(session);
+
+  data_fill1D(session,hname,"Times");
+
+  // Get current plotter :
+  AIDA::IPlotter* plotter = create_plotter(*aida);
+  if(plotter) {
+    AIDA::IPlotterRegion& region = plotter->currentRegion();
+    region.plot(*h);
+    delete plotter;
+  }
+}
+#define MINIMUM(a,b) ((a)<(b)?a:b)
+#define MAXIMUM(a,b) ((a)>(b)?a:b)
+//////////////////////////////////////////////////////////////////////////////
+void MEMPHYS_vis_bins(
+ Slash::UI::IUI& aUI
+) 
+//////////////////////////////////////////////////////////////////////////////
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+{
+  Slash::Core::ISession& session = aUI.session();
+
+  Slash::UI::IWidget* cw = aUI.currentWidget();
+  Slash::UI::IWidget* widget = aUI.findWidget("Viewer_2");
+  if(!widget) return;
+  aUI.setCurrentWidget(widget);
+
+  //FIXME : check that current region is a plotter.
+  data_collect(session,"SceneGraph","highlight==true");
+  data_filter(session,"name");
+
+  std::vector<double> mins;
+  Lib::smanip::todoubles(data_values(session,"lowerEdge"),mins);
+  std::vector<double> maxs;
+  Lib::smanip::todoubles(data_values(session,"upperEdge"),maxs);
+  if(maxs.size()!=mins.size()) return;
+  if(!mins.size()) {
+    Lib::Out out(session.printer());
+    out << "MEMPHYS_vis_bins :"
+        << " no highlighted bins."
+        << Lib::endl;
+    return;
+  }
+  double mn = mins[0];
+  double mx = maxs[0];
+  for(unsigned int index=1;index<mins.size();index++) {
+    mn = MINIMUM(mn,mins[index]);
+    mx = MAXIMUM(mx,maxs[index]);
+  }
+
+  Lib::Out out(session.printer());
+  out << "MEMPHYS_vis_bins :"
+      << " min " << mn
+      << " max " << mx
+      << Lib::endl;
+
+  aUI.setCurrentWidget(cw);
+
+  std::string filter;
+  Lib::smanip::printf(filter,128,"(!(Times<%g))&&(!(Times>=%g))",mn,mx);
+  data_collect(session,"WCPMT",filter);
+  data_visualize(session);
+}
+
+
+} // extern "C"

@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT
+END
+aida_ROOT.C
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT/aida_ROOT.C
+END
+MEMPHYS.C
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT/MEMPHYS.C
+END
+analysis_leaks.C
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT/analysis_leaks.C
+END
+analysis.C
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT/analysis.C
+END
+batch_dummy.C
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/scripts/ROOT/batch_dummy.C
+END

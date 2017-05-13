@@ -1,0 +1,18 @@
+<widget class="CascadeButton">
+  <label>Help</label>
+  <widget class="Menu">
+    <widget class="MenuItem">
+      <label>MEMPHYS Tutorial</label>
+      <activate exec="DLD">OnX ui_help_file $MEMPHYSROOT/scripts/Help/Tutorial.help</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Viewer controls</label>
+      <activate exec="DLD">OnX ui_help_file $ONXROOT/scripts/Help/Viewer.help</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>DLD</label>
+      <activate exec="DLD">OnX ui_help_file $ONXROOT/scripts/Help/DLD.help</activate>
+    </widget>
+  </widget>
+</widget>
+

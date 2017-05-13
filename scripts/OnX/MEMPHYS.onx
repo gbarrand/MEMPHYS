@@ -1,0 +1,51 @@
+<widget class="CascadeButton">
+  <label>MEMPHYS</label>
+  <widget class="Menu">
+    <widget class="MenuItem">
+      <label>Default layout</label>
+      <activate exec="DLD">MEMPHYS MEMPHYS_Layout_default</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Detector</label>
+      <activate exec="DLD">MEMPHYS MEMPHYS_Geant4_detector</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Scan event</label>
+      <activate exec="DLD">OnX session_setParameter event.scan yes</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Do not scan event</label>
+      <activate exec="DLD">OnX session_setParameter event.scan no</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Dump WCPMT hits</label>
+      <activate exec="DLD">OnX data_collect WCPMT</activate>
+      <activate exec="DLD">OnX data_number</activate>
+      <activate exec="DLD">OnX data_dump</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Visualize Trajectories</label>
+      <activate exec="DLD">OnX data_collect Trajectory</activate>
+      <activate exec="DLD">OnX data_visualize</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Visualize WCPMT hits</label>
+      <activate exec="DLD">OnX data_collect WCPMT</activate>
+      <activate exec="DLD">OnX data_visualize</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Visualize WCPMT hits TotalPe>=10</label>
+      <activate exec="DLD">OnX data_collect WCPMT TotalPe>=10</activate>
+      <activate exec="DLD">OnX data_visualize</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Plot hits times</label>
+      <activate exec="DLD">MEMPHYS MEMPHYS_plot_hits_times</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Vis bins</label>
+      <activate exec="DLD">MEMPHYS MEMPHYS_vis_bins</activate>
+    </widget>
+  </widget>
+</widget>
+

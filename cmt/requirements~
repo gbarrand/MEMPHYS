@@ -1,0 +1,145 @@
+package MEMPHYS
+version v8r0
+
+#//////////////////////////////////////////////////
+#/// Uses needed to build this package ////////////
+#//////////////////////////////////////////////////
+
+use OpenScientist v16r11p2 Interfaces
+
+#use Geant4 v2r* Interfaces
+use Geant4 v2r8201p0 Interfaces
+
+#////////////////////////////////////////////////////////////
+#/// From Interfaces/Platform ///////////////////////////////
+#////////////////////////////////////////////////////////////
+
+macro Platform_bin "${CMTCONFIG}"
+#set PLATFORMBIN "${Platform_bin}"
+
+pattern Platform_paths \
+  path_remove LD_LIBRARY_PATH "$(<PACKAGE>ROOT)/$(Platform_bin)" WIN32 "" Darwin "" ;\
+  path_append LD_LIBRARY_PATH "$(<PACKAGE>ROOT)/$(Platform_bin)" WIN32 "" Darwin "" ;\
+  path_remove DYLD_LIBRARY_PATH "" Darwin "$(<PACKAGE>ROOT)/$(Platform_bin)" ;\
+  path_append DYLD_LIBRARY_PATH "" Darwin "$(<PACKAGE>ROOT)/$(Platform_bin)" ;\
+  path_remove PATH "$(<PACKAGE>ROOT)/$(Platform_bin)" WIN32 "$(<PACKAGE>ROOT)\$(Platform_bin)" ;\
+  path_append PATH "$(<PACKAGE>ROOT)/$(Platform_bin)" WIN32 "$(<PACKAGE>ROOT)\$(Platform_bin)"
+
+# Darwin : to build dlls properly :
+macro make_shlib "$(make_shlib)" Darwin "$(MEMPHYSROOT)/cmt/cmt_make_shlib_common.sh extract"
+
+#//////////////////////////////////////////////////
+#//////////////////////////////////////////////////
+#//////////////////////////////////////////////////
+
+branches run
+
+build_strategy no_prototypes
+include_path none
+
+include_dirs $(MEMPHYSROOT)
+
+# With Geant4 global libs :
+macro MEMPHYS_Geant4_incs "${Geant4_incs}"
+macro MEMPHYS_Geant4_linkopts "-L${Geant4_lib} -lG4physicslists -lG4readout -lG4run -lG4event -lG4tracking -lG4processes -lG4digits_hits -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global ${CLHEP_linkopts}"
+
+# Waiting Geant4 DLL on Windows...
+# Darwin : problem too with dylibs.
+macro MEMPHYS_libopts "" WIN32 " -no_share" Darwin " -no_share"
+#macro MEMPHYS_libopts "" WIN32 ""
+
+#//////////////////////////////////////////////////
+#/// Over Geant4 kernel and AIDA interfaces only //
+#//////////////////////////////////////////////////
+
+# Over Geant4 and AIDA only :
+library MEMPHYSCore ${MEMPHYS_libopts} -s=../source *.cxx
+
+#JEC 17/11/05 add the G4readout_incs to manage G4DigiManager
+macro MEMPHYSCore_cppflags "${OSC_AIDA_incs} ${MEMPHYS_Geant4_incs}"
+#macro MEMPHYSCore_shlibflags "${MEMPHYS_Geant4_linkopts}"
+macro MEMPHYSCore_linkopts "-L${MEMPHYSROOT}/$(Platform_bin) -lMEMPHYSCore" WIN32 "${MEMPHYSROOT}\$(Platform_bin)\MEMPHYSCore.lib"
+
+#//////////////////////////////////////////////////
+#/// DLD callbacks ////////////////////////////////
+#//////////////////////////////////////////////////
+
+# Must not use Geant4 singletons if having not Geant4 shared libs.
+macro MEMPHYS_kind "dll"
+library MEMPHYS -s=../source/Callbacks Callbacks.cxx InventorCallbacks.cxx
+#macro MEMPHYS_cppflags "${MEMPHYS_Geant4_incs} ${OSC_OnX_incs}"
+macro MEMPHYS_cppflags "${OSC_G4Lab_incs} ${OSC_amanip_incs} ${OSC_AIDA_incs} ${OSC_OnX_incs} ${OSC_Inventor_incs}"
+macro MEMPHYS_shlibflags "${OSC_Inventor_linkopts} ${OSC_OnX_linkopts}"
+
+#//////////////////////////////////////////////////
+#/// Application "a la Geant4 examples" ///////////
+#//////////////////////////////////////////////////
+
+# Over Geant4 and AIDA only :
+application MEMPHYS_batch ../applications/MEMPHYS_batch.cxx use_linkopts='"${MEMPHYSCore_linkopts} ${MEMPHYS_Geant4_linkopts} ${OSC_AIDA_linkopts}"'
+#macro MEMPHYS_batch_cppflags "${MEMPHYSCore_cppflags} "
+macro MEMPHYS_batch_cppflags "${MEMPHYSCore_cppflags}"
+
+# Over AIDA only :
+application MEMPHYS_analysis ../applications/MEMPHYS_analysis.cxx use_linkopts='"$(OSC_AIDA_linkopts)"'
+
+# Over G4Lab :
+application MEMPHYS_session ../applications/MEMPHYS_session.cxx ../applications/HitsCollectionAccessor.cxx use_linkopts='"${MEMPHYSCore_linkopts} ${OSC_G4Lab_linkopts} ${MEMPHYS_Geant4_linkopts} ${OSC_Inventor_linkopts} ${OSC_OnX_linkopts}"' 
+macro MEMPHYS_session_cppflags "${MEMPHYS_Geant4_incs} ${MEMPHYS_batch_cppflags}"
+
+application test -group=debug -s=../source test.cxx
+
+#//////////////////////////////////////////////////
+#/// Things using ROOT ////////////////////////////
+#//////////////////////////////////////////////////
+use ROOT v1r* Interfaces
+
+# Example of ROOT program to work on a MEMPHYS.root file :
+application MEMPHYS_analysis_ROOT -group=ROOT ../applications/MEMPHYS_analysis_ROOT.cxx use_linkopts='"${ROOT_Gpad_linkopts} ${ROOT_freetype_linkopts} ${ROOT_Graf_linkopts} ${ROOT_Tree_linkopts} ${ROOT_Hist_linkopts} ${ROOT_Matrix_linkopts} ${ROOT_Core_linkopts} ${ROOT_Cint_linkopts}"'
+
+# Compiled version of scripts/ROOT/aida.C
+application MEMPHYS_analysis_aida_ROOT -group=ROOT ../applications/MEMPHYS_analysis_aida_ROOT.cxx use_linkopts='"${OSC_AIDA_linkopts} ${ROOT_Postscript_linkopts} ${ROOT_Gpad_linkopts} ${ROOT_freetype_linkopts} ${ROOT_Graf_linkopts} ${ROOT_Hist_linkopts} ${ROOT_Matrix_linkopts} ${ROOT_Core_linkopts} ${ROOT_Cint_linkopts}"'
+macro MEMPHYS_analysis_aida_ROOT_cppflags "${OSC_AIDA_incs}"
+#macro_remove MEMPHYS_analysis_aida_ROOT_cppflags "-ansi -pedantic"
+macro_remove cppflags "-ansi -pedantic"
+
+# Declare AIDA to rootcint.
+# See scripts/ROOT/aida.C for a usage example.
+
+#macro MEMPHYS_cint_cintflags "${OSC_AIDA_incs} $(ROOT_cppflags)"
+#macro MEMPHYS_cint_LinkDef_h "../source/ROOT/LinkDef.h"
+#document rootcint MEMPHYS_rootcint_AIDA -group=ROOT ${MEMPHYSROOT}/source/ROOT/MEMPHYS_cint.h
+
+#library MEMPHYSAIDADict -group=ROOT -import=ROOT ${dict}/MEMPHYS_cintDict.cpp
+#macro MEMPHYSAIDADict_shlibflags "$(OSC_AIDA_linkopts) ${ROOT_Core_linkopts} ${ROOT_Cint_linkopts}"
+
+#//////////////////////////////////////////////////
+#//////////////////////////////////////////////////
+#//////////////////////////////////////////////////
+
+private
+macro build_library_links "true" WIN32 ""
+macro remove_library_links "true" WIN32 ""
+
+# WIN32 : /GR to enable RTTI and dynamic cast.
+# WIN32 : /GX to enable exception handling (for STL).
+#macro_append cppflags "" WIN32 " /GX /GR" 
+macro_append cppflags "-fPIC" WIN32 " /GX /GR" 
+
+# DEBUG :
+#macro_append cflags  " -g" WIN32 " /ZI /Od"
+#macro_append cppflags  " -g" WIN32 " /ZI /Od"
+#macro_append cpplinkflags  " -g" WIN32 " /DEBUG"
+
+# OPTIMIZE :
+macro_append cflags  " -O" WIN32 " /O2"
+macro_append cppflags  " -O" WIN32 " /O2"
+macro_append cpplinkflags  " -O" WIN32 ""
+public
+
+#//////////////////////////////////////////////////
+#// Run time //////////////////////////////////////
+#//////////////////////////////////////////////////
+
+apply_pattern Platform_paths
+

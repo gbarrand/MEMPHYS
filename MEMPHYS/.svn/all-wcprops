@@ -1,0 +1,149 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS
+END
+DetectorMessenger.hh
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/DetectorMessenger.hh
+END
+Analysis.hh
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/Analysis.hh
+END
+WCDigitizer.hh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/WCDigitizer.hh
+END
+DetectorConstruction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/DetectorConstruction.hh
+END
+IAppManager.hh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/IAppManager.hh
+END
+Trajectory.hh
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/Trajectory.hh
+END
+SteppingAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/SteppingAction.hh
+END
+PrimaryGeneratorAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/PrimaryGeneratorAction.hh
+END
+Cast.hh
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/Cast.hh
+END
+PhysicsMessenger.hh
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/PhysicsMessenger.hh
+END
+HitsCollectionAccessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/HitsCollectionAccessor.h
+END
+WCSD.hh
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/WCSD.hh
+END
+TrackingAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/TrackingAction.hh
+END
+StackingAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/StackingAction.hh
+END
+RunAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/RunAction.hh
+END
+PrimaryGeneratorMessenger.hh
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/PrimaryGeneratorMessenger.hh
+END
+WCDigi.hh
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/WCDigi.hh
+END
+TrackingActionMessenger.hh
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/TrackingActionMessenger.hh
+END
+DigitsCollectionAccessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/DigitsCollectionAccessor.h
+END
+TrackInformation.hh
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/TrackInformation.hh
+END
+RunActionMessenger.hh
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/RunActionMessenger.hh
+END
+PhysicsList.hh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/PhysicsList.hh
+END
+WCHit.hh
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/WCHit.hh
+END
+EventAction.hh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/MEMPHYS/EventAction.hh
+END

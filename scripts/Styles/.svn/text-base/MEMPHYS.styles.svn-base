@@ -1,0 +1,78 @@
+<styles>
+
+  <!-- ///////////////////////////////////////////////// -->
+  <!-- // PV /////////////////////////////////////////// -->
+  <!-- ///////////////////////////////////////////////// -->
+
+  <style name="PV">  <!-- default -->
+    <modeling>wire_frame</modeling>
+    <color>green</color>
+  </style>
+
+  <style name="PV_TargetPhys">
+    <modeling>wire_frame</modeling>
+    <color>blue</color>
+  </style>
+
+  <style name="PV_DetectorPhys">
+<!--
+    <modeling>solid</modeling>
+-->
+    <modeling>wire_frame</modeling>
+    <color>0.6 0.6 0</color>
+  </style>
+
+  <!-- ///////////////////////////////////////////////// -->
+  <!-- // Trajectory /////////////////////////////////// -->
+  <!-- ///////////////////////////////////////////////// -->
+
+  <style name="Trajectory">  <!-- default -->
+    <modeling>wire_frame</modeling>
+    <color>cyan</color>
+    <linePattern>solid</linePattern>
+  </style>
+
+  <style name="Trajectory(e-)">
+    <modeling>wire_frame</modeling>
+    <color>yellow</color>
+    <linePattern>solid</linePattern>
+  </style>
+
+  <style name="Trajectory(e+)">
+    <modeling>wire_frame</modeling>
+    <color>yellow</color>
+    <linePattern>solid</linePattern>
+  </style>
+
+  <style name="Trajectory(gamma)">
+    <modeling>wire_frame</modeling>
+    <color>red</color>
+    <linePattern>dashed</linePattern>
+  </style>
+
+  <style name="Trajectory(pi+)">
+    <modeling>wire_frame</modeling>
+    <color>blue</color>
+    <linePattern>solid</linePattern>
+  </style>
+
+  <style name="Trajectory(pi-)">
+    <modeling>wire_frame</modeling>
+    <color>blue</color>
+    <linePattern>solid</linePattern>
+  </style>
+
+  <!-- ///////////////////////////////////////////////// -->
+  <!-- // Hits ///////////////////////////////////////// -->
+  <!-- ///////////////////////////////////////////////// -->
+
+  <style name="HC">
+    <rotationSteps>3</rotationSteps>
+<!--
+    <rotationSteps>12</rotationSteps>
+    <modeling>wire_frame</modeling>
+-->
+    <color>0 0 1</color>
+  </style>
+
+</styles>

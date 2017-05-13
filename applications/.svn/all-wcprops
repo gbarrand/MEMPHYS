@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications
+END
+DigitsCollectionAccessor.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/DigitsCollectionAccessor.cxx
+END
+MEMPHYS_batch.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/MEMPHYS_batch.cxx
+END
+MEMPHYS_analysis.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/MEMPHYS_analysis.cxx
+END
+MEMPHYS_session.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/MEMPHYS_session.cxx
+END
+HitsCollectionAccessor.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/HitsCollectionAccessor.cxx
+END
+MEMPHYS_analysis_aida_ROOT.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/MEMPHYS_analysis_aida_ROOT.cxx
+END
+MEMPHYS_analysis_ROOT.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/Opera/Glob/!svn/ver/267/MEMPHYS/tags/v7r0/applications/MEMPHYS_analysis_ROOT.cxx
+END

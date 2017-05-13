@@ -1,0 +1,30 @@
+<widget class="CascadeButton">
+  <label>Geant4</label>
+  <widget class="Menu">
+    <widget class="MenuItem">
+      <label>PVs</label>
+      <activate exec="DLD">G4Lab data_PV_dump</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Gun...</label>
+      <activate exec="DLD">OnX ui_show_dialog $G4LABROOT/scripts/OnX/InputGun.onx G4Lab_InputGun_dialog</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Run...</label>
+      <activate exec="DLD">OnX ui_show_dialog $G4LABROOT/scripts/OnX/InputRun.onx G4Lab_InputRun_dialog</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Next evt</label>
+      <activate exec="DLD">G4Lab G4Lab_next_event</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Abort run</label>
+      <activate exec="G4">/run/abort</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>Dump particles</label>
+      <activate exec="DLD">G4Lab G4_dump_ParticleTables</activate>
+    </widget>
+  </widget>
+</widget>
+

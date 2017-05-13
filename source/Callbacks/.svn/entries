@@ -1,0 +1,52 @@
+8
+
+dir
+267
+https://svn.lal.in2p3.fr/Opera/Glob/MEMPHYS/tags/v7r0/source/Callbacks
+https://svn.lal.in2p3.fr/Opera/Glob
+
+
+
+2007-01-26T07:46:00.912316Z
+263
+barrand
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+7f3acecb-7603-0410-b1a7-fca1bcc97d58
+
+Callbacks.cxx
+file
+
+
+
+
+2007-01-30T16:06:02.000000Z
+ad31167fb6199ea51169276672030e90
+2007-01-18T15:49:30.196958Z
+237
+barrand
+
+InventorCallbacks.cxx
+file
+
+
+
+
+2007-01-30T16:06:02.000000Z
+bb83240a29ce5179d5b3cc7b8d2b5558
+2007-01-26T07:46:00.912316Z
+263
+barrand
+

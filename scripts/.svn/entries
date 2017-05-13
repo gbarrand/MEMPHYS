@@ -1,0 +1,43 @@
+8
+
+dir
+267
+https://svn.lal.in2p3.fr/Opera/Glob/MEMPHYS/tags/v7r0/scripts
+https://svn.lal.in2p3.fr/Opera/Glob
+
+
+
+2007-01-26T10:58:56.872076Z
+265
+barrand
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+7f3acecb-7603-0410-b1a7-fca1bcc97d58
+
+Geant4
+dir
+
+ROOT
+dir
+
+Styles
+dir
+
+OnX
+dir
+
+Help
+dir
+

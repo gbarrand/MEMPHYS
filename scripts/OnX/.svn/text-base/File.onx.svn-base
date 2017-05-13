@@ -1,0 +1,21 @@
+<widget class="CascadeButton" name="OnX_menu_File">
+  <label>File</label>
+  <widget class="Menu">
+    <widget class="MenuItem">
+      <label>Print</label>
+      <activate exec="DLD">OnX ui_show_dialog $ONXROOT/scripts/OnX/InputPrint.onx OnX_InputPrint_dialog</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>View .ps...</label>
+      <activate exec="DLD">OnX ui_showFileChooser OnX OnX_File_ps *.ps .</activate>
+    </widget>
+    <widget class="MenuItem">
+      <label>View .gif...</label>
+      <activate exec="DLD">OnX ui_showFileChooser OnX OnX_File_gif *.gif .</activate>
+    </widget>
+    <widget class="MenuItem" name="OnX_File_exit">
+      <label>Exit</label>
+      <activate exec="DLD">OnX ui_exit</activate>
+    </widget>
+  </widget>
+</widget>

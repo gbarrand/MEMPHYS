@@ -1,0 +1,13 @@
+
+  To build :
+ - have a look and edit if needed the meta_setup.csh.
+   In it you have to say where is the OpenScientist binary installation.
+ - source the meta_setup. 
+ - build with "cmt config" and "gmake". 
+
+  To run source the meta_setup and the setup and launch an application.
+
+  Note that the "meta setup" informations are something that can be put 
+ in login scripts.
+
+    G.Barrand 
