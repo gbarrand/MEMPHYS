@@ -17,15 +17,19 @@ use_archive=yes
 cppflags="${cppflags} -I.."
 
 #cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
-#aida_libs="`aida-config --libs` -lBatchLabRio -losc_Rio"
 
 use_geant4=yes
 use_inlib=yes
-use_osc_batch=yes
 
 . ${bush_home}/use/geant4_82
 . ${bush_home}/use/inlib
-. ${bush_home}/use/osc_batch
+
+#use_osc_batch=yes
+#. ${bush_home}/use/osc_batch
+cppflags="${cppflags} -I/nfs/users/gbarrand/usr/local/osc_batch/17.1/Resources/AIDA/src/cpp"
+libs="${libs} -L/nfs/users/gbarrand/usr/local/osc_batch/17.1/lib"
+libs="${libs} -lBatchLabAIDA -lLibUtils -lourex_zlib -losc_Minuit -ldl"
+#libs="${libs} -lBatchLabRio -lLibUtils -losc_Rio"
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
