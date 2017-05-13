@@ -26,8 +26,15 @@ use_inlib=yes
 
 #use_osc_batch=yes
 #. ${bush_home}/use/osc_batch
-cppflags="${cppflags} -I/nfs/users/gbarrand/usr/local/osc_batch/17.1/Resources/AIDA/src/cpp"
-libs="${libs} -L/nfs/users/gbarrand/usr/local/osc_batch/17.1/lib"
+
+if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
+  osc_home=/nfs/users/gbarrand/usr/local
+else
+  osc_home=/usr/local
+fi
+
+cppflags="${cppflags} -I${osc_home}/osc_batch/17.1/Resources/AIDA/src/cpp"
+libs="${libs} -L${osc_home}/osc_batch/17.1/lib"
 libs="${libs} -lBatchLabAIDA -lLibUtils -lourex_zlib -losc_Minuit -ldl"
 #libs="${libs} -lBatchLabRio -lLibUtils -losc_Rio"
 
