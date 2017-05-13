@@ -22,8 +22,7 @@
 // std::
 #include <iostream>
 
-//JEC Lib :
-#include <Lib/System.h>
+#include <inlib/system>
 
 //////////////////////////////////////////////////////////////////////////////
 int main(
@@ -64,10 +63,12 @@ int main(
 
   runManager->SetUserInitialization(new MEMPHYS::PhysicsList);
 
+  std::string MEMPHYSROOT; 
+  inlib::get_env("MEMPHYSROOT",MEMPHYSROOT);
+
   G4UImanager* UI = G4UImanager::GetUIpointer();
   if (UI) {
-    std::string file = 
-      Lib::System::getenv("MEMPHYSROOT")+"/scripts/Geant4/jobOptions.mac"; //JEC FIXME this comes from JHF
+    std::string file = MEMPHYSROOT+"/scripts/Geant4/jobOptions.mac"; //JEC FIXME this comes from JHF
     UI->ApplyCommand("/control/execute "+file);  
   }
 
@@ -96,7 +97,7 @@ int main(
 
   if (UI) {
     std::string file = 
-      Lib::System::getenv("MEMPHYSROOT")+"/scripts/Geant4/init.g4m"; //JEC FIXME this comes from JHF
+      MEMPHYSROOT+"/scripts/Geant4/init.g4m"; //JEC FIXME this comes from JHF
     UI->ApplyCommand("/control/execute "+file);  
   }
 
