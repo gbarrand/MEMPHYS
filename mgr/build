@@ -1,0 +1,22 @@
+#!/bin/sh -f
+
+bush_home=../../../softinex/bush
+
+. ${bush_home}/args
+
+if [ `uname` = Darwin ] ; then
+  build_args="${build_args} -clang_11"
+else
+  build_args="${build_args} -gnu_11"
+fi
+build_args="${build_args} -sys_geant4"
+
+./build_lib_MEMPHYSCore   ${build_args}
+./build_plugin_MEMPHYS    ${build_args}
+
+./build_app_MEMPHYS_batch              ${build_args}
+./build_app_MEMPHYS_analysis           ${build_args}
+./build_app_MEMPHYS_analysis_ROOT      ${build_args}
+./build_app_MEMPHYS_analysis_aida_ROOT ${build_args}
+./build_app_MEMPHYS_session            ${build_args}
+

@@ -1,0 +1,110 @@
+#!/bin/sh -f
+
+bush_home=`dirname $0`/../../../softinex/bush
+
+save_dir=`pwd`
+
+run_args=
+build_args=
+
+run_batch=yes
+run_analysis=no
+run_analysis_ROOT=no
+run_analysis_aida_ROOT=no
+run_vis=no
+
+build_args=
+if [ `uname` = Darwin ] ; then
+  build_args="${build_args} -clang_11"
+else
+  build_args="${build_args} -gnu_11"
+fi
+
+while test $# -ge 1 ; do
+  case $1 in
+    -x)         build_args="${build_args} $1";;
+    -g)         build_args="${build_args} $1";;
+    -debug)     build_args="${build_args} $1";;
+    -bin*)      build_args="${build_args} $1";;
+
+#    -gtk)  run_gui=-Gtk;;  
+#    -Qt)   run_gui=-Qt;;  
+#    -Xt)   run_gui=-Xt;;  
+#   -Win)   run_gui=-Win;;  
+#   -SDL)   run_gui=-SDL;;
+
+    # local options : 
+    -vis)                run_vis=yes;;
+    -analysis)           run_analysis=yes;;
+    -analysis_ROOT)      run_analysis_ROOT=yes;;
+    -analysis_aida_ROOT) run_analysis_aida_ROOT=yes;;
+
+    -*) run_args="${run_args} $1";;  
+     *) run_args="${run_args} $1";;  
+  esac
+  shift
+done
+
+. ${bush_home}/ourex_header # to get build_path
+
+#//////////////////////////////////////////
+#//////////////////////////////////////////
+#//////////////////////////////////////////
+cd /usr/local/geant4/10.03.p01/bin
+. ./geant4.sh
+cd ${save_dir}
+
+#geant4_data=/usr/local/geant4/data
+#G4NEUTRONHPDATA="${geant4_data}/G4NDL3.12";export G4NEUTRONHPDATA
+#G4LEDATA="${geant4_data}/G4EMLOW6.41";export G4LEDATA
+#G4LEDATA="${geant4_data}/G4EMLOW6.50";export G4LEDATA
+
+. /usr/local/osc_geant4/17.1_g4_10_03_p01_clang_11/setup.sh
+#. /Users/barrand/private/dev/softinex/osc/osc_geant4/mgr/bin_clang_11/distrib/osc_geant4/17.1/setup.sh
+
+use_cern_root=no
+if [ ${run_analysis_ROOT} = yes ] ; then use_cern_root=yes;fi    
+if [ ${run_analysis_aida_ROOT} = yes ] ; then use_cern_root=yes;fi    
+
+if [ ${use_cern_root} = yes ] ; then
+  cd /usr/local/ROOT/5.34.18/bin
+  #cd /usr/local/ROOT/6.03.02/bin
+  . ./thisroot.sh
+  cd ${save_dir}
+fi
+
+bin_path="${save_dir}/${build_dir}"
+
+ld_path="${bin_path}"
+. ${bush_home}/ld_library_path
+
+#//////////////////////////////////////////
+#//////////////////////////////////////////
+#//////////////////////////////////////////
+
+MEMPHYSROOT=..;export MEMPHYSROOT
+
+LC_CTYPE=C;export LC_CTYPE
+
+cd ../data
+
+if [ ${run_analysis} = yes ] ; then
+  ${bin_path}/MEMPHYS_analysis ${run_args}
+elif [ ${run_analysis_ROOT} = yes ] ; then
+  ${bin_path}/MEMPHYS_analysis_ROOT ${run_args}
+elif [ ${run_analysis_aida_ROOT} = yes ] ; then
+  ${bin_path}/MEMPHYS_analysis_aida_ROOT ${run_args}
+else
+  if [ ! -f ./inputEventFile ] ; then
+    echo 'Have an inputEventFile file in current directory.'
+    exit      
+  fi	
+  if [ ${run_vis} = yes ] ; then
+    ${bin_path}/MEMPHYS_session ${run_args}
+  else
+    ${bin_path}/MEMPHYS_batch ${run_args}
+  fi	
+fi
+
+cd ${save_dir}
+

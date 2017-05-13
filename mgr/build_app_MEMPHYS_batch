@@ -1,0 +1,47 @@
+#!/bin/sh -f
+
+# options : -clang_11 -sys_geant4
+
+bush_home=../../../../softinex/bush
+
+. ${bush_home}/args
+
+. ${bush_home}/ourex_header
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+use_archive=yes
+
+cppflags="${cppflags} -I.."
+
+#cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
+#aida_libs="`aida-config --libs` -lBatchLabRio -losc_Rio"
+
+use_geant4=yes
+use_inlib=yes
+use_osc_batch=yes
+
+. ${bush_home}/use/geant4_82
+. ${bush_home}/use/inlib
+. ${bush_home}/use/osc_batch
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+if [ ${build_visual} = "yes" ] ; then
+  libs="${build_path}/MEMPHYSCore.lib ${libs}"
+else
+  libs="-L${build_path} -lMEMPHYSCore ${libs}"
+fi
+
+objs=
+app_exe=MEMPHYS_batch
+app_src=../applications/MEMPHYS_batch.cxx
+
+. ${bush_home}/application
+
+. ${bush_home}/clean
+

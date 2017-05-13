@@ -1,0 +1,62 @@
+#!/bin/sh -f
+
+bush_home=../../../softinex/bush
+
+. ${bush_home}/args
+. ${bush_home}/ourex_header
+
+plugin=MEMPHYS
+
+
+use_archive=no
+
+if [ ${build_compile} = "yes" ] ; then
+
+cppflags="${cppflags} -I${OSC_HOME_DIR}/Resources/Slash"
+cppflags="${cppflags} -I${OSC_HOME_DIR}/Resources/amanip/src/cpp"
+cppflags="${cppflags} -I${OSC_HOME_DIR}/Resources/G4Lab/include"
+
+cppfiles=
+cppfiles="${cppfiles} ../source/Callbacks/Callbacks.cxx"
+cppfiles="${cppfiles} ../source/Callbacks/InventorCallbacks.cxx"
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+use_geant4=yes
+
+use_inlib=yes
+use_AIDA=yes
+
+use_HEPVis=yes
+use_CoinGL=yes
+use_GL=yes
+use_png=yes
+use_jpeg=yes
+use_freetype=yes
+use_zlib=yes
+
+. ${bush_home}/use/geant4
+
+. ${bush_home}/use/inlib
+. ${bush_home}/use/AIDA
+
+. ${bush_home}/use/HEPVis
+. ${bush_home}/use/CoinGL
+. ${bush_home}/use/GL
+. ${bush_home}/use/png
+. ${bush_home}/use/jpeg
+. ${bush_home}/use/freetype
+. ${bush_home}/use/zlib
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+. ${bush_home}/compile
+
+fi # end build_compile
+ 
+if [ ${build_archive} = "yes" ] ; then . ${bush_home}/plugin; fi
+
+. ${bush_home}/clean
