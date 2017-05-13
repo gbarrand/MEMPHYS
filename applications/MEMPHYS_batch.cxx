@@ -31,7 +31,7 @@ extern "C" {
 // std::
 #include <iostream>
 
-#include <inlib/system>
+//#include <inlib/system>
 
 //////////////////////////////////////////////////////////////////////////////
 int main(
@@ -78,12 +78,13 @@ int main(
 
   runManager->SetUserInitialization(new MEMPHYS::PhysicsList);
 
-  std::string MEMPHYSROOT; 
-  inlib::get_env("MEMPHYSROOT",MEMPHYSROOT);
+  //std::string MEMPHYSROOT; 
+  //inlib::get_env("MEMPHYSROOT",MEMPHYSROOT);
 
   G4UImanager* UI = G4UImanager::GetUIpointer();
   if (UI) {
-    std::string file = MEMPHYSROOT+"/scripts/Geant4/jobOptions.mac"; //JEC FIXME this comes from JHF
+    //std::string file = MEMPHYSROOT+"/scripts/Geant4/jobOptions.mac"; //JEC FIXME this comes from JHF
+    std::string file = "jobOptions.mac"; //JEC FIXME this comes from JHF
     UI->ApplyCommand("/control/execute "+file);  
   }
 
@@ -111,8 +112,8 @@ int main(
   runManager->Initialize();
 
   if (UI) {
-    std::string file = 
-      MEMPHYSROOT+"/scripts/Geant4/init.g4m"; //JEC FIXME this comes from JHF
+    //std::string file = MEMPHYSROOT+"/scripts/Geant4/init.g4m"; //JEC FIXME this comes from JHF
+    std::string file = "init.g4m";
     UI->ApplyCommand("/control/execute "+file);  
   }
 
