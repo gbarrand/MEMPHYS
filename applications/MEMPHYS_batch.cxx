@@ -19,6 +19,15 @@
 //JEC AIDA :
 #include <AIDA/IAnalysisFactory.h>
 
+#ifdef APP_USE_NO_PLUGIN
+namespace Slash {namespace Core {class ISession;}}
+extern "C" {
+  void BatchLabRioInitialize(Slash::Core::ISession&);
+  void BatchLabRioFinalize(Slash::Core::ISession&);
+}
+#endif //APP_USE_NO_PLUGIN
+
+
 // std::
 #include <iostream>
 
@@ -32,6 +41,12 @@ int main(
 //////////////////////////////////////////////////////////////////////////////
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
 {
+#ifdef APP_USE_NO_PLUGIN
+  if(aArgc<-10) {
+    Slash::Core::ISession* session = 0;
+    BatchLabRioInitialize(*session);
+  }
+#endif
   std::string arg1 = (aArgc>=2?aArgv[1]:"");
 
   //AIDA Analysis factory
