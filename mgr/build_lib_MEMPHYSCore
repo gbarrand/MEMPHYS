@@ -7,6 +7,8 @@ bush_home=../../../../softinex/bush
 
 libname=MEMPHYSCore
 
+build_shlib=no
+
 if [ ${build_compile} = "yes" ] ; then
 
 cppflags="${cppflags} -I.."
