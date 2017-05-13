@@ -12,6 +12,7 @@ build_shlib=no
 if [ ${build_compile} = "yes" ] ; then
 
 cppflags="${cppflags} -I.."
+#cppflags="${cppflags} -DAPP_USE_NO_PLUGIN"
     
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cxx"
