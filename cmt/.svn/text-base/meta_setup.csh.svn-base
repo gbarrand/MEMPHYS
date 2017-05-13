@@ -1,7 +1,0 @@
-
-source /lal/CMT/v1r18p20050501/mgr/setup.csh
-
-setenv CMTPATH "/exp/opera/barrand"
-
-setenv CMTCONFIG slc3_gcc323
-
