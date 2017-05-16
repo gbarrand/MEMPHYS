@@ -43,6 +43,7 @@ int main(
 {
 #ifdef APP_USE_NO_PLUGIN
   if(aArgc<-10) {
+    // enforce to link with libBatchLabRio.a :
     Slash::Core::ISession* session = 0;
     BatchLabRioInitialize(*session);
   }
