@@ -6,7 +6,8 @@ else
 endif
 
 setenv NeutronHPCrossSections ${G4DATA}/G4NDL
-setenv G4LEVELGAMMADATA ${G4DATA}/PhotonEvaporation
+#setenv G4LEVELGAMMADATA ${G4DATA}/PhotonEvaporation
+setenv G4LEVELGAMMADATA ${G4DATA}/PhotonEvaporation2
 setenv G4RADIOACTIVEDATA ${G4DATA}/RadioactiveDecay
 setenv G4LEDATA ${G4DATA}/G4EMLOW
 
