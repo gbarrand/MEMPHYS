@@ -169,10 +169,10 @@ inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
 #define EXLIB_SCREEN_MGR X11
 #endif
 #include <exlib/AIDA/h2plot>
-inline void set_region_style(inlib::sg::plotter& aRegion) {
+inline void set_region_style(inlib::sg::plotter& a_plotter) {
   
-  aRegion.right_axis_visible = true;
-  aRegion.top_axis_visible = true;
+  a_plotter.right_axis_visible = true;
+  a_plotter.top_axis_visible = true;
   
   // ROOT is in NDC, then we take a plotter with width = height = 1
 
@@ -187,14 +187,14 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   YLAB = 0.05F; //FIXME : cooking.
 
   // ROOT def margins 0.1. SoPlotter def 0.1.
-  aRegion.right_margin = 0.1f;
-  aRegion.top_margin = 0.1f;
-  aRegion.left_margin = 0.1f;
-  aRegion.bottom_margin = 0.1f;
+  a_plotter.right_margin = 0.1f;
+  a_plotter.top_margin = 0.1f;
+  a_plotter.left_margin = 0.1f;
+  a_plotter.bottom_margin = 0.1f;
 
-  aRegion.wall_style().visible = false;
-  aRegion.grid_style().visible = false;
-  aRegion.inner_frame_style().line_width = 2;
+  a_plotter.wall_style().visible = false;
+  a_plotter.grid_style().visible = false;
+  a_plotter.inner_frame_style().line_width = 2;
   
   std::string font = "times.ttf";
   bool smoothing = true;
@@ -204,60 +204,65 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   float majic = 0.6f;
   
   // X axis :
-  aRegion.x_axis().labels_style().scale = majic;
-  aRegion.x_axis().labels_style().font = font;
-  aRegion.x_axis().labels_style().smoothing = smoothing;
-  aRegion.x_axis().title_style().scale = majic;
-  aRegion.x_axis().title_style().font = font;
-  aRegion.x_axis().title_style().smoothing = smoothing;
-  aRegion.x_axis().mag_style().scale = majic;
-  aRegion.x_axis().mag_style().font = font;
-  aRegion.x_axis().mag_style().smoothing = smoothing;
-  aRegion.x_axis().line_style().width = 2;
-  aRegion.x_axis().ticks_style().width = 2;
-  aRegion.x_axis().label_height = 0.05f;
-  aRegion.x_axis().title_height = 0.06f;
-  aRegion.x_axis().title_to_axis = 1.1f*YLAB;
-//aRegion.x_axis().label_to_axis = 0.01f;
+  a_plotter.x_axis().labels_style().scale = majic;
+  a_plotter.x_axis().labels_style().font = font;
+  a_plotter.x_axis().labels_style().smoothing = smoothing;
+  a_plotter.x_axis().title_style().scale = majic;
+  a_plotter.x_axis().title_style().font = font;
+  a_plotter.x_axis().title_style().smoothing = smoothing;
+  a_plotter.x_axis().mag_style().scale = majic;
+  a_plotter.x_axis().mag_style().font = font;
+  a_plotter.x_axis().mag_style().smoothing = smoothing;
+  a_plotter.x_axis().line_style().width = 2;
+  a_plotter.x_axis().ticks_style().width = 2;
+  a_plotter.x_axis().label_height = 0.05f;
+  a_plotter.x_axis().title_height = 0.06f;
+  a_plotter.x_axis().title_to_axis = 1.1f*YLAB;
+//a_plotter.x_axis().label_to_axis = 0.01f;
   // Set hplot tick modeling :
-  aRegion.x_axis().modeling = inlib::sg::tick_modeling_hplot();
-  aRegion.x_axis().divisions = 505;
+  a_plotter.x_axis().modeling = inlib::sg::tick_modeling_hplot();
+  a_plotter.x_axis().divisions = 505;
 
   // Y axis :
-  aRegion.y_axis().labels_style().scale = majic;
-  aRegion.y_axis().labels_style().font = font;
-  aRegion.y_axis().labels_style().smoothing = smoothing;
-  aRegion.y_axis().title_style().font = font;
-  aRegion.y_axis().title_style().scale = majic;
-  aRegion.y_axis().title_style().smoothing = smoothing;
-  aRegion.y_axis().mag_style().scale = majic;
-  aRegion.y_axis().mag_style().font = font;
-  aRegion.y_axis().mag_style().smoothing = smoothing;
-  aRegion.y_axis().line_style().width = 2;
-  aRegion.y_axis().ticks_style().width = 2;
-  aRegion.y_axis().label_height = 0.05f;
-  aRegion.y_axis().title_height = 0.06f;
-  aRegion.y_axis().title_to_axis = 1.1f*XLAB;
-  aRegion.y_axis().label_to_axis = 0.01f;
+  a_plotter.y_axis().labels_style().scale = majic;
+  a_plotter.y_axis().labels_style().font = font;
+  a_plotter.y_axis().labels_style().smoothing = smoothing;
+  a_plotter.y_axis().title_style().font = font;
+  a_plotter.y_axis().title_style().scale = majic;
+  a_plotter.y_axis().title_style().smoothing = smoothing;
+  a_plotter.y_axis().mag_style().scale = majic;
+  a_plotter.y_axis().mag_style().font = font;
+  a_plotter.y_axis().mag_style().smoothing = smoothing;
+  a_plotter.y_axis().line_style().width = 2;
+  a_plotter.y_axis().ticks_style().width = 2;
+  a_plotter.y_axis().label_height = 0.05f;
+  a_plotter.y_axis().title_height = 0.06f;
+  a_plotter.y_axis().title_to_axis = 1.1f*XLAB;
+  a_plotter.y_axis().label_to_axis = 0.01f;
   // Set hplot tick modeling :
-  aRegion.y_axis().modeling = inlib::sg::tick_modeling_hplot();
-  aRegion.y_axis().divisions = 505;
+  a_plotter.y_axis().modeling = inlib::sg::tick_modeling_hplot();
+  a_plotter.y_axis().divisions = 505;
   
   // title :
-  aRegion.title_height = 0.04f;
-  aRegion.title_to_axis = 0.02f;
-  aRegion.title_style().font = font;
-  aRegion.title_style().smoothing = smoothing;
-  aRegion.title_style().color = inlib::colorf_black();
+  a_plotter.title_height = 0.04f;
+  a_plotter.title_to_axis = 0.02f;
+  a_plotter.title_style().font = font;
+  a_plotter.title_style().smoothing = smoothing;
+  a_plotter.title_style().color = inlib::colorf_black();
 
+  // info box :
+  a_plotter.infos_style().font = inlib::sg::font_arialbd_ttf();
+  a_plotter.infos_style().front_face = inlib::sg::winding_cw;
+  a_plotter.infos_x_margin = 0.01f; //percent of plotter width.
+  a_plotter.infos_y_margin = 0.01f; //percent of plotter height.
   /*
   // legend box :
-  aRegion.setParameter("legendRegionVisible","TRUE");
-  aRegion.setParameter("legendRegion.viewportRegion.backgroundColor","1 1 0");
-  aRegion.setParameter("legendRegionSize","0.15 0.16");
-  aRegion.setParameter("legendRegionOrigin","0.1 0.1");
-  aRegion.setParameter("legendRegion.horizontalMargin","2");
-  aRegion.setParameter("legendRegion.verticalMargin","2");
+  a_plotter.setParameter("legendRegionVisible","TRUE");
+  a_plotter.setParameter("legendRegion.viewportRegion.backgroundColor","1 1 0");
+  a_plotter.setParameter("legendRegionSize","0.15 0.16");
+  a_plotter.setParameter("legendRegionOrigin","0.1 0.1");
+  a_plotter.setParameter("legendRegion.horizontalMargin","2");
+  a_plotter.setParameter("legendRegion.verticalMargin","2");
   */
   
   //gStyle->SetPadBottomMargin(0.15);
