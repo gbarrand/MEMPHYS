@@ -14,8 +14,6 @@ bush_home=../../../../softinex/bush
 
 use_archive=yes
 
-cppflags="${cppflags} -I.."
-
 use_geant4=yes
 use_inlib=yes
 
