@@ -24,12 +24,7 @@ MEMPHYS::Analysis::Analysis(
   AIDA::ITreeFactory* treeFactory = fAIDA->createTreeFactory();
   if(fBatch) {
     if( (aFormat=="root") || (aFormat==""))  {
-#ifdef APP_USE_NO_PLUGIN
-      std::string opts = "no_plugin";
-      fTree = treeFactory->create("MEMPHYS.root","root",false,true,opts);
-#else
       fTree = treeFactory->create("MEMPHYS.root","root",false,true);
-#endif
     } else if(aFormat=="hdf5") {
       //HDF5 tree :
       std::string opts = "";
