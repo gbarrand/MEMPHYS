@@ -14,8 +14,6 @@ bush_home=../../../../softinex/bush
 
 use_archive=yes
 
-#cppflags="${cppflags} -I.."
-
 enforce_archive=yes
 
 if [ ${enforce_archive} = yes ] ; then
