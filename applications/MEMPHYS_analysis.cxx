@@ -312,12 +312,30 @@ inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA
 
   return true;
 }
+
+#ifdef APP_USE_ARCHIVE
+#include <BatchLab/Core/Main.h>
+extern "C" {
+  void BatchLabRioInitialize(Slash::Core::ISession&);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 int main(int aArgc,char** aArgv) {
 
+#ifdef APP_USE_ARCHIVE
+  BatchLab::Main* session = new BatchLab::Main(std::vector<std::string>());
+  Slash::Core::ILibraryManager* libraryManager = Slash::libraryManager(*session);
+  if(!libraryManager) {std::cout << "LibraryManager not found." << std::endl;return EXIT_FAILURE;}
+  Slash::Core::ILibrary* library = libraryManager->addLibrary("Rio","main","");
+  if(!library) {std::cout << "addLibrary() failed." << std::endl;return EXIT_FAILURE;}
+  ::BatchLabRioInitialize(*session);
+  AIDA::IAnalysisFactory* aida = static_cast<AIDA::IAnalysisFactory*>(session);
+#else
   AIDA::IAnalysisFactory* aida = AIDA_createAnalysisFactory();
+#endif
   if(!aida) {
     std::cout << "AIDA not found." << std::endl;
     return 1;

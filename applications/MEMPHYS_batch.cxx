@@ -23,7 +23,6 @@
 #include <BatchLab/Core/Main.h>
 extern "C" {
   void BatchLabRioInitialize(Slash::Core::ISession&);
-  void BatchLabRioFinalize(Slash::Core::ISession&);
 }
 #endif
 
