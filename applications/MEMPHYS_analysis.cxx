@@ -4,35 +4,33 @@
 #include <AIDA/AIDA.h>
 #include <AIDA/ITupleEntry.h>
 
+#include <inlib/system>
+
+#include <sstream>
+namespace Lib {
+namespace smanip {
+inline std::string tostring(double a_value) {
+  std::ostringstream strm;
+  strm << a_value;
+  return strm.str();
+}
+}}
+
 // std :
 #include <iostream>
 
-// Lib :
-#include <Lib/smanip.h>
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////
-AIDA::ITuple* cast_Tuple(
- AIDA::ITupleEntry* aEntry
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+inline AIDA::ITuple* cast_Tuple(AIDA::ITupleEntry* aEntry) {
   //FIXME : CINT can't handle dynamic_cast :
   //return (AIDA::ITuple*)aEntry->cast("AIDA::ITuple");
 
   return dynamic_cast<AIDA::ITuple*>(aEntry);
 }
-//////////////////////////////////////////////////////////////////////////////
-bool get_XYZ(
- AIDA::ITuple& aParent
-,int aColumn
-,double& aX
-,double& aY
-,double& aZ
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline bool get_XYZ(AIDA::ITuple& aParent,int aColumn,double& aX,double& aY,double& aZ) {
   AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(aColumn);
   if(!entry) return false;
 
@@ -51,12 +49,7 @@ bool get_XYZ(
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-bool dump_tracks(
- AIDA::ITuple& aParent
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+inline bool dump_tracks(AIDA::ITuple& aParent) {
   AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(8);
   if(!entry) return false;
 
@@ -116,14 +109,8 @@ bool dump_tracks(
   }
   return true;
 }
-//////////////////////////////////////////////////////////////////////////////
-bool process_hits_times(
- AIDA::ITuple& aParent
-,AIDA::IHistogram1D& aHisto
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline bool process_hits_times(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto) {
   AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(2);
   if(!entry) return false;
 
@@ -139,14 +126,8 @@ bool process_hits_times(
   }
   return true;
 }
-//////////////////////////////////////////////////////////////////////////////
-bool process_hits(
- AIDA::ITuple& aParent
-,AIDA::IHistogram1D& aHisto
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline bool process_hits(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto) {
   AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(10);
   if(!entry) return false;
 
@@ -163,14 +144,8 @@ bool process_hits(
   }
   return true;
 }
-//////////////////////////////////////////////////////////////////////////////
-bool process_digits(
- AIDA::ITuple& aParent
-,AIDA::IHistogram2D& aHisto
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
   AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(13);
   if(!entry) return false;
 
@@ -189,14 +164,9 @@ bool process_digits(
   }
   return true;
 }
-//////////////////////////////////////////////////////////////////////////////
-void set_region_style(
- AIDA::IPlotterRegion& aRegion
-) 
-//////////////////////////////////////////////////////////////////////////////
-// Taken from G4SPL_analysis.cxx.
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline void set_region_style(AIDA::IPlotterRegion& aRegion) {
+  // Taken from G4SPL_analysis.cxx.
   //FIXME : have to do the below with AIDA styles.
 
   // ROOT is in NDC, then we take a plotter with width = height = 1
@@ -274,10 +244,8 @@ void set_region_style(
   //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
   aRegion.setParameter("plotter.yAxis.labelToAxis","0.01");
   //gStyle->SetTitleOffset(1.1,"Y");
-  aRegion.setParameter("plotter.yAxis.titleToAxis",
-   Lib::smanip::tostring(1.1*XLAB));
-  aRegion.setParameter("plotter.xAxis.titleToAxis",
-   Lib::smanip::tostring(1.1*YLAB));
+  aRegion.setParameter("plotter.yAxis.titleToAxis",Lib::smanip::tostring(1.1*XLAB));
+  aRegion.setParameter("plotter.xAxis.titleToAxis",Lib::smanip::tostring(1.1*YLAB));
   //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
   aRegion.setParameter("plotter.yAxis.labelHeight","0.05");
   aRegion.setParameter("plotter.xAxis.labelHeight","0.05");
@@ -305,15 +273,8 @@ void set_region_style(
   // Frame :
   aRegion.setParameter("plotter.innerFrameStyle.lineWidth","2");
 }
-//////////////////////////////////////////////////////////////////////////////
-bool plot(
- AIDA::IAnalysisFactory& aAIDA
-,AIDA::IHistogram1D& aHisto1D
-,AIDA::IHistogram2D& aHisto2D
-) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+
+inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
   std::string header = "MEMPHYS_analysis : ";
 
   AIDA::IPlotterFactory* plotterFactory = 
@@ -368,10 +329,7 @@ bool plot(
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-int main(int aArgc,char** aArgv) 
-//////////////////////////////////////////////////////////////////////////////
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-{
+int main(int aArgc,char** aArgv) {
   std::string program = "MEMPHYS_analysis";
   std::string header = program + " : ";
 
@@ -395,15 +353,13 @@ int main(int aArgc,char** aArgv)
     std::cout << header << "can't get memory tree." << std::endl;
     return 1;
   }
-  AIDA::IHistogramFactory* histogramFactory = 
-    aida->createHistogramFactory(*memory);
+  AIDA::IHistogramFactory* histogramFactory = aida->createHistogramFactory(*memory);
   if(!histogramFactory) {
     std::cout << header << "can't get an histogram factory." << std::endl;
     return 1;
   }
   
-  AIDA::IHistogram1D* hits_times = 
-    histogramFactory->createHistogram1D("hits_times","Hits times",100,0,3000);
+  AIDA::IHistogram1D* hits_times = histogramFactory->createHistogram1D("hits_times","Hits times",100,0,3000);
   if(!hits_times) {
     std::cout << header 
               << "can't create histogram : time." 
