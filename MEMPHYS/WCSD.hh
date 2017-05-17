@@ -5,7 +5,7 @@
 #include "G4VSensitiveDetector.hh"
 
 //MEMPHYS
-#include "MEMPHYS/WCHit.hh"
+#include "WCHit.hh"
 
 class G4Step;
 class G4HCofThisEvent;

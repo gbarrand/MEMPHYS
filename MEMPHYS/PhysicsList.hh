@@ -6,7 +6,7 @@
 #include "globals.hh"
 
 //MEMPHYS
-#include "MEMPHYS/PhysicsMessenger.hh"
+#include "PhysicsMessenger.hh"
 
 //JEC 10/1/06 introduce MEMPHYS
 namespace MEMPHYS {

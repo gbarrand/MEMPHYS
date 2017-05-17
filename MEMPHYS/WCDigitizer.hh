@@ -7,7 +7,7 @@
 #include "Randomize.hh"
 
 //MEMPHYS
-#include "MEMPHYS/WCDigi.hh"
+#include "WCDigi.hh"
 
 //JEC 10/1/06 introduce MEMPHYS
 namespace MEMPHYS {

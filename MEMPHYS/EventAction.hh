@@ -8,9 +8,9 @@
 #include "G4ios.hh"
 
 //MEMPHYS
-#include "MEMPHYS/DetectorConstruction.hh"
-#include "MEMPHYS/WCHit.hh"
-#include "MEMPHYS/WCDigi.hh"
+#include "DetectorConstruction.hh"
+#include "WCHit.hh"
+#include "WCDigi.hh"
 
 
 class G4Event;

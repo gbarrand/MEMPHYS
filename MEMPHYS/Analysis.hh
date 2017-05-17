@@ -2,7 +2,7 @@
 #define MEMPHYS_Analysis_h
 
 // Inheritance :
-#include <MEMPHYS/IAppManager.hh>
+#include "IAppManager.hh"
 
 #include <string>
 
