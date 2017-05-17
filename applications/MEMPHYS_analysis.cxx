@@ -169,6 +169,113 @@ inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
 #define EXLIB_SCREEN_MGR X11
 #endif
 #include <exlib/AIDA/h2plot>
+inline void set_region_style(inlib::sg::plotter& aRegion) {
+  /*
+  // Taken from G4SPL_analysis.cxx.
+  //FIXME : have to do the below with AIDA styles.
+
+  // ROOT is in NDC, then we take a plotter with width = height = 1
+
+  // PAW :
+  //float XSIZ = 20.0F;
+  //float XLAB = 1.4F;
+  //float YSIZ = 20.0F;
+  //float YLAB = 1.4F;
+
+  float XLAB = 1.4F/20.0F; //0.07 //x distance of y title to data frame.
+  float YLAB = 0.8F/20.0F; //0.04 //y distance of x title to data frame.
+  YLAB = 0.05F; //FIXME : cooking.
+
+  // To have a good matching with ROOT for text size :
+  //double majic = 0.014/0.027;
+  double majic = 0.6;
+  std::string s = Lib::smanip::tostring(majic);
+  //FIXME : have methods for the below :
+  //aRegion.style().setParameter("textScale",s);
+  aRegion.style().xAxisStyle().setParameter("magStyle.scale",s);
+  aRegion.style().yAxisStyle().setParameter("magStyle.scale",s);
+  aRegion.style().xAxisStyle().tickLabelStyle().setParameter("scale",s);
+  aRegion.style().xAxisStyle().labelStyle().setParameter("scale",s);
+  aRegion.style().yAxisStyle().tickLabelStyle().setParameter("scale",s);
+  aRegion.style().yAxisStyle().labelStyle().setParameter("scale",s);
+
+  // ROOT def margins 0.1. SoPlotter def 0.1.
+  aRegion.layout().setParameter("rightMargin",0.1);
+  aRegion.layout().setParameter("topMargin",0.1);
+  //gStyle->SetPadBottomMargin(0.15);
+  aRegion.layout().setParameter("leftMargin",0.15);
+  //gStyle->SetPadLeftMargin(0.15);
+  aRegion.layout().setParameter("bottomMargin",0.15);
+
+  aRegion.style().setParameter("superposeBins","TRUE");
+  aRegion.setParameter("plotter.wallStyle.visible","FALSE");
+  aRegion.setParameter("plotter.gridStyle.visible","FALSE");
+  */
+  std::string font = "times.ttf";
+  bool smoothing = true;
+  /*
+  // X axis :
+  aRegion.style().xAxisStyle().tickLabelStyle().setFont(font);
+  aRegion.style().xAxisStyle().tickLabelStyle().setParameter("smoothing",smoothing);
+  aRegion.style().xAxisStyle().labelStyle().setFont(font);
+  aRegion.style().xAxisStyle().labelStyle().setParameter("smoothing",smoothing);
+  aRegion.setParameter("plotter.xAxis.magStyle.fontName",font);
+  aRegion.setParameter("plotter.xAxis.magStyle.smoothing",smoothing);
+  aRegion.style().xAxisStyle().lineStyle().setThickness(2);
+  aRegion.setParameter("plotter.xAxis.ticksStyle.width","2");
+  aRegion.style().setParameter("topAxisVisible","TRUE");
+  // Set hplot tick modeling :
+  aRegion.style().xAxisStyle().setParameter("modeling","hplot");
+  aRegion.style().xAxisStyle().setParameter("divisions","505");
+
+  // Y axis :
+  //aRegion.style().setParameter("yAxisLogScale","TRUE");
+  aRegion.style().yAxisStyle().tickLabelStyle().setFont(font);
+  aRegion.style().yAxisStyle().tickLabelStyle().setParameter("smoothing",smoothing);
+  aRegion.style().yAxisStyle().labelStyle().setFont(font);
+  aRegion.style().yAxisStyle().labelStyle().setParameter("smoothing",smoothing);
+  aRegion.setParameter("plotter.yAxis.magStyle.fontName",font);
+  aRegion.setParameter("plotter.yAxis.magStyle.smoothing",smoothing);
+  aRegion.style().yAxisStyle().lineStyle().setThickness(2);
+  aRegion.setParameter("plotter.yAxis.ticksStyle.width","2");
+
+  //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
+  aRegion.setParameter("plotter.xAxis.titleHeight","0.06");
+  aRegion.setParameter("plotter.yAxis.titleHeight","0.06");
+  //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
+  aRegion.setParameter("plotter.yAxis.labelToAxis","0.01");
+  //gStyle->SetTitleOffset(1.1,"Y");
+  aRegion.setParameter("plotter.yAxis.titleToAxis",Lib::smanip::tostring(1.1*XLAB));
+  aRegion.setParameter("plotter.xAxis.titleToAxis",Lib::smanip::tostring(1.1*YLAB));
+  //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
+  aRegion.setParameter("plotter.yAxis.labelHeight","0.05");
+  aRegion.setParameter("plotter.xAxis.labelHeight","0.05");
+
+  aRegion.style().setParameter("rightAxisVisible","TRUE");
+  // Set hplot tick modeling :
+  aRegion.style().yAxisStyle().setParameter("modeling","hplot");
+  aRegion.style().yAxisStyle().setParameter("divisions","505");
+  */
+  // title :
+  aRegion.title_height = 0.04f;
+  aRegion.title_to_axis = 0.02f;
+  aRegion.title_style().font = font;
+  aRegion.title_style().smoothing = smoothing;
+  aRegion.title_style().color = inlib::colorf_blue();
+
+  /*
+  // legend box :
+  aRegion.setParameter("legendRegionVisible","TRUE");
+  aRegion.setParameter("legendRegion.viewportRegion.backgroundColor","1 1 0");
+  aRegion.setParameter("legendRegionSize","0.15 0.16");
+  aRegion.setParameter("legendRegionOrigin","0.1 0.1");
+  aRegion.setParameter("legendRegion.horizontalMargin","2");
+  aRegion.setParameter("legendRegion.verticalMargin","2");
+
+  */
+  // Frame :
+  aRegion.inner_frame_style().line_width = 2;
+}
 inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
   
   exlib::EXLIB_SCREEN_MGR::session smgr(std::cout);
@@ -186,7 +293,7 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.infos_style().front_face = inlib::sg::winding_cw;
     sgp.infos_x_margin = 0.01f; //percent of plotter width.
     sgp.infos_y_margin = 0.01f; //percent of plotter height.
-    //set_region_style(region);
+    set_region_style(sgp);
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "Entries";
     inlib::sg::plottable* ptb = new exlib::AIDA::h1d2plot(aHisto1D);
@@ -200,7 +307,7 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.infos_style().front_face = inlib::sg::winding_cw;
     sgp.infos_x_margin = 0.01f; //percent of plotter width.
     sgp.infos_y_margin = 0.01f; //percent of plotter height.
-    //set_region_style(region);
+    set_region_style(sgp);
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "PE";
     inlib::sg::plottable* ptb = new exlib::AIDA::h2d2plot(aHisto2D);
