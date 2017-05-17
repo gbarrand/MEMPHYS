@@ -88,7 +88,7 @@ void analysis()
   //nEvent = 10000;
   std::cout << " nEvents = " << nEvent << std::endl;
 
-  for (Int_t i=0; i<nEvent; ++i) {
+  for (Int_t iev=0; iev<nEvent; ++iev) {
 
     TTree* Event_vtxPos = new TTree();
     tEvent->SetBranchAddress("vtxPos",&Event_vtxPos);
@@ -102,7 +102,7 @@ void analysis()
     TTree* Event_digit = new TTree();
     tEvent->SetBranchAddress("digit",&Event_digit);
 
-    tEvent->GetEntry(i);
+    tEvent->GetEntry(iev);
 
     //{TObjArray* brs = Event_track->GetListOfBranches();
     //for(int i=0;i<brs->GetEntries();i++) {
@@ -141,7 +141,7 @@ void analysis()
     Event_digit->SetBranchAddress("time",&digit_time);
 
     if(dump)
-    std::cout << ">>>>>>>>>>>>> Event{" << i << "}: "
+    std::cout << ">>>>>>>>>>>>> Event{" << iev << "}: "
     	      << " evt Id " << eventId 
     //	      << " evt Input Id " << inputEvtId
     //	      << "\n interaction mode " << interMode
@@ -164,7 +164,7 @@ void analysis()
     	      << " nTube Digits = " << nTubeDigits
     	      << std::endl;
 
-    for (Int_t j=0; j<nTracks; ++j) {
+    for (Int_t jtk=0; jtk<nTracks; ++jtk) {
 
       //Sub tuples of Event_tracks :
       TTree* Track_direction = new TTree();
@@ -176,7 +176,7 @@ void analysis()
       TTree* Track_stopPos = new TTree();
       Event_track->SetBranchAddress("stopPos",&Track_stopPos);
 
-      Event_track->GetEntry(j);
+      Event_track->GetEntry(jtk);
 
       Double_t dx,dy,dz;
       Track_direction->SetBranchAddress("dx",&dx);
@@ -211,7 +211,7 @@ void analysis()
       if(Track_stopPos->GetEntries()==1) Track_stopPos->GetEntry(0);
 
       if(dump)
-      std::cout << "----> Tk{"<<j<<"}: " 
+      std::cout << "----> Tk{"<< jtk <<"}: " 
 	   	<< " pId " << pId
 		<< " parent " << parent
 		<< " creation time " << timeStart 
@@ -237,12 +237,12 @@ void analysis()
     //--------
 
 
-    for (Int_t k=0; k<nTubeHits; ++k) {
+    for (Int_t khit=0; khit<nTubeHits; ++khit) {
       
       TTree* Hit_pe = new TTree();
       Event_hit->SetBranchAddress("pe",&Hit_pe);
   
-      Event_hit->GetEntry(k);
+      Event_hit->GetEntry(khit);
 
       Float_t hit_time;
       //Float_t trk_length; //NV 13/6/06
@@ -251,7 +251,7 @@ void analysis()
 
       //JEC 16/1/06 add the tubeId_hit info
       if(dump)
-      std::cout << "----> Hit{"<<k<<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
+      std::cout << "----> Hit{"<< khit <<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
 
       for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
 	Hit_pe->GetEntry(ki);
