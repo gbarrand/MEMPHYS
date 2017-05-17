@@ -173,10 +173,7 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   
   aRegion.right_axis_visible = true;
   aRegion.top_axis_visible = true;
-  /*
-  // Taken from G4SPL_analysis.cxx.
-  //FIXME : have to do the below with AIDA styles.
-
+  
   // ROOT is in NDC, then we take a plotter with width = height = 1
 
   // PAW :
@@ -189,6 +186,7 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   float YLAB = 0.8F/20.0F; //0.04 //y distance of x title to data frame.
   YLAB = 0.05F; //FIXME : cooking.
 
+  /*
   // To have a good matching with ROOT for text size :
   //double majic = 0.014/0.027;
   double majic = 0.6;
@@ -227,6 +225,9 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.x_axis().line_style().width = 2;
   aRegion.x_axis().ticks_style().width = 2;
   aRegion.x_axis().label_height = 0.05f;
+  aRegion.x_axis().title_height = 0.06f;
+  aRegion.x_axis().title_to_axis = 1.1f*YLAB;
+//aRegion.x_axis().label_to_axis = 0.01f;
   // Set hplot tick modeling :
   aRegion.x_axis().modeling = inlib::sg::tick_modeling_hplot();
   aRegion.x_axis().divisions = 505;
@@ -241,22 +242,17 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.y_axis().line_style().width = 2;
   aRegion.y_axis().ticks_style().width = 2;
   aRegion.y_axis().label_height = 0.05f;
-  /*
-
-  //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
-  aRegion.setParameter("plotter.xAxis.titleHeight","0.06");
-  aRegion.setParameter("plotter.yAxis.titleHeight","0.06");
-  //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
-  aRegion.setParameter("plotter.yAxis.labelToAxis","0.01");
-  //gStyle->SetTitleOffset(1.1,"Y");
-  aRegion.setParameter("plotter.yAxis.titleToAxis",Lib::smanip::tostring(1.1*XLAB));
-  aRegion.setParameter("plotter.xAxis.titleToAxis",Lib::smanip::tostring(1.1*YLAB));
-  //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
-  */
-  aRegion.y_axis().label_height = 0.05f;
+  aRegion.y_axis().title_height = 0.06f;
+  aRegion.y_axis().title_to_axis = 1.1f*XLAB;
+  aRegion.y_axis().label_to_axis = 0.01f;
   // Set hplot tick modeling :
   aRegion.y_axis().modeling = inlib::sg::tick_modeling_hplot();
   aRegion.y_axis().divisions = 505;
+  
+  //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
+  //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
+  //gStyle->SetTitleOffset(1.1,"Y");
+  //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
   
   // title :
   aRegion.title_height = 0.04f;
