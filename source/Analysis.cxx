@@ -1,4 +1,4 @@
-#include "MEMPHYS/Analysis.hh"
+#include "../MEMPHYS/Analysis.hh"
 
 //AIDA
 #include <AIDA/IAnalysisFactory.h>
