@@ -272,18 +272,17 @@ inline void set_region_style(AIDA::IPlotterRegion& aRegion) {
 }
 
 inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
-  std::string header = "MEMPHYS_analysis : ";
 
   AIDA::IPlotterFactory* plotterFactory = 
     aAIDA.createPlotterFactory(0,0);
   if(!plotterFactory) {
-    std::cout << header << "can't get a PlotterFactory." << std::endl;
+    std::cout << "can't get a PlotterFactory." << std::endl;
     return false;
   }
     
   AIDA::IPlotter* plotter = plotterFactory->create();
   if(!plotter) {
-    std::cout << header << "can't get a plotter." << std::endl;
+    std::cout << "can't get a plotter." << std::endl;
     return false;
   }
     
@@ -306,16 +305,6 @@ inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA
 
   plotter->show();
 
-  /* FIXME : try to have multiple plotters in the tab stack :
- {AIDA::IPlotter* plotter = plotterFactory->create("Viewer_2");
-  if(!plotter) {
-    std::cout << header << "can't get a plotter." << std::endl;
-    return false;
-  }
-  plotter->clearRegions();
-  plotter->createRegions(1,1,0);}
-  */
-
   plotter->interact();
 
   delete plotter;
@@ -327,18 +316,16 @@ inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 int main(int aArgc,char** aArgv) {
-  std::string program = "MEMPHYS_analysis";
-  std::string header = program + " : ";
 
   AIDA::IAnalysisFactory* aida = AIDA_createAnalysisFactory();
   if(!aida) {
-    std::cout << header << "AIDA not found." << std::endl;
+    std::cout << "AIDA not found." << std::endl;
     return 1;
   }
 
   AIDA::ITreeFactory* treeFactory = aida->createTreeFactory();
   if(!treeFactory) {
-    std::cout << header << "can't get a TreeFactory." << std::endl;
+    std::cout << "can't get a TreeFactory." << std::endl;
     return 1;
   }
 
@@ -347,20 +334,18 @@ int main(int aArgc,char** aArgv) {
   ////////////////////////////////////////////////////////
   AIDA::ITree* memory = treeFactory->create();
   if(!memory) {
-    std::cout << header << "can't get memory tree." << std::endl;
+    std::cout << "can't get memory tree." << std::endl;
     return 1;
   }
   AIDA::IHistogramFactory* histogramFactory = aida->createHistogramFactory(*memory);
   if(!histogramFactory) {
-    std::cout << header << "can't get an histogram factory." << std::endl;
+    std::cout << "can't get an histogram factory." << std::endl;
     return 1;
   }
   
   AIDA::IHistogram1D* hits_times = histogramFactory->createHistogram1D("hits_times","Hits times",100,0,3000);
   if(!hits_times) {
-    std::cout << header 
-              << "can't create histogram : time." 
-              << std::endl;
+    std::cout << "can't create histogram : time." << std::endl;
     return 1;
   }
 
@@ -368,9 +353,7 @@ int main(int aArgc,char** aArgv) {
     histogramFactory->createHistogram2D("digits_pe_time","Digits PE time",
 					100,0,3000,100,0,10);
   if(!digits_time_pe) {
-    std::cout << header 
-              << "can't create histogram : digits_time_pe." 
-              << std::endl;
+    std::cout << "can't create histogram : digits_time_pe." << std::endl;
     return 1;
   }
 
@@ -384,42 +367,37 @@ int main(int aArgc,char** aArgv) {
 
   AIDA::ITree* tree = treeFactory->create("MEMPHYS."+fmt,fmt,true,false);
   if(!tree) {
-    std::cout << header << "can't open data file." << std::endl;
+    std::cout << "can't open data file." << std::endl;
     return 1;
   }
 
   AIDA::IManagedObject* object = tree->find("Event");
   if(!object) {
-    std::cout << header 
-              << "object Event not found in tree." 
-              << std::endl;
+    std::cout << "object Event not found in tree." << std::endl;
     return 1;
   }
   //FIXME : CINT can't handle dynamic_cast :
   //AIDA::ITuple* tuple = (AIDA::ITuple*)object->cast("AIDA::ITuple");
   AIDA::ITuple* tuple = dynamic_cast<AIDA::ITuple*>(object);
   if(!tuple) {
-    std::cout << header << "object not an AIDA::ITuple." << std::endl;
+    std::cout << "object not an AIDA::ITuple." << std::endl;
     return 1;
   }
 
   int coln = tuple->columns();
   for(int index=0;index<coln;index++) {
-    std::cout << header 
-              << " icol = " << index
+    std::cout << " icol = " << index
               << ", label = " << tuple->columnName(index) 
               << ", type = " << tuple->columnType(index) 
               << std::endl;
   }
 
-  std::cout << header << "rows = " << tuple->rows() << std::endl;
+  std::cout << "rows = " << tuple->rows() << std::endl;
 
   int nentries = tuple->rows();
   //nentries = 100000;
   //nentries = 40;
-  std::cout << header 
-            << "traitements de " << nentries << " entrees" 
-            << std::endl;
+  std::cout << "traitements de " << nentries << " entrees" << std::endl;
 
   int irow = 0;
   tuple->start();
