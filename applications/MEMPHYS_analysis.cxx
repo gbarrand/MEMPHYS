@@ -168,28 +168,38 @@ inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
 #include <exlib/X11/plotter>
 #define EXLIB_SCREEN_MGR X11
 #endif
+#include <exlib/AIDA/h2plot>
 inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
   
   exlib::EXLIB_SCREEN_MGR::session smgr(std::cout);
   if(!smgr.is_valid()) return false;
 
-  exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,1,0,0,700,500);
+  exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,2,0,0,700,500);
   if(!plotter.window()) return false;
-
   inlib::env_append_path("EXLIB_FONT_PATH",".");    
-
-  inlib::sg::plotter& sgp = plotter.plots().current_plotter();
-  sgp.bins_style(0).color = inlib::colorf_blue();
-
-  sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
-  sgp.infos_style().front_face = inlib::sg::winding_cw;
-  sgp.infos_x_margin = 0.01f; //percent of plotter width.
-  sgp.infos_y_margin = 0.01f; //percent of plotter height.
-
-  //  inlib::sg::plottable* ptb = new exlib::SOPHYA::h1d2plot_cp(h);
-  //  sgp.add_plottable(ptb);
-
   plotter.plots().view_border = false;
+
+  if(plotter.plots().set_current_plotter(0)) {
+    inlib::sg::plotter& sgp = plotter.plots().current_plotter();
+    sgp.bins_style(0).color = inlib::colorf_blue();
+    sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
+    sgp.infos_style().front_face = inlib::sg::winding_cw;
+    sgp.infos_x_margin = 0.01f; //percent of plotter width.
+    sgp.infos_y_margin = 0.01f; //percent of plotter height.
+    inlib::sg::plottable* ptb = new exlib::AIDA::h1d2plot(aHisto1D);
+    sgp.add_plottable(ptb);
+  }
+
+  if(plotter.plots().set_current_plotter(1)) {
+    inlib::sg::plotter& sgp = plotter.plots().current_plotter();
+    sgp.bins_style(0).color = inlib::colorf_blue();
+    sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
+    sgp.infos_style().front_face = inlib::sg::winding_cw;
+    sgp.infos_x_margin = 0.01f; //percent of plotter width.
+    sgp.infos_y_margin = 0.01f; //percent of plotter height.
+    inlib::sg::plottable* ptb = new exlib::AIDA::h2d2plot(aHisto2D);
+    sgp.add_plottable(ptb);
+  }
 
   plotter.show();
 
