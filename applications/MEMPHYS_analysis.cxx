@@ -186,6 +186,9 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.infos_style().front_face = inlib::sg::winding_cw;
     sgp.infos_x_margin = 0.01f; //percent of plotter width.
     sgp.infos_y_margin = 0.01f; //percent of plotter height.
+    //set_region_style(region);
+    sgp.x_axis().title = "time";
+    sgp.y_axis().title = "Entries";
     inlib::sg::plottable* ptb = new exlib::AIDA::h1d2plot(aHisto1D);
     sgp.add_plottable(ptb);
   }
@@ -197,6 +200,9 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.infos_style().front_face = inlib::sg::winding_cw;
     sgp.infos_x_margin = 0.01f; //percent of plotter width.
     sgp.infos_y_margin = 0.01f; //percent of plotter height.
+    //set_region_style(region);
+    sgp.x_axis().title = "time";
+    sgp.y_axis().title = "PE";
     inlib::sg::plottable* ptb = new exlib::AIDA::h2d2plot(aHisto2D);
     sgp.add_plottable(ptb);
   }
