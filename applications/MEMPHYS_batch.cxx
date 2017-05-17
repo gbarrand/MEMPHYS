@@ -4,16 +4,16 @@
 #include "G4UImanager.hh"
 
 //MEMPHYS:
-#include "MEMPHYS/Analysis.hh"
-#include "MEMPHYS/DetectorConstruction.hh"
-#include "MEMPHYS/PhysicsList.hh"
-#include "MEMPHYS/PhysicsMessenger.hh"
-#include "MEMPHYS/PrimaryGeneratorAction.hh"
-#include "MEMPHYS/EventAction.hh"
-#include "MEMPHYS/RunAction.hh"
-#include "MEMPHYS/StackingAction.hh"
-#include "MEMPHYS/TrackingAction.hh"
-#include "MEMPHYS/SteppingAction.hh"
+#include "../MEMPHYS/Analysis.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/PhysicsList.hh"
+#include "../MEMPHYS/PhysicsMessenger.hh"
+#include "../MEMPHYS/PrimaryGeneratorAction.hh"
+#include "../MEMPHYS/EventAction.hh"
+#include "../MEMPHYS/RunAction.hh"
+#include "../MEMPHYS/StackingAction.hh"
+#include "../MEMPHYS/TrackingAction.hh"
+#include "../MEMPHYS/SteppingAction.hh"
 
 
 //JEC AIDA :
