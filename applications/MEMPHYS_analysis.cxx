@@ -186,37 +186,31 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   float YLAB = 0.8F/20.0F; //0.04 //y distance of x title to data frame.
   YLAB = 0.05F; //FIXME : cooking.
 
-  // To have a good matching with ROOT for text size :
-  //double majic = 0.014/0.027;
-  float majic = 0.6f;
-  aRegion.x_axis().mag_style().scale = majic;
-  aRegion.y_axis().mag_style().scale = majic;
-  aRegion.x_axis().labels_style().scale = majic;
-  aRegion.y_axis().labels_style().scale = majic;
-  aRegion.x_axis().title_style().scale = majic;
-  aRegion.y_axis().title_style().scale = majic;
-
-  /*
   // ROOT def margins 0.1. SoPlotter def 0.1.
-  aRegion.layout().setParameter("rightMargin",0.1);
-  aRegion.layout().setParameter("topMargin",0.1);
-  //gStyle->SetPadBottomMargin(0.15);
-  aRegion.layout().setParameter("leftMargin",0.15);
-  //gStyle->SetPadLeftMargin(0.15);
-  aRegion.layout().setParameter("bottomMargin",0.15);
+  aRegion.right_margin = 0.1f;
+  aRegion.top_margin = 0.1f;
+  aRegion.left_margin = 0.1f;
+  aRegion.bottom_margin = 0.1f;
 
-  aRegion.style().setParameter("superposeBins","TRUE");
-  aRegion.setParameter("plotter.wallStyle.visible","FALSE");
-  aRegion.setParameter("plotter.gridStyle.visible","FALSE");
-  */
+  aRegion.wall_style().visible = false;
+  aRegion.grid_style().visible = false;
+  aRegion.inner_frame_style().line_width = 2;
+  
   std::string font = "times.ttf";
   bool smoothing = true;
   
+  // To have a good matching with ROOT for text size :
+  //double majic = 0.014/0.027;
+  float majic = 0.6f;
+  
   // X axis :
+  aRegion.x_axis().labels_style().scale = majic;
   aRegion.x_axis().labels_style().font = font;
   aRegion.x_axis().labels_style().smoothing = smoothing;
+  aRegion.x_axis().title_style().scale = majic;
   aRegion.x_axis().title_style().font = font;
   aRegion.x_axis().title_style().smoothing = smoothing;
+  aRegion.x_axis().mag_style().scale = majic;
   aRegion.x_axis().mag_style().font = font;
   aRegion.x_axis().mag_style().smoothing = smoothing;
   aRegion.x_axis().line_style().width = 2;
@@ -230,10 +224,13 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.x_axis().divisions = 505;
 
   // Y axis :
+  aRegion.y_axis().labels_style().scale = majic;
   aRegion.y_axis().labels_style().font = font;
   aRegion.y_axis().labels_style().smoothing = smoothing;
   aRegion.y_axis().title_style().font = font;
+  aRegion.y_axis().title_style().scale = majic;
   aRegion.y_axis().title_style().smoothing = smoothing;
+  aRegion.y_axis().mag_style().scale = majic;
   aRegion.y_axis().mag_style().font = font;
   aRegion.y_axis().mag_style().smoothing = smoothing;
   aRegion.y_axis().line_style().width = 2;
@@ -246,17 +243,12 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.y_axis().modeling = inlib::sg::tick_modeling_hplot();
   aRegion.y_axis().divisions = 505;
   
-  //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
-  //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
-  //gStyle->SetTitleOffset(1.1,"Y");
-  //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
-  
   // title :
   aRegion.title_height = 0.04f;
   aRegion.title_to_axis = 0.02f;
   aRegion.title_style().font = font;
   aRegion.title_style().smoothing = smoothing;
-  aRegion.title_style().color = inlib::colorf_blue();
+  aRegion.title_style().color = inlib::colorf_black();
 
   /*
   // legend box :
@@ -266,10 +258,15 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.setParameter("legendRegionOrigin","0.1 0.1");
   aRegion.setParameter("legendRegion.horizontalMargin","2");
   aRegion.setParameter("legendRegion.verticalMargin","2");
-
   */
-  // Frame :
-  aRegion.inner_frame_style().line_width = 2;
+  
+  //gStyle->SetPadBottomMargin(0.15);
+  //gStyle->SetPadLeftMargin(0.15);
+  //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
+  //gStyle->SetLabelOffset(0.01,"Y"); //ROOT def 0.005. SoPlotter def 0.02
+  //gStyle->SetTitleOffset(1.1,"Y");
+  //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.  
+  
 }
 inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
   
@@ -283,11 +280,6 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
 
   if(plotter.plots().set_current_plotter(0)) {
     inlib::sg::plotter& sgp = plotter.plots().current_plotter();
-    sgp.bins_style(0).color = inlib::colorf_blue();
-    sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
-    sgp.infos_style().front_face = inlib::sg::winding_cw;
-    sgp.infos_x_margin = 0.01f; //percent of plotter width.
-    sgp.infos_y_margin = 0.01f; //percent of plotter height.
     set_region_style(sgp);
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "Entries";
@@ -297,11 +289,6 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
 
   if(plotter.plots().set_current_plotter(1)) {
     inlib::sg::plotter& sgp = plotter.plots().current_plotter();
-    sgp.bins_style(0).color = inlib::colorf_blue();
-    sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
-    sgp.infos_style().front_face = inlib::sg::winding_cw;
-    sgp.infos_x_margin = 0.01f; //percent of plotter width.
-    sgp.infos_y_margin = 0.01f; //percent of plotter height.
     set_region_style(sgp);
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "PE";
