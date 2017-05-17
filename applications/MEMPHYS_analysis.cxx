@@ -194,7 +194,7 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
 
   a_plotter.wall_style().visible = false;
   a_plotter.grid_style().visible = false;
-  a_plotter.inner_frame_style().line_width = 2;
+  a_plotter.inner_frame_style().line_width = 1;
   
   std::string font = "times.ttf";
   bool smoothing = true;
@@ -237,7 +237,7 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
   a_plotter.y_axis().ticks_style().width = 2;
   a_plotter.y_axis().label_height = 0.05f;
   a_plotter.y_axis().title_height = 0.06f;
-  a_plotter.y_axis().title_to_axis = 1.1f*XLAB;
+  a_plotter.y_axis().title_to_axis = XLAB;
   a_plotter.y_axis().label_to_axis = 0.01f;
   // Set hplot tick modeling :
   a_plotter.y_axis().modeling = inlib::sg::tick_modeling_hplot();
@@ -251,8 +251,11 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
   a_plotter.title_style().color = inlib::colorf_black();
 
   // info box :
-  a_plotter.infos_style().font = inlib::sg::font_arialbd_ttf();
+  //a_plotter.infos_style().font = inlib::sg::font_arialbd_ttf();
+  a_plotter.infos_style().modeling = inlib::sg::infos_modeling_ROOT();
+  a_plotter.infos_style().font = font;
   a_plotter.infos_style().front_face = inlib::sg::winding_cw;
+  a_plotter.infos_width = 0.2f;
   a_plotter.infos_x_margin = 0.01f; //percent of plotter width.
   a_plotter.infos_y_margin = 0.01f; //percent of plotter height.
   /*
