@@ -21,9 +21,7 @@ inline std::string tostring(double a_value) {
 //////////////////////////////////////////////////////////////////////////////
 
 inline AIDA::ITuple* cast_Tuple(AIDA::ITupleEntry* aEntry) {
-  //FIXME : CINT can't handle dynamic_cast :
   //return (AIDA::ITuple*)aEntry->cast("AIDA::ITuple");
-
   return dynamic_cast<AIDA::ITuple*>(aEntry);
 }
 
@@ -162,6 +160,44 @@ inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
   return true;
 }
 
+#ifdef APP_USE_ARCHIVE //plotting done with inlib/exlib.
+#ifdef _WIN32
+#include <exlib/Windows/plotter>
+#define EXLIB_SCREEN_MGR Windows
+#else
+#include <exlib/X11/plotter>
+#define EXLIB_SCREEN_MGR X11
+#endif
+inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
+  
+  exlib::EXLIB_SCREEN_MGR::session smgr(std::cout);
+  if(!smgr.is_valid()) return false;
+
+  exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,1,0,0,700,500);
+  if(!plotter.window()) return false;
+
+  inlib::env_append_path("EXLIB_FONT_PATH",".");    
+
+  inlib::sg::plotter& sgp = plotter.plots().current_plotter();
+  sgp.bins_style(0).color = inlib::colorf_blue();
+
+  sgp.infos_style().font = inlib::sg::font_arialbd_ttf();
+  sgp.infos_style().front_face = inlib::sg::winding_cw;
+  sgp.infos_x_margin = 0.01f; //percent of plotter width.
+  sgp.infos_y_margin = 0.01f; //percent of plotter height.
+
+  //  inlib::sg::plottable* ptb = new exlib::SOPHYA::h1d2plot_cp(h);
+  //  sgp.add_plottable(ptb);
+
+  plotter.plots().view_border = false;
+
+  plotter.show();
+
+  smgr.steer();
+
+  return true;
+}
+#else
 inline void set_region_style(AIDA::IPlotterRegion& aRegion) {
   // Taken from G4SPL_analysis.cxx.
   //FIXME : have to do the below with AIDA styles.
@@ -270,7 +306,6 @@ inline void set_region_style(AIDA::IPlotterRegion& aRegion) {
   // Frame :
   aRegion.setParameter("plotter.innerFrameStyle.lineWidth","2");
 }
-
 inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA::IHistogram2D& aHisto2D) {
 
   AIDA::IPlotterFactory* plotterFactory = 
@@ -312,6 +347,7 @@ inline bool plot(AIDA::IAnalysisFactory& aAIDA,AIDA::IHistogram1D& aHisto1D,AIDA
 
   return true;
 }
+#endif
 
 #ifdef APP_USE_ARCHIVE
 #include <BatchLab/Core/Main.h>
@@ -338,13 +374,13 @@ int main(int aArgc,char** aArgv) {
 #endif
   if(!aida) {
     std::cout << "AIDA not found." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   AIDA::ITreeFactory* treeFactory = aida->createTreeFactory();
   if(!treeFactory) {
     std::cout << "can't get a TreeFactory." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   ////////////////////////////////////////////////////////
@@ -353,18 +389,18 @@ int main(int aArgc,char** aArgv) {
   AIDA::ITree* memory = treeFactory->create();
   if(!memory) {
     std::cout << "can't get memory tree." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
   AIDA::IHistogramFactory* histogramFactory = aida->createHistogramFactory(*memory);
   if(!histogramFactory) {
     std::cout << "can't get an histogram factory." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
   
   AIDA::IHistogram1D* hits_times = histogramFactory->createHistogram1D("hits_times","Hits times",100,0,3000);
   if(!hits_times) {
     std::cout << "can't create histogram : time." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   AIDA::IHistogram2D* digits_time_pe = 
@@ -372,7 +408,7 @@ int main(int aArgc,char** aArgv) {
 					100,0,3000,100,0,10);
   if(!digits_time_pe) {
     std::cout << "can't create histogram : digits_time_pe." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   delete histogramFactory;
@@ -386,20 +422,19 @@ int main(int aArgc,char** aArgv) {
   AIDA::ITree* tree = treeFactory->create("MEMPHYS."+fmt,fmt,true,false);
   if(!tree) {
     std::cout << "can't open data file." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   AIDA::IManagedObject* object = tree->find("Event");
   if(!object) {
     std::cout << "object Event not found in tree." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
-  //FIXME : CINT can't handle dynamic_cast :
   //AIDA::ITuple* tuple = (AIDA::ITuple*)object->cast("AIDA::ITuple");
   AIDA::ITuple* tuple = dynamic_cast<AIDA::ITuple*>(object);
   if(!tuple) {
     std::cout << "object not an AIDA::ITuple." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   int coln = tuple->columns();
@@ -447,10 +482,10 @@ int main(int aArgc,char** aArgv) {
     	      << std::endl;
     */
 
-    //if(!dump_tracks(*tuple)) return 1;
+    //if(!dump_tracks(*tuple)) return EXIT_FAILURE;
 
-    if(!process_hits(*tuple,*hits_times)) return 1;
-    if(!process_digits(*tuple,*digits_time_pe)) return 1;
+    if(!process_hits(*tuple,*hits_times)) return EXIT_FAILURE;
+    if(!process_digits(*tuple,*digits_time_pe)) return EXIT_FAILURE;
 
     irow++;
   }
@@ -462,5 +497,5 @@ int main(int aArgc,char** aArgv) {
 
   delete aida;
 
-  return 0;
+  return EXIT_SUCCESS;
 }
