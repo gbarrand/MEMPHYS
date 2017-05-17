@@ -16,10 +16,10 @@ use_archive=yes
 
 cppflags="${cppflags} -I.."
 
-use_geant4=yes
+use_exlib=yes
 use_inlib=yes
 
-. ${bush_home}/use/geant4_82
+. ${bush_home}/use/exlib
 . ${bush_home}/use/inlib
 
 enforce_archive=yes
@@ -61,15 +61,9 @@ fi
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 
-if [ ${build_visual} = "yes" ] ; then
-  libs="${build_path}/MEMPHYSCore.lib ${libs}"
-else
-  libs="-L${build_path} -lMEMPHYSCore ${libs}"
-fi
-
 objs=
-app_exe=MEMPHYS_batch
-app_src=../applications/MEMPHYS_batch.cxx
+app_exe=MEMPHYS_analysis
+app_src=../applications/MEMPHYS_analysis.cxx
 
 . ${bush_home}/application
 
