@@ -170,6 +170,9 @@ inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
 #endif
 #include <exlib/AIDA/h2plot>
 inline void set_region_style(inlib::sg::plotter& aRegion) {
+  
+  aRegion.right_axis_visible = true;
+  aRegion.top_axis_visible = true;
   /*
   // Taken from G4SPL_analysis.cxx.
   //FIXME : have to do the below with AIDA styles.
@@ -213,31 +216,32 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   */
   std::string font = "times.ttf";
   bool smoothing = true;
-  /*
+  
   // X axis :
-  aRegion.style().xAxisStyle().tickLabelStyle().setFont(font);
-  aRegion.style().xAxisStyle().tickLabelStyle().setParameter("smoothing",smoothing);
-  aRegion.style().xAxisStyle().labelStyle().setFont(font);
-  aRegion.style().xAxisStyle().labelStyle().setParameter("smoothing",smoothing);
-  aRegion.setParameter("plotter.xAxis.magStyle.fontName",font);
-  aRegion.setParameter("plotter.xAxis.magStyle.smoothing",smoothing);
-  aRegion.style().xAxisStyle().lineStyle().setThickness(2);
-  aRegion.setParameter("plotter.xAxis.ticksStyle.width","2");
-  aRegion.style().setParameter("topAxisVisible","TRUE");
+  aRegion.x_axis().labels_style().font = font;
+  aRegion.x_axis().labels_style().smoothing = smoothing;
+  aRegion.x_axis().title_style().font = font;
+  aRegion.x_axis().title_style().smoothing = smoothing;
+  aRegion.x_axis().mag_style().font = font;
+  aRegion.x_axis().mag_style().smoothing = smoothing;
+  aRegion.x_axis().line_style().width = 2;
+  aRegion.x_axis().ticks_style().width = 2;
+  aRegion.x_axis().label_height = 0.05f;
   // Set hplot tick modeling :
-  aRegion.style().xAxisStyle().setParameter("modeling","hplot");
-  aRegion.style().xAxisStyle().setParameter("divisions","505");
+  aRegion.x_axis().modeling = inlib::sg::tick_modeling_hplot();
+  aRegion.x_axis().divisions = 505;
 
   // Y axis :
-  //aRegion.style().setParameter("yAxisLogScale","TRUE");
-  aRegion.style().yAxisStyle().tickLabelStyle().setFont(font);
-  aRegion.style().yAxisStyle().tickLabelStyle().setParameter("smoothing",smoothing);
-  aRegion.style().yAxisStyle().labelStyle().setFont(font);
-  aRegion.style().yAxisStyle().labelStyle().setParameter("smoothing",smoothing);
-  aRegion.setParameter("plotter.yAxis.magStyle.fontName",font);
-  aRegion.setParameter("plotter.yAxis.magStyle.smoothing",smoothing);
-  aRegion.style().yAxisStyle().lineStyle().setThickness(2);
-  aRegion.setParameter("plotter.yAxis.ticksStyle.width","2");
+  aRegion.y_axis().labels_style().font = font;
+  aRegion.y_axis().labels_style().smoothing = smoothing;
+  aRegion.y_axis().title_style().font = font;
+  aRegion.y_axis().title_style().smoothing = smoothing;
+  aRegion.y_axis().mag_style().font = font;
+  aRegion.y_axis().mag_style().smoothing = smoothing;
+  aRegion.y_axis().line_style().width = 2;
+  aRegion.y_axis().ticks_style().width = 2;
+  aRegion.y_axis().label_height = 0.05f;
+  /*
 
   //gStyle->SetTitleSize(0.06,"XYZ"); //ROOT def 0.04. SoPlotter : 0.014
   aRegion.setParameter("plotter.xAxis.titleHeight","0.06");
@@ -248,14 +252,12 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   aRegion.setParameter("plotter.yAxis.titleToAxis",Lib::smanip::tostring(1.1*XLAB));
   aRegion.setParameter("plotter.xAxis.titleToAxis",Lib::smanip::tostring(1.1*YLAB));
   //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.
-  aRegion.setParameter("plotter.yAxis.labelHeight","0.05");
-  aRegion.setParameter("plotter.xAxis.labelHeight","0.05");
-
-  aRegion.style().setParameter("rightAxisVisible","TRUE");
-  // Set hplot tick modeling :
-  aRegion.style().yAxisStyle().setParameter("modeling","hplot");
-  aRegion.style().yAxisStyle().setParameter("divisions","505");
   */
+  aRegion.y_axis().label_height = 0.05f;
+  // Set hplot tick modeling :
+  aRegion.y_axis().modeling = inlib::sg::tick_modeling_hplot();
+  aRegion.y_axis().divisions = 505;
+  
   // title :
   aRegion.title_height = 0.04f;
   aRegion.title_to_axis = 0.02f;
