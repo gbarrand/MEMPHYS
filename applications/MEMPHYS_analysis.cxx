@@ -186,20 +186,17 @@ inline void set_region_style(inlib::sg::plotter& aRegion) {
   float YLAB = 0.8F/20.0F; //0.04 //y distance of x title to data frame.
   YLAB = 0.05F; //FIXME : cooking.
 
-  /*
   // To have a good matching with ROOT for text size :
   //double majic = 0.014/0.027;
-  double majic = 0.6;
-  std::string s = Lib::smanip::tostring(majic);
-  //FIXME : have methods for the below :
-  //aRegion.style().setParameter("textScale",s);
-  aRegion.style().xAxisStyle().setParameter("magStyle.scale",s);
-  aRegion.style().yAxisStyle().setParameter("magStyle.scale",s);
-  aRegion.style().xAxisStyle().tickLabelStyle().setParameter("scale",s);
-  aRegion.style().xAxisStyle().labelStyle().setParameter("scale",s);
-  aRegion.style().yAxisStyle().tickLabelStyle().setParameter("scale",s);
-  aRegion.style().yAxisStyle().labelStyle().setParameter("scale",s);
+  float majic = 0.6f;
+  aRegion.x_axis().mag_style().scale = majic;
+  aRegion.y_axis().mag_style().scale = majic;
+  aRegion.x_axis().labels_style().scale = majic;
+  aRegion.y_axis().labels_style().scale = majic;
+  aRegion.x_axis().title_style().scale = majic;
+  aRegion.y_axis().title_style().scale = majic;
 
+  /*
   // ROOT def margins 0.1. SoPlotter def 0.1.
   aRegion.layout().setParameter("rightMargin",0.1);
   aRegion.layout().setParameter("topMargin",0.1);
