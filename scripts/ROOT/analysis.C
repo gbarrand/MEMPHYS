@@ -134,9 +134,9 @@ void analysis()
     Event_hit->SetBranchAddress("tubeId",&tubeId_hit); //JEC 16/1/06   
     Event_hit->SetBranchAddress("totalPE",&totalPE);
 
-    Int_t tubeId;
+    Int_t tubeId_digit;
     Double_t digit_pe, digit_time;
-    Event_digit->SetBranchAddress("tubeId",&tubeId);
+    Event_digit->SetBranchAddress("tubeId",&tubeId_digit);
     Event_digit->SetBranchAddress("pe",&digit_pe);
     Event_digit->SetBranchAddress("time",&digit_time);
 
@@ -278,7 +278,7 @@ void analysis()
       
       if(dump)
       std::cout << "----> Digit{"<<l<<"}: " 
-		<< "tube[" << tubeId << "] = " 
+		<< "tube[" << tubeId_digit << "] = " 
 		<< " pe: " << digit_pe
 		<< " time: " << digit_time
 		<< std::endl;
