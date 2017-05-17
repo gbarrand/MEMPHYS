@@ -4,8 +4,6 @@
 #include <AIDA/AIDA.h>
 #include <AIDA/ITupleEntry.h>
 
-#include <inlib/system>
-
 #include <sstream>
 namespace Lib {
 namespace smanip {
@@ -16,7 +14,6 @@ inline std::string tostring(double a_value) {
 }
 }}
 
-// std :
 #include <iostream>
 
 //////////////////////////////////////////////////////////////////////////////
