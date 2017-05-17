@@ -105,11 +105,9 @@ inline bool dump_tracks(AIDA::ITuple& aParent) {
   return true;
 }
 
-inline bool process_hits_times(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto) {
-  AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(2);
-  if(!entry) return false;
-
-  AIDA::ITuple* tuple = cast_Tuple(entry);
+inline bool process_hits_times(AIDA::ITupleEntry* a_entry,AIDA::IHistogram1D& aHisto) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
   if(!tuple) return false;
 
   tuple->start();
@@ -122,11 +120,10 @@ inline bool process_hits_times(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto)
   return true;
 }
 
-inline bool process_hits(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto) {
-  AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(10);
-  if(!entry) return false;
+inline bool process_hits(AIDA::ITupleEntry* a_entry,AIDA::IHistogram1D& aHisto) {
+  if(!a_entry) return false;
 
-  AIDA::ITuple* tuple = cast_Tuple(entry);
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
   if(!tuple) return false;
 
   tuple->start();
@@ -135,16 +132,14 @@ inline bool process_hits(AIDA::ITuple& aParent,AIDA::IHistogram1D& aHisto) {
     //int tubeId = tuple->getInt(0);
     //int totalPE = tuple->getInt(1);
 
-    if(!process_hits_times(*tuple,aHisto)) return false;
+    if(!process_hits_times((AIDA::ITupleEntry*)tuple->getObject(2),aHisto)) return false;
   }
   return true;
 }
 
-inline bool process_digits(AIDA::ITuple& aParent,AIDA::IHistogram2D& aHisto) {
-  AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(13);
-  if(!entry) return false;
-
-  AIDA::ITuple* tuple = cast_Tuple(entry);
+inline bool process_digits(AIDA::ITupleEntry* a_entry,AIDA::IHistogram2D& aHisto) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
   if(!tuple) return false;
 
   tuple->start();
@@ -599,8 +594,9 @@ int main(int aArgc,char** aArgv) {
 
     //if(!dump_tracks(*tuple)) return EXIT_FAILURE;
 
-    if(!process_hits(*tuple,*hits_times)) return EXIT_FAILURE;
-    if(!process_digits(*tuple,*digits_time_pe)) return EXIT_FAILURE;
+    if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),*hits_times)) return EXIT_FAILURE;
+    
+    if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),*digits_time_pe)) return EXIT_FAILURE;
 
     irow++;
   }
