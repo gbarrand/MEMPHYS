@@ -281,7 +281,7 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
   exlib::EXLIB_SCREEN_MGR::session smgr(std::cout);
   if(!smgr.is_valid()) return false;
 
-  exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,2,0,0,700,500);
+  exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,2,0,0,800,600);
   if(!plotter.window()) return false;
   inlib::env_append_path("EXLIB_FONT_PATH",".");    
   plotter.plots().view_border = false;
@@ -292,6 +292,7 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "Entries";
     inlib::sg::plottable* ptb = new exlib::AIDA::h1d2plot(aHisto1D);
+    ptb->set_name(aHisto1D.title());
     sgp.add_plottable(ptb);
   }
 
@@ -301,6 +302,7 @@ inline bool plot(AIDA::IAnalysisFactory&,AIDA::IHistogram1D& aHisto1D,AIDA::IHis
     sgp.x_axis().title = "time";
     sgp.y_axis().title = "PE";
     inlib::sg::plottable* ptb = new exlib::AIDA::h2d2plot(aHisto2D);
+    ptb->set_name(aHisto2D.title());
     sgp.add_plottable(ptb);
   }
 
