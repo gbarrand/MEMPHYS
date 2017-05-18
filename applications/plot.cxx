@@ -44,6 +44,7 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
   a_plotter.inner_frame_style().line_width = 1;
   
   std::string font = "times.ttf";
+  //std::string font = "hershey";
   bool smoothing = true;
   
   // To have a good matching with ROOT for text size :
