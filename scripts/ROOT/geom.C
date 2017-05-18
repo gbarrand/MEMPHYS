@@ -1,4 +1,4 @@
-void MEMPHYS_geom() {
+void geom() {
 
   //see Analysis AIDA Tuple definition
 
