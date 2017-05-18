@@ -76,14 +76,16 @@ void geom() {
     tGeom_pmtInfos->GetEntry(i);
     
     if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
-      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
-                << std::endl;
-       ::exit(1);
+      //std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
+      //          << std::endl;
+      //::exit(1);
+      continue;
     }
     if ( tGeom_pmtInfos_pmtPosition->GetEntries() !=1 ) {
-      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
-                << std::endl;
-       ::exit(1);
+      //std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
+      //          << std::endl;
+      //::exit(1);
+      continue;
     }
   
     Double_t dx, dy, dz;
