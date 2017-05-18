@@ -4,18 +4,6 @@
 #include <AIDA/AIDA.h>
 #include <AIDA/ITupleEntry.h>
 
-/*
-#include <sstream>
-namespace Lib {
-namespace smanip {
-inline std::string tostring(double a_value) {
-  std::ostringstream strm;
-  strm << a_value;
-  return strm.str();
-}
-}}
-*/
-
 #include <inlib/histo/h1d>
 #include <inlib/histo/h2d>
 
