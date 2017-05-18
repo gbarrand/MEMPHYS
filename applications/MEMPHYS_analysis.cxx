@@ -1,4 +1,5 @@
-// AIDA analysis program over MEMPHYS.root file.
+
+// A MEMPHYS.root file is read with the AIDA API and plotting is done with inlib/exlib.
 
 #include "analysis.icc"
 
@@ -178,9 +179,8 @@ int main(int aArgc,char** aArgv) {
   inlib::histo::h2d digits_time_pe("Digits PE time",100,0,3000,100,0,10);
 
   ////////////////////////////////////////////////////////
-  /// Read data //////////////////////////////////////////
+  /// Read data : ////////////////////////////////////////
   ////////////////////////////////////////////////////////
-
 #ifdef APP_USE_ARCHIVE
   BatchLab::Main* session = new BatchLab::Main(std::vector<std::string>());
   Slash::Core::ILibraryManager* libraryManager = Slash::libraryManager(*session);
@@ -205,6 +205,9 @@ int main(int aArgc,char** aArgv) {
 
   delete aida;
 
+  ////////////////////////////////////////////////////////
+  /// plot histos : //////////////////////////////////////
+  ////////////////////////////////////////////////////////
   plot(hits_times,digits_time_pe);
 
   return EXIT_SUCCESS;
