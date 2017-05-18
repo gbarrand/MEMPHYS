@@ -98,7 +98,6 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
   a_plotter.title_style().color = inlib::colorf_black();
 
   // info box :
-  //a_plotter.infos_style().font = inlib::sg::font_arialbd_ttf();
   a_plotter.infos_style().modeling = inlib::sg::infos_modeling_ROOT();
   a_plotter.infos_style().font = font;
   a_plotter.infos_style().front_face = inlib::sg::winding_cw;
