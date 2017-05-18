@@ -1,4 +1,4 @@
-#include "MEMPHYS/PrimaryGeneratorMessenger.hh"
+#include "../MEMPHYS/PrimaryGeneratorMessenger.hh"
 
 //Geant4
 #include "G4UIdirectory.hh"
@@ -6,7 +6,7 @@
 #include "G4ios.hh"
 
 //MEMPHYS
-#include "MEMPHYS/PrimaryGeneratorAction.hh"
+#include "../MEMPHYS/PrimaryGeneratorAction.hh"
 
 
 MEMPHYS::PrimaryGeneratorMessenger::PrimaryGeneratorMessenger(MEMPHYS::PrimaryGeneratorAction* pointerToAction)

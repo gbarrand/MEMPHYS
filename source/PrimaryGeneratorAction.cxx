@@ -1,4 +1,4 @@
-#include "MEMPHYS/PrimaryGeneratorAction.hh"
+#include "../MEMPHYS/PrimaryGeneratorAction.hh"
 
 //Geant4
 #include "G4Event.hh"
@@ -17,8 +17,8 @@
 #include <string>
 
 //MEMPHYS
-#include "MEMPHYS/DetectorConstruction.hh"
-#include "MEMPHYS/PrimaryGeneratorMessenger.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/PrimaryGeneratorMessenger.hh"
 
 
 using std::vector;

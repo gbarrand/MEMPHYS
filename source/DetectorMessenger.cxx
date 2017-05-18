@@ -1,4 +1,4 @@
-#include "MEMPHYS/DetectorMessenger.hh"
+#include "../MEMPHYS/DetectorMessenger.hh"
 
 //Geant 4
 #include "G4UIdirectory.hh"
@@ -7,7 +7,7 @@
 #include "G4UIcmdWithAString.hh"
 
 //MEMPHYS
-#include "MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
 
 MEMPHYS::DetectorMessenger::DetectorMessenger(MEMPHYS::DetectorConstruction* MEMPHYSDet)
 : MEMPHYSDetector(MEMPHYSDet) { 

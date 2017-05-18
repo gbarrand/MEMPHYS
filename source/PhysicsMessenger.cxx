@@ -1,4 +1,4 @@
-#include "MEMPHYS/PhysicsMessenger.hh"
+#include "../MEMPHYS/PhysicsMessenger.hh"
 
 //Geant4
 #include "G4UIdirectory.hh"
@@ -7,7 +7,7 @@
 #include "G4UIcmdWithAString.hh"
 
 //MEMPHYS
-#include "MEMPHYS/PhysicsList.hh"
+#include "../MEMPHYS/PhysicsList.hh"
 
 
 MEMPHYS::PhysicsMessenger::PhysicsMessenger(MEMPHYS::PhysicsList* MEMPHYSPhys)

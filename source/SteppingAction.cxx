@@ -1,4 +1,4 @@
-#include "MEMPHYS/SteppingAction.hh"
+#include "../MEMPHYS/SteppingAction.hh"
 
 //GEANT 4
 #include "G4SteppingManager.hh"
@@ -16,11 +16,11 @@
 #include "G4OpBoundaryProcess.hh"
 
 //MEMPHYS
-#include "MEMPHYS/EventAction.hh"
-#include "MEMPHYS/TrackingAction.hh"
-#include "MEMPHYS/Trajectory.hh"
-#include "MEMPHYS/WCSD.hh"
-#include "MEMPHYS/TrackInformation.hh"
+#include "../MEMPHYS/EventAction.hh"
+#include "../MEMPHYS/TrackingAction.hh"
+#include "../MEMPHYS/Trajectory.hh"
+#include "../MEMPHYS/WCSD.hh"
+#include "../MEMPHYS/TrackInformation.hh"
 
 //JEC 14/12/05 code adapted from G4 extanded optical LXe ex. 
 

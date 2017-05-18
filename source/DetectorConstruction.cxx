@@ -1,4 +1,4 @@
-#include "MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
 
 // Geant 4
 #include "G4PhysicalConstants.hh"
@@ -55,10 +55,10 @@
 
 
 //MEMPHYS
-#include "MEMPHYS/WCSD.hh"
-#include "MEMPHYS/DetectorMessenger.hh"
-#include "MEMPHYS/Cast.hh"
-#include "MEMPHYS/Analysis.hh"
+#include "../MEMPHYS/WCSD.hh"
+#include "../MEMPHYS/DetectorMessenger.hh"
+#include "../MEMPHYS/Cast.hh"
+#include "../MEMPHYS/Analysis.hh"
 
 MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis) 
 :fAnalysis(aAnalysis)

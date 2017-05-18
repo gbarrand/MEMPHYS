@@ -1,4 +1,4 @@
-#include "MEMPHYS/WCSD.hh"
+#include "../MEMPHYS/WCSD.hh"
 
 //Geant4
 #include "G4ParticleTypes.hh"
@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 //MEMPHYS
-#include "MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
 
 MEMPHYS::WCSD::WCSD(G4String name, DetectorConstruction* aDetConstruction) :G4VSensitiveDetector(name),MEMPHYSDetConstruction(aDetConstruction) {
   

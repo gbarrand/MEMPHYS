@@ -1,4 +1,4 @@
-#include "MEMPHYS/WCDigi.hh"
+#include "../MEMPHYS/WCDigi.hh"
 
 //Geant4
 #include "G4AttDefStore.hh"

@@ -1,4 +1,4 @@
-#include "MEMPHYS/TrackingActionMessenger.hh"
+#include "../MEMPHYS/TrackingActionMessenger.hh"
 
 //Geant4
 #include "G4UIdirectory.hh"
@@ -7,7 +7,7 @@
 #include "G4UIcmdWithABool.hh"
 
 //MEMPHYS
-#include "MEMPHYS/TrackingAction.hh"
+#include "../MEMPHYS/TrackingAction.hh"
 
 
 MEMPHYS::TrackingActionMessenger::TrackingActionMessenger(MEMPHYS::TrackingAction* MEMPHYSTrackAction)

@@ -1,4 +1,4 @@
-#include "MEMPHYS/StackingAction.hh"
+#include "../MEMPHYS/StackingAction.hh"
 
 //Geant4
 #include "G4Track.hh"
@@ -11,7 +11,7 @@
 #include "G4ParticleTypes.hh"
 
 //MEMPHYS
-#include "MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
 
 
 

@@ -1,4 +1,4 @@
-#include "MEMPHYS/TrackingAction.hh"
+#include "../MEMPHYS/TrackingAction.hh"
 
 //Geant4
 #include "G4ParticleTypes.hh"
@@ -8,9 +8,9 @@
 #include "G4VProcess.hh"
 
 //MEMPHYS
-#include "MEMPHYS/Trajectory.hh"
-#include "MEMPHYS/TrackInformation.hh"
-#include "MEMPHYS/TrackingActionMessenger.hh" //JEC 24/1/06
+#include "../MEMPHYS/Trajectory.hh"
+#include "../MEMPHYS/TrackInformation.hh"
+#include "../MEMPHYS/TrackingActionMessenger.hh" //JEC 24/1/06
 
 MEMPHYS::TrackingAction::TrackingAction() {
   ProcessList.insert("Decay") ;

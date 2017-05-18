@@ -1,6 +1,6 @@
 // Physics List
 //this
-#include "MEMPHYS/PhysicsList.hh"
+#include "../MEMPHYS/PhysicsList.hh"
 
 //Geant 4
 #include "G4ParticleDefinition.hh"
@@ -24,7 +24,7 @@
 #include <iomanip>
 
 //MEMPHYS
-#include "MEMPHYS/PhysicsMessenger.hh"
+#include "../MEMPHYS/PhysicsMessenger.hh"
 
 
 MEMPHYS::PhysicsList::PhysicsList() 

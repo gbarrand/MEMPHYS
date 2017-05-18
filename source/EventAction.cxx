@@ -1,4 +1,4 @@
-#include "MEMPHYS/EventAction.hh"
+#include "../MEMPHYS/EventAction.hh"
 
 //Geant4
 #include "G4Event.hh"
@@ -29,15 +29,15 @@
 #include <AIDA/ITuple.h>
 
 //MEMPHYS
-#include "MEMPHYS/Cast.hh"
-#include "MEMPHYS/Analysis.hh"
-#include "MEMPHYS/Trajectory.hh"
-#include "MEMPHYS/RunAction.hh"
-#include "MEMPHYS/PrimaryGeneratorAction.hh"
-#include "MEMPHYS/WCHit.hh"
-#include "MEMPHYS/WCDigi.hh"
-#include "MEMPHYS/WCDigitizer.hh"
-#include "MEMPHYS/DetectorConstruction.hh"
+#include "../MEMPHYS/Cast.hh"
+#include "../MEMPHYS/Analysis.hh"
+#include "../MEMPHYS/Trajectory.hh"
+#include "../MEMPHYS/RunAction.hh"
+#include "../MEMPHYS/PrimaryGeneratorAction.hh"
+#include "../MEMPHYS/WCHit.hh"
+#include "../MEMPHYS/WCDigi.hh"
+#include "../MEMPHYS/WCDigitizer.hh"
+#include "../MEMPHYS/DetectorConstruction.hh"
 
 
 MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,

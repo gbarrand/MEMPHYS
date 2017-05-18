@@ -1,4 +1,4 @@
-#include "MEMPHYS/TrackInformation.hh"
+#include "../MEMPHYS/TrackInformation.hh"
 #include "G4ios.hh"
 
 //JEC 10/1/06 introduce MEMPHYS

@@ -1,4 +1,4 @@
-#include "MEMPHYS/RunActionMessenger.hh"
+#include "../MEMPHYS/RunActionMessenger.hh"
 
 //Geant4
 #include "G4UIdirectory.hh"
@@ -7,7 +7,7 @@
 #include "G4UIcmdWithAString.hh"
 
 //MEMPHYS
-#include "MEMPHYS/RunAction.hh"
+#include "../MEMPHYS/RunAction.hh"
 
 MEMPHYS::RunActionMessenger::RunActionMessenger(MEMPHYS::RunAction* MEMPHYSRA)
 :MEMPHYSRun(MEMPHYSRA) { 

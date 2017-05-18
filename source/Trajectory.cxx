@@ -1,4 +1,4 @@
-#include "MEMPHYS/Trajectory.hh"
+#include "../MEMPHYS/Trajectory.hh"
 
 //Geant4
 #include "G4TrajectoryPoint.hh"

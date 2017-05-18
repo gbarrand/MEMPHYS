@@ -1,4 +1,4 @@
-#include "MEMPHYS/WCDigitizer.hh"
+#include "../MEMPHYS/WCDigitizer.hh"
 
 //Geant4
 #include "G4EventManager.hh"
@@ -12,8 +12,8 @@
 #include <cstring>
 
 //MEMPHYS
-#include "MEMPHYS/WCDigi.hh"
-#include "MEMPHYS/WCHit.hh"
+#include "../MEMPHYS/WCDigi.hh"
+#include "../MEMPHYS/WCHit.hh"
 
 
 const G4double MEMPHYS::WCDigitizer::offset          = 950.0; //ns  

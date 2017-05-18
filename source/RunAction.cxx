@@ -1,4 +1,4 @@
-#include "MEMPHYS/RunAction.hh"
+#include "../MEMPHYS/RunAction.hh"
 
 //Geant4
 #include "G4Run.hh"
@@ -7,8 +7,8 @@
 #include "G4ios.hh"
 
 //MEMPHYS
-#include "MEMPHYS/Cast.hh"
-#include "MEMPHYS/RunActionMessenger.hh"
+#include "../MEMPHYS/Cast.hh"
+#include "../MEMPHYS/RunActionMessenger.hh"
 
 //JEC: Fixme: Analyse should implement the RootEvent/RootGeom part...
 
