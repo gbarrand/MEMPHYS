@@ -35,11 +35,9 @@ inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ)
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-inline bool dump_tracks(AIDA::ITuple& aParent) {
-  AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(8);
-  if(!entry) return false;
-
-  AIDA::ITuple* tuple = cast_Tuple(entry);
+inline bool dump_tracks(AIDA::ITupleEntry* a_entry) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
   if(!tuple) return false;
 
   //if(nPart!=tracks->rows()) {
@@ -226,7 +224,7 @@ inline bool read_data(AIDA::IAnalysisFactory& a_aida,inlib::histo::h1d& aHisto1D
     	      << std::endl;
     */
 
-    if(!dump_tracks(*tuple)) break;
+    if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
 
     if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
     if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
