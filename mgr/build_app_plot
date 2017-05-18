@@ -64,8 +64,8 @@ use_X11=yes
 #//////////////////////////////////////////////////////
 
 objs=
-app_exe=MEMPHYS_analysis
-app_src=../applications/MEMPHYS_analysis.cxx
+app_exe=MEMPHYS_plot
+app_src=../applications/plot.cxx
 
 . ${bush_home}/application
 

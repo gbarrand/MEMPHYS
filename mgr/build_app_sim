@@ -64,8 +64,8 @@ else
 fi
 
 objs=
-app_exe=MEMPHYS_batch
-app_src=../applications/batch.cxx
+app_exe=MEMPHYS_sim
+app_src=../applications/sim.cxx
 
 . ${bush_home}/application
 

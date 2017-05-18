@@ -19,8 +19,8 @@ use_cern_root=yes
 #//////////////////////////////////////////////////////
 
 objs=
-app_exe=MEMPHYS_analysis_ROOT
-app_src=../applications/MEMPHYS_analysis_ROOT.cxx
+app_exe=MEMPHYS_all_ROOT
+app_src=../applications/MEMPHYS_all_ROOT.cxx
 
 . ${bush_home}/application
 
