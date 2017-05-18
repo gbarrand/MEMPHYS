@@ -18,11 +18,9 @@ inline AIDA::ITuple* cast_Tuple(AIDA::ITupleEntry* aEntry) {
   return dynamic_cast<AIDA::ITuple*>(aEntry);
 }
 
-inline bool get_XYZ(AIDA::ITuple& aParent,int aColumn,double& aX,double& aY,double& aZ) {
-  AIDA::ITupleEntry* entry = (AIDA::ITupleEntry*)aParent.getObject(aColumn);
-  if(!entry) return false;
-
-  AIDA::ITuple* tuple = cast_Tuple(entry);
+inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
   if(!tuple) return false;
 
   tuple->start();
@@ -59,20 +57,20 @@ inline bool dump_tracks(AIDA::ITuple& aParent) {
     float timeStart = tuple->getFloat(2);
 
     double dx,dy,dz;
-    if(!get_XYZ(*tuple,3,dx,dy,dz)) return false;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(3),dx,dy,dz)) return false;
 
     double mass = tuple->getDouble(4);
     double pTot = tuple->getDouble(5);
     double ETot = tuple->getDouble(6);
 
     double px,py,pz;
-    if(!get_XYZ(*tuple,7,px,py,pz)) return false;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
 
     double start_x,start_y,start_z;
-    if(!get_XYZ(*tuple,8,start_x,start_y,start_z)) return false;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(8),start_x,start_y,start_z)) return false;
 
     double stop_x,stop_y,stop_z;
-    if(!get_XYZ(*tuple,9,stop_x,stop_y,stop_z)) return false;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(9),stop_x,stop_y,stop_z)) return false;
 
     int startVol = tuple->getInt(10);
     int stopVol = tuple->getInt(11);
@@ -228,7 +226,7 @@ inline bool read_data(AIDA::IAnalysisFactory& a_aida,inlib::histo::h1d& aHisto1D
     	      << std::endl;
     */
 
-    //if(!dump_tracks(*tuple)) break;
+    if(!dump_tracks(*tuple)) break;
 
     if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
     if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
