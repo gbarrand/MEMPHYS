@@ -1567,6 +1567,8 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
     cylLocation    = tubeCylLocation[tubeID];
     pmtInfos->fill(1, cylLocation);                                     //pmtLocation
     
+    //std::cout << "PMT [" << tubeID <<"]: loc. " <<  cylLocation << std::endl;
+    
     newTransform   = tubeIDMap[tubeID];
     pmtOrient = pmtInfos->getTuple( 2 );                   //pmtOrient
     // Get tube orientation vector
