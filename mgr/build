@@ -5,11 +5,9 @@ bush_home=../../../../softinex/bush
 . ${bush_home}/args
 
 ./build_lib_MEMPHYSCore   ${build_args}
-./build_app_MEMPHYS_batch ${build_args}
+./build_app_sim           ${build_args}
+./build_app_plot          ${build_args}
 
-#./build_plugin_MEMPHYS    ${build_args}
-#./build_app_MEMPHYS_analysis           ${build_args}
-#./build_app_MEMPHYS_analysis_ROOT      ${build_args}
-#./build_app_MEMPHYS_analysis_aida_ROOT ${build_args}
-#./build_app_MEMPHYS_session            ${build_args}
+#./build_app_plot_ROOT  ${build_args}
+#./build_app_all_ROOT   ${build_args}
 

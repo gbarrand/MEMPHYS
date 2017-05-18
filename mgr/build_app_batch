@@ -65,7 +65,7 @@ fi
 
 objs=
 app_exe=MEMPHYS_batch
-app_src=../applications/MEMPHYS_batch.cxx
+app_src=../applications/batch.cxx
 
 . ${bush_home}/application
 
