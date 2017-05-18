@@ -5,7 +5,6 @@ void geom() {
   TFile* f = new TFile("MEMPHYS.root");
   TTree* tGeom = (TTree*)f->Get("Geometry");
   
-  //declare Non sibTuple part
   Double_t wcRadius, wcLenght;
   tGeom->SetBranchAddress("wcRadius",&wcRadius);
   tGeom->SetBranchAddress("wcLenght",&wcLenght);
@@ -14,45 +13,31 @@ void geom() {
   Int_t nPMTs;
   tGeom->SetBranchAddress("nPMTs",&nPMTs);
   
-  //The wcOffset subTuple
   TTree* tGeom_wcOffset = new TTree();
   tGeom->SetBranchAddress("wcOffset",&tGeom_wcOffset);
   Double_t xWC,yWC,zWC;
 
-  //The pmtInfos subTuple
   TTree* tGeom_pmtInfos = new TTree();
   tGeom->SetBranchAddress("pmtInfos",&tGeom_pmtInfos);
-  Int_t pmtId, pmtLocation;
-
-  //The pmtOrient(ation) subsubTuple
-  TTree* tGeom_pmtInfos_pmtOrient = new TTree();
-  Double_t dx, dy, dz;
-
-  //The pmtPosition subsubTuple
-  TTree* tGeom_pmtInfos_pmtPosition = new TTree();
-  Double_t xPMT, yPMT, zPMT;
   
   //--------------------------------
   //Start to extract the tuple values
   //--------------------------------
-  Int_t nEntries = tGeom->GetEntries(); //should be 1
-  if ( nEntries !=1 ) {
-    std::cout << "Very suspect, #entries in Geom Tuple = " << nEntries 
+  if ( tGeom->GetEntries() !=1 ) {
+    std::cout << "Very suspect, #entries in Geom Tuple = " << tGeom->GetEntries()
 	      << std::endl;
+    ::exit(1);
   }
   tGeom->GetEntry(0); //suppose that there is only 1 entry
   
   std::cout << "WC Radius " << wcRadius << " Length " <<wcLenght << std::endl;  
-
   
-  nEntries = tGeom_wcOffset->GetEntries(); //should be 1 
-  if ( nEntries !=1 ) {
-    std::cout << "Very suspect, #entries in wcOffset Tuple = " << nEntries 
+  if ( tGeom_wcOffset->GetEntries() !=1 ) {
+    std::cout << "Very suspect, #entries in wcOffset Tuple = " << tGeom_wcOffset->GetEntries()
 	      << std::endl;
+    ::exit(1);
   }
   
-  // Have a brand new overwritten hit TTree ; we have
-  // to rebind its user variables :
   tGeom_wcOffset->SetBranchAddress("x",&xWC);
   tGeom_wcOffset->SetBranchAddress("y",&yWC);
   tGeom_wcOffset->SetBranchAddress("z",&zWC);
@@ -72,28 +57,46 @@ void geom() {
     std::cout << "Very suspect, #entries in pmtInfos Tuple = " <<  nPMTInfos
 	      << " <> #PMts = " << nPMTs
 	      << std::endl;
+    ::exit(1);
   }
-  // Have a brand new overwritten hit TTree ; we have
-  // to rebind its user variables :
+  
+  Int_t pmtId, pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
-  tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
-  tGeom_pmtInfos->SetBranchAddress("pmtPosition",&tGeom_pmtInfos_pmtPosition);
-
+  
+  //  exit(0);  
   for (Int_t i=0; i<nPMTInfos; ++i) {
+
+    TTree* tGeom_pmtInfos_pmtOrient = new TTree();
+    tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
+
+    TTree* tGeom_pmtInfos_pmtPosition = new TTree();
+    tGeom_pmtInfos->SetBranchAddress("pmtPosition",&tGeom_pmtInfos_pmtPosition);
+  
     tGeom_pmtInfos->GetEntry(i);
     
+    if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
+      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
+                << std::endl;
+       ::exit(1);
+    }
+    if ( tGeom_pmtInfos_pmtPosition->GetEntries() !=1 ) {
+      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
+                << std::endl;
+       ::exit(1);
+    }
+  
+    Double_t dx, dy, dz;
     tGeom_pmtInfos_pmtOrient->SetBranchAddress("dx",&dx);
     tGeom_pmtInfos_pmtOrient->SetBranchAddress("dy",&dy);
     tGeom_pmtInfos_pmtOrient->SetBranchAddress("dz",&dz);
     tGeom_pmtInfos_pmtOrient->GetEntry(0);
 
-
+    Double_t xPMT, yPMT, zPMT;
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("x",&xPMT);
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("y",&yPMT);
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("z",&zPMT);
     tGeom_pmtInfos_pmtPosition->GetEntry(0);
-    
 
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
 	      << " pos. (" 
@@ -105,5 +108,13 @@ void geom() {
 	      << dy << " , "
 	      << dz << ")"
 	      << std::endl;
+    
+    delete tGeom_pmtInfos_pmtOrient;
+    delete tGeom_pmtInfos_pmtPosition;
+    
   }//Loop on PMTs
+
+  delete tGeom_wcOffset;
+  delete tGeom_pmtInfos;
+  
 }
