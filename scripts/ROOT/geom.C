@@ -67,6 +67,9 @@ void geom() {
   //  exit(0);  
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
+    tGeom_pmtInfos->GetEntry(i);
+    std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
+    /*
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
 
@@ -115,7 +118,7 @@ void geom() {
     
     delete tGeom_pmtInfos_pmtOrient;
     delete tGeom_pmtInfos_pmtPosition;
-    
+    */    
   }//Loop on PMTs
 
   delete tGeom_wcOffset;
