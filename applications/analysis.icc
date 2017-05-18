@@ -104,7 +104,7 @@ inline bool process_hits_times(AIDA::ITupleEntry* a_entry,H1D& aHisto) {
 
     float time = tuple->getFloat(0);
 
-    aHisto.fill(time);
+    aHisto.Fill(time);
   }
   return true;
 }
@@ -141,7 +141,7 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
     double time = tuple->getDouble(2);
     //printf("debug : ++++ : %g %g\n",time,pe);
 
-    aHisto.fill(time,pe);
+    aHisto.Fill(time,pe);
   }
   return true;
 }
@@ -227,7 +227,7 @@ inline bool read_data(AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D
     	      << std::endl;
     */
 
-    if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
+    //if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
 
     if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
     if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
