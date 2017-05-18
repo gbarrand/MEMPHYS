@@ -1,0 +1,242 @@
+
+#include <AIDA/IAnalysisFactory.h>
+#include <AIDA/ITreeFactory.h>
+#include <AIDA/ITree.h>
+#include <AIDA/IManagedObject.h>
+#include <AIDA/ITuple.h>
+#include <AIDA/ITupleEntry.h>
+
+#include <iostream>
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+inline AIDA::ITuple* cast_Tuple(AIDA::ITupleEntry* aEntry) {
+  //return (AIDA::ITuple*)aEntry->cast("AIDA::ITuple");
+  return dynamic_cast<AIDA::ITuple*>(aEntry);
+}
+
+inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
+  if(!tuple) return false;
+
+  tuple->start();
+  if(!tuple->next()) return false;
+
+  aX = tuple->getDouble(0);
+  aY = tuple->getDouble(1);
+  aZ = tuple->getDouble(2);
+
+  return true;
+}
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+inline bool dump_tracks(AIDA::ITupleEntry* a_entry) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
+  if(!tuple) return false;
+
+  //if(nPart!=tracks->rows()) {
+  //  std::cout << "read: nPart / tracks mismatch " 
+  //              << nPart << " " << tracks->rows() << std::endl;
+  //  return false;
+  //}
+
+  tuple->start();
+  int irow = 0;
+  while(tuple->next()) {
+
+    int pId = tuple->getInt(0);
+    int parent = tuple->getInt(1);
+    float timeStart = tuple->getFloat(2);
+
+    double dx,dy,dz;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(3),dx,dy,dz)) return false;
+
+    double mass = tuple->getDouble(4);
+    double pTot = tuple->getDouble(5);
+    double ETot = tuple->getDouble(6);
+
+    double px,py,pz;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
+
+    double start_x,start_y,start_z;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(8),start_x,start_y,start_z)) return false;
+
+    double stop_x,stop_y,stop_z;
+    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(9),stop_x,stop_y,stop_z)) return false;
+
+    int startVol = tuple->getInt(10);
+    int stopVol = tuple->getInt(11);
+
+    std::cout << "----> Tk{"<<irow<<"}: " 
+              << " pId " << pId
+              << " parent " << parent
+              << " creation time " << timeStart 
+              << " Volumes " << startVol << " " << stopVol << "\n"
+              << " Start Pos (" << start_x 
+              << "," << start_y << "," << start_z << ")\n"
+              << " Stop Pos (" << stop_x 
+              << "," << stop_y << "," << stop_z << ")\n"
+              << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
+              << " m " << mass
+              << " ETot " << ETot
+              << " pTot " << pTot
+              << " px,py,pz " << px << " " << py << " " << pz << "\n"
+              << std::endl;
+
+    irow++;
+  }
+  return true;
+}
+
+template <class H1D>
+inline bool process_hits_times(AIDA::ITupleEntry* a_entry,H1D& aHisto) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
+  if(!tuple) return false;
+
+  tuple->start();
+  while(tuple->next()) {
+
+    float time = tuple->getFloat(0);
+
+    aHisto.fill(time);
+  }
+  return true;
+}
+
+template <class H1D>
+inline bool process_hits(AIDA::ITupleEntry* a_entry,H1D& aHisto) {
+  if(!a_entry) return false;
+
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
+  if(!tuple) return false;
+
+  tuple->start();
+  while(tuple->next()) {
+
+    //int tubeId = tuple->getInt(0);
+    //int totalPE = tuple->getInt(1);
+    
+    if(!process_hits_times((AIDA::ITupleEntry*)tuple->getObject(2),aHisto)) return false;
+  }
+  return true;
+}
+
+template <class H2D>
+inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
+  if(!a_entry) return false;
+  AIDA::ITuple* tuple = cast_Tuple(a_entry);
+  if(!tuple) return false;
+
+  tuple->start();
+  while(tuple->next()) {
+
+    //int tubeId = tuple->getInt(0);
+    double pe = tuple->getDouble(1);
+    double time = tuple->getDouble(2);
+    //printf("debug : ++++ : %g %g\n",time,pe);
+
+    aHisto.fill(time,pe);
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+template <class H1D,class H2D>
+inline bool read_data(AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D) {
+
+  AIDA::ITreeFactory* treeFactory = a_aida.createTreeFactory();
+  if(!treeFactory) {
+    std::cout << "can't get a TreeFactory." << std::endl;
+    return false;
+  }
+
+  AIDA::ITree* tree = treeFactory->create("MEMPHYS.root","root",true,false);
+  if(!tree) {
+    std::cout << "can't open data file." << std::endl;
+    delete treeFactory;
+    return false;
+  }
+
+  AIDA::IManagedObject* object = tree->find("Event");
+  if(!object) {
+    std::cout << "object Event not found in tree." << std::endl;
+    delete tree;
+    delete treeFactory;
+    return false;
+  }
+  
+  AIDA::ITuple* tuple = (AIDA::ITuple*)object->cast("AIDA::ITuple");
+  //AIDA::ITuple* tuple = dynamic_cast<AIDA::ITuple*>(object);
+  if(!tuple) {
+    std::cout << "object not an AIDA::ITuple." << std::endl;
+    delete tree;
+    delete treeFactory;
+    return false;
+  }
+
+  int coln = tuple->columns();
+  for(int index=0;index<coln;index++) {
+    std::cout << " icol = " << index
+              << ", label = " << tuple->columnName(index) 
+              << ", type = " << tuple->columnType(index) 
+              << std::endl;
+  }
+
+  std::cout << "rows = " << tuple->rows() << std::endl;
+
+  int nentries = tuple->rows();
+  //nentries = 100000;
+  //nentries = 40;
+  std::cout << "traitements de " << nentries << " entrees" << std::endl;
+
+  int irow = 0;
+  tuple->start();
+  while(tuple->next() && (irow<nentries)) {
+
+    /*
+    int eventId = tuple->getInt(0);
+    //int inputEvtId = tuple->getInt(1);
+    //int interMode = tuple->getInt(2);
+    //int vtxVol = tuple->getInt(3);
+
+    int nPart = tuple->getInt(5);
+    //int leptonIndex = tuple->getInt(6);
+    //int protonIndex = tuple->getInt(7);
+
+    int nHits = tuple->getInt(9);
+    int nDigits = tuple->getInt(11);
+    double sumPE = tuple->getDouble(12);
+
+    std::cout << ">>>>>>>>>>>>> Event{" << irow << "}: "
+    	      << " evt Id " << eventId 
+    //	      << " evt Input Id " << inputEvtId
+    //	      << "\n interaction mode " << interMode
+    //	      << " start in volume " << vtxVol << "\n"
+    	      <<" #tracks: " << nPart
+    	      <<" #hits: " << nHits
+              <<" #digits: " << nDigits
+              <<" sumPE " << sumPE
+    	      << std::endl;
+    */
+
+    if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
+
+    if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
+    if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
+
+    irow++;
+  }
+
+  delete tree;
+  delete treeFactory;
+
+  return true;
+}
