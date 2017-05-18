@@ -1,4 +1,4 @@
-void MEMPHYS_hit() {
+void hits() {
 
   TFile* f = new TFile("MEMPHYS.root");
   TTree* tEvent = (TTree*)f->Get("Event");
