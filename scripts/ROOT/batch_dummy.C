@@ -13,6 +13,8 @@
 //  G.Barrand
 //
 
+#include <cstdlib>
+
 void batch_dummy() {
 
   int compress = 1;
