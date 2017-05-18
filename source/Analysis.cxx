@@ -13,7 +13,6 @@
 
 MEMPHYS::Analysis::Analysis(
  AIDA::IAnalysisFactory* aAIDA
-,const std::string& aFormat
 ,bool aBatch)
 :fAIDA(aAIDA)
 ,fBatch(aBatch)
@@ -23,29 +22,9 @@ MEMPHYS::Analysis::Analysis(
 
   AIDA::ITreeFactory* treeFactory = fAIDA->createTreeFactory();
   if(fBatch) {
-    if( (aFormat=="root") || (aFormat==""))  {
-      fTree = treeFactory->create("MEMPHYS.root","root",false,true);
-    } else if(aFormat=="hdf5") {
-      //HDF5 tree :
-      std::string opts = "";
-      fTree = treeFactory->create("MEMPHYS.hdf5","hdf5",false,true,opts);
-    } else if(aFormat=="hbook") {
-      //HBOOK
-      //std::string opts = "";
-      //fTree = treeFactory->create("memphys.hbook","hbook",false,true,opts);
-    } else if(aFormat=="xml") {
-      // AIDA XML tree :
-      std::string opts = "compress=yes";
-      fTree = treeFactory->create("MEMPHYS.xml","xml",false,true,opts);
-    } else {
-      std::cout << "Analysis :"
-                << " file format \"" << aFormat << "\""
-                << " not handled."  
-                << std::endl;
-    }
+    fTree = treeFactory->create("MEMPHYS.root","root",false,true);
   } else {
-    // Memory tree :
-    fTree = treeFactory->create();
+    fTree = treeFactory->create(); // Memory tree :
   }
   delete treeFactory;
   if(!fTree) {

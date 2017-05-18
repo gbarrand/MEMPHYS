@@ -19,9 +19,7 @@ class Analysis  : public virtual IAppManager {
     virtual void closeTree();         
     virtual bool initialize() {return true;}
   public:        
-    Analysis(AIDA::IAnalysisFactory*,
-             const std::string& format = "",
-             bool aBatch = true);
+    Analysis(AIDA::IAnalysisFactory*,bool aBatch = true);
     virtual ~Analysis();
 
     //Get tree pointer
