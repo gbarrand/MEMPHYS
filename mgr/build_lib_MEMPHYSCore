@@ -11,8 +11,6 @@ build_shlib=no
 
 if [ ${build_compile} = "yes" ] ; then
 
-cppflags="${cppflags} -I.."
-
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cxx"
 cppfiles="${cppfiles} ../source/DetectorConstruction.cxx"
