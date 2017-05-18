@@ -10,8 +10,45 @@ bush_home=../../../../softinex/bush
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 
+enforce_archive=yes
+
+if [ ${enforce_archive} = yes ] ; then
+  # enforce to link the app with the CERN-ROOT format writer driver (BatchLab/Rio) :
+  cppflags="${cppflags} -DAPP_USE_ARCHIVE"    
+  osc_home=../../../../softinex/osc
+  cppflags="${cppflags} -I${osc_home}/Slash"
+  cppflags="${cppflags} -I${osc_home}/Lib/include"
+  cppflags="${cppflags} -I${osc_home}/amanip/src/cpp"
+  cppflags="${cppflags} -I${osc_home}/Minuit"
+  cppflags="${cppflags} -I${osc_home}/BatchLab"
+  libs="${libs} ${osc_home}/BatchLab/mgr/${build_dir}/libBatchLabAIDA.a"
+  libs="${libs} ${osc_home}/Minuit/mgr/${build_dir}/libosc_Minuit.a"
+  libs="${libs} ${osc_home}/BatchLab/mgr/${build_dir}/libBatchLabRio.a"
+  libs="${libs} ${osc_home}/Lib/mgr/${build_dir}/libLibUtils.a"
+  libs="${libs} ${osc_home}/Rio/mgr/${build_dir}/libosc_Rio.a"
+  use_exlib=yes
+  use_AIDA=yes
+  use_zlib=yes
+  use_dl=yes
+  . ${bush_home}/use/exlib
+  . ${bush_home}/use/AIDA
+  . ${bush_home}/use/zlib
+  . ${bush_home}/use/dl
+else
+  if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
+    osc_home=/nfs/users/gbarrand/usr/local
+  else
+    osc_home=/usr/local
+  fi
+  cppflags="${cppflags} -I${osc_home}/osc_batch/17.1/Resources/AIDA/src/cpp"
+  libs="${libs} -L${osc_home}/osc_batch/17.1/lib"
+  libs="${libs} -lBatchLabAIDA -lLibUtils -lourex_zlib -losc_Minuit -ldl"
+fi
+
+use_inlib=yes
 use_cern_root=yes
 
+. ${bush_home}/use/inlib
 . ${bush_home}/use/cern_root
 
 #//////////////////////////////////////////////////////
@@ -19,8 +56,8 @@ use_cern_root=yes
 #//////////////////////////////////////////////////////
 
 objs=
-app_exe=MEMPHYS_analysis_ROOT
-app_src=../applications/MEMPHYS_analysis_ROOT.cxx
+app_exe=MEMPHYS_analysis_aida_ROOT
+app_src=../applications/MEMPHYS_analysis_aida_ROOT.cxx
 
 . ${bush_home}/application
 
