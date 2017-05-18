@@ -28,11 +28,9 @@ if [ ${enforce_archive} = yes ] ; then
   libs="${libs} ${osc_home}/BatchLab/mgr/${build_dir}/libBatchLabRio.a"
   libs="${libs} ${osc_home}/Lib/mgr/${build_dir}/libLibUtils.a"
   libs="${libs} ${osc_home}/Rio/mgr/${build_dir}/libosc_Rio.a"
-  use_exlib=yes
   use_AIDA=yes
   use_zlib=yes
   use_dl=yes
-  . ${bush_home}/use/exlib
   . ${bush_home}/use/AIDA
   . ${bush_home}/use/zlib
   . ${bush_home}/use/dl
