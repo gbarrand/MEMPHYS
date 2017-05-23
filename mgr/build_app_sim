@@ -15,7 +15,7 @@ bush_home=../../../../softinex/bush
 use_geant4=yes
 use_inlib=yes
 
-. ${bush_home}/use/geant4_82
+. ./geant4_82
 . ${bush_home}/use/inlib
 
 enforce_archive=yes

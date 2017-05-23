@@ -41,7 +41,7 @@ use_AIDA=yes
 use_geant4=yes
 
 . ${bush_home}/use/AIDA
-. ${bush_home}/use/geant4_82
+. ./geant4_82
 
 #////////////////////////////////////
 #////////////////////////////////////
