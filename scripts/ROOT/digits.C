@@ -1,5 +1,7 @@
 void digits() {
 
+  bool dump = false;
+  
   TCanvas* c1 = new TCanvas("c1","MEMPHYS Digit",100,100,600,600);
   c1->SetGridx();
   c1->SetGridy();
@@ -54,12 +56,14 @@ void digits() {
     //--------
     for (Int_t l=0; l<nTubeDigits; ++l) {
       Event_digit->GetEntry(l);
+
+      if(dump)
+      std::cout << "----> Digit{"<<l<<"}: " 
+                << "tube[" << tubeId << "] = " 
+                << " pe: " << digit_pe
+                << " time: " << digit_time
+                << std::endl;
       
-       std::cout << "----> Digit{"<<l<<"}: " 
- 		<< "tube[" << tubeId << "] = " 
- 		<< " pe: " << digit_pe
- 		<< " time: " << digit_time
- 		<< std::endl;
       htime->Fill(digit_time);
       
     }//Loop on Digits
