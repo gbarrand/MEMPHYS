@@ -11,6 +11,8 @@ build_shlib=no
 
 if [ ${build_compile} = "yes" ] ; then
 
+#cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+    
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cxx"
 cppfiles="${cppfiles} ../source/DetectorConstruction.cxx"
@@ -37,10 +39,11 @@ cppfiles="${cppfiles} ../source/WCSD.cxx"
 #////////////////////////////////////
 #////////////////////////////////////
 use_AIDA=yes
-
+use_inlib=yes
 use_geant4=yes
 
 . ${bush_home}/use/AIDA
+. ${bush_home}/use/inlib
 . ./geant4_82
 
 #////////////////////////////////////

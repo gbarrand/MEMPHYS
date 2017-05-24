@@ -18,6 +18,8 @@ use_inlib=yes
 . ./geant4_82
 . ${bush_home}/use/inlib
 
+#cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+
 enforce_archive=yes
 
 if [ ${enforce_archive} = yes ] ; then
