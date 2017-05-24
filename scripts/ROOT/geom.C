@@ -64,7 +64,6 @@ void geom() {
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
   
-  //  exit(0);  
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
     tGeom_pmtInfos->GetEntry(i);
@@ -82,14 +81,12 @@ void geom() {
       std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
                 << std::endl;
       ::exit(1);
-      std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
       continue;
     }
     if ( tGeom_pmtInfos_pmtPosition->GetEntries() !=1 ) {
       std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
                 << std::endl;
       ::exit(1);
-      std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
       continue;
     }
   
