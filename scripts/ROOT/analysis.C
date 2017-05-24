@@ -235,8 +235,7 @@ void analysis()
     //--------
     // The Hits
     //--------
-    TBranch* br_Hit_pe = Event_hit->GetBranch("pe");
-    br_Hit_pe->SetFile(file);
+    Event_hit->GetBranch("pe")->SetFile(file);
 
     for (Int_t khit=0; khit<nTubeHits; ++khit) {
       
@@ -291,7 +290,7 @@ void analysis()
     delete Event_vtxPos;
     delete Event_track;
     
-    br_Hit_pe->SetFile((TFile*)0);
+    Event_hit->GetBranch("pe")->SetFile((TFile*)0);
     delete Event_hit;
 
     delete Event_digit;
