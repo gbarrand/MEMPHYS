@@ -51,8 +51,7 @@ void hits() {
     //--------
     // The Hits
     //--------
-    TBranch* br_Hit_pe = Event_hit->GetBranch("pe");
-    br_Hit_pe->SetFile(file);
+    Event_hit->GetBranch("pe")->SetFile(file);
 
     for (Int_t k=0; k<nTubeHits; ++k) {
       
@@ -81,7 +80,7 @@ void hits() {
       delete Hit_pe;
     }//Loop on Hits
     
-    br_Hit_pe->SetFile((TFile*)0);
+    Event_hit->GetBranch("pe")->SetFile((TFile*)0);
     delete Event_hit;
   }//loop on event
 
