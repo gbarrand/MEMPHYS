@@ -53,8 +53,8 @@ void analysis()
   ////////////////////////////////////////////////////////
   /// Read data and fill histos //////////////////////////
   ////////////////////////////////////////////////////////
-  TFile* f = new TFile("MEMPHYS.root");
-  TTree* tEvent = (TTree*)f->Get("Event");
+  TFile* file = new TFile("MEMPHYS.root");
+  TTree* tEvent = (TTree*)file->Get("Event");
 
  {TObjArray* brs = tEvent->GetListOfBranches();
   for(int i=0;i<brs->GetEntries();i++) {
@@ -235,7 +235,8 @@ void analysis()
     //--------
     // The Hits
     //--------
-
+    TBranch* br_Hit_pe = Event_hit->GetBranch("pe");
+    br_Hit_pe->SetFile(file);
 
     for (Int_t khit=0; khit<nTubeHits; ++khit) {
       
@@ -289,7 +290,10 @@ void analysis()
 
     delete Event_vtxPos;
     delete Event_track;
+    
+    br_Hit_pe->SetFile((TFile*)0);
     delete Event_hit;
+
     delete Event_digit;
 
   }//loop on event
