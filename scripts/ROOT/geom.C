@@ -2,6 +2,9 @@ void geom() {
 
   //see Analysis AIDA Tuple definition
 
+  bool dump = false;
+  //dump = true;
+  
   TFile* file = new TFile("MEMPHYS.root");
   TTree* tGeom = (TTree*)file->Get("Geometry");
   
@@ -30,7 +33,7 @@ void geom() {
   }
   tGeom->GetEntry(0); //suppose that there is only 1 entry
   
-  std::cout << "WC Radius " << wcRadius << " Length " <<wcLenght << std::endl;  
+  if(dump) std::cout << "WC Radius " << wcRadius << " Length " <<wcLenght << std::endl;  
   
   if ( tGeom_wcOffset->GetEntries() !=1 ) {
     std::cout << "Very suspect, #entries in wcOffset Tuple = " << tGeom_wcOffset->GetEntries()
@@ -43,15 +46,15 @@ void geom() {
   tGeom_wcOffset->SetBranchAddress("z",&zWC);
   tGeom_wcOffset->GetEntry(0);
 
+  if(dump)
   std::cout << "WC center: (" 
 	    << xWC << " , "
 	    << yWC << " , "
-	    << zWC << ")" << std::endl;
-
-  std::cout << "#PMTs " << nPMTs 
+	    << zWC << ")" << std::endl
+            << "#PMTs " << nPMTs 
 	    << " of radius " << pmtRadius
 	    << std::endl;
-
+  
   Int_t nPMTInfos = tGeom_pmtInfos->GetEntries();
   if ( nPMTInfos != nPMTs ) {
     std::cout << "Very suspect, #entries in pmtInfos Tuple = " <<  nPMTInfos
@@ -71,7 +74,7 @@ void geom() {
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
-    std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
+    if(dump) std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
     
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
@@ -110,6 +113,7 @@ void geom() {
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("z",&zPMT);
     tGeom_pmtInfos_pmtPosition->GetEntry(0);
 
+    if(dump)
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
 	      << " pos. (" 
 	      << xPMT << " , "
