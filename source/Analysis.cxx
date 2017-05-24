@@ -14,9 +14,17 @@
 MEMPHYS::Analysis::Analysis(
  AIDA::IAnalysisFactory* aAIDA
 ,bool aBatch)
-:fAIDA(aAIDA)
-,fBatch(aBatch)
+:fBatch(aBatch)
+,fAIDA(aAIDA)
 ,fTree(0)
+#ifdef APP_USE_INLIB_WROOT
+,m_file(std::cout,"MEMPHYS_inlib.root")
+,m_geom_tree(0)
+,m_leaf_wcRadius(0)
+,m_leaf_wcLength(0)
+,m_leaf_pmtRadius(0)
+,m_leaf_nPMTs(0)
+#endif
 {
   if(!fAIDA) return;
 
@@ -32,7 +40,7 @@ MEMPHYS::Analysis::Analysis(
               << " tree not created." << std::endl;
     return;
   }
-
+  
   //Booking Event Tuple
   AIDA::ITupleFactory* tf = fAIDA->createTupleFactory(*fTree);
   if(fBatch) { //GB 8/7/06 : Book tuple and histos only if batch.
@@ -74,6 +82,14 @@ MEMPHYS::Analysis::Analysis(
 
   delete tf;
 
+#ifdef APP_USE_INLIB_WROOT
+  m_geom_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
+  m_leaf_wcRadius = m_geom_tree->create_leaf<double>("wcRadius");
+  m_leaf_wcLength = m_geom_tree->create_leaf<double>("wcLength");
+  m_leaf_pmtRadius = m_geom_tree->create_leaf<double>("pmtRadius");
+  m_leaf_nPMTs = m_geom_tree->create_leaf<int>("nPMTs");
+#endif
+  
 }//Ctor
 
 //----------------------------------------------------------------------
@@ -85,6 +101,13 @@ MEMPHYS::Analysis::~Analysis(){
     delete fTree;
     fTree = 0;
   }
+#ifdef APP_USE_INLIB_WROOT
+ {unsigned int n;
+  if(!m_file.write(n)) {
+    std::cout << "file write failed." << std::endl;
+  }}  
+  m_file.close();
+#endif
 }//Dtor
 
 //----------------------------------------------------------------------
