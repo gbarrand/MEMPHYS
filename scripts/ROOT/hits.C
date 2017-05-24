@@ -81,7 +81,8 @@ void hits() {
       delete Hit_pe;
     }//Loop on Hits
     
-    //delete Event_hit;
+    br_Hit_pe->SetFile((TFile*)0);
+    delete Event_hit;
   }//loop on event
 
   TCanvas* plotter = new TCanvas("canvas","",10,10,800,600);
