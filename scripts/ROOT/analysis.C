@@ -47,8 +47,8 @@ void analysis()
     new TH2D("digits_pe_time","Digits PE time",100,0,3000,100,0,10);
 
   int hit_count = 0;
-  bool dump = true;
-  //bool dump = false;
+  bool dump = false;
+  //dump = true;
 
   ////////////////////////////////////////////////////////
   /// Read data and fill histos //////////////////////////
