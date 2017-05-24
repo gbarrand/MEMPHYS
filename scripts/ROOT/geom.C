@@ -69,7 +69,7 @@ void geom() {
 
     tGeom_pmtInfos->GetEntry(i);
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
-    /*
+    
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
 
@@ -79,16 +79,16 @@ void geom() {
     tGeom_pmtInfos->GetEntry(i);
     
     if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
-      //std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
-      //          << std::endl;
-      //::exit(1);
+      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
+                << std::endl;
+      ::exit(1);
       std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
       continue;
     }
     if ( tGeom_pmtInfos_pmtPosition->GetEntries() !=1 ) {
-      //std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
-      //          << std::endl;
-      //::exit(1);
+      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
+                << std::endl;
+      ::exit(1);
       std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
       continue;
     }
@@ -118,7 +118,7 @@ void geom() {
     
     delete tGeom_pmtInfos_pmtOrient;
     delete tGeom_pmtInfos_pmtPosition;
-    */    
+    
   }//Loop on PMTs
 
   delete tGeom_wcOffset;
