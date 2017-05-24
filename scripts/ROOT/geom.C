@@ -64,14 +64,10 @@ void geom() {
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
 
-  TBranch* br_pmtId = tGeom_pmtInfos->GetBranch("pmtId");
-  br_pmtId->SetFile(file);
-  TBranch* br_pmtLocation = tGeom_pmtInfos->GetBranch("pmtLocation");
-  br_pmtLocation->SetFile(file);
-  TBranch* br_pmtOrient = tGeom_pmtInfos->GetBranch("pmtOrient");
-  br_pmtOrient->SetFile(file);
-  TBranch* br_pmtPosition = tGeom_pmtInfos->GetBranch("pmtPosition");
-  br_pmtPosition->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile(file);
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
@@ -130,10 +126,10 @@ void geom() {
     
   }//Loop on PMTs
 
-  br_pmtId->SetFile((TFile*)0);
-  br_pmtLocation->SetFile((TFile*)0);
-  br_pmtOrient->SetFile((TFile*)0);
-  br_pmtPosition->SetFile((TFile*)0);
+  tGeom_pmtInfos->GetBranch("pmtId")->SetFile((TFile*)0);
+  tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile((TFile*)0);
+  tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile((TFile*)0);
+  tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile((TFile*)0);
   
   delete tGeom_wcOffset;
   delete tGeom_pmtInfos;
