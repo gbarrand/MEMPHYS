@@ -1,7 +1,7 @@
 void hits() {
 
   bool dump = false;
-  dump = true;
+  //dump = true;
   
   TH1D* hits_times = new TH1D("hits_times","Hits times",100,0,3000);
   
