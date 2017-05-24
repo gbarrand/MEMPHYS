@@ -2,8 +2,8 @@ void geom() {
 
   //see Analysis AIDA Tuple definition
 
-  TFile* f = new TFile("MEMPHYS.root");
-  TTree* tGeom = (TTree*)f->Get("Geometry");
+  TFile* file = new TFile("MEMPHYS.root");
+  TTree* tGeom = (TTree*)file->Get("Geometry");
   
   Double_t wcRadius, wcLenght;
   tGeom->SetBranchAddress("wcRadius",&wcRadius);
@@ -63,10 +63,18 @@ void geom() {
   Int_t pmtId, pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
+
+  TBranch* br_pmtId = tGeom_pmtInfos->GetBranch("pmtId");
+  br_pmtId->SetFile(file);
+  TBranch* br_pmtLocation = tGeom_pmtInfos->GetBranch("pmtLocation");
+  br_pmtLocation->SetFile(file);
+  TBranch* br_pmtOrient = tGeom_pmtInfos->GetBranch("pmtOrient");
+  br_pmtOrient->SetFile(file);
+  TBranch* br_pmtPosition = tGeom_pmtInfos->GetBranch("pmtPosition");
+  br_pmtPosition->SetFile(file);
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
-    tGeom_pmtInfos->GetEntry(i);
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
     
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
@@ -75,7 +83,11 @@ void geom() {
     TTree* tGeom_pmtInfos_pmtPosition = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtPosition",&tGeom_pmtInfos_pmtPosition);
   
-    tGeom_pmtInfos->GetEntry(i);
+    int nbytes = tGeom_pmtInfos->GetEntry(i);
+    if(nbytes<0) {
+      std::cout << "problem with IO. " << std::endl;
+      ::exit(1);
+    }
     
     if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
       std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
@@ -118,6 +130,11 @@ void geom() {
     
   }//Loop on PMTs
 
+  br_pmtId->SetFile((TFile*)0);
+  br_pmtLocation->SetFile((TFile*)0);
+  br_pmtOrient->SetFile((TFile*)0);
+  br_pmtPosition->SetFile((TFile*)0);
+  
   delete tGeom_wcOffset;
   delete tGeom_pmtInfos;
   
