@@ -56,8 +56,6 @@ void hits() {
     Event_hit->SetBranchAddress("totalPE",&totalPE);
     Event_hit->SetBranchAddress("pe",&Hit_pe);
     
-    //exit(0);
-    
     //--------
     // The Hits
     //--------
@@ -65,7 +63,7 @@ void hits() {
       
       Event_hit->GetEntry(k);
 
-      Hit_pe->SetBranchAddress("time",&hit_time);
+      if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(0);	
 	
       //JEC 16/1/06 add the tubeId_hit info
       //std::cout << "----> Hit{"<<k<<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
