@@ -1,5 +1,7 @@
 void hits() {
 
+  bool dump = false;
+  
   TFile* f = new TFile("MEMPHYS.root");
   TTree* tEvent = (TTree*)f->Get("Event");
 
@@ -32,16 +34,22 @@ void hits() {
   for (Int_t i=0; i<nEvent; ++i){
     tEvent->GetEntry(i);
 
+    Int_t nTubeHits = Event_hit->GetEntries();
+    if(nHits!=nTubeHits) {
+      std::cout << ">>>>>>>>>>>>> Event{" << i << "}: "
+                << " number of hits mismatch. "
+                <<" nHits: " << nHits << ", nTubeHits: " << nTubeHits
+                << std::endl;      
+    }
+    
+    if(dump) {
     std::cout << ">>>>>>>>>>>>> Event{" << i << "}: "
 	      << " evt Id " << eventId 
 	      << " evt Input Id " << inputEvtId
 	      <<" #hits: " << nHits
 	      << std::endl;
-
-    Int_t nTubeHits = Event_hit->GetEntries();
-    std::cout << " Hits = " << nTubeHits
-	      << std::endl;
-
+    std::cout << " Hits = " << nTubeHits << std::endl;
+    }
 
     // Have a brand new overwritten hit TTree ; we have
     // to rebind its user variables :
@@ -50,15 +58,17 @@ void hits() {
     Event_hit->SetBranchAddress("pe",&Hit_pe);
     
 
+    //exit(0);
+    
     //--------
     // The Hits
     //--------
-
     for (Int_t k=0; k<nTubeHits; ++k) {
       
       Event_hit->GetEntry(k);
 
       Hit_pe->SetBranchAddress("time",&hit_time);
+	
       //JEC 16/1/06 add the tubeId_hit info
       //std::cout << "----> Hit{"<<k<<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
       for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
