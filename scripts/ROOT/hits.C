@@ -1,6 +1,7 @@
 void hits() {
 
   bool dump = false;
+  dump = true;
   
   TFile* f = new TFile("MEMPHYS.root");
   TTree* tEvent = (TTree*)f->Get("Event");
@@ -42,14 +43,12 @@ void hits() {
                 << std::endl;      
     }
     
-    if(dump) {
+    if(dump)
     std::cout << ">>>>>>>>>>>>> Event{" << i << "}: "
 	      << " evt Id " << eventId 
 	      << " evt Input Id " << inputEvtId
 	      <<" #hits: " << nHits
 	      << std::endl;
-    std::cout << " Hits = " << nTubeHits << std::endl;
-    }
 
     // Have a brand new overwritten hit TTree ; we have
     // to rebind its user variables :
@@ -57,7 +56,6 @@ void hits() {
     Event_hit->SetBranchAddress("totalPE",&totalPE);
     Event_hit->SetBranchAddress("pe",&Hit_pe);
     
-
     //exit(0);
     
     //--------
