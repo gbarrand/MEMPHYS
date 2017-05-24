@@ -1,7 +1,7 @@
 void hits() {
 
   bool dump = false;
-  dump = true;
+  //dump = true;
   
   TFile* f = new TFile("MEMPHYS.root");
   TTree* tEvent = (TTree*)f->Get("Event");
