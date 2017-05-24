@@ -1592,6 +1592,17 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   //Save the geom
   geomTuple->addRow();
 
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_leaf_wcRadius->fill(WCCylInfo[0]);
+  fAnalysis.m_leaf_wcLength->fill(WCCylInfo[1]);
+  fAnalysis.m_leaf_pmtRadius->fill(WCPMTSize);
+  fAnalysis.m_leaf_nPMTs->fill(totalNumPMTs);
+  inlib::uint32 nbytes;
+  if(!fAnalysis.m_geom_tree->fill(nbytes)) {
+    std::cout << "geom tree fill failed." << std::endl;
+  }
+#endif
+  
   G4cout << "DetectorConstruction::FillGeometryTuple : end" << G4endl;
 
 }//FillGeometryTuple
