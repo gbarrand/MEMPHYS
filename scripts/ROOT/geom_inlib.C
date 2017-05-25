@@ -17,11 +17,10 @@ void geom_inlib() {
   Int_t nPMTs;
   tGeom->SetBranchAddress("nPMTs",&nPMTs);
   
-  /*
   TTree* tGeom_wcOffset = new TTree();
   tGeom->SetBranchAddress("wcOffset",&tGeom_wcOffset);
-  Double_t xWC,yWC,zWC;
 
+  /*
   TTree* tGeom_pmtInfos = new TTree();
   tGeom->SetBranchAddress("pmtInfos",&tGeom_pmtInfos);
   */  
@@ -37,13 +36,13 @@ void geom_inlib() {
   
   if(dump) std::cout << "WC Radius " << wcRadius << " Length " <<wcLength << std::endl;  
   
-  /*
   if ( tGeom_wcOffset->GetEntries() !=1 ) {
     std::cout << "Very suspect, #entries in wcOffset Tuple = " << tGeom_wcOffset->GetEntries()
 	      << std::endl;
     ::exit(1);
   }
   
+  Double_t xWC,yWC,zWC;
   tGeom_wcOffset->SetBranchAddress("x",&xWC);
   tGeom_wcOffset->SetBranchAddress("y",&yWC);
   tGeom_wcOffset->SetBranchAddress("z",&zWC);
@@ -56,6 +55,7 @@ void geom_inlib() {
             << "#PMTs " << nPMTs 
 	    << " of radius " << pmtRadius
 	    << std::endl;
+  /*
 
   Int_t nPMTInfos = tGeom_pmtInfos->GetEntries();
   if ( nPMTInfos != nPMTs ) {
