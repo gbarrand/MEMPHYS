@@ -3,7 +3,7 @@ void geom_inlib() {
   //see Analysis AIDA Tuple definition
 
   bool dump = false;
-  dump = true;
+  //dump = true;
   
   TFile* file = new TFile("MEMPHYS_inlib.root");
   TTree* tGeom = (TTree*)file->Get("Geometry");
