@@ -22,6 +22,11 @@ MEMPHYS::Analysis::Analysis(
 ,m_geom_tree(0)
 ,m_leaf_wcRadius(0)
 ,m_leaf_wcLength(0)
+  ,m_wcOffset_tree(0)
+  ,m_wcOffset_leaf_x(0)
+  ,m_wcOffset_leaf_y(0)
+  ,m_wcOffset_leaf_z(0)
+,m_leaf_wcOffset(0)
 ,m_leaf_pmtRadius(0)
 ,m_leaf_nPMTs(0)
 #endif
@@ -86,6 +91,16 @@ MEMPHYS::Analysis::Analysis(
   m_geom_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
   m_leaf_wcRadius = m_geom_tree->create_leaf<double>("wcRadius");
   m_leaf_wcLength = m_geom_tree->create_leaf<double>("wcLength");
+  
+    // Do not let the file directory manage a sub tree, else its going to be saved in the file.
+    // Only the main geom tree should appear in the file.
+    m_wcOffset_tree = new inlib::wroot::tree(m_file.dir(),"wcOffset","wcOffset",false); //false = not managed.
+    m_wcOffset_leaf_x = m_wcOffset_tree->create_leaf<double>("x");
+    m_wcOffset_leaf_y = m_wcOffset_tree->create_leaf<double>("y");
+    m_wcOffset_leaf_z = m_wcOffset_tree->create_leaf<double>("z");
+  
+  m_leaf_wcOffset = m_geom_tree->create_leaf("wcOffset",*m_wcOffset_tree);
+  
   m_leaf_pmtRadius = m_geom_tree->create_leaf<double>("pmtRadius");
   m_leaf_nPMTs = m_geom_tree->create_leaf<int>("nPMTs");
 #endif
@@ -106,7 +121,8 @@ MEMPHYS::Analysis::~Analysis(){
   if(!m_file.write(n)) {
     std::cout << "file write failed." << std::endl;
   }}  
-  m_file.close();
+  m_file.close(); // m_file dstor will delete m_geom_tree.
+  delete m_wcOffset_tree;
 #endif
 }//Dtor
 
