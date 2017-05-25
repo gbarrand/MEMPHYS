@@ -20,10 +20,9 @@ void geom_inlib() {
   TTree* tGeom_wcOffset = new TTree();
   tGeom->SetBranchAddress("wcOffset",&tGeom_wcOffset);
 
-  /*
   TTree* tGeom_pmtInfos = new TTree();
   tGeom->SetBranchAddress("pmtInfos",&tGeom_pmtInfos);
-  */  
+  
   //--------------------------------
   //Start to extract the tuple values
   //--------------------------------
@@ -55,7 +54,6 @@ void geom_inlib() {
             << "#PMTs " << nPMTs 
 	    << " of radius " << pmtRadius
 	    << std::endl;
-  /*
 
   Int_t nPMTInfos = tGeom_pmtInfos->GetEntries();
   if ( nPMTInfos != nPMTs ) {
@@ -65,31 +63,33 @@ void geom_inlib() {
     ::exit(1);
   }
   
-  Int_t pmtId, pmtLocation;
+  Int_t pmtId;
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
+  Int_t pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
   tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile(file);
+  /*
   tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile(file);
   tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile(file);
+  */
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
-    if(dump) std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
-    
+    /*    
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
 
     TTree* tGeom_pmtInfos_pmtPosition = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtPosition",&tGeom_pmtInfos_pmtPosition);
-  
+    */
     int nbytes = tGeom_pmtInfos->GetEntry(i);
     if(nbytes<0) {
       std::cout << "problem with IO. " << std::endl;
       ::exit(1);
     }
-    
+    /*
     if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
       std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
                 << std::endl;
@@ -102,7 +102,7 @@ void geom_inlib() {
       ::exit(1);
       //continue;
     }
-  
+
     Double_t dx, dy, dz;
     tGeom_pmtInfos_pmtOrient->SetBranchAddress("dx",&dx);
     tGeom_pmtInfos_pmtOrient->SetBranchAddress("dy",&dy);
@@ -114,30 +114,30 @@ void geom_inlib() {
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("y",&yPMT);
     tGeom_pmtInfos_pmtPosition->SetBranchAddress("z",&zPMT);
     tGeom_pmtInfos_pmtPosition->GetEntry(0);
-
+    */
+    
     if(dump)
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
-	      << " pos. (" 
+      /*      << " pos. (" 
 	      << xPMT << " , "
 	      << yPMT << " , "
 	      << zPMT << ")"
 	      << " dir. (" 
 	      << dx << " , "
 	      << dy << " , "
-	      << dz << ")"
+	      << dz << ")"*/
 	      << std::endl;
     
-    delete tGeom_pmtInfos_pmtOrient;
-    delete tGeom_pmtInfos_pmtPosition;
+    //delete tGeom_pmtInfos_pmtOrient;
+    //delete tGeom_pmtInfos_pmtPosition;
     
   }//Loop on PMTs
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile((TFile*)0);
   tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile((TFile*)0);
-  tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile((TFile*)0);
-  tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile((TFile*)0);
+  //tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile((TFile*)0);
+  //tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile((TFile*)0);
   
   delete tGeom_wcOffset;
   delete tGeom_pmtInfos;
-  */  
 }
