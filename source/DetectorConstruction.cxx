@@ -1609,6 +1609,18 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   fAnalysis.m_leaf_pmtRadius->fill(WCPMTSize);
   fAnalysis.m_leaf_nPMTs->fill(totalNumPMTs);
 
+   {inlib::wroot::tree* _pmtInfos = fAnalysis.m_pmtInfos_tree;
+    _pmtInfos->reset();
+    for ( int tubeID = 1; tubeID <= totalNumPMTs; tubeID++){
+      cylLocation    = tubeCylLocation[tubeID];
+      fAnalysis.m_pmtInfos_leaf_pmtId->fill(tubeID);
+      fAnalysis.m_pmtInfos_leaf_pmtLocation->fill(cylLocation);
+     {inlib::uint32 nbytes;
+      if(!_pmtInfos->fill(nbytes)) {
+        std::cout << "pmtInfos tree fill failed." << std::endl;
+      }}
+     }}
+  
  {inlib::uint32 nbytes;
   if(!fAnalysis.m_geom_tree->fill(nbytes)) {
     std::cout << "geom tree fill failed." << std::endl;

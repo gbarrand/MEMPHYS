@@ -29,6 +29,10 @@ MEMPHYS::Analysis::Analysis(
 ,m_leaf_wcOffset(0)
 ,m_leaf_pmtRadius(0)
 ,m_leaf_nPMTs(0)
+  ,m_pmtInfos_tree(0)
+  ,m_pmtInfos_leaf_pmtId(0)
+  ,m_pmtInfos_leaf_pmtLocation(0)
+,m_leaf_pmtInfos(0)
 #endif
 {
   if(!fAIDA) return;
@@ -97,12 +101,20 @@ MEMPHYS::Analysis::Analysis(
     m_wcOffset_tree = new inlib::wroot::tree(m_file.dir(),"wcOffset","wcOffset",false); //false = not managed.
     m_wcOffset_leaf_x = m_wcOffset_tree->create_leaf<double>("x");
     m_wcOffset_leaf_y = m_wcOffset_tree->create_leaf<double>("y");
-    m_wcOffset_leaf_z = m_wcOffset_tree->create_leaf<double>("z");
-  
+    m_wcOffset_leaf_z = m_wcOffset_tree->create_leaf<double>("z");  
   m_leaf_wcOffset = m_geom_tree->create_leaf("wcOffset",*m_wcOffset_tree);
   
   m_leaf_pmtRadius = m_geom_tree->create_leaf<double>("pmtRadius");
   m_leaf_nPMTs = m_geom_tree->create_leaf<int>("nPMTs");
+
+    m_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false); //false = not managed.
+    m_pmtInfos_leaf_pmtId = m_pmtInfos_tree->create_leaf<int>("pmtId");
+    m_pmtInfos_leaf_pmtLocation = m_pmtInfos_tree->create_leaf<int>("pmtLocation");
+    //column +=                      "ITuple pmtOrient   = { double dx, dy, dz }, ";
+    //column +=                      "ITuple pmtPosition = { double  x,  y,  z } ";
+  m_leaf_pmtInfos = m_geom_tree->create_leaf("pmtInfos",*m_pmtInfos_tree);
+
+  
 #endif
   
 }//Ctor
@@ -123,6 +135,7 @@ MEMPHYS::Analysis::~Analysis(){
   }}  
   m_file.close(); // m_file dstor will delete m_geom_tree.
   delete m_wcOffset_tree;
+  delete m_pmtInfos_tree;
 #endif
 }//Dtor
 
