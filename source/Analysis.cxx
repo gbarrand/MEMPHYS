@@ -32,6 +32,16 @@ MEMPHYS::Analysis::Analysis(
   ,m_pmtInfos_tree(0)
   ,m_pmtInfos_leaf_pmtId(0)
   ,m_pmtInfos_leaf_pmtLocation(0)
+    ,m_pmtOrient_tree(0)
+    ,m_pmtOrient_leaf_dx(0)
+    ,m_pmtOrient_leaf_dy(0)
+    ,m_pmtOrient_leaf_dz(0)
+  ,m_pmtInfos_leaf_Orient(0)
+    ,m_pmtPosition_tree(0)
+    ,m_pmtPosition_leaf_x(0)
+    ,m_pmtPosition_leaf_y(0)
+    ,m_pmtPosition_leaf_z(0)
+  ,m_pmtInfos_leaf_Position(0)
 ,m_leaf_pmtInfos(0)
 #endif
 {
@@ -110,8 +120,21 @@ MEMPHYS::Analysis::Analysis(
     m_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false); //false = not managed.
     m_pmtInfos_leaf_pmtId = m_pmtInfos_tree->create_leaf<int>("pmtId");
     m_pmtInfos_leaf_pmtLocation = m_pmtInfos_tree->create_leaf<int>("pmtLocation");
-    //column +=                      "ITuple pmtOrient   = { double dx, dy, dz }, ";
     //column +=                      "ITuple pmtPosition = { double  x,  y,  z } ";
+
+      m_pmtOrient_tree = new inlib::wroot::tree(m_file.dir(),"pmtOrient","pmtOrient",false); //false = not managed.
+      m_pmtOrient_leaf_dx = m_pmtOrient_tree->create_leaf<double>("dx");
+      m_pmtOrient_leaf_dy = m_pmtOrient_tree->create_leaf<double>("dy");
+      m_pmtOrient_leaf_dz = m_pmtOrient_tree->create_leaf<double>("dz");
+    m_pmtInfos_leaf_Orient = m_pmtInfos_tree->create_leaf("pmtOrient",*m_pmtOrient_tree);
+
+      m_pmtPosition_tree = new inlib::wroot::tree(m_file.dir(),"pmtPosition","pmtPosition",false); //false = not managed.
+      m_pmtPosition_leaf_x = m_pmtPosition_tree->create_leaf<double>("x");
+      m_pmtPosition_leaf_y = m_pmtPosition_tree->create_leaf<double>("y");
+      m_pmtPosition_leaf_z = m_pmtPosition_tree->create_leaf<double>("z");
+    m_pmtInfos_leaf_Position = m_pmtInfos_tree->create_leaf("pmtPosition",*m_pmtPosition_tree);
+
+
   m_leaf_pmtInfos = m_geom_tree->create_leaf("pmtInfos",*m_pmtInfos_tree);
 
   
@@ -136,6 +159,8 @@ MEMPHYS::Analysis::~Analysis(){
   m_file.close(); // m_file dstor will delete m_geom_tree.
   delete m_wcOffset_tree;
   delete m_pmtInfos_tree;
+  delete m_pmtOrient_tree;
+  delete m_pmtPosition_tree;
 #endif
 }//Dtor
 
