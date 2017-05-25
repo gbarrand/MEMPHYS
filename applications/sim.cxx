@@ -3,6 +3,12 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 
+#ifdef APP_USE_INLIB_WROOT
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+#endif
+
 //MEMPHYS:
 #include "../MEMPHYS/Analysis.hh"
 #include "../MEMPHYS/DetectorConstruction.hh"
@@ -29,6 +35,12 @@ extern "C" {
 #include <iostream>
 
 int main(int aArgc,char** aArgv) {
+#ifdef APP_USE_INLIB_WROOT
+#ifdef INLIB_MEM
+  inlib::mem::set_check_by_class(true);{
+#endif //INLIB_MEM
+#endif
+    
   //AIDA Analysis factory
 #ifdef APP_USE_ARCHIVE
   BatchLab::Main* session = new BatchLab::Main(std::vector<std::string>());
@@ -101,7 +113,14 @@ int main(int aArgc,char** aArgv) {
   delete runManager;
   delete analysis;
   delete aida;
-  return 0;
+
+#ifdef APP_USE_INLIB_WROOT
+#ifdef INLIB_MEM
+  }inlib::mem::balance(std::cout);
+#endif //INLIB_MEM
+#endif
+  
+  return EXIT_SUCCESS;
 }
 
 
