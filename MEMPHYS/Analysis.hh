@@ -45,15 +45,21 @@ class Analysis  : public virtual IAppManager {
     inlib::wroot::tree* m_geom_tree;
     inlib::wroot::leaf<double>* m_leaf_wcRadius;
     inlib::wroot::leaf<double>* m_leaf_wcLength;
-  
+
       inlib::wroot::tree* m_wcOffset_tree;
       inlib::wroot::leaf<double>* m_wcOffset_leaf_x;
       inlib::wroot::leaf<double>* m_wcOffset_leaf_y;
-      inlib::wroot::leaf<double>* m_wcOffset_leaf_z;
-  
+      inlib::wroot::leaf<double>* m_wcOffset_leaf_z;  
     inlib::wroot::leaf_object* m_leaf_wcOffset;
+  
     inlib::wroot::leaf<double>* m_leaf_pmtRadius;
     inlib::wroot::leaf<int>* m_leaf_nPMTs;
+
+      inlib::wroot::tree* m_pmtInfos_tree;
+      inlib::wroot::leaf<int>* m_pmtInfos_leaf_pmtId;
+      inlib::wroot::leaf<int>* m_pmtInfos_leaf_pmtLocation;
+    inlib::wroot::leaf_object* m_leaf_pmtInfos;
+  
 #endif  
 };
 
