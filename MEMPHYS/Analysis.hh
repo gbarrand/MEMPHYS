@@ -58,6 +58,19 @@ class Analysis  : public virtual IAppManager {
       inlib::wroot::tree* m_pmtInfos_tree;
       inlib::wroot::leaf<int>* m_pmtInfos_leaf_pmtId;
       inlib::wroot::leaf<int>* m_pmtInfos_leaf_pmtLocation;
+
+        inlib::wroot::tree* m_pmtOrient_tree;
+        inlib::wroot::leaf<double>* m_pmtOrient_leaf_dx;
+        inlib::wroot::leaf<double>* m_pmtOrient_leaf_dy;
+        inlib::wroot::leaf<double>* m_pmtOrient_leaf_dz;
+      inlib::wroot::leaf_object* m_pmtInfos_leaf_Orient;
+
+        inlib::wroot::tree* m_pmtPosition_tree;
+        inlib::wroot::leaf<double>* m_pmtPosition_leaf_x;
+        inlib::wroot::leaf<double>* m_pmtPosition_leaf_y;
+        inlib::wroot::leaf<double>* m_pmtPosition_leaf_z;
+      inlib::wroot::leaf_object* m_pmtInfos_leaf_Position;
+
     inlib::wroot::leaf_object* m_leaf_pmtInfos;
   
 #endif  
