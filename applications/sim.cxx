@@ -3,12 +3,6 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 
-#ifdef APP_USE_INLIB_WROOT
-#ifdef INLIB_MEM
-#include <inlib/mem>
-#endif
-#endif
-
 //MEMPHYS:
 #include "../MEMPHYS/Analysis.hh"
 #include "../MEMPHYS/DetectorConstruction.hh"
@@ -26,10 +20,22 @@
 #include <AIDA/IAnalysisFactory.h>
 
 #ifdef APP_USE_ARCHIVE
+#ifdef INLIB_MEM
+#undef INLIB_MEM
 #include <BatchLab/Core/Main.h>
+#define INLIB_MEM
+#else
+#include <BatchLab/Core/Main.h>
+#endif
 extern "C" {
   void BatchLabRioInitialize(Slash::Core::ISession&);
 }
+#endif
+
+#ifdef APP_USE_INLIB_WROOT
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
 #endif
 
 #include <iostream>
