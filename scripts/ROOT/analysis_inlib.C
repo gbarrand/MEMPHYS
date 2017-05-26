@@ -54,7 +54,7 @@ void analysis_inlib()
   /// Read data and fill histos //////////////////////////
   ////////////////////////////////////////////////////////
   TFile* file = new TFile("MEMPHYS_inlib.root");
-  TTree* tEvent = (TTree*)file->Get("Event");
+  TTree* tEvent = (TTree*)file->Get("event");
 
  {TObjArray* brs = tEvent->GetListOfBranches();
   for(int i=0;i<brs->GetEntries();i++) {
