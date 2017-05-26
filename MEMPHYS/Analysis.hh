@@ -42,6 +42,9 @@ class Analysis  : public virtual IAppManager {
 #ifdef APP_USE_INLIB_WROOT
   public:
     inlib::wroot::file m_file;
+  public:
+#include "event_tree_h.icc"
+  public:
     inlib::wroot::tree* m_geom_tree;
     inlib::wroot::leaf<double>* m_leaf_wcRadius;
     inlib::wroot::leaf<double>* m_leaf_wcLength;
