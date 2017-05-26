@@ -55,7 +55,7 @@ MEMPHYS::Analysis::Analysis(
 #endif
 {
 #ifdef APP_USE_AIDA
-  if(!fAIDA) return;
+  if(fAIDA) {
 
   AIDA::ITreeFactory* treeFactory = fAIDA->createTreeFactory();
   if(fBatch) {
@@ -109,6 +109,7 @@ MEMPHYS::Analysis::Analysis(
   tf->create("Geometry","MEMPHYS WC Geometry",column,"");
 
   delete tf;
+  } //fAIDA
 #endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
