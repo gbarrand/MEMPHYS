@@ -70,7 +70,6 @@ void analysis_inlib()
   tEvent->SetBranchAddress("interMode",&interMode);
   tEvent->SetBranchAddress("vtxVol",&vtxVol);
 
-  /*
   Int_t nPart,leptonIndex, protonIndex;
   tEvent->SetBranchAddress("nPart",&nPart);
   tEvent->SetBranchAddress("leptonIndex",&leptonIndex);
@@ -83,13 +82,12 @@ void analysis_inlib()
   Double_t sumPE;
   tEvent->SetBranchAddress("nDigits",&nDigits);
   tEvent->SetBranchAddress("sumPE",&sumPE);
-  */
-  
+
   Int_t nEvent = (Int_t)tEvent->GetEntries();  
   //nEvent = 1;
   //nEvent = 10000;
   std::cout << " nEvents = " << nEvent << std::endl;
-  /*
+
   for (Int_t iev=0; iev<nEvent; ++iev) {
 
     TTree* Event_vtxPos = new TTree();
@@ -299,7 +297,7 @@ void analysis_inlib()
     delete Event_digit;
 
   }//loop on event
-*/
+
   if(dump)
   std::cout << " nEvents = " << nEvent << " hits = " << hit_count << std::endl;
 
