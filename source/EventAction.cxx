@@ -23,10 +23,12 @@
 #include <string>
 #include <vector>
 
+#ifdef APP_USE_AIDA
 // AIDA :
 #include <AIDA/ITree.h>
 #include <AIDA/IManagedObject.h>
 #include <AIDA/ITuple.h>
+#endif
 
 //MEMPHYS
 #include "../MEMPHYS/Cast.hh"
@@ -44,17 +46,21 @@ MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,
 				  MEMPHYS::RunAction* myRun, 
 				  MEMPHYS::DetectorConstruction* myDetector, 
 				  MEMPHYS::PrimaryGeneratorAction* myGenerator)
-:fAnalysis(aAnalysis),
- runAction(myRun), 
- generatorAction(myGenerator), 
- detectorConstructor(myDetector),
- eventTuple(0),
- hitTimeTuple(0) {
+:fAnalysis(aAnalysis)
+,runAction(myRun)
+,generatorAction(myGenerator)
+,detectorConstructor(myDetector)
+#ifdef APP_USE_AIDA
+,eventTuple(0)
+,hitTimeTuple(0)
+#endif
+{
   
   G4DigiManager* DMman = G4DigiManager::GetDMpointer(); //JEC FIXME: be a data member
   WCDigitizer* WCDM = new WCDigitizer( "WCReadout");
   DMman->AddNewModule(WCDM);
 
+#ifdef APP_USE_AIDA
   //JEC 10/11/05 introduce AIDA
   //Get User Histo pointers
   AIDA::ITree* usrTree = aAnalysis.tree(); //get the tree
@@ -93,7 +99,8 @@ MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,
       exit(0);
     }
   }
-
+#endif //APP_USE_AIDA
+  
 }//Ctor
 
 //-------------------------------------------------------------------------------------------
@@ -155,6 +162,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   if(!eventTuple) return;
   if(!hitTimeTuple) return;
 
+#ifdef APP_USE_AIDA
   eventTuple->fill(0, event_id);                                    //eventId
   eventTuple->fill(1, vecRecNumber);                                //inputEvtId
   eventTuple->fill(2, mode);                                        //interMode
@@ -695,7 +703,14 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   
   //Save the Event
   eventTuple->addRow();
+#endif //APP_USE_AIDA
 
+#ifdef APP_USE_INLIB_WROOT
+  ///////////////////////////////////////////////////////
+  /// fill event trees : ////////////////////////////////
+  ///////////////////////////////////////////////////////
+#endif
+    
 }//EndOfEventAction
 
 //--------------------------------------------------------------------------------------------------
