@@ -46,6 +46,12 @@ class EventAction : public G4UserEventAction {
   G4int EventFindStartingVolume(G4ThreeVector vtx);
   G4int EventFindStoppingVolume(G4String stopVolumeName);
   
+  void fill_track(int pId,int parent,float timeStart,
+                  double dx,double dy,double dz,
+                  double mass,double pTot, double ETot,double px,double py,double pz,
+                  double startPos_x,double startPos_y,double startPos_z,
+                  double stopPos_x,double stopPos_y,double stopPos_z,
+                  int startVol,int stopVol);
  private:
   //JEC FIXME is it necessary to maintain fAnalysis?
   Analysis&               fAnalysis;            //the Analysis
