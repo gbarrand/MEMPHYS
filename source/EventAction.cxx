@@ -791,8 +791,6 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif
   
 #ifdef APP_USE_INLIB_WROOT
-  fAnalysis.m_event_track_tree->reset();
-  
   fAnalysis.m_event_track_leaf_pId->fill(pId);
   fAnalysis.m_event_track_leaf_parent->fill(parent);  
   fAnalysis.m_event_track_leaf_timeStart->fill(timeStart);
@@ -863,8 +861,6 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
   hit->addRow();
 #endif  
 #ifdef APP_USE_INLIB_WROOT
-  fAnalysis.m_event_hit_tree->reset();
-  
   fAnalysis.m_event_hit_leaf_tubeId->fill(tubeID_hit);
   fAnalysis.m_event_hit_leaf_totalPE->fill(totalPE);
 
@@ -893,8 +889,6 @@ void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,doubl
   digit->addRow();
 #endif
 #ifdef APP_USE_INLIB_WROOT
-  fAnalysis.m_event_digit_tree->reset();
-  
   fAnalysis.m_event_digit_leaf_tubeId->fill(tubeID);
   fAnalysis.m_event_digit_leaf_pe->fill(tubePhotoElectrons);
   fAnalysis.m_event_digit_leaf_time->fill(tubeTime);
