@@ -864,14 +864,14 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
   fAnalysis.m_event_hit_leaf_tubeId->fill(tubeID_hit);
   fAnalysis.m_event_hit_leaf_totalPE->fill(totalPE);
 
-  for (size_t j=0; j<times.size();j++) {
     fAnalysis.m_event_hit_pe_tree->reset();
-    fAnalysis.m_event_hit_pe_leaf_time->fill(times[j]);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_hit_pe_tree->fill(nbytes)) {
-      std::cout << "fAnalysis.m_event_hit_pe_tree fill failed." << std::endl;
-    }}   
-  }
+    for (size_t j=0; j<times.size();j++) {
+      fAnalysis.m_event_hit_pe_leaf_time->fill(times[j]);
+      inlib::uint32 nbytes;
+      if(!fAnalysis.m_event_hit_pe_tree->fill(nbytes)) {
+        std::cout << "fAnalysis.m_event_hit_pe_tree fill failed." << std::endl;
+      }
+    }   
   
  {inlib::uint32 nbytes;
   if(!fAnalysis.m_event_hit_tree->fill(nbytes)) {
