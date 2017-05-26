@@ -199,12 +199,22 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << " pTot " << pTot
 	 << " px,py,pz " << px << " " << py << " " << pz << "\n"
 	 << G4endl;
+
+#ifdef APP_USE_AIDA
+  AIDA::ITuple* tracks = eventTuple->getTuple(8);  
+  AIDA::ITuple* hits = eventTuple->getTuple(10);
+  AIDA::ITuple* digits = eventTuple->getTuple(13);
+#else
+  void* tracks = 0;
+  void* hits = 0;
+  void* digits = 0;
+#endif
   
   fill_track(pId,parent,timeStart,dx,dy,dz,
              mass,pTot,ETot,px,py,pz,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             startVol,stopVol);
+             startVol,stopVol,tracks);
 
   //----------------
   // The target
@@ -262,7 +272,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
              mass,pTot,ETot,px,py,pz,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             startVol,stopVol);
+             startVol,stopVol,tracks);
 
   // --------------------------
   //  Loop over Trajectories
@@ -409,7 +419,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
                mass,pTot,ETot,px,py,pz,
                start.x()/cm,start.y()/cm,start.z()/cm,
                stop.x()/cm,stop.y()/cm,stop.z()/cm,
-               startVol,stopVol);
+               startVol,stopVol,tracks);
     
     ntrack++;
 
@@ -488,7 +498,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	times.push_back(peArrivalTime);
         fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
-      fill_hit(tubeID_hit,totalPE,times);
+      fill_hit(tubeID_hit,totalPE,times,hits);
     }
   }//Hit container
   
@@ -535,7 +545,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 
       tubeTime           = (*WCDC)[i]->GetTime();
       
-      fill_digit(tubeID,tubePhotoElectrons,tubeTime);
+      fill_digit(tubeID,tubePhotoElectrons,tubeTime,digits);
       //	(*WCDC)[i]->Print();
     }//loop on digits
   } else {
@@ -738,11 +748,10 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
                                       double mass,double pTot, double ETot,double px,double py,double pz,
                                       double startPos_x,double startPos_y,double startPos_z,
                                       double stopPos_x,double stopPos_y,double stopPos_z,
-             	                      int startVol,int stopVol) {
+             	                      int startVol,int stopVol,void* container) {
 #ifdef APP_USE_AIDA
-  if(!eventTuple) return;
+  AIDA::ITuple* track = (AIDA::ITuple*)container;
   
-  AIDA::ITuple* track = eventTuple->getTuple(8);
   track->fill(0, pId);
   track->fill(1, parent);  
   track->fill(2, timeStart);
@@ -838,11 +847,9 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif 
 }
  
-void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times) {
-#ifdef APP_USE_AIDA  
-  if(!eventTuple) return;
-  
-  AIDA::ITuple* hit = eventTuple->getTuple(10);
+void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times,void* container) {
+#ifdef APP_USE_AIDA    
+  AIDA::ITuple* hit = (AIDA::ITuple*)container;
   
   hit->fill(0,tubeID_hit);
   hit->fill(1,totalPE);
@@ -877,10 +884,9 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
 #endif   
 }
 
-void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime) {
+void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime,void* container) {
 #ifdef APP_USE_AIDA  
-  if(!eventTuple) return;
-  AIDA::ITuple* digit = eventTuple->getTuple(13);
+  AIDA::ITuple* digit = (AIDA::ITuple*)container;
   digit->fill(0, tubeID);
   digit->fill(1, tubePhotoElectrons);
   digit->fill(2, tubeTime);

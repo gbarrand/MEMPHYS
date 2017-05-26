@@ -51,9 +51,9 @@ class EventAction : public G4UserEventAction {
                   double mass,double pTot, double ETot,double px,double py,double pz,
                   double startPos_x,double startPos_y,double startPos_z,
                   double stopPos_x,double stopPos_y,double stopPos_z,
-                  int startVol,int stopVol);
-  void fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times);
-  void fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime);
+                  int startVol,int stopVol,void*);
+  void fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times,void*);
+  void fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime,void*);
   void fill_hit_time(float peArrivalTime);
  private:
   //JEC FIXME is it necessary to maintain fAnalysis?
