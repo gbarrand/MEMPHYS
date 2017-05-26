@@ -92,7 +92,7 @@ MEMPHYS::Analysis::Analysis(
 
   //Booking Geometry Tuple (JEC 18/11/05 replace the RunEVent ROOT IO)
   //Needed for the visualization program.
-  std::string column =  "double wcRadius, wcLenght, ITuple wcOffset = {double x, y, z}, ";
+  std::string column =  "double wcRadius, wcLength, ITuple wcOffset = {double x, y, z}, ";
   column += "double pmtRadius, int nPMTs,  ";
   column += "ITuple pmtInfos = { ";
   column +=                      "int pmtId, pmtLocation, ";
@@ -164,10 +164,22 @@ MEMPHYS::Analysis::~Analysis(){
     std::cout << "file write failed." << std::endl;
   }}  
   m_file.close(); // m_file dstor will delete m_geom_tree.
+
+  delete m_event_vtxPos_tree;
+  delete m_event_track_tree;
+  delete m_event_track_direction_tree;
+  delete m_event_track_momentum_tree;
+  delete m_event_track_startPos_tree;
+  delete m_event_track_stopPos_tree;
+  delete m_event_hit_tree;
+  delete m_event_hit_pe_tree;
+  delete m_event_digit_tree;
+  
   delete m_wcOffset_tree;
   delete m_pmtInfos_tree;
   delete m_pmtOrient_tree;
   delete m_pmtPosition_tree;
+  
 #endif
 }//Dtor
 

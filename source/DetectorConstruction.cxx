@@ -1534,7 +1534,7 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   //JEC Have a look at MEMPHYS::Analysis for the description of the Tuple variables
   geomTuple->fill(0, WCCylInfo[0]);                                   //wcRadius
   
-  geomTuple->fill(1, WCCylInfo[1]);                                   //wcLenght
+  geomTuple->fill(1, WCCylInfo[1]);                                   //wcLength
   
   AIDA::ITuple* wcOffset = geomTuple->getTuple( 2 );
   wcOffset->fill(0, WCOffset.x()/cm);                                //wcOffset
@@ -1593,6 +1593,14 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   geomTuple->addRow();
 
 #ifdef APP_USE_INLIB_WROOT
+
+  ///////////////////////////////////////////////////////
+  /// fill event trees : ////////////////////////////////
+  ///////////////////////////////////////////////////////
+  
+  ///////////////////////////////////////////////////////
+  /// fill geom trees : /////////////////////////////////
+  ///////////////////////////////////////////////////////
   fAnalysis.m_leaf_wcRadius->fill(WCCylInfo[0]);
   fAnalysis.m_leaf_wcLength->fill(WCCylInfo[1]);
 
