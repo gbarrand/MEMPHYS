@@ -426,26 +426,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     outgoingProtonIndex += 2; //add the "beam" + "target" index, JEC FIXME see comment above
   }
   
-#ifdef APP_USE_AIDA
-  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
-
-  if(eventTuple && hitTimeTuple) {
-
-  eventTuple->fill(0, event_id);
-  eventTuple->fill(1, vecRecNumber); //inputEvtId
-  eventTuple->fill(2, mode);         //interMode
-  eventTuple->fill(3, vtxvol);
-
-  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
-  vtxPos->fill(0, vtx.x()/cm);
-  vtxPos->fill(1, vtx.y()/cm);
-  vtxPos->fill(2, vtx.z()/cm);
-  vtxPos->addRow();
-  
-  eventTuple->fill(5, ntrack);
-  eventTuple->fill(6, leadingLeptonIndex);
-  eventTuple->fill(7, outgoingProtonIndex);
-  
   // --------------------
   //  Get WC Hit Collection
   // --------------------
@@ -453,10 +433,9 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   G4SDManager* SDman = G4SDManager::GetSDMpointer(); //JEC FIXME: use data member
     
   // Get Hit collection of this event
-  G4HCofThisEvent* HCE         = evt->GetHCofThisEvent();
+  G4HCofThisEvent* HCE = evt->GetHCofThisEvent();
   WCHitsCollection* WCHC = 0;
 
-  AIDA::ITuple* hit = eventTuple->getTuple(10);                         //hit
   G4int nHits=0;
   G4int tubeID_hit; //JEC 16/1/06
   G4int totalPE;
@@ -477,12 +456,10 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   // Get a pointer to the WC Digitizer module
   WCDigitizer* WCDM = (WCDigitizer*)DMman->FindDigitizerModule("WCReadout");
   if (!WCDM) {
-    G4cout << "(JEC:EndOfEventAction): FATAL no WC Digitizer found" << G4endl;
-    exit(0);
+    G4cout << "(JEC:EndOfEventAction): WARNING no WC Digitizer found" << G4endl;
   }
-  //JEC 14/6/06 END
 
-  if (WCHC) {
+  if (WCDM && WCHC) {
 
     //JEC 14/6/06 START   
     // Figure out what size PMTs we are using in the WC detector.
@@ -492,38 +469,29 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     WCDM->Digitize();
     //JEC 14/6/06 END
 
-
-
     //nHits = std::min(500,WCHC->entries());                              //JEC: limit the number of hits
 
     nHits = WCHC->entries();
  
     //JEC FIWME save the time information also later
+    std::vector<float> times;
     for (G4int i=0; i<nHits  ;i++) {
       
       (*WCHC)[i]->UpdateColour();
       
       tubeID_hit = (*WCHC)[i]->GetTubeID(); //JEC 16/1/06
-      hit->fill(0,tubeID_hit);              //   "
-
       totalPE = (*WCHC)[i]->GetTotalPe();
-      hit->fill(1, totalPE);                                            //totalPE (JEC 16/1/06 tupleid=1)
-      AIDA::ITuple* pe = hit->getTuple(2);                              //(JEC 16/1/06 tupleid=2)
+
+      times.clear();
       for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
 	peArrivalTime = (*WCHC)[i]->GetTime(j); 
-	pe->fill(0,peArrivalTime);
-
-	//JEC 5/4/06 fill the Hit time tuple
-	hitTimeTuple->fill(0,peArrivalTime);
-	hitTimeTuple->addRow();
-
-	pe->addRow();
+	times.push_back(peArrivalTime);
+        fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
-      hit->addRow();
+      fill_hit(tubeID_hit,totalPE,times);
     }
   }//Hit container
-
-  eventTuple->fill(9, nHits);                                          //nHits
+  
 
   // --------------------
   //  Get Digitized Hit Collection
@@ -552,34 +520,51 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   G4int WCDCID = DMman->GetDigiCollectionID("WCDigitizedCollection");
   WCDigitsCollection * WCDC = (WCDigitsCollection*)DMman->GetDigiCollection(WCDCID);
     
-
-  AIDA::ITuple* digit = eventTuple->getTuple(13);
-  G4int nDigits=0;
-  G4double sumPE=0;
-  G4int   tubeID;
+  G4int nDigits = 0;
+  G4double sumPE = 0;
+  G4int tubeID;
   G4double tubePhotoElectrons;
   G4double tubeTime;
   if(WCDC) {
     nDigits = WCDC->entries();
     for (G4int i=0; i < nDigits; i++) {
       tubeID             = (*WCDC)[i]->GetTubeID();
-      digit->fill(0, tubeID);                                         //tubeId
-
+      
       tubePhotoElectrons = (*WCDC)[i]->GetPe();
       sumPE += tubePhotoElectrons;
-      digit->fill(1, tubePhotoElectrons);                             //pe
 
       tubeTime           = (*WCDC)[i]->GetTime();
-      digit->fill(2, tubeTime);                                       //time
-      digit->addRow();
+      
+      fill_digit(tubeID,tubePhotoElectrons,tubeTime);
       //	(*WCDC)[i]->Print();
     }//loop on digits
   } else {
     G4cout << "(JEC) EventAction: No Digits for Event: "  << event_id << G4endl;
   }//digits collection
   
-  eventTuple->fill(11, nDigits);                                        //nDigits
-  eventTuple->fill(12, sumPE);                                          //sumPE
+#ifdef APP_USE_AIDA
+  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
+
+  if(eventTuple) {
+
+  eventTuple->fill(0, event_id);
+  eventTuple->fill(1, vecRecNumber); //inputEvtId
+  eventTuple->fill(2, mode);         //interMode
+  eventTuple->fill(3, vtxvol);
+
+  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
+  vtxPos->fill(0, vtx.x()/cm);
+  vtxPos->fill(1, vtx.y()/cm);
+  vtxPos->fill(2, vtx.z()/cm);
+  vtxPos->addRow();
+  
+  eventTuple->fill(5, ntrack);
+  eventTuple->fill(6, leadingLeptonIndex);
+  eventTuple->fill(7, outgoingProtonIndex);
+  
+  eventTuple->fill(9, nHits);
+  eventTuple->fill(11, nDigits);
+  eventTuple->fill(12, sumPE);
   
   //Save the Event
   eventTuple->addRow();
@@ -604,146 +589,11 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   fAnalysis.m_event_leaf_nPart->fill(ntrack);
   fAnalysis.m_event_leaf_leptonIndex->fill(leadingLeptonIndex);
   fAnalysis.m_event_leaf_protonIndex->fill(outgoingProtonIndex);
- /*
-  // --------------------
-  //  Get WC Hit Collection
-  // --------------------
-    
-  G4SDManager* SDman = G4SDManager::GetSDMpointer(); //JEC FIXME: use data member
-    
-  // Get Hit collection of this event
-  G4HCofThisEvent* HCE         = evt->GetHCofThisEvent();
-  WCHitsCollection* WCHC = 0;
-
-  AIDA::ITuple* hit = eventTuple->getTuple(10);                         //hit
-  G4int nHits=0;
-  G4int tubeID_hit; //JEC 16/1/06
-  G4int totalPE;
   
-  G4float peArrivalTime;
-
-  if (HCE) { 
-    G4String name = "WCPMT";
-    G4int collectionID = SDman->GetCollectionID(name);
-    WCHC = (WCHitsCollection*)HCE->GetHC(collectionID);
-  }
-
+  fAnalysis.m_event_leaf_nHits->fill(nHits);
+  fAnalysis.m_event_leaf_nDigits->fill(nDigits);
+  fAnalysis.m_event_leaf_sumPE->fill(sumPE);
   
-  //JEC 14/6/06 START the Digitization should be done before manipulation of hit (ie. sorting the time!)
-  // Get a pointer to the Digitizing Module Manager
-  G4DigiManager* DMman = G4DigiManager::GetDMpointer(); //JEC FIXME: use data member
-  
-  // Get a pointer to the WC Digitizer module
-  WCDigitizer* WCDM = (WCDigitizer*)DMman->FindDigitizerModule("WCReadout");
-  if (!WCDM) {
-    G4cout << "(JEC:EndOfEventAction): FATAL no WC Digitizer found" << G4endl;
-    exit(0);
-  }
-  //JEC 14/6/06 END
-
-  if (WCHC) {
-
-    //JEC 14/6/06 START   
-    // Figure out what size PMTs we are using in the WC detector.
-    G4float PMTSize = detectorConstructor->GetPMTSize();
-    WCDM->SetPMTSize(PMTSize);
-    // Digitize the hits
-    WCDM->Digitize();
-    //JEC 14/6/06 END
-
-
-
-    //nHits = std::min(500,WCHC->entries());                              //JEC: limit the number of hits
-
-    nHits = WCHC->entries();
- 
-    //JEC FIWME save the time information also later
-    for (G4int i=0; i<nHits  ;i++) {
-      
-      (*WCHC)[i]->UpdateColour();
-      
-      tubeID_hit = (*WCHC)[i]->GetTubeID(); //JEC 16/1/06
-      hit->fill(0,tubeID_hit);              //   "
-
-      totalPE = (*WCHC)[i]->GetTotalPe();
-      hit->fill(1, totalPE);                                            //totalPE (JEC 16/1/06 tupleid=1)
-      AIDA::ITuple* pe = hit->getTuple(2);                              //(JEC 16/1/06 tupleid=2)
-      for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
-	peArrivalTime = (*WCHC)[i]->GetTime(j); 
-	pe->fill(0,peArrivalTime);
-
-	//JEC 5/4/06 fill the Hit time tuple
-	hitTimeTuple->fill(0,peArrivalTime);
-	hitTimeTuple->addRow();
-
-	pe->addRow();
-      }
-      hit->addRow();
-    }
-  }//Hit container
-
-  eventTuple->fill(9, nHits);                                          //nHits
-
-  // --------------------
-  //  Get Digitized Hit Collection
-  // --------------------
-
-  //JEC 14/6/06 this part should be done before storing the Hits as the Digitization sort the times for instance
-//   // Get a pointer to the Digitizing Module Manager
-//   G4DigiManager* DMman = G4DigiManager::GetDMpointer(); //JEC FIXME: use data member
-
-//   // Get a pointer to the WC Digitizer module
-//   WCDigitizer* WCDM =
-//     (WCDigitizer*)DMman->FindDigitizerModule("WCReadout");
-//   if (!WCDM) {
-//     G4cout << "(JEC:EndOfEventAction): FATAL no WC Digitizer found" << G4endl;
-//     exit(0);
-//   }
-
-//   // Figure out what size PMTs we are using in the WC detector.
-//   G4float PMTSize = detectorConstructor->GetPMTSize();
-//   WCDM->SetPMTSize(PMTSize);
-
-//   // Digitize the hits
-//   WCDM->Digitize();
-  
-  // Get the digitized collection for the WC
-  G4int WCDCID = DMman->GetDigiCollectionID("WCDigitizedCollection");
-  WCDigitsCollection * WCDC = (WCDigitsCollection*)DMman->GetDigiCollection(WCDCID);
-    
-
-  AIDA::ITuple* digit = eventTuple->getTuple(13);
-  G4int nDigits=0;
-  G4double sumPE=0;
-  G4int   tubeID;
-  G4double tubePhotoElectrons;
-  G4double tubeTime;
-  if(WCDC) {
-    nDigits = WCDC->entries();
-    for (G4int i=0; i < nDigits; i++) {
-      tubeID             = (*WCDC)[i]->GetTubeID();
-      digit->fill(0, tubeID);                                         //tubeId
-
-      tubePhotoElectrons = (*WCDC)[i]->GetPe();
-      sumPE += tubePhotoElectrons;
-      digit->fill(1, tubePhotoElectrons);                             //pe
-
-      tubeTime           = (*WCDC)[i]->GetTime();
-      digit->fill(2, tubeTime);                                       //time
-      digit->addRow();
-      //	(*WCDC)[i]->Print();
-    }//loop on digits
-  } else {
-    G4cout << "(JEC) EventAction: No Digits for Event: "  << event_id << G4endl;
-  }//digits collection
-  
-  eventTuple->fill(11, nDigits);                                        //nDigits
-  eventTuple->fill(12, sumPE);                                          //sumPE
-  
-  //Save the Event
-  eventTuple->addRow();
-  */
- 
  {inlib::uint32 nbytes;
   if(!fAnalysis.m_event_tree->fill(nbytes)) {
     std::cout << "m_event_tree fill failed." << std::endl;
@@ -981,3 +831,39 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif 
 }
  
+void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
+#ifdef APP_USE_AIDA
+  if(!hitTimeTuple) return;
+  hitTimeTuple->fill(0,peArrivalTime);
+  hitTimeTuple->addRow();
+#endif  
+}
+void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times) {
+#ifdef APP_USE_AIDA  
+  if(!eventTuple) return;
+  
+  AIDA::ITuple* hit = eventTuple->getTuple(10);
+  
+  hit->fill(0,tubeID_hit);
+  hit->fill(1,totalPE);
+  
+  AIDA::ITuple* pe = hit->getTuple(2);
+  for (size_t j=0; j<times.size();j++) {
+    pe->fill(0,times[j]);
+    pe->addRow();
+  }
+  
+  hit->addRow();
+#endif  
+}
+
+void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime) {
+#ifdef APP_USE_AIDA  
+  if(!eventTuple) return;
+  AIDA::ITuple* digit = eventTuple->getTuple(13);
+  digit->fill(0, tubeID);
+  digit->fill(1, tubePhotoElectrons);
+  digit->fill(2, tubeTime);
+  digit->addRow();
+#endif
+}				      

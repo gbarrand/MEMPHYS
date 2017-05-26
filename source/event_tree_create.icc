@@ -53,9 +53,9 @@
     m_event_track_leaf_stopVol = m_event_track_tree->create_leaf<int>("stopVol");
   m_event_leaf_track = m_event_tree->create_leaf("track",*m_event_track_tree);
   
-    /*
   m_event_leaf_nHits = m_event_tree->create_leaf<int>("nHits");
-    
+  
+    /*    
     m_event_hit_tree = new inlib::wroot::tree(m_file.dir(),"hit","hit",false);
     m_event_hit_leaf_tubeId = m_event_hit_tree->create_leaf<int>("tubeId");
     m_event_hit_leaf_totalPE = m_event_hit_tree->create_leaf<int>("totalPE");
@@ -65,10 +65,12 @@
     m_event_hit_leaf_pe = m_event_hit_tree->create_leaf("pe",*m_event_hit_pe_tree);
       
   m_event_leaf_hit = m_event_tree->create_leaf("hit",*m_event_hit_tree);
+    */
     
   m_event_leaf_nDigits = m_event_tree->create_leaf<int>("nDigits");
   m_event_leaf_sumPE = m_event_tree->create_leaf<double>("sumPE");
-    
+  
+    /*
     m_event_digit_tree = new inlib::wroot::tree(m_file.dir(),"digit","digit",false);
     m_event_digit_leaf_tubeId = m_event_digit_tree->create_leaf<int>("tubeId");
     m_event_digit_leaf_pe = m_event_digit_tree->create_leaf<double>("pe");
