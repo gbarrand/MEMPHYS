@@ -1531,6 +1531,12 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
 
   G4cout << "DetectorConstruction::FillGeometryTuple : begin" << G4endl;
 
+  G4Transform3D newTransform;
+  G4Vector3D nullOrient = G4Vector3D(0,0,1); 
+  G4Vector3D pmtOrientation;
+  cyl_location cylLocation;
+
+#ifdef APP_USE_AIDA
   //JEC Have a look at MEMPHYS::Analysis for the description of the Tuple variables
   geomTuple->fill(0, WCCylInfo[0]);                                   //wcRadius
   
@@ -1545,11 +1551,6 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   geomTuple->fill(3, WCPMTSize);                                     //pmtRadius
   
   geomTuple->fill(4, totalNumPMTs);                                  //nPMTs
-
-  G4Transform3D newTransform;
-  G4Vector3D nullOrient = G4Vector3D(0,0,1); 
-  G4Vector3D pmtOrientation;
-  cyl_location cylLocation;
 
   AIDA::ITuple* pmtInfos;
   AIDA::ITuple* pmtOrient;
@@ -1591,7 +1592,8 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
 
   //Save the geom
   geomTuple->addRow();
-
+#endif //APP_USE_AIDA
+  
 #ifdef APP_USE_INLIB_WROOT
 
   ///////////////////////////////////////////////////////
