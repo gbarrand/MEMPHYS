@@ -1,7 +1,8 @@
 
   // code produced automatically by the inlib wroot_trees app.
 
-  m_event_tree = new inlib::wroot::tree(m_file.dir(),"event","MEMPHYS WC Event");
+  m_event_tree = new inlib::wroot::tree(m_file.dir(),"Event","MEMPHYS WC Event");
+  
   m_event_leaf_eventId = m_event_tree->create_leaf<int>("eventId");
   m_event_leaf_inputEvtId = m_event_tree->create_leaf<int>("inputEvtId");
   m_event_leaf_interMode = m_event_tree->create_leaf<int>("interMode");
