@@ -578,6 +578,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   fAnalysis.m_event_leaf_interMode->fill(mode);
   fAnalysis.m_event_leaf_vtxVol->fill(vtxvol);
 
+    fAnalysis.m_event_vtxPos_tree->reset();
     fAnalysis.m_event_vtxPos_leaf_x->fill(vtx.x()/cm);
     fAnalysis.m_event_vtxPos_leaf_y->fill(vtx.y()/cm);
     fAnalysis.m_event_vtxPos_leaf_z->fill(vtx.z()/cm);
@@ -781,10 +782,13 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif
   
 #ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_track_tree->reset();
+  
   fAnalysis.m_event_track_leaf_pId->fill(pId);
   fAnalysis.m_event_track_leaf_parent->fill(parent);  
   fAnalysis.m_event_track_leaf_timeStart->fill(timeStart);
 
+    fAnalysis.m_event_track_direction_tree->reset();
     fAnalysis.m_event_track_direction_leaf_dx->fill(dx);
     fAnalysis.m_event_track_direction_leaf_dy->fill(dy);
     fAnalysis.m_event_track_direction_leaf_dz->fill(dz);
@@ -797,6 +801,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
   fAnalysis.m_event_track_leaf_pTot->fill(pTot);
   fAnalysis.m_event_track_leaf_ETot->fill(ETot);
 
+    fAnalysis.m_event_track_momentum_tree->reset();
     fAnalysis.m_event_track_momentum_leaf_px->fill(px);
     fAnalysis.m_event_track_momentum_leaf_py->fill(py);
     fAnalysis.m_event_track_momentum_leaf_pz->fill(pz);
@@ -805,6 +810,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
       std::cout << "fAnalysis.m_event_track_momentum_tree fill failed." << std::endl;
     }}
 
+    fAnalysis.m_event_track_startPos_tree->reset();
     fAnalysis.m_event_track_startPos_leaf_x->fill(startPos_x);
     fAnalysis.m_event_track_startPos_leaf_y->fill(startPos_y);
     fAnalysis.m_event_track_startPos_leaf_z->fill(startPos_z);
@@ -813,6 +819,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
       std::cout << "fAnalysis.m_event_track_startPos_tree fill failed." << std::endl;
     }}
 
+    fAnalysis.m_event_track_stopPos_tree->reset();
     fAnalysis.m_event_track_stopPos_leaf_x->fill(stopPos_x);
     fAnalysis.m_event_track_stopPos_leaf_y->fill(stopPos_y);
     fAnalysis.m_event_track_stopPos_leaf_z->fill(stopPos_z);
@@ -831,13 +838,6 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif 
 }
  
-void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
-#ifdef APP_USE_AIDA
-  if(!hitTimeTuple) return;
-  hitTimeTuple->fill(0,peArrivalTime);
-  hitTimeTuple->addRow();
-#endif  
-}
 void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times) {
 #ifdef APP_USE_AIDA  
   if(!eventTuple) return;
@@ -854,6 +854,34 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
   }
   
   hit->addRow();
+#endif  
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_hit_tree->reset();
+  
+  fAnalysis.m_event_hit_leaf_tubeId->fill(tubeID_hit);
+  fAnalysis.m_event_hit_leaf_totalPE->fill(totalPE);
+
+  for (size_t j=0; j<times.size();j++) {
+    fAnalysis.m_event_hit_pe_tree->reset();
+    fAnalysis.m_event_hit_pe_leaf_time->fill(times[j]);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_hit_pe_tree->fill(nbytes)) {
+      std::cout << "fAnalysis.m_event_hit_pe_tree fill failed." << std::endl;
+    }}   
+  }
+  
+ {inlib::uint32 nbytes;
+  if(!fAnalysis.m_event_hit_tree->fill(nbytes)) {
+    std::cout << "fAnalysis.m_event_hit_tree fill failed." << std::endl;
+  }}  
+#endif   
+}
+
+void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
+#ifdef APP_USE_AIDA
+  if(!hitTimeTuple) return;
+  hitTimeTuple->fill(0,peArrivalTime);
+  hitTimeTuple->addRow();
 #endif  
 }
 
