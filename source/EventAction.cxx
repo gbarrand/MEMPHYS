@@ -157,16 +157,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << ")"
 	 << G4endl;
 
-  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
-
-  //variables used to fill the tuple (track part)
   //JEC FIXME how to set flag? G4int flag; 
-  G4int pId, parent; 
-  G4float timeStart;
-  G4double dx, dy, dz;
-  G4double mass, pTot, ETot, px, py, pz;
-  G4int startVol, stopVol;
-
   // mustop, pstop, npar will be filled later
 
   // Next in the ntuple is an array of tracks.
@@ -178,26 +169,26 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   // The beam
   //----------------
   G4int  beampdg = generatorAction->GetBeamPDG();
-  pId =  beampdg;                                                  //pId
-  parent = 0;                                                      //parent (none)
-  timeStart = 0;                                                   //creation time
+  int pId =  beampdg;                                                  //pId
+  int parent = 0;                                                      //parent (none)
+  float timeStart = 0;                                                   //creation time
   
   G4ThreeVector beamdir = generatorAction->GetBeamDir();        //direction
-  dx = beamdir.x();
-  dy = beamdir.y();
-  dz = beamdir.z();
+  double dx = beamdir.x();
+  double dy = beamdir.y();
+  double dz = beamdir.z();
 
-  mass = 0;                                                       //mass  
+  double mass = 0;                                                       //mass  
   G4double beamenergy = generatorAction->GetBeamEnergy();
-  pTot =  beamenergy;                                            //ptot
-  ETot = pTot;                                                   //ETot (= pTot for neutrino)
+  double pTot =  beamenergy;                                            //ptot
+  double ETot = pTot;                                                   //ETot (= pTot for neutrino)
   
-  px = pTot * dx;
-  py = pTot * dy;
-  pz = pTot * dz;
+  double px = pTot * dx;
+  double py = pTot * dy;
+  double pz = pTot * dz;
   
-  startVol = -1;                                               //startVol
-  stopVol  = -1;                                               //stopVol
+  int startVol = -1;                                               //startVol
+  int stopVol  = -1;                                               //stopVol
   
   G4cout << "----> Tk{Beam}: " 
 	 << " pId " << pId
@@ -212,6 +203,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << G4endl;
   
 #ifdef APP_USE_AIDA
+  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
+
   if(eventTuple && hitTimeTuple) {
 
   eventTuple->fill(0, event_id);                                    //eventId
