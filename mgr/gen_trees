@@ -35,6 +35,7 @@ file="${name}_tree"
 
 #${inlib_app} -script="${script}"
 #exit
+
 ${inlib_app} -script="${script}" -name=${name} -h    >& ../MEMPHYS/${file}_h.icc
 ${inlib_app} -script="${script}" -name=${name} -zero >& ../source/${file}_zero.icc
 ${inlib_app} -script="${script}" -name=${name} -title="${title}" -icc  >& ../source/${file}_create.icc
