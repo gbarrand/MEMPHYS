@@ -209,7 +209,12 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   void* hits = 0;
   void* digits = 0;
 #endif
-  
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_track_tree->reset();
+  fAnalysis.m_event_hit_tree->reset();
+  fAnalysis.m_event_digit_tree->reset();
+#endif
+    
   fill_track(pId,parent,timeStart,dx,dy,dz,
              mass,pTot,ETot,px,py,pz,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
