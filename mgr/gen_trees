@@ -1,0 +1,17 @@
+#!/bin/sh -f
+
+bush_home=../../../../softinex/bush
+
+. ${bush_home}/args
+
+./build_lib_MEMPHYSCore   ${build_args}
+./build_app_sim           ${build_args}
+./build_app_plot          ${build_args}
+
+${bush_home}/check_app root-config 'root-config program not found. MEMPHYS_[plot_ROOT,all_ROOT] not built.'
+use_status=$?
+if [ ${use_status} = 0 ] ; then
+  ./build_app_plot_ROOT  ${build_args}
+  ./build_app_all_ROOT   ${build_args}
+fi
+
