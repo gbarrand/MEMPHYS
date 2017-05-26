@@ -167,26 +167,26 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   // The beam
   //----------------
   G4int  beampdg = generatorAction->GetBeamPDG();
-  int pId =  beampdg;                                                  //pId
-  int parent = 0;                                                      //parent (none)
-  float timeStart = 0;                                                   //creation time
+  int pId =  beampdg;
+  int parent = 0;
+  float timeStart = 0;
   
-  G4ThreeVector beamdir = generatorAction->GetBeamDir();        //direction
+  G4ThreeVector beamdir = generatorAction->GetBeamDir();
   double dx = beamdir.x();
   double dy = beamdir.y();
   double dz = beamdir.z();
 
-  double mass = 0;                                                       //mass  
+  double mass = 0;
   G4double beamenergy = generatorAction->GetBeamEnergy();
-  double pTot =  beamenergy;                                            //ptot
-  double ETot = pTot;                                                   //ETot (= pTot for neutrino)
+  double pTot = beamenergy;
+  double ETot = pTot; //ETot (= pTot for neutrino)
   
   double px = pTot * dx;
   double py = pTot * dy;
   double pz = pTot * dz;
   
-  int startVol = -1;                                               //startVol
-  int stopVol  = -1;                                               //stopVol
+  int startVol = -1;
+  int stopVol  = -1;
   
   G4cout << "----> Tk{Beam}: " 
 	 << " pId " << pId
@@ -200,90 +200,27 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << " px,py,pz " << px << " " << py << " " << pz << "\n"
 	 << G4endl;
   
-#ifdef APP_USE_AIDA
-  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
-
-  if(eventTuple && hitTimeTuple) {
-
-  eventTuple->fill(0, event_id);                                    //eventId
-  eventTuple->fill(1, vecRecNumber);                                //inputEvtId
-  eventTuple->fill(2, mode);                                        //interMode
-  eventTuple->fill(3, vtxvol);                                      //vtxVol
-
-  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
-  vtxPos->fill(0, vtx.x()/cm);                                       //vtxPos
-  vtxPos->fill(1, vtx.y()/cm);
-  vtxPos->fill(2, vtx.z()/cm);
-  vtxPos->addRow();
-  
-  //----------------
-  // The beam
-  //----------------
-  AIDA::ITuple* track = eventTuple->getTuple(8);
-  track->fill(0, pId);
-  track->fill(1, parent);  
-  track->fill(2, timeStart);
-  
-  AIDA::ITuple* direction = track->getTuple( 3 );
-  direction->fill(0, dx);
-  direction->fill(1, dy);
-  direction->fill(2, dz);
-  direction->addRow();
-
-  track->fill(4, mass);
-  track->fill(5, pTot);
-  track->fill(6, ETot);
-  
-  AIDA::ITuple* momentum = track->getTuple( 7 );                           //momentum
-  momentum->fill(0, px);
-  momentum->fill(1, py);
-  momentum->fill(2, pz);
-  momentum->addRow();
-
-  AIDA::ITuple* startPos = track->getTuple( 8 );                          //start position
-  startPos->fill(0, vtx.x()/cm);
-  startPos->fill(1, vtx.y()/cm);
-  startPos->fill(2, vtx.z()/cm);
-  startPos->addRow(); 
-
-  AIDA::ITuple* stopPos = track->getTuple( 9 );                          //stop position
-  stopPos->fill(0, vtx.x()/cm); 
-  stopPos->fill(1, vtx.y()/cm);
-  stopPos->fill(2, vtx.z()/cm);
-  stopPos->addRow(); 
-
-  track->fill(10, startVol);
-  track->fill(11, stopVol);
-  
-  //add the Beam track to tuple
-  track->addRow();
+  fill_track(pId,parent,timeStart,dx,dy,dz,
+             mass,pTot,ETot,px,py,pz,
+             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             startVol,stopVol);
 
   //----------------
   // The target
   //----------------
   G4int  targetpdg    = generatorAction->GetTargetPDG();
-  pId =  targetpdg;                                                  //pId
-  track->fill(0, pId);
-
-  parent = 0;                                                      //parent (none)
-  track->fill(1, parent);  
-
-  timeStart = 0;                                                   //creation time
-  track->fill(2, timeStart);
+  pId =  targetpdg;
+  parent = 0;    //none
+  timeStart = 0; //creation time
   
-  G4ThreeVector targetdir    = generatorAction->GetTargetDir();
-  direction = track->getTuple( 3 );
+  G4ThreeVector targetdir = generatorAction->GetTargetDir();
   dx = targetdir.x();
   dy = targetdir.y();
   dz = targetdir.z();
   
-  direction->fill(0, dx);
-  direction->fill(1, dy);
-  direction->fill(2, dz);
-  direction->addRow();
-  
-  G4double      targetenergy = generatorAction->GetTargetEnergy();
-  G4double      targetpmag = 0.0, targetmass = 0.0;
+  G4double targetenergy = generatorAction->GetTargetEnergy();
+  G4double targetpmag = 0.0, targetmass = 0.0;
   
   //JEC FIXME: keep original code for the moment
   if (targetpdg!=0) {            // protects against seg-fault
@@ -299,45 +236,15 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     }
   }
 
-  mass = targetmass;                                             //mass
-  track->fill(4, mass);
-  
-  pTot =  targetpmag;                                            //ptot
-  track->fill(5, pTot);
-
-  ETot = targetenergy;                                           //ETot
-  track->fill(6, ETot);
-  
-  momentum = track->getTuple( 7 );                           //momentum
+  mass = targetmass;
+  pTot =  targetpmag;
+  ETot = targetenergy;
   px = pTot * dx;
   py = pTot * dy;
   pz = pTot * dz;
-  momentum->fill(0, px);
-  momentum->fill(1, py);
-  momentum->fill(2, pz);
-  momentum->addRow();
 
-  startPos = track->getTuple( 8 );                          //start position
-  startPos->fill(0, vtx.x()/cm);
-  startPos->fill(1, vtx.y()/cm);
-  startPos->fill(2, vtx.z()/cm);
-  startPos->addRow(); 
-
-  stopPos = track->getTuple( 9 );                          //stop position
-  stopPos->fill(0, vtx.x()/cm);
-  stopPos->fill(1, vtx.y()/cm);
-  stopPos->fill(2, vtx.z()/cm);
-  stopPos->addRow(); 
-
-  startVol = -1;                                               //startVol
-  track->fill(10, startVol);
-
-  stopVol  = -1;                                               //stopVol
-  track->fill(11, stopVol);
-  
-  //add the Target track to tuple
-  track->addRow();
-
+  startVol = -1;
+  stopVol  = -1;
 
   G4cout << "----> Tk{Target}: " 
 	 << " pId " << pId
@@ -351,6 +258,11 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << " px,py,pz " << px << " " << py << " " << pz << "\n"
 	 << G4endl;
 
+  fill_track(pId,parent,timeStart,dx,dy,dz,
+             mass,pTot,ETot,px,py,pz,
+             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             startVol,stopVol);
 
   // --------------------------
   //  Loop over Trajectories
@@ -412,7 +324,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       antipionList.insert( trjIndex );
       break;
     }//eosw
-
       
     // Process primary tracks or the secondaries from pizero or muons, pions...
     if ( ! trj->GetSaveFlag() ) continue;
@@ -420,8 +331,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     // initial point of the trajectory
     G4TrajectoryPoint* aa =   (G4TrajectoryPoint*)trj->GetPoint(0) ;   
     runAction->incrementEventsGenerated(); //JEC FIXME: what is the need of that?
-    
-    track->fill(0, pId);                                         //pId
     
     //JEC FIXME should be META info G4int         flag   = 0;    // will be set later
     
@@ -442,31 +351,18 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     } else {  // no identified parent, but not a primary
       parent = 999;
     }//eoif
-    track->fill(1,parent);                                       //parent
     
     timeStart =  trj->GetGlobalTime()/ns;
-    track->fill(2, timeStart);                                   //creation time
     
     mom    = trj->GetInitialMomentum();
     mommag = mom.mag();
-    direction = track->getTuple( 3 );                            //direction
     dx = mom.x()/mommag;
     dy = mom.y()/mommag;
     dz = mom.z()/mommag;
-    direction->fill(0, dx);
-    direction->fill(1, dy);
-    direction->fill(2, dz);
-    direction->addRow();
     
-    mass   = trj->GetParticleDefinition()->GetPDGMass();
-    track->fill(4, mass);                                        //mass
-    
+    mass = trj->GetParticleDefinition()->GetPDGMass();
     pTot = mommag;
-    track->fill(5, pTot);                                        //p Total
-    
     ETot = sqrt(mom.mag2() + mass*mass);
-    track->fill(6, ETot);                                        //Total energy
-
 
     //Save index of the most energetic primary lepton and proton
     if ( 0 == parent ) {
@@ -483,40 +379,18 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       }//eo update special particle index saving
     }//eo a primary particle
     
-    momentum = track->getTuple( 7 );                             //3-momentum
     px = mom.x();
     py = mom.y();
     pz = mom.z();
-    momentum->fill(0, px);
-    momentum->fill(1, py);
-    momentum->fill(2, pz);
-    momentum->addRow();
     
-    start  = aa->GetPosition();
-    startPos = track->getTuple( 8 );                             //start position
-    startPos->fill(0, start.x()/cm);
-    startPos->fill(1, start.y()/cm);
-    startPos->fill(2, start.z()/cm);
-    startPos->addRow(); 
+    start = aa->GetPosition();
     
-    stop   = trj->GetStoppingPoint();
-    stopPos = track->getTuple( 9 );                              //stop position
-    stopPos->fill(0, stop.x()/cm);
-    stopPos->fill(1, stop.y()/cm);
-    stopPos->fill(2, stop.z()/cm);
-    stopPos->addRow(); 
+    stop  = trj->GetStoppingPoint();
     
     startVol = EventFindStartingVolume(start);
-    track->fill(10, startVol);                                   //Starting Volume
-    
-    
     stopVolumeName = trj->GetStoppingVolume()->GetName();
     stopVol  = EventFindStoppingVolume(stopVolumeName);
-    track->fill(11, stopVol);                                    //Stopping Volume
     
-    //add the new track to tuple
-    track->addRow(); 
-
     G4cout << "----> Tk{"<<ntrack<<"}: " 
 	   << " pId " << pId
 	   << " parent " << parent
@@ -531,24 +405,46 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	   << " px,py,pz " << px << " " << py << " " << pz << "\n"
 	   << G4endl;
        
+    fill_track(pId,parent,timeStart,dx,dy,dz,
+               mass,pTot,ETot,px,py,pz,
+               start.x()/cm,start.y()/cm,start.z()/cm,
+               stop.x()/cm,stop.y()/cm,stop.z()/cm,
+               startVol,stopVol);
+    
     ntrack++;
 
   }//end of loop on trajectories
   
-  eventTuple->fill(5, ntrack);                                           //nPart
   G4cout << "Final # of tracks : " << ntrack << G4endl;
-
+  
   if (leadingLeptonIndex != -1 ) {
     //most energetic primary lepton found
     leadingLeptonIndex += 2; //add the "beam" + "target" index, JEC FIXME see comment above
   }
-  eventTuple->fill(6,leadingLeptonIndex);                               //leptonIndex
 
   if (outgoingProtonIndex !=-1 ) {
     outgoingProtonIndex += 2; //add the "beam" + "target" index, JEC FIXME see comment above
   }
-  eventTuple->fill(7, outgoingProtonIndex);                            //protonIndex
+  
+#ifdef APP_USE_AIDA
+  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
 
+  if(eventTuple && hitTimeTuple) {
+
+  eventTuple->fill(0, event_id);
+  eventTuple->fill(1, vecRecNumber); //inputEvtId
+  eventTuple->fill(2, mode);         //interMode
+  eventTuple->fill(3, vtxvol);
+
+  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
+  vtxPos->fill(0, vtx.x()/cm);
+  vtxPos->fill(1, vtx.y()/cm);
+  vtxPos->fill(2, vtx.z()/cm);
+  vtxPos->addRow();
+  
+  eventTuple->fill(5, ntrack);
+  eventTuple->fill(6, leadingLeptonIndex);
+  eventTuple->fill(7, outgoingProtonIndex);
   
   // --------------------
   //  Get WC Hit Collection
@@ -692,9 +588,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 #endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
-  ///////////////////////////////////////////////////////
-  /// fill event trees : ////////////////////////////////
-  ///////////////////////////////////////////////////////
   fAnalysis.m_event_leaf_eventId->fill(event_id);
   fAnalysis.m_event_leaf_inputEvtId->fill(vecRecNumber);
   fAnalysis.m_event_leaf_interMode->fill(mode);
@@ -708,308 +601,10 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       std::cout << "m_event_vtxPos_tree fill failed." << std::endl;
     }}
   
-  //----------------
-  // The beam
-  //----------------
-  fAnalysis.fill_track(pId,parent,timeStart,dx,dy,dz,
-                       mass,pTot,ETot,px,py,pz,
-                       vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-                       vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-                       startVol,stopVol);
-
+  fAnalysis.m_event_leaf_nPart->fill(ntrack);
+  fAnalysis.m_event_leaf_leptonIndex->fill(leadingLeptonIndex);
+  fAnalysis.m_event_leaf_protonIndex->fill(outgoingProtonIndex);
  /*
-  //----------------
-  // The target
-  //----------------
-  G4int  targetpdg    = generatorAction->GetTargetPDG();
-  pId =  targetpdg;                                                  //pId
-  track->fill(0, pId);
-
-  parent = 0;                                                      //parent (none)
-  track->fill(1, parent);  
-
-  timeStart = 0;                                                   //creation time
-  track->fill(2, timeStart);
-  
-  G4ThreeVector targetdir    = generatorAction->GetTargetDir();
-  direction = track->getTuple( 3 );
-  dx = targetdir.x();
-  dy = targetdir.y();
-  dz = targetdir.z();
-  
-  direction->fill(0, dx);
-  direction->fill(1, dy);
-  direction->fill(2, dz);
-  direction->addRow();
-  
-  G4double      targetenergy = generatorAction->GetTargetEnergy();
-  G4double      targetpmag = 0.0, targetmass = 0.0;
-  
-  //JEC FIXME: keep original code for the moment
-  if (targetpdg!=0) {            // protects against seg-fault
-    if ( 8016 == targetpdg ) {   // JEC 25/11/05 Oxygen 16 in Nuance PID = Z*1000+A = 8016
-      targetmass = targetenergy; // supposed at Rest
-    } else {
-      targetmass = particleTable->FindParticle(targetpdg)->GetPDGMass();
-    }
-    if (targetenergy > targetmass) {
-      targetpmag = sqrt(targetenergy*targetenergy - targetmass*targetmass);
-    } else { // protect against NaN
-      targetpmag = 0.0;
-    }
-  }
-
-  mass = targetmass;                                             //mass
-  track->fill(4, mass);
-  
-  pTot =  targetpmag;                                            //ptot
-  track->fill(5, pTot);
-
-  ETot = targetenergy;                                           //ETot
-  track->fill(6, ETot);
-  
-  momentum = track->getTuple( 7 );                           //momentum
-  px = pTot * dx;
-  py = pTot * dy;
-  pz = pTot * dz;
-  momentum->fill(0, px);
-  momentum->fill(1, py);
-  momentum->fill(2, pz);
-  momentum->addRow();
-
-  startPos = track->getTuple( 8 );                          //start position
-  startPos->fill(0, vtx.x()/cm);
-  startPos->fill(1, vtx.y()/cm);
-  startPos->fill(2, vtx.z()/cm);
-  startPos->addRow(); 
-
-  stopPos = track->getTuple( 9 );                          //stop position
-  stopPos->fill(0, vtx.x()/cm);
-  stopPos->fill(1, vtx.y()/cm);
-  stopPos->fill(2, vtx.z()/cm);
-  stopPos->addRow(); 
-
-  startVol = -1;                                               //startVol
-  track->fill(10, startVol);
-
-  stopVol  = -1;                                               //stopVol
-  track->fill(11, stopVol);
-  
-  //add the Target track to tuple
-  track->addRow();
-
-
-  G4cout << "----> Tk{Target}: " 
-	 << " pId " << pId
-	 << " parent " << parent
-	 << " creation time " << timeStart 
-	 << " Volumes " << startVol << " " << stopVol << "\n"
-	 << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
-	 << " m " << mass
-	 << " ETot " << ETot
-	 << " pTot " << pTot
-	 << " px,py,pz " << px << " " << py << " " << pz << "\n"
-	 << G4endl;
-
-
-  // --------------------------
-  //  Loop over Trajectories
-  // --------------------------
-
-  G4TrajectoryContainer* trajectoryContainer = evt->GetTrajectoryContainer();
-
-  G4int n_trajectories = 0;
-  if (trajectoryContainer) n_trajectories = trajectoryContainer->entries();
-
-  std::set<int> pizeroList;
-  std::set<int> muonList;
-  std::set<int> antimuonList;
-  std::set<int> pionList;
-  std::set<int> antipionList;
-
-  G4int trjIndex;    //JEC 14/11/05 this is the trajectory Index
-  G4int parentIndex; //JEC 14/11/05 this the parent trajectory index
-
-  //JEC 14/11/05 factorize declarations...
-  G4ThreeVector mom; //px,py,pz
-  G4double      mommag; //p = sqrt(px*px + ...)
-  G4ThreeVector stop; //stopping point
-  G4ThreeVector start;//starting point
-  G4String stopVolumeName; //Volume name of the stopping point for retreive
-  G4int ntrack = 2; //count tracks that are stored in Tuple (start at 2 for the Beam + Target)
-
-  //JEC 21/11/05
-  G4int leadingLeptonIndex = -1;    //Index of the most energetic lepton issued from the neutrino interaction
-  G4double tmpEnergyleadingLepton = -1.0; //temproary variable to trigger the update of leadingLeptonIndex
-  G4int outgoingProtonIndex= -1;    //Index of the most energetic proton issued from the neutrino interaction
-  G4double tmpEnergyoutgoingProton = -1.0; //temproary variable to trigger the update of outgoingProtonIndex
-  
-
-  for (G4int i=0; i < n_trajectories; i++) {
-    Trajectory* trj = (Trajectory*)((*(evt->GetTrajectoryContainer()))[i]);
-    
-    // Draw Charged Tracks
-    //JEC FIWME: display if (trj->GetCharge() != 0.) trj->DrawTrajectory(50);
-    
-    // If this track has a special id remember it for later
-    
-    pId      =  trj->GetPDGEncoding();                                   //pId
-    trjIndex =  trj->GetTrackID();
-    switch ( pId ) {
-    case 111: //pi0
-      pizeroList.insert( trjIndex );
-      break;
-    case 13: //muon
-      muonList.insert( trjIndex );
-      break;
-    case -13: //anti-mu
-      antimuonList.insert( trjIndex );
-      break;
-    case 211: //pion
-      pionList.insert( trjIndex );
-      break;
-    case -211: //anti-pion
-      antipionList.insert( trjIndex );
-      break;
-    }//eosw
-
-      
-    // Process primary tracks or the secondaries from pizero or muons, pions...
-    if ( ! trj->GetSaveFlag() ) continue;
-
-    // initial point of the trajectory
-    G4TrajectoryPoint* aa =   (G4TrajectoryPoint*)trj->GetPoint(0) ;   
-    runAction->incrementEventsGenerated(); //JEC FIXME: what is the need of that?
-    
-    track->fill(0, pId);                                         //pId
-    
-    //JEC FIXME should be META info G4int         flag   = 0;    // will be set later
-    
-    //JEC 14/11/06 code adapeted from M.F
-    parentIndex = trj->GetParentID();
-    if (parentIndex == 0){
-      parent = 0;
-    } else if ( pizeroList.count(parentIndex) ) {
-      parent = 111;
-    } else if ( muonList.count(parentIndex) ) {
-      parent = 13;
-    } else if ( antimuonList.count(parentIndex) ) {
-      parent = -13;
-    } else if ( antipionList.count(parentIndex) ) {
-      parent = -211;
-    } else if ( pionList.count(parentIndex) ) {
-      parent = 211;
-    } else {  // no identified parent, but not a primary
-      parent = 999;
-    }//eoif
-    track->fill(1,parent);                                       //parent
-    
-    timeStart =  trj->GetGlobalTime()/ns;
-    track->fill(2, timeStart);                                   //creation time
-    
-    mom    = trj->GetInitialMomentum();
-    mommag = mom.mag();
-    direction = track->getTuple( 3 );                            //direction
-    dx = mom.x()/mommag;
-    dy = mom.y()/mommag;
-    dz = mom.z()/mommag;
-    direction->fill(0, dx);
-    direction->fill(1, dy);
-    direction->fill(2, dz);
-    direction->addRow();
-    
-    mass   = trj->GetParticleDefinition()->GetPDGMass();
-    track->fill(4, mass);                                        //mass
-    
-    pTot = mommag;
-    track->fill(5, pTot);                                        //p Total
-    
-    ETot = sqrt(mom.mag2() + mass*mass);
-    track->fill(6, ETot);                                        //Total energy
-
-
-    //Save index of the most energetic primary lepton and proton
-    if ( 0 == parent ) {
-      if ( ( (13 == pId) || (-13 == pId) ) && 
-	   ( ETot > tmpEnergyleadingLepton ) ) {
-	//a mu+ or mu- from the neutrino interaction and with a greater energy than previous case, update
-	tmpEnergyleadingLepton = ETot;
-	//flag the particle Index
-	leadingLeptonIndex = i; //JEC FIXME it may be 'ntrack' directly
-      } else if ( ( (11 == pId) || (-11 == pId) ) && 
-		  ( ETot > tmpEnergyoutgoingProton ) ) {
-	tmpEnergyoutgoingProton = ETot;
-	outgoingProtonIndex = i; //JEC FIXME it may be 'ntrack' directly
-      }//eo update special particle index saving
-    }//eo a primary particle
-    
-    momentum = track->getTuple( 7 );                             //3-momentum
-    px = mom.x();
-    py = mom.y();
-    pz = mom.z();
-    momentum->fill(0, px);
-    momentum->fill(1, py);
-    momentum->fill(2, pz);
-    momentum->addRow();
-    
-    start  = aa->GetPosition();
-    startPos = track->getTuple( 8 );                             //start position
-    startPos->fill(0, start.x()/cm);
-    startPos->fill(1, start.y()/cm);
-    startPos->fill(2, start.z()/cm);
-    startPos->addRow(); 
-    
-    stop   = trj->GetStoppingPoint();
-    stopPos = track->getTuple( 9 );                              //stop position
-    stopPos->fill(0, stop.x()/cm);
-    stopPos->fill(1, stop.y()/cm);
-    stopPos->fill(2, stop.z()/cm);
-    stopPos->addRow(); 
-    
-    startVol = EventFindStartingVolume(start);
-    track->fill(10, startVol);                                   //Starting Volume
-    
-    
-    stopVolumeName = trj->GetStoppingVolume()->GetName();
-    stopVol  = EventFindStoppingVolume(stopVolumeName);
-    track->fill(11, stopVol);                                    //Stopping Volume
-    
-    //add the new track to tuple
-    track->addRow(); 
-
-    G4cout << "----> Tk{"<<ntrack<<"}: " 
-	   << " pId " << pId
-	   << " parent " << parent
-	   << " creation time " << timeStart 
-	   << " Volumes " << startVol << " " << stopVol << "\n"
-	   << " Start Pos (" << start.x()/cm << "," << start.y() << "," << start.z() << ")\n"
-	   << " Stop Pos (" << stop.x()/cm << "," << stop.y() << "," << stop.z() << ")\n"
-	   << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
-	   << " m " << mass
-	   << " ETot " << ETot
-	   << " pTot " << pTot
-	   << " px,py,pz " << px << " " << py << " " << pz << "\n"
-	   << G4endl;
-       
-    ntrack++;
-
-  }//end of loop on trajectories
-  
-  eventTuple->fill(5, ntrack);                                           //nPart
-  G4cout << "Final # of tracks : " << ntrack << G4endl;
-
-  if (leadingLeptonIndex != -1 ) {
-    //most energetic primary lepton found
-    leadingLeptonIndex += 2; //add the "beam" + "target" index, JEC FIXME see comment above
-  }
-  eventTuple->fill(6,leadingLeptonIndex);                               //leptonIndex
-
-  if (outgoingProtonIndex !=-1 ) {
-    outgoingProtonIndex += 2; //add the "beam" + "target" index, JEC FIXME see comment above
-  }
-  eventTuple->fill(7, outgoingProtonIndex);                            //protonIndex
-
-  
   // --------------------
   //  Get WC Hit Collection
   // --------------------
@@ -1286,3 +881,103 @@ G4int MEMPHYS::EventAction::EventFindStoppingVolume(G4String stopVolumeName) {
 }//EventFindStoppingVolume
 
 
+
+void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
+		                      double dx,double dy,double dz,
+                                      double mass,double pTot, double ETot,double px,double py,double pz,
+                                      double startPos_x,double startPos_y,double startPos_z,
+                                      double stopPos_x,double stopPos_y,double stopPos_z,
+             	                      int startVol,int stopVol) {
+#ifdef APP_USE_AIDA
+  if(!eventTuple) return;
+  
+  AIDA::ITuple* track = eventTuple->getTuple(8);
+  track->fill(0, pId);
+  track->fill(1, parent);  
+  track->fill(2, timeStart);
+  
+  AIDA::ITuple* direction = track->getTuple( 3 );
+  direction->fill(0, dx);
+  direction->fill(1, dy);
+  direction->fill(2, dz);
+  direction->addRow();
+
+  track->fill(4, mass);
+  track->fill(5, pTot);
+  track->fill(6, ETot);
+  
+  AIDA::ITuple* momentum = track->getTuple( 7 );                           //momentum
+  momentum->fill(0, px);
+  momentum->fill(1, py);
+  momentum->fill(2, pz);
+  momentum->addRow();
+
+  AIDA::ITuple* startPos = track->getTuple( 8 );                          //start position
+  startPos->fill(0, startPos_x);
+  startPos->fill(1, startPos_y);
+  startPos->fill(2, startPos_z);
+  startPos->addRow(); 
+
+  AIDA::ITuple* stopPos = track->getTuple( 9 );                          //stop position
+  stopPos->fill(0, stopPos_x); 
+  stopPos->fill(1, stopPos_y);
+  stopPos->fill(2, stopPos_z);
+  stopPos->addRow(); 
+
+  track->fill(10, startVol);
+  track->fill(11, stopVol);
+  
+  track->addRow();
+#endif
+  
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_track_leaf_pId->fill(pId);
+  fAnalysis.m_event_track_leaf_parent->fill(parent);  
+  fAnalysis.m_event_track_leaf_timeStart->fill(timeStart);
+
+    fAnalysis.m_event_track_direction_leaf_dx->fill(dx);
+    fAnalysis.m_event_track_direction_leaf_dy->fill(dy);
+    fAnalysis.m_event_track_direction_leaf_dz->fill(dz);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_direction_tree->fill(nbytes)) {
+      std::cout << "fAnalysis.m_event_track_direction_tree fill failed." << std::endl;
+    }}
+   
+  fAnalysis.m_event_track_leaf_mass->fill(mass);
+  fAnalysis.m_event_track_leaf_pTot->fill(pTot);
+  fAnalysis.m_event_track_leaf_ETot->fill(ETot);
+
+    fAnalysis.m_event_track_momentum_leaf_px->fill(px);
+    fAnalysis.m_event_track_momentum_leaf_py->fill(py);
+    fAnalysis.m_event_track_momentum_leaf_pz->fill(pz);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_momentum_tree->fill(nbytes)) {
+      std::cout << "fAnalysis.m_event_track_momentum_tree fill failed." << std::endl;
+    }}
+
+    fAnalysis.m_event_track_startPos_leaf_x->fill(startPos_x);
+    fAnalysis.m_event_track_startPos_leaf_y->fill(startPos_y);
+    fAnalysis.m_event_track_startPos_leaf_z->fill(startPos_z);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_startPos_tree->fill(nbytes)) {
+      std::cout << "fAnalysis.m_event_track_startPos_tree fill failed." << std::endl;
+    }}
+
+    fAnalysis.m_event_track_stopPos_leaf_x->fill(stopPos_x);
+    fAnalysis.m_event_track_stopPos_leaf_y->fill(stopPos_y);
+    fAnalysis.m_event_track_stopPos_leaf_z->fill(stopPos_z);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_stopPos_tree->fill(nbytes)) {
+      std::cout << "fAnalysis.m_event_track_stopPos_tree fill failed." << std::endl;
+    }}
+   
+  fAnalysis.m_event_track_leaf_startVol->fill(startVol);
+  fAnalysis.m_event_track_leaf_stopVol->fill(stopVol);
+   
+ {inlib::uint32 nbytes;
+  if(!fAnalysis.m_event_track_tree->fill(nbytes)) {
+    std::cout << "fAnalysis.m_event_track_tree fill failed." << std::endl;
+  }}
+#endif 
+}
+ 
