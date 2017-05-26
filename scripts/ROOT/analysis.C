@@ -256,9 +256,10 @@ void analysis()
       for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
 	Hit_pe->GetEntry(ki);
 
-        if(dump)
-	std::cout << "<" << hit_time << ">" 
-	  /* << "<" << trk_length << ">" */ ;
+        if(dump) {
+          std::cout << "<" << hit_time << ">";
+	  //std::cout << "<" << trk_length << ">";
+	}
 
         hits_times->Fill(hit_time);
 
