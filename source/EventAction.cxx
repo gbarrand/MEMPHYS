@@ -709,14 +709,14 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   fAnalysis.m_event_leaf_interMode->fill(mode);
   fAnalysis.m_event_leaf_vtxVol->fill(vtxvol);
 
-  fAnalysis.m_event_vtxPos_leaf_x->fill(vtx.x()/cm);
-  fAnalysis.m_event_vtxPos_leaf_y->fill(vtx.y()/cm);
-  fAnalysis.m_event_vtxPos_leaf_z->fill(vtx.z()/cm);
- {inlib::uint32 nbytes;
-  if(!fAnalysis.m_event_vtxPos_tree->fill(nbytes)) {
-    std::cout << "m_event_vtxPos_tree fill failed." << std::endl;
-  }}
-
+    fAnalysis.m_event_vtxPos_leaf_x->fill(vtx.x()/cm);
+    fAnalysis.m_event_vtxPos_leaf_y->fill(vtx.y()/cm);
+    fAnalysis.m_event_vtxPos_leaf_z->fill(vtx.z()/cm);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_vtxPos_tree->fill(nbytes)) {
+      std::cout << "m_event_vtxPos_tree fill failed." << std::endl;
+    }}
+  
   //----------------
   // The beam
   //----------------
@@ -724,40 +724,45 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   fAnalysis.m_event_track_leaf_parent->fill(parent);  
   fAnalysis.m_event_track_leaf_timeStart->fill(timeStart);
 
-  fAnalysis.m_event_track_direction_leaf_dx->fill(dx);
-  fAnalysis.m_event_track_direction_leaf_dy->fill(dy);
-  fAnalysis.m_event_track_direction_leaf_dz->fill(dz);
- {inlib::uint32 nbytes;
-  if(!fAnalysis.m_event_track_direction_tree->fill(nbytes)) {
-    std::cout << "m_event_track_direction_tree fill failed." << std::endl;
-  }}
- 
+    fAnalysis.m_event_track_direction_leaf_dx->fill(dx);
+    fAnalysis.m_event_track_direction_leaf_dy->fill(dy);
+    fAnalysis.m_event_track_direction_leaf_dz->fill(dz);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_direction_tree->fill(nbytes)) {
+      std::cout << "m_event_track_direction_tree fill failed." << std::endl;
+    }}
+   
   fAnalysis.m_event_track_leaf_mass->fill(mass);
   fAnalysis.m_event_track_leaf_pTot->fill(pTot);
   fAnalysis.m_event_track_leaf_ETot->fill(ETot);
 
- /*
-  AIDA::ITuple* momentum = track->getTuple( 7 );                           //momentum
-  momentum->fill(0, px);
-  momentum->fill(1, py);
-  momentum->fill(2, pz);
-  momentum->addRow();
+    fAnalysis.m_event_track_momentum_leaf_px->fill(px);
+    fAnalysis.m_event_track_momentum_leaf_py->fill(py);
+    fAnalysis.m_event_track_momentum_leaf_pz->fill(pz);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_momentum_tree->fill(nbytes)) {
+      std::cout << "m_event_track_momentum_tree fill failed." << std::endl;
+    }}
 
-  AIDA::ITuple* startPos = track->getTuple( 8 );                          //start position
-  startPos->fill(0, vtx.x()/cm);
-  startPos->fill(1, vtx.y()/cm);
-  startPos->fill(2, vtx.z()/cm);
-  startPos->addRow(); 
+    fAnalysis.m_event_track_startPos_leaf_x->fill(vtx.x()/cm);
+    fAnalysis.m_event_track_startPos_leaf_y->fill(vtx.y()/cm);
+    fAnalysis.m_event_track_startPos_leaf_z->fill(vtx.z()/cm);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_startPos_tree->fill(nbytes)) {
+      std::cout << "m_event_track_startPos_tree fill failed." << std::endl;
+    }}
 
-  AIDA::ITuple* stopPos = track->getTuple( 9 );                          //stop position
-  stopPos->fill(0, vtx.x()/cm); 
-  stopPos->fill(1, vtx.y()/cm);
-  stopPos->fill(2, vtx.z()/cm);
-  stopPos->addRow(); 
-
-  track->fill(10, startVol);
-  track->fill(11, stopVol);
- */  
+    fAnalysis.m_event_track_stopPos_leaf_x->fill(vtx.x()/cm);
+    fAnalysis.m_event_track_stopPos_leaf_y->fill(vtx.y()/cm);
+    fAnalysis.m_event_track_stopPos_leaf_z->fill(vtx.z()/cm);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_track_stopPos_tree->fill(nbytes)) {
+      std::cout << "m_event_track_stopPos_tree fill failed." << std::endl;
+    }}
+   
+  fAnalysis.m_event_track_leaf_startVol->fill(startVol);
+  fAnalysis.m_event_track_leaf_stopVol->fill(stopVol);
+   
   //add the Beam track to tuple
  {inlib::uint32 nbytes;
   if(!fAnalysis.m_event_track_tree->fill(nbytes)) {
