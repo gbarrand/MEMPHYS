@@ -160,8 +160,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
 
 #ifdef APP_USE_AIDA
-  if(!eventTuple) return;
-  if(!hitTimeTuple) return;
+  if(eventTuple && hitTimeTuple) {
 
   eventTuple->fill(0, event_id);                                    //eventId
   eventTuple->fill(1, vecRecNumber);                                //inputEvtId
@@ -593,8 +592,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   G4DigiManager* DMman = G4DigiManager::GetDMpointer(); //JEC FIXME: use data member
   
   // Get a pointer to the WC Digitizer module
-  WCDigitizer* WCDM =
-    (WCDigitizer*)DMman->FindDigitizerModule("WCReadout");
+  WCDigitizer* WCDM = (WCDigitizer*)DMman->FindDigitizerModule("WCReadout");
   if (!WCDM) {
     G4cout << "(JEC:EndOfEventAction): FATAL no WC Digitizer found" << G4endl;
     exit(0);
@@ -669,8 +667,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   
   // Get the digitized collection for the WC
   G4int WCDCID = DMman->GetDigiCollectionID("WCDigitizedCollection");
-  WCDigitsCollection * WCDC = 
-    (WCDigitsCollection*)DMman->GetDigiCollection(WCDCID);
+  WCDigitsCollection * WCDC = (WCDigitsCollection*)DMman->GetDigiCollection(WCDCID);
     
 
   AIDA::ITuple* digit = eventTuple->getTuple(13);
@@ -703,6 +700,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   
   //Save the Event
   eventTuple->addRow();
+  
+  } //if(eventTuple && hitTimeTuple)
 #endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
