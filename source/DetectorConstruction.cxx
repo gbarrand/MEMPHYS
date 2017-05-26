@@ -64,6 +64,7 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
 :fAnalysis(aAnalysis)
 ,geomTuple(0) {
 
+#ifdef APP_USE_AIDA
   //Get User Histo pointers
   AIDA::ITree* usrTree = aAnalysis.tree();
   if (!usrTree) {
@@ -84,7 +85,8 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
       exit(0);
     }
   }
-
+#endif
+  
   //-----------------
   // Create Materials
   //-----------------
@@ -134,6 +136,7 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
 
   messenger = new DetectorMessenger(this);
 
+#ifdef APP_USE_AIDA
   obj = usrTree->find("Geometry");
   if(!obj) {
     G4cout << "DetectorConstruction: FATAL: no tuple Geometry" << G4endl;
@@ -146,7 +149,7 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
     usrTree->ls();
     exit(0);
   }
-
+#endif
 }//Ctor
 
 //-----------------------------------------------------------------------------------------------

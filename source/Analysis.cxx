@@ -1,10 +1,12 @@
 #include "../MEMPHYS/Analysis.hh"
 
+#ifdef APP_USE_AIDA
 //AIDA
 #include <AIDA/IAnalysisFactory.h>
 #include <AIDA/ITreeFactory.h>
 #include <AIDA/ITree.h>
 #include <AIDA/ITupleFactory.h>
+#endif
 
 //Std
 #include <iostream>
@@ -12,11 +14,15 @@
 #include <string>
 
 MEMPHYS::Analysis::Analysis(
- AIDA::IAnalysisFactory* aAIDA
-,bool aBatch)
+#ifdef APP_USE_AIDA
+ AIDA::IAnalysisFactory* aAIDA,
+#endif 
+ bool aBatch)
 :fBatch(aBatch)
+#ifdef APP_USE_AIDA
 ,fAIDA(aAIDA)
 ,fTree(0)
+#endif
 #ifdef APP_USE_INLIB_WROOT
 ,m_file(std::cout,"MEMPHYS_inlib.root")
 
@@ -48,6 +54,7 @@ MEMPHYS::Analysis::Analysis(
 ,m_leaf_pmtInfos(0)
 #endif
 {
+#ifdef APP_USE_AIDA
   if(!fAIDA) return;
 
   AIDA::ITreeFactory* treeFactory = fAIDA->createTreeFactory();
@@ -87,7 +94,6 @@ MEMPHYS::Analysis::Analysis(
   //Time tuple for Interactive session needed for the time beeing (G.Barrand does'nt yet manage the Tuple into Tuple in his Tuple Explorer (JEC 5/4/06)
   column = "float time";
   tf->create("HitTime","MEMPHYS WC hit time info",column,"");
-
   }
 
   //Booking Geometry Tuple (JEC 18/11/05 replace the RunEVent ROOT IO)
@@ -103,6 +109,7 @@ MEMPHYS::Analysis::Analysis(
   tf->create("Geometry","MEMPHYS WC Geometry",column,"");
 
   delete tf;
+#endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
   
@@ -152,12 +159,15 @@ MEMPHYS::Analysis::Analysis(
 //----------------------------------------------------------------------
 MEMPHYS::Analysis::~Analysis(){
   //Not to be changed
-  if(!fTree) return;
+#ifdef APP_USE_AIDA
+  if(fTree) {
   if(fBatch) {
     fTree->commit();
     delete fTree;
     fTree = 0;
-  }
+  }}
+#endif
+  
 #ifdef APP_USE_INLIB_WROOT
  {unsigned int n;
   if(!m_file.write(n)) {
@@ -186,9 +196,12 @@ MEMPHYS::Analysis::~Analysis(){
 //----------------------------------------------------------------------
 
 void MEMPHYS::Analysis::closeTree(){
-  if(!fTree) return;
-  if(!fBatch) return;
-  fTree->commit();
-  delete fTree;
-  fTree = 0;
+#ifdef APP_USE_AIDA
+  if(fTree) {
+  if(fBatch) {
+    fTree->commit();
+    delete fTree;
+    fTree = 0;
+  }}
+#endif
 }
