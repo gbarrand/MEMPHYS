@@ -25,14 +25,17 @@ script="${script}                  ITuple stopPos   = { double  x,  y,  z }, "
 script="${script}                  int startVol, stopVol "
 script="${script}                }, "
 script="${script} int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, "
-script="${script} int nDigits, double sumPE, "
-script="${script} ITuple digit = { int tubeId, double pe, time }"
+script="${script} int nDigits, double sumPE, ITuple digit = { int tubeId, double pe, time }"
+
+#echo ${script}
 
 name=event
 title='MEMPHYS WC Event'
 file="${name}_tree"
 
-${inlib_app} -script=${script} -name=${name} -title=${title} -h    >& ../MEMPHYS/${file}_h.icc
-${inlib_app} -script=${script} -name=${name} -title=${title} -zero >& ../source/${file}_zero.icc
-${inlib_app} -script=${script} -name=${name} -title=${title} -icc  >& ../source/${file}_create.icc
+#${inlib_app} -script="${script}"
+#exit
+${inlib_app} -script="${script}" -name=${name} -h    >& ../MEMPHYS/${file}_h.icc
+${inlib_app} -script="${script}" -name=${name} -zero >& ../source/${file}_zero.icc
+${inlib_app} -script="${script}" -name=${name} -title="${title}" -icc  >& ../source/${file}_create.icc
 
