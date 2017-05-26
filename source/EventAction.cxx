@@ -159,10 +159,10 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 
   //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
 
+#ifdef APP_USE_AIDA
   if(!eventTuple) return;
   if(!hitTimeTuple) return;
 
-#ifdef APP_USE_AIDA
   eventTuple->fill(0, event_id);                                    //eventId
   eventTuple->fill(1, vecRecNumber);                                //inputEvtId
   eventTuple->fill(2, mode);                                        //interMode
