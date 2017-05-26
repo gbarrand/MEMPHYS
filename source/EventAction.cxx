@@ -117,8 +117,6 @@ void MEMPHYS::EventAction::BeginOfEventAction(const G4Event* evt){
 
 }//BeginOfEventAction
 
-//-------------------------------------------------------------------------------------------
-
 void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   G4cout << " (JEC) EventAction::End EventAction" << G4endl;
   
