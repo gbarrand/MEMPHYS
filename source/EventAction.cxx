@@ -877,14 +877,6 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
 #endif   
 }
 
-void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
-#ifdef APP_USE_AIDA
-  if(!hitTimeTuple) return;
-  hitTimeTuple->fill(0,peArrivalTime);
-  hitTimeTuple->addRow();
-#endif  
-}
-
 void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime) {
 #ifdef APP_USE_AIDA  
   if(!eventTuple) return;
@@ -894,4 +886,24 @@ void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,doubl
   digit->fill(2, tubeTime);
   digit->addRow();
 #endif
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_digit_tree->reset();
+  
+  fAnalysis.m_event_digit_leaf_tubeId->fill(tubeID);
+  fAnalysis.m_event_digit_leaf_pe->fill(tubePhotoElectrons);
+  fAnalysis.m_event_digit_leaf_time->fill(tubeTime);
+  
+ {inlib::uint32 nbytes;
+  if(!fAnalysis.m_event_digit_tree->fill(nbytes)) {
+    std::cout << "fAnalysis.m_event_digit_tree fill failed." << std::endl;
+  }}  
+#endif   
 }				      
+
+void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
+#ifdef APP_USE_AIDA
+  if(!hitTimeTuple) return;
+  hitTimeTuple->fill(0,peArrivalTime);
+  hitTimeTuple->addRow();
+#endif  
+}
