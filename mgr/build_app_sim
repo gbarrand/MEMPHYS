@@ -5,7 +5,6 @@
 bush_home=../../../../softinex/bush
 
 . ${bush_home}/args
-
 . ${bush_home}/ourex_header
 
 #//////////////////////////////////////////////////////
@@ -18,7 +17,8 @@ use_inlib=yes
 . ./geant4_82
 . ${bush_home}/use/inlib
 
-#cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+cppflags="${cppflags} -DAPP_USE_AIDA"
+cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
 
 enforce_archive=yes
 
