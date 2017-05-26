@@ -2,16 +2,37 @@
 
 bush_home=../../../../softinex/bush
 
-. ${bush_home}/args
+inlib_home="${bush_home}/../inexlib/inlib"
 
-./build_lib_MEMPHYSCore   ${build_args}
-./build_app_sim           ${build_args}
-./build_app_plot          ${build_args}
+save_dir=`pwd`
 
-${bush_home}/check_app root-config 'root-config program not found. MEMPHYS_[plot_ROOT,all_ROOT] not built.'
-use_status=$?
-if [ ${use_status} = 0 ] ; then
-  ./build_app_plot_ROOT  ${build_args}
-  ./build_app_all_ROOT   ${build_args}
-fi
+inlib_app=./inlib_wroot_trees
+c++ -o ${inlib_app} -I${inlib_home} ${inlib_home}/apps/wroot_trees.cpp
+use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+
+#//////////////////////////////////////////////////////////////
+#// event_trees : //////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////
+script="int eventId, inputEvtId, interMode, vtxVol, " 
+script="${script} ITuple vtxPos = { double x, y, z }, "
+script="${script} int nPart, leptonIndex, protonIndex, "
+script="${script} ITuple track = { int pId, parent, float timeStart, "
+script="${script}                  ITuple direction = { double dx, dy, dz }, "
+script="${script}                  double mass, pTot, ETot, "
+script="${script}                  ITuple momentum  = { double px, py, pz }, "
+script="${script}                  ITuple startPos  = { double  x,  y,  z }, "
+script="${script}                  ITuple stopPos   = { double  x,  y,  z }, "
+script="${script}                  int startVol, stopVol "
+script="${script}                }, "
+script="${script} int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, "
+script="${script} int nDigits, double sumPE, "
+script="${script} ITuple digit = { int tubeId, double pe, time }"
+
+name=event
+title='MEMPHYS WC Event'
+file="${name}_tree"
+
+${inlib_app} -script=${script} -name=${name} -title=${title} -h    >& ../MEMPHYS/${file}_h.icc
+${inlib_app} -script=${script} -name=${name} -title=${title} -zero >& ../source/${file}_zero.icc
+${inlib_app} -script=${script} -name=${name} -title=${title} -icc  >& ../source/${file}_create.icc
 
