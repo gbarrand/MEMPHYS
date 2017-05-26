@@ -498,6 +498,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	times.push_back(peArrivalTime);
         fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
+      
       fill_hit(tubeID_hit,totalPE,times,hits);
     }
   }//Hit container
