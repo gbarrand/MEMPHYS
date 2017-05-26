@@ -8,9 +8,10 @@ void geom() {
   TFile* file = new TFile("MEMPHYS.root");
   TTree* tGeom = (TTree*)file->Get("Geometry");
   
-  Double_t wcRadius, wcLenght;
+  Double_t wcRadius;
   tGeom->SetBranchAddress("wcRadius",&wcRadius);
-  tGeom->SetBranchAddress("wcLenght",&wcLenght);
+  Double_t wcLength;
+  tGeom->SetBranchAddress("wcLength",&wcLength);
   Double_t pmtRadius;
   tGeom->SetBranchAddress("pmtRadius",&pmtRadius);
   Int_t nPMTs;
@@ -18,7 +19,6 @@ void geom() {
   
   TTree* tGeom_wcOffset = new TTree();
   tGeom->SetBranchAddress("wcOffset",&tGeom_wcOffset);
-  Double_t xWC,yWC,zWC;
 
   TTree* tGeom_pmtInfos = new TTree();
   tGeom->SetBranchAddress("pmtInfos",&tGeom_pmtInfos);
@@ -33,7 +33,7 @@ void geom() {
   }
   tGeom->GetEntry(0); //suppose that there is only 1 entry
   
-  if(dump) std::cout << "WC Radius " << wcRadius << " Length " <<wcLenght << std::endl;  
+  if(dump) std::cout << "WC Radius " << wcRadius << " Length " <<wcLength << std::endl;  
   
   if ( tGeom_wcOffset->GetEntries() !=1 ) {
     std::cout << "Very suspect, #entries in wcOffset Tuple = " << tGeom_wcOffset->GetEntries()
@@ -41,6 +41,7 @@ void geom() {
     ::exit(1);
   }
   
+  Double_t xWC,yWC,zWC;
   tGeom_wcOffset->SetBranchAddress("x",&xWC);
   tGeom_wcOffset->SetBranchAddress("y",&yWC);
   tGeom_wcOffset->SetBranchAddress("z",&zWC);
@@ -63,8 +64,9 @@ void geom() {
     ::exit(1);
   }
   
-  Int_t pmtId, pmtLocation;
+  Int_t pmtId;
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
+  Int_t pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
@@ -74,8 +76,6 @@ void geom() {
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
 
-    if(dump) std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation << std::endl;
-    
     TTree* tGeom_pmtInfos_pmtOrient = new TTree();
     tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
 
@@ -115,7 +115,7 @@ void geom() {
 
     if(dump)
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
-	      << " pos. (" 
+              << " pos. (" 
 	      << xPMT << " , "
 	      << yPMT << " , "
 	      << zPMT << ")"
