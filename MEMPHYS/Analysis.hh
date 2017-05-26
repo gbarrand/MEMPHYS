@@ -48,7 +48,7 @@ class Analysis  : public virtual IAppManager {
     AIDA::IAnalysisFactory* fAIDA;
     AIDA::ITree* fTree;
 #endif
-  
+  public:  
     void fill_track(int pId,int parent,float timeStart,
 	            double dx,double dy,double dz,
                     double mass,double pTot, double ETot,double px,double py,double pz,

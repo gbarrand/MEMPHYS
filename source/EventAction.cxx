@@ -711,54 +711,11 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   //----------------
   // The beam
   //----------------
-  fAnalysis.m_event_track_leaf_pId->fill(pId);
-  fAnalysis.m_event_track_leaf_parent->fill(parent);  
-  fAnalysis.m_event_track_leaf_timeStart->fill(timeStart);
-
-    fAnalysis.m_event_track_direction_leaf_dx->fill(dx);
-    fAnalysis.m_event_track_direction_leaf_dy->fill(dy);
-    fAnalysis.m_event_track_direction_leaf_dz->fill(dz);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_track_direction_tree->fill(nbytes)) {
-      std::cout << "m_event_track_direction_tree fill failed." << std::endl;
-    }}
-   
-  fAnalysis.m_event_track_leaf_mass->fill(mass);
-  fAnalysis.m_event_track_leaf_pTot->fill(pTot);
-  fAnalysis.m_event_track_leaf_ETot->fill(ETot);
-
-    fAnalysis.m_event_track_momentum_leaf_px->fill(px);
-    fAnalysis.m_event_track_momentum_leaf_py->fill(py);
-    fAnalysis.m_event_track_momentum_leaf_pz->fill(pz);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_track_momentum_tree->fill(nbytes)) {
-      std::cout << "m_event_track_momentum_tree fill failed." << std::endl;
-    }}
-
-    fAnalysis.m_event_track_startPos_leaf_x->fill(vtx.x()/cm);
-    fAnalysis.m_event_track_startPos_leaf_y->fill(vtx.y()/cm);
-    fAnalysis.m_event_track_startPos_leaf_z->fill(vtx.z()/cm);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_track_startPos_tree->fill(nbytes)) {
-      std::cout << "m_event_track_startPos_tree fill failed." << std::endl;
-    }}
-
-    fAnalysis.m_event_track_stopPos_leaf_x->fill(vtx.x()/cm);
-    fAnalysis.m_event_track_stopPos_leaf_y->fill(vtx.y()/cm);
-    fAnalysis.m_event_track_stopPos_leaf_z->fill(vtx.z()/cm);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_track_stopPos_tree->fill(nbytes)) {
-      std::cout << "m_event_track_stopPos_tree fill failed." << std::endl;
-    }}
-   
-  fAnalysis.m_event_track_leaf_startVol->fill(startVol);
-  fAnalysis.m_event_track_leaf_stopVol->fill(stopVol);
-   
-  //add the Beam track to tuple
- {inlib::uint32 nbytes;
-  if(!fAnalysis.m_event_track_tree->fill(nbytes)) {
-    std::cout << "m_event_track_tree fill failed." << std::endl;
-  }}
+  fAnalysis.fill_track(pId,parent,timeStart,dx,dy,dz,
+                       mass,pTot,ETot,px,py,pz,
+                       vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+                       vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+                       startVol,stopVol);
 
  /*
   //----------------
