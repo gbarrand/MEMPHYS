@@ -54,7 +54,7 @@ void analysis_inlib()
   /// Read data and fill histos //////////////////////////
   ////////////////////////////////////////////////////////
   TFile* file = new TFile("MEMPHYS_inlib.root");
-  TTree* tEvent = (TTree*)file->Get("event");
+  TTree* tEvent = (TTree*)file->Get("Event");
 
  {TObjArray* brs = tEvent->GetListOfBranches();
   for(int i=0;i<brs->GetEntries();i++) {
@@ -244,7 +244,12 @@ void analysis_inlib()
   
       Event_hit->GetEntry(khit);
 
+      //Hit_pe->GetBranch("time")->SetFile(file);
+      
       Float_t hit_time;
+      
+      if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);
+      
       //Float_t trk_length; //NV 13/6/06
       Hit_pe->SetBranchAddress("time",&hit_time);
       //Hit_pe->SetBranchAddress("length",&trk_length);
@@ -268,6 +273,7 @@ void analysis_inlib()
       if(dump)
       std::cout << std::endl;
 
+      //Hit_pe->GetBranch("time")->SetFile((TFile*)0);
       delete Hit_pe;
     }//Loop on Hits
 
