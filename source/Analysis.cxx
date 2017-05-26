@@ -19,6 +19,9 @@ MEMPHYS::Analysis::Analysis(
 ,fTree(0)
 #ifdef APP_USE_INLIB_WROOT
 ,m_file(std::cout,"MEMPHYS_inlib.root")
+
+#include "event_tree_zero.icc"
+ 
 ,m_geom_tree(0)
 ,m_leaf_wcRadius(0)
 ,m_leaf_wcLength(0)
@@ -102,6 +105,10 @@ MEMPHYS::Analysis::Analysis(
   delete tf;
 
 #ifdef APP_USE_INLIB_WROOT
+  
+#include "event_tree_create.icc"
+
+  
   m_geom_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
   m_leaf_wcRadius = m_geom_tree->create_leaf<double>("wcRadius");
   m_leaf_wcLength = m_geom_tree->create_leaf<double>("wcLength");
