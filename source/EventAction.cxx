@@ -558,64 +558,10 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     G4cout << "(JEC) EventAction: No Digits for Event: "  << event_id << G4endl;
   }//digits collection
   
-#ifdef APP_USE_AIDA
-  //JEC FIXME: introduce enumeration for the column shared by Analysis/EventAction &  namespace protected
-
-  if(eventTuple) {
-
-  eventTuple->fill(0, event_id);
-  eventTuple->fill(1, vecRecNumber); //inputEvtId
-  eventTuple->fill(2, mode);         //interMode
-  eventTuple->fill(3, vtxvol);
-
-  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
-  vtxPos->fill(0, vtx.x()/cm);
-  vtxPos->fill(1, vtx.y()/cm);
-  vtxPos->fill(2, vtx.z()/cm);
-  vtxPos->addRow();
-  
-  eventTuple->fill(5, ntrack);
-  eventTuple->fill(6, leadingLeptonIndex);
-  eventTuple->fill(7, outgoingProtonIndex);
-  
-  eventTuple->fill(9, nHits);
-  eventTuple->fill(11, nDigits);
-  eventTuple->fill(12, sumPE);
-  
-  //Save the Event
-  eventTuple->addRow();
-  
-  } //if(eventTuple && hitTimeTuple)
-#endif //APP_USE_AIDA
-
-#ifdef APP_USE_INLIB_WROOT
-  fAnalysis.m_event_leaf_eventId->fill(event_id);
-  fAnalysis.m_event_leaf_inputEvtId->fill(vecRecNumber);
-  fAnalysis.m_event_leaf_interMode->fill(mode);
-  fAnalysis.m_event_leaf_vtxVol->fill(vtxvol);
-
-    fAnalysis.m_event_vtxPos_tree->reset();
-    fAnalysis.m_event_vtxPos_leaf_x->fill(vtx.x()/cm);
-    fAnalysis.m_event_vtxPos_leaf_y->fill(vtx.y()/cm);
-    fAnalysis.m_event_vtxPos_leaf_z->fill(vtx.z()/cm);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_event_vtxPos_tree->fill(nbytes)) {
-      std::cout << "m_event_vtxPos_tree fill failed." << std::endl;
-    }}
-  
-  fAnalysis.m_event_leaf_nPart->fill(ntrack);
-  fAnalysis.m_event_leaf_leptonIndex->fill(leadingLeptonIndex);
-  fAnalysis.m_event_leaf_protonIndex->fill(outgoingProtonIndex);
-  
-  fAnalysis.m_event_leaf_nHits->fill(nHits);
-  fAnalysis.m_event_leaf_nDigits->fill(nDigits);
-  fAnalysis.m_event_leaf_sumPE->fill(sumPE);
-  
- {inlib::uint32 nbytes;
-  if(!fAnalysis.m_event_tree->fill(nbytes)) {
-    std::cout << "m_event_tree fill failed." << std::endl;
-  }}
-#endif
+  fill_event(event_id,vecRecNumber,mode,vtxvol,
+             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,ntrack,
+             leadingLeptonIndex,outgoingProtonIndex,
+             nHits,nDigits,sumPE);
     
 }//EndOfEventAction
 
@@ -905,6 +851,66 @@ void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,doubl
   }}  
 #endif   
 }				      
+
+void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int vtxvol,
+				      double vtx_x,double vtx_y,double vtx_z,int ntrack,
+                                      int leadingLeptonIndex,int outgoingProtonIndex,
+                                      int nHits,int nDigits,double sumPE) {
+#ifdef APP_USE_AIDA
+  if(!eventTuple) return;
+
+  eventTuple->fill(0, event_id);
+  eventTuple->fill(1, vecRecNumber); //inputEvtId
+  eventTuple->fill(2, mode);         //interMode
+  eventTuple->fill(3, vtxvol);
+
+  AIDA::ITuple* vtxPos = eventTuple->getTuple( 4 );
+  vtxPos->fill(0, vtx_x);
+  vtxPos->fill(1, vtx_y);
+  vtxPos->fill(2, vtx_z);
+  vtxPos->addRow();
+  
+  eventTuple->fill(5, ntrack);
+  eventTuple->fill(6, leadingLeptonIndex);
+  eventTuple->fill(7, outgoingProtonIndex);
+  
+  eventTuple->fill(9, nHits);
+  eventTuple->fill(11, nDigits);
+  eventTuple->fill(12, sumPE);
+  
+  //Save the Event
+  eventTuple->addRow();
+#endif //APP_USE_AIDA
+
+#ifdef APP_USE_INLIB_WROOT
+  fAnalysis.m_event_leaf_eventId->fill(event_id);
+  fAnalysis.m_event_leaf_inputEvtId->fill(vecRecNumber);
+  fAnalysis.m_event_leaf_interMode->fill(mode);
+  fAnalysis.m_event_leaf_vtxVol->fill(vtxvol);
+
+    fAnalysis.m_event_vtxPos_tree->reset();
+    fAnalysis.m_event_vtxPos_leaf_x->fill(vtx_x);
+    fAnalysis.m_event_vtxPos_leaf_y->fill(vtx_y);
+    fAnalysis.m_event_vtxPos_leaf_z->fill(vtx_z);
+   {inlib::uint32 nbytes;
+    if(!fAnalysis.m_event_vtxPos_tree->fill(nbytes)) {
+      std::cout << "m_event_vtxPos_tree fill failed." << std::endl;
+    }}
+  
+  fAnalysis.m_event_leaf_nPart->fill(ntrack);
+  fAnalysis.m_event_leaf_leptonIndex->fill(leadingLeptonIndex);
+  fAnalysis.m_event_leaf_protonIndex->fill(outgoingProtonIndex);
+  
+  fAnalysis.m_event_leaf_nHits->fill(nHits);
+  fAnalysis.m_event_leaf_nDigits->fill(nDigits);
+  fAnalysis.m_event_leaf_sumPE->fill(sumPE);
+  
+ {inlib::uint32 nbytes;
+  if(!fAnalysis.m_event_tree->fill(nbytes)) {
+    std::cout << "m_event_tree fill failed." << std::endl;
+  }}
+#endif
+}    
 
 void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
 #ifdef APP_USE_AIDA
