@@ -173,17 +173,17 @@ MEMPHYS::Analysis::~Analysis(){
   if(!m_file.write(n)) {
     std::cout << "file write failed." << std::endl;
   }}  
-  m_file.close(); // m_file dstor will delete m_event_tree, m_geom_tree.
+  m_file.close(); // m_file dstor will delete m_Event_tree, m_geom_tree.
 
-  delete m_event_vtxPos_tree;
-  delete m_event_track_tree;
-  delete m_event_track_direction_tree;
-  delete m_event_track_momentum_tree;
-  delete m_event_track_startPos_tree;
-  delete m_event_track_stopPos_tree;
-  delete m_event_hit_tree;
-  delete m_event_hit_pe_tree;
-  delete m_event_digit_tree;
+  delete m_Event_vtxPos_tree;
+  delete m_Event_track_tree;
+  delete m_Event_track_direction_tree;
+  delete m_Event_track_momentum_tree;
+  delete m_Event_track_startPos_tree;
+  delete m_Event_track_stopPos_tree;
+  delete m_Event_hit_tree;
+  delete m_Event_hit_pe_tree;
+  delete m_Event_digit_tree;
   
   delete m_wcOffset_tree;
   delete m_pmtInfos_tree;
