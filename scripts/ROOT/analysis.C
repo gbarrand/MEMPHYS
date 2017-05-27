@@ -245,9 +245,8 @@ void analysis()
       Event_hit->GetEntry(khit);
 
       Float_t hit_time;
-      //Float_t trk_length; //NV 13/6/06
-      Hit_pe->SetBranchAddress("time",&hit_time);
-      //Hit_pe->SetBranchAddress("length",&trk_length);
+
+      if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);
 
       //JEC 16/1/06 add the tubeId_hit info
       if(dump)
