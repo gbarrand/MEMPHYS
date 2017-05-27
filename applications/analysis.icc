@@ -150,7 +150,7 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 template <class H1D,class H2D>
-inline bool read_data(AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D) {
+inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D) {
 
   AIDA::ITreeFactory* treeFactory = a_aida.createTreeFactory();
   if(!treeFactory) {
@@ -158,7 +158,7 @@ inline bool read_data(AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D
     return false;
   }
 
-  AIDA::ITree* tree = treeFactory->create("MEMPHYS.root","root",true,false);
+  AIDA::ITree* tree = treeFactory->create(a_file,"root",true,false);
   if(!tree) {
     std::cout << "can't open data file." << std::endl;
     delete treeFactory;
