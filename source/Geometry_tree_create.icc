@@ -1,0 +1,35 @@
+
+  // code produced automatically by the inlib wroot_trees app.
+
+  m_Geometry_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
+  m_Geometry_leaf_wcRadius = m_Geometry_tree->create_leaf<double>("wcRadius");
+  m_Geometry_leaf_wcLength = m_Geometry_tree->create_leaf<double>("wcLength");
+    
+    m_Geometry_wcOffset_tree = new inlib::wroot::tree(m_file.dir(),"wcOffset","wcOffset",false);
+    m_Geometry_wcOffset_leaf_x = m_Geometry_wcOffset_tree->create_leaf<double>("x");
+    m_Geometry_wcOffset_leaf_y = m_Geometry_wcOffset_tree->create_leaf<double>("y");
+    m_Geometry_wcOffset_leaf_z = m_Geometry_wcOffset_tree->create_leaf<double>("z");
+  m_Geometry_leaf_wcOffset = m_Geometry_tree->create_leaf("wcOffset",*m_Geometry_wcOffset_tree);
+    
+  m_Geometry_leaf_pmtRadius = m_Geometry_tree->create_leaf<double>("pmtRadius");
+  m_Geometry_leaf_nPMTs = m_Geometry_tree->create_leaf<int>("nPMTs");
+    
+    m_Geometry_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false);
+    m_Geometry_pmtInfos_leaf_pmtId = m_Geometry_pmtInfos_tree->create_leaf<int>("pmtId");
+    m_Geometry_pmtInfos_leaf_pmtLocation = m_Geometry_pmtInfos_tree->create_leaf<int>("pmtLocation");
+      
+      m_Geometry_pmtInfos_pmtOrient_tree = new inlib::wroot::tree(m_file.dir(),"pmtOrient","pmtOrient",false);
+      m_Geometry_pmtInfos_pmtOrient_leaf_dx = m_Geometry_pmtInfos_pmtOrient_tree->create_leaf<double>("dx");
+      m_Geometry_pmtInfos_pmtOrient_leaf_dy = m_Geometry_pmtInfos_pmtOrient_tree->create_leaf<double>("dy");
+      m_Geometry_pmtInfos_pmtOrient_leaf_dz = m_Geometry_pmtInfos_pmtOrient_tree->create_leaf<double>("dz");
+    m_Geometry_pmtInfos_leaf_pmtOrient = m_Geometry_pmtInfos_tree->create_leaf("pmtOrient",*m_Geometry_pmtInfos_pmtOrient_tree);
+      
+      
+      m_Geometry_pmtInfos_pmtPosition_tree = new inlib::wroot::tree(m_file.dir(),"pmtPosition","pmtPosition",false);
+      m_Geometry_pmtInfos_pmtPosition_leaf_x = m_Geometry_pmtInfos_pmtPosition_tree->create_leaf<double>("x");
+      m_Geometry_pmtInfos_pmtPosition_leaf_y = m_Geometry_pmtInfos_pmtPosition_tree->create_leaf<double>("y");
+      m_Geometry_pmtInfos_pmtPosition_leaf_z = m_Geometry_pmtInfos_pmtPosition_tree->create_leaf<double>("z");
+    m_Geometry_pmtInfos_leaf_pmtPosition = m_Geometry_pmtInfos_tree->create_leaf("pmtPosition",*m_Geometry_pmtInfos_pmtPosition_tree);
+      
+  m_Geometry_leaf_pmtInfos = m_Geometry_tree->create_leaf("pmtInfos",*m_Geometry_pmtInfos_tree);
+    
