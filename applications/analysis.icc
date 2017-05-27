@@ -197,11 +197,14 @@ inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H
   //nentries = 40;
   std::cout << "traitements de " << nentries << " entrees" << std::endl;
 
+  bool dump = false;
+  dump = true;
+
   int irow = 0;
   tuple->start();
   while(tuple->next() && (irow<nentries)) {
 
-    /*
+    if(dump) {
     int eventId = tuple->getInt(0);
     //int inputEvtId = tuple->getInt(1);
     //int interMode = tuple->getInt(2);
@@ -225,9 +228,9 @@ inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H
               <<" #digits: " << nDigits
               <<" sumPE " << sumPE
     	      << std::endl;
-    */
+    }
 
-    //if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
+    if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
 
     if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
     if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
