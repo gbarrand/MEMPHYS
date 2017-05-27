@@ -1,0 +1,79 @@
+
+  // code produced automatically by the inlib wroot_trees app.
+
+  m_Event_tree = new inlib::wroot::tree(m_file.dir(),"Event","MEMPHYS WC Event");
+  m_Event_leaf_eventId = m_Event_tree->create_leaf<int>("eventId");
+  m_Event_leaf_inputEvtId = m_Event_tree->create_leaf<int>("inputEvtId");
+  m_Event_leaf_interMode = m_Event_tree->create_leaf<int>("interMode");
+  m_Event_leaf_vtxVol = m_Event_tree->create_leaf<int>("vtxVol");
+    
+    m_Event_vtxPos_tree = new inlib::wroot::tree(m_file.dir(),"vtxPos","vtxPos",false);
+    m_Event_vtxPos_leaf_x = m_Event_vtxPos_tree->create_leaf<double>("x");
+    m_Event_vtxPos_leaf_y = m_Event_vtxPos_tree->create_leaf<double>("y");
+    m_Event_vtxPos_leaf_z = m_Event_vtxPos_tree->create_leaf<double>("z");
+  m_Event_leaf_vtxPos = m_Event_tree->create_leaf("vtxPos",*m_Event_vtxPos_tree);
+    
+  m_Event_leaf_nPart = m_Event_tree->create_leaf<int>("nPart");
+  m_Event_leaf_leptonIndex = m_Event_tree->create_leaf<int>("leptonIndex");
+  m_Event_leaf_protonIndex = m_Event_tree->create_leaf<int>("protonIndex");
+    
+    m_Event_track_tree = new inlib::wroot::tree(m_file.dir(),"track","track",false);
+    m_Event_track_leaf_pId = m_Event_track_tree->create_leaf<int>("pId");
+    m_Event_track_leaf_parent = m_Event_track_tree->create_leaf<int>("parent");
+    m_Event_track_leaf_timeStart = m_Event_track_tree->create_leaf<float>("timeStart");
+      
+      m_Event_track_direction_tree = new inlib::wroot::tree(m_file.dir(),"direction","direction",false);
+      m_Event_track_direction_leaf_dx = m_Event_track_direction_tree->create_leaf<double>("dx");
+      m_Event_track_direction_leaf_dy = m_Event_track_direction_tree->create_leaf<double>("dy");
+      m_Event_track_direction_leaf_dz = m_Event_track_direction_tree->create_leaf<double>("dz");
+    m_Event_track_leaf_direction = m_Event_track_tree->create_leaf("direction",*m_Event_track_direction_tree);
+      
+    m_Event_track_leaf_mass = m_Event_track_tree->create_leaf<double>("mass");
+    m_Event_track_leaf_pTot = m_Event_track_tree->create_leaf<double>("pTot");
+    m_Event_track_leaf_ETot = m_Event_track_tree->create_leaf<double>("ETot");
+      
+      m_Event_track_momentum_tree = new inlib::wroot::tree(m_file.dir(),"momentum","momentum",false);
+      m_Event_track_momentum_leaf_px = m_Event_track_momentum_tree->create_leaf<double>("px");
+      m_Event_track_momentum_leaf_py = m_Event_track_momentum_tree->create_leaf<double>("py");
+      m_Event_track_momentum_leaf_pz = m_Event_track_momentum_tree->create_leaf<double>("pz");
+    m_Event_track_leaf_momentum = m_Event_track_tree->create_leaf("momentum",*m_Event_track_momentum_tree);
+      
+      
+      m_Event_track_startPos_tree = new inlib::wroot::tree(m_file.dir(),"startPos","startPos",false);
+      m_Event_track_startPos_leaf_x = m_Event_track_startPos_tree->create_leaf<double>("x");
+      m_Event_track_startPos_leaf_y = m_Event_track_startPos_tree->create_leaf<double>("y");
+      m_Event_track_startPos_leaf_z = m_Event_track_startPos_tree->create_leaf<double>("z");
+    m_Event_track_leaf_startPos = m_Event_track_tree->create_leaf("startPos",*m_Event_track_startPos_tree);
+      
+      
+      m_Event_track_stopPos_tree = new inlib::wroot::tree(m_file.dir(),"stopPos","stopPos",false);
+      m_Event_track_stopPos_leaf_x = m_Event_track_stopPos_tree->create_leaf<double>("x");
+      m_Event_track_stopPos_leaf_y = m_Event_track_stopPos_tree->create_leaf<double>("y");
+      m_Event_track_stopPos_leaf_z = m_Event_track_stopPos_tree->create_leaf<double>("z");
+    m_Event_track_leaf_stopPos = m_Event_track_tree->create_leaf("stopPos",*m_Event_track_stopPos_tree);
+      
+    m_Event_track_leaf_startVol = m_Event_track_tree->create_leaf<int>("startVol");
+    m_Event_track_leaf_stopVol = m_Event_track_tree->create_leaf<int>("stopVol");
+  m_Event_leaf_track = m_Event_tree->create_leaf("track",*m_Event_track_tree);
+    
+  m_Event_leaf_nHits = m_Event_tree->create_leaf<int>("nHits");
+    
+    m_Event_hit_tree = new inlib::wroot::tree(m_file.dir(),"hit","hit",false);
+    m_Event_hit_leaf_tubeId = m_Event_hit_tree->create_leaf<int>("tubeId");
+    m_Event_hit_leaf_totalPE = m_Event_hit_tree->create_leaf<int>("totalPE");
+      
+      m_Event_hit_pe_tree = new inlib::wroot::tree(m_file.dir(),"pe","pe",false);
+      m_Event_hit_pe_leaf_time = m_Event_hit_pe_tree->create_leaf<float>("time");
+    m_Event_hit_leaf_pe = m_Event_hit_tree->create_leaf("pe",*m_Event_hit_pe_tree);
+      
+  m_Event_leaf_hit = m_Event_tree->create_leaf("hit",*m_Event_hit_tree);
+    
+  m_Event_leaf_nDigits = m_Event_tree->create_leaf<int>("nDigits");
+  m_Event_leaf_sumPE = m_Event_tree->create_leaf<double>("sumPE");
+    
+    m_Event_digit_tree = new inlib::wroot::tree(m_file.dir(),"digit","digit",false);
+    m_Event_digit_leaf_tubeId = m_Event_digit_tree->create_leaf<int>("tubeId");
+    m_Event_digit_leaf_pe = m_Event_digit_tree->create_leaf<double>("pe");
+    m_Event_digit_leaf_time = m_Event_digit_tree->create_leaf<double>("time");
+  m_Event_leaf_digit = m_Event_tree->create_leaf("digit",*m_Event_digit_tree);
+    
