@@ -23,10 +23,11 @@ class G4VPhysicalVolume;
 
 
 
-
+#ifdef APP_USE_AIDA
 namespace AIDA {
   class ITuple;
 }
+#endif
 
 namespace MEMPHYS {
 
@@ -96,8 +97,10 @@ private:
 
   //JEC FIXME is it necessary to maintain fAnalysis?
   Analysis&  fAnalysis;            //the Analysis JEC 18/11/05
+#ifdef APP_USE_AIDA
   AIDA::ITuple*     geomTuple;            //the Geometry tuple
-
+#endif
+  
   // Sensitive Detectors. We declare the pointers here because we need
   // to check their state if we change the geometry.
   WCSD*  aWCPMT;
