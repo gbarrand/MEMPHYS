@@ -204,14 +204,15 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   AIDA::ITuple* tracks = eventTuple->getTuple(8);  
   AIDA::ITuple* hits = eventTuple->getTuple(10);
   AIDA::ITuple* digits = eventTuple->getTuple(13);
+#else  
+  void* tracks = 0;
+  void* hits = 0;
+  void* digits = 0;
 #endif
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_event_track_tree->reset();
   fAnalysis.m_event_hit_tree->reset();
   fAnalysis.m_event_digit_tree->reset();
-  void* tracks = 0;
-  void* hits = 0;
-  void* digits = 0;
 #endif
     
   fill_track(pId,parent,timeStart,dx,dy,dz,
