@@ -62,7 +62,10 @@
 
 MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis) 
 :fAnalysis(aAnalysis)
-,geomTuple(0) {
+#ifdef APP_USE_AIDA
+,geomTuple(0)
+#endif
+{
 
 #ifdef APP_USE_AIDA
   //Get User Histo pointers
@@ -1530,8 +1533,6 @@ void MEMPHYS::DetectorConstruction::DumpGeometryTableToFile() {
 //---------------------------------------------------------------------------------------------
 
 void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
-  if(!geomTuple) return; //Running from MEMPHYS_session.
-
   G4cout << "DetectorConstruction::FillGeometryTuple : begin" << G4endl;
 
   G4Transform3D newTransform;
@@ -1540,6 +1541,8 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   cyl_location cylLocation;
 
 #ifdef APP_USE_AIDA
+  if(geomTuple) {
+
   //JEC Have a look at MEMPHYS::Analysis for the description of the Tuple variables
   geomTuple->fill(0, WCCylInfo[0]);                                   //wcRadius
   
@@ -1594,7 +1597,7 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   }//eo loop on PMTs 
 
   //Save the geom
-  geomTuple->addRow();
+  geomTuple->addRow();}
 #endif //APP_USE_AIDA
   
 #ifdef APP_USE_INLIB_WROOT
