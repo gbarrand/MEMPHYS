@@ -489,7 +489,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     nHits = WCHC->entries();
  
     //JEC FIWME save the time information also later
-    std::vector<float> times;
     for (G4int i=0; i<nHits  ;i++) {
       
       (*WCHC)[i]->UpdateColour();
@@ -497,7 +496,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       tubeID_hit = (*WCHC)[i]->GetTubeID(); //JEC 16/1/06
       totalPE = (*WCHC)[i]->GetTotalPe();
 
-      times.clear();
+      std::vector<float> times;
       for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
 	peArrivalTime = (*WCHC)[i]->GetTime(j); 
 	times.push_back(peArrivalTime);
