@@ -8,6 +8,10 @@
 #include <AIDA/ITupleFactory.h>
 #endif
 
+#ifdef APP_USE_INLIB_WROOT
+#include <exlib/zlib>
+#endif
+
 //Std
 #include <iostream>
 #include <vector>
@@ -88,7 +92,8 @@ MEMPHYS::Analysis::Analysis(
 #endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
-  
+  m_file.add_ziper('Z',exlib::compress_buffer);
+  m_file.set_compression(1); //max is 9.
 #include "Event_tree_create.icc"
 #include "Geometry_tree_create.icc"
 #endif
