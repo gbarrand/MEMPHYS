@@ -135,7 +135,6 @@ MEMPHYS::Analysis::Analysis(
     m_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false); //false = not managed.
     m_pmtInfos_leaf_pmtId = m_pmtInfos_tree->create_leaf<int>("pmtId");
     m_pmtInfos_leaf_pmtLocation = m_pmtInfos_tree->create_leaf<int>("pmtLocation");
-    //column +=                      "ITuple pmtPosition = { double  x,  y,  z } ";
 
       m_pmtOrient_tree = new inlib::wroot::tree(m_file.dir(),"pmtOrient","pmtOrient",false); //false = not managed.
       m_pmtOrient_leaf_dx = m_pmtOrient_tree->create_leaf<double>("dx");
