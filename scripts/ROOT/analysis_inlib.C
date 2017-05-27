@@ -244,15 +244,9 @@ void analysis_inlib()
   
       Event_hit->GetEntry(khit);
 
-      //Hit_pe->GetBranch("time")->SetFile(file);
-      
       Float_t hit_time;
       
       if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);
-      
-      //Float_t trk_length; //NV 13/6/06
-      Hit_pe->SetBranchAddress("time",&hit_time);
-      //Hit_pe->SetBranchAddress("length",&trk_length);
 
       //JEC 16/1/06 add the tubeId_hit info
       if(dump)
@@ -273,7 +267,6 @@ void analysis_inlib()
       if(dump)
       std::cout << std::endl;
 
-      //Hit_pe->GetBranch("time")->SetFile((TFile*)0);
       delete Hit_pe;
     }//Loop on Hits
 
