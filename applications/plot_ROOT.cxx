@@ -16,12 +16,20 @@ extern "C" {
 }
 #endif
 
+#include <inlib/args>
 #include <iostream>
 
-int main(int aArgc,char* aArgv[]) {
-  //ROOT::GetROOT();
+int main(int a_argc,char* a_argv[]) {
+
+#ifdef INLIB_MEM
+  inlib::mem::set_check_by_class(true);{
+#endif //INLIB_MEM
+
+  inlib::args args(a_argc,a_argv);
+  std::string file;
+  if(!args.file(file)) file = "MEMPHYS.root";
   
-  new TApplication("MEMPHYS_analysis_aida_ROOT",&aArgc,aArgv);
+  new TApplication("MEMPHYS_analysis_aida_ROOT",&a_argc,a_argv);
 
   ////////////////////////////////////////////////////////
   // Create histograms : /////////////////////////////////
@@ -49,7 +57,7 @@ int main(int aArgc,char* aArgv[]) {
     return EXIT_FAILURE;
   }
 
-  if(!read_data(*aida,*hits_times,*digits_time_pe)) {
+  if(!read_data(file,*aida,*hits_times,*digits_time_pe)) {
     std::cout << "can't read data file." << std::endl;
     delete aida;
     return EXIT_FAILURE;
@@ -72,6 +80,10 @@ int main(int aArgc,char* aArgv[]) {
   plotter->Update();
 
   gSystem->Run();
+
+#ifdef INLIB_MEM
+  }inlib::mem::balance(std::cout);
+#endif //INLIB_MEM
 
   return EXIT_SUCCESS;
 }
