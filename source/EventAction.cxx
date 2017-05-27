@@ -204,15 +204,14 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   AIDA::ITuple* tracks = eventTuple->getTuple(8);  
   AIDA::ITuple* hits = eventTuple->getTuple(10);
   AIDA::ITuple* digits = eventTuple->getTuple(13);
-#else
-  void* tracks = 0;
-  void* hits = 0;
-  void* digits = 0;
 #endif
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_event_track_tree->reset();
   fAnalysis.m_event_hit_tree->reset();
   fAnalysis.m_event_digit_tree->reset();
+  void* tracks = 0;
+  void* hits = 0;
+  void* digits = 0;
 #endif
     
   fill_track(pId,parent,timeStart,dx,dy,dz,
@@ -702,7 +701,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
                                       double stopPos_x,double stopPos_y,double stopPos_z,
              	                      int startVol,int stopVol,void* container) {
 #ifdef APP_USE_AIDA
-  AIDA::ITuple* track = (AIDA::ITuple*)container;
+ {AIDA::ITuple* track = (AIDA::ITuple*)container;
   
   track->fill(0, pId);
   track->fill(1, parent);  
@@ -739,7 +738,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
   track->fill(10, startVol);
   track->fill(11, stopVol);
   
-  track->addRow();
+  track->addRow();}
 #endif
   
 #ifdef APP_USE_INLIB_WROOT
@@ -799,7 +798,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
  
 void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times,void* container) {
 #ifdef APP_USE_AIDA    
-  AIDA::ITuple* hit = (AIDA::ITuple*)container;
+ {AIDA::ITuple* hit = (AIDA::ITuple*)container;
   
   hit->fill(0,tubeID_hit);
   hit->fill(1,totalPE);
@@ -810,7 +809,7 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
     pe->addRow();
   }
   
-  hit->addRow();
+  hit->addRow();}
 #endif  
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_event_hit_leaf_tubeId->fill(tubeID_hit);
@@ -834,11 +833,11 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector
 
 void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime,void* container) {
 #ifdef APP_USE_AIDA  
-  AIDA::ITuple* digit = (AIDA::ITuple*)container;
+ {AIDA::ITuple* digit = (AIDA::ITuple*)container;
   digit->fill(0, tubeID);
   digit->fill(1, tubePhotoElectrons);
   digit->fill(2, tubeTime);
-  digit->addRow();
+  digit->addRow();}
 #endif
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_event_digit_leaf_tubeId->fill(tubeID);
@@ -857,8 +856,7 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
                                       int leadingLeptonIndex,int outgoingProtonIndex,
                                       int nHits,int nDigits,double sumPE) {
 #ifdef APP_USE_AIDA
-  if(!eventTuple) return;
-
+  if(eventTuple) {
   eventTuple->fill(0, event_id);
   eventTuple->fill(1, vecRecNumber); //inputEvtId
   eventTuple->fill(2, mode);         //interMode
@@ -880,6 +878,7 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
   
   //Save the Event
   eventTuple->addRow();
+  }
 #endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
@@ -914,8 +913,9 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
 
 void MEMPHYS::EventAction::fill_hit_time(float peArrivalTime) {
 #ifdef APP_USE_AIDA
-  if(!hitTimeTuple) return;
-  hitTimeTuple->fill(0,peArrivalTime);
-  hitTimeTuple->addRow();
+  if(hitTimeTuple) {
+    hitTimeTuple->fill(0,peArrivalTime);
+    hitTimeTuple->addRow();
+  }
 #endif  
 }
