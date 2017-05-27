@@ -11,7 +11,7 @@ c++ -o ${inlib_app} -I${inlib_home} ${inlib_home}/apps/wroot_trees.cpp
 use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 
 #//////////////////////////////////////////////////////////////
-#// event_trees : //////////////////////////////////////////////
+#// Event : ///////////////////////////////////////////////////
 #//////////////////////////////////////////////////////////////
 script="int eventId, inputEvtId, interMode, vtxVol, " 
 script="${script} ITuple vtxPos = { double x, y, z }, "
@@ -29,7 +29,7 @@ script="${script} int nDigits, double sumPE, ITuple digit = { int tubeId, double
 
 #echo ${script}
 
-name=event
+name=Event
 title='MEMPHYS WC Event'
 file="${name}_tree"
 
@@ -40,4 +40,26 @@ ${inlib_app} -script="${script}" -name=${name} -h    >& ../MEMPHYS/${file}_h.icc
 ${inlib_app} -script="${script}" -name=${name} -zero >& ../source/${file}_zero.icc
 ${inlib_app} -script="${script}" -name=${name} -title="${title}" -icc  >& ../source/${file}_create.icc
 
+#//////////////////////////////////////////////////////////////
+#// Geometry : ////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////
+script="double wcRadius, wcLength, ITuple wcOffset = {double x, y, z}, "
+script="${script}  double pmtRadius, int nPMTs,  "
+script="${script}  ITuple pmtInfos = { "
+script="${script}                      int pmtId, pmtLocation, "
+script="${script}                      ITuple pmtOrient   = { double dx, dy, dz }, "
+script="${script}                      ITuple pmtPosition = { double  x,  y,  z } "
+script="${script}                    }"
+  
+name=Geometry
+title='MEMPHYS WC Geometry'
+file="${name}_tree"
+
+${inlib_app} -script="${script}" -name=${name} -h    >& ../MEMPHYS/${file}_h.icc
+${inlib_app} -script="${script}" -name=${name} -zero >& ../source/${file}_zero.icc
+${inlib_app} -script="${script}" -name=${name} -title="${title}" -icc  >& ../source/${file}_create.icc
+
+#//////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////
 /bin/rm -f ${inlib_app}
