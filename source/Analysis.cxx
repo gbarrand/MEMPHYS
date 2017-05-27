@@ -26,7 +26,8 @@ MEMPHYS::Analysis::Analysis(
 #ifdef APP_USE_INLIB_WROOT
 ,m_file(std::cout,"MEMPHYS_inlib.root")
 
-#include "event_tree_zero.icc"
+#include "Event_tree_zero.icc"
+#include "Geometry_tree_zero.icc"
  
 ,m_geom_tree(0)
 ,m_leaf_wcRadius(0)
@@ -114,44 +115,8 @@ MEMPHYS::Analysis::Analysis(
 
 #ifdef APP_USE_INLIB_WROOT
   
-#include "event_tree_create.icc"
-
-  
-  m_geom_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
-  m_leaf_wcRadius = m_geom_tree->create_leaf<double>("wcRadius");
-  m_leaf_wcLength = m_geom_tree->create_leaf<double>("wcLength");
-  
-    // Do not let the file directory manage a sub tree, else its going to be saved in the file.
-    // Only the main geom tree should appear in the file.
-    m_wcOffset_tree = new inlib::wroot::tree(m_file.dir(),"wcOffset","wcOffset",false); //false = not managed.
-    m_wcOffset_leaf_x = m_wcOffset_tree->create_leaf<double>("x");
-    m_wcOffset_leaf_y = m_wcOffset_tree->create_leaf<double>("y");
-    m_wcOffset_leaf_z = m_wcOffset_tree->create_leaf<double>("z");  
-  m_leaf_wcOffset = m_geom_tree->create_leaf("wcOffset",*m_wcOffset_tree);
-  
-  m_leaf_pmtRadius = m_geom_tree->create_leaf<double>("pmtRadius");
-  m_leaf_nPMTs = m_geom_tree->create_leaf<int>("nPMTs");
-
-    m_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false); //false = not managed.
-    m_pmtInfos_leaf_pmtId = m_pmtInfos_tree->create_leaf<int>("pmtId");
-    m_pmtInfos_leaf_pmtLocation = m_pmtInfos_tree->create_leaf<int>("pmtLocation");
-
-      m_pmtOrient_tree = new inlib::wroot::tree(m_file.dir(),"pmtOrient","pmtOrient",false); //false = not managed.
-      m_pmtOrient_leaf_dx = m_pmtOrient_tree->create_leaf<double>("dx");
-      m_pmtOrient_leaf_dy = m_pmtOrient_tree->create_leaf<double>("dy");
-      m_pmtOrient_leaf_dz = m_pmtOrient_tree->create_leaf<double>("dz");
-    m_pmtInfos_leaf_Orient = m_pmtInfos_tree->create_leaf("pmtOrient",*m_pmtOrient_tree);
-
-      m_pmtPosition_tree = new inlib::wroot::tree(m_file.dir(),"pmtPosition","pmtPosition",false); //false = not managed.
-      m_pmtPosition_leaf_x = m_pmtPosition_tree->create_leaf<double>("x");
-      m_pmtPosition_leaf_y = m_pmtPosition_tree->create_leaf<double>("y");
-      m_pmtPosition_leaf_z = m_pmtPosition_tree->create_leaf<double>("z");
-    m_pmtInfos_leaf_Position = m_pmtInfos_tree->create_leaf("pmtPosition",*m_pmtPosition_tree);
-
-
-  m_leaf_pmtInfos = m_geom_tree->create_leaf("pmtInfos",*m_pmtInfos_tree);
-
-  
+#include "Event_tree_create.icc"
+#include "Geometry_tree_create.icc"
 #endif
   
 }//Ctor
