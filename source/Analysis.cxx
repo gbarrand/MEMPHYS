@@ -25,34 +25,8 @@ MEMPHYS::Analysis::Analysis(
 #endif
 #ifdef APP_USE_INLIB_WROOT
 ,m_file(std::cout,"MEMPHYS_inlib.root")
-
 #include "Event_tree_zero.icc"
 #include "Geometry_tree_zero.icc"
- 
-,m_geom_tree(0)
-,m_leaf_wcRadius(0)
-,m_leaf_wcLength(0)
-  ,m_wcOffset_tree(0)
-  ,m_wcOffset_leaf_x(0)
-  ,m_wcOffset_leaf_y(0)
-  ,m_wcOffset_leaf_z(0)
-,m_leaf_wcOffset(0)
-,m_leaf_pmtRadius(0)
-,m_leaf_nPMTs(0)
-  ,m_pmtInfos_tree(0)
-  ,m_pmtInfos_leaf_pmtId(0)
-  ,m_pmtInfos_leaf_pmtLocation(0)
-    ,m_pmtOrient_tree(0)
-    ,m_pmtOrient_leaf_dx(0)
-    ,m_pmtOrient_leaf_dy(0)
-    ,m_pmtOrient_leaf_dz(0)
-  ,m_pmtInfos_leaf_Orient(0)
-    ,m_pmtPosition_tree(0)
-    ,m_pmtPosition_leaf_x(0)
-    ,m_pmtPosition_leaf_y(0)
-    ,m_pmtPosition_leaf_z(0)
-  ,m_pmtInfos_leaf_Position(0)
-,m_leaf_pmtInfos(0)
 #endif
 {
 #ifdef APP_USE_AIDA
