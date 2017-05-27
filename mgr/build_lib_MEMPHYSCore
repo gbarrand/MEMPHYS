@@ -11,8 +11,21 @@ build_shlib=no
 
 if [ ${build_compile} = "yes" ] ; then
 
-cppflags="${cppflags} -DAPP_USE_AIDA"
-cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+build_use_wroot=yes    
+if [ ${build_use_wroot} = yes ] ; then    
+  cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+  use_exlib=yes
+  use_zlib=yes
+  . ${bush_home}/use/exlib
+  . ${bush_home}/use/zlib
+fi
+
+build_use_aida=yes    
+if [ ${build_use_aida} = yes ] ; then    
+  cppflags="${cppflags} -DAPP_USE_AIDA"
+  use_AIDA=yes
+  . ${bush_home}/use/AIDA
+fi    
     
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cxx"
@@ -39,11 +52,10 @@ cppfiles="${cppfiles} ../source/WCSD.cxx"
 #////////////////////////////////////
 #////////////////////////////////////
 #////////////////////////////////////
-use_AIDA=yes
+
 use_inlib=yes
 use_geant4=yes
 
-. ${bush_home}/use/AIDA
 . ${bush_home}/use/inlib
 . ./geant4_82
 
