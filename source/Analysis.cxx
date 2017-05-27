@@ -174,7 +174,7 @@ MEMPHYS::Analysis::~Analysis(){
   if(!m_file.write(n)) {
     std::cout << "file write failed." << std::endl;
   }}  
-  m_file.close(); // m_file dstor will delete m_geom_tree.
+  m_file.close(); // m_file dstor will delete m_event_tree, m_geom_tree.
 
   delete m_event_vtxPos_tree;
   delete m_event_track_tree;
