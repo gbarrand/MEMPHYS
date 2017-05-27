@@ -1558,35 +1558,30 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   
   geomTuple->fill(4, totalNumPMTs);                                  //nPMTs
 
-  AIDA::ITuple* pmtInfos;
-  AIDA::ITuple* pmtOrient;
-  AIDA::ITuple* pmtPosition;
-
-  pmtInfos = geomTuple->getTuple( 5 );                //pmtInfos (JEC 21/4/06 fix: should be placed here)
+  AIDA::ITuple* pmtInfos = geomTuple->getTuple( 5 );                //pmtInfos (JEC 21/4/06 fix: should be placed here)
 
   G4cout << "DetectorConstruction::FillGeometryTuple : " 
          << " totalNumPMTs = " << totalNumPMTs 
          << G4endl;
 
   for ( int tubeID = 1; tubeID <= totalNumPMTs; tubeID++){
-    pmtInfos->fill(0, tubeID);                                          //pmtId 
-
     cylLocation    = tubeCylLocation[tubeID];
+    newTransform   = tubeIDMap[tubeID];
+    pmtOrientation = newTransform * nullOrient;
+    
+    pmtInfos->fill(0, tubeID);                                          //pmtId 
     pmtInfos->fill(1, cylLocation);                                     //pmtLocation
     
     //std::cout << "PMT [" << tubeID <<"]: loc. " <<  cylLocation << std::endl;
     
-    newTransform   = tubeIDMap[tubeID];
-    pmtOrient = pmtInfos->getTuple( 2 );                   //pmtOrient
+    AIDA::ITuple* pmtOrient = pmtInfos->getTuple( 2 );                   //pmtOrient
     // Get tube orientation vector
-    pmtOrientation = newTransform * nullOrient;
     pmtOrient->fill(0, pmtOrientation.x());                                 //dx
     pmtOrient->fill(1, pmtOrientation.y());                                 //dy
     pmtOrient->fill(2, pmtOrientation.z());                                 //dz
     pmtOrient->addRow();
 
-
-    pmtPosition = pmtInfos->getTuple( 3 );                //pmtPosition
+    AIDA::ITuple* pmtPosition = pmtInfos->getTuple( 3 );                //pmtPosition
     pmtPosition->fill(0,  newTransform.getTranslation().getX()/cm);        //x
     pmtPosition->fill(1,  newTransform.getTranslation().getY()/cm);        //y
     pmtPosition->fill(2,  newTransform.getTranslation().getZ()/cm);        //z
@@ -1620,12 +1615,12 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
     fAnalysis.m_pmtInfos_tree->reset();
     for ( int tubeID = 1; tubeID <= totalNumPMTs; tubeID++){
       cylLocation    = tubeCylLocation[tubeID];
-      fAnalysis.m_pmtInfos_leaf_pmtId->fill(tubeID);
-      fAnalysis.m_pmtInfos_leaf_pmtLocation->fill(cylLocation);
-
       newTransform   = tubeIDMap[tubeID];
       pmtOrientation = newTransform * nullOrient;
       
+      fAnalysis.m_pmtInfos_leaf_pmtId->fill(tubeID);
+      fAnalysis.m_pmtInfos_leaf_pmtLocation->fill(cylLocation);
+
       fAnalysis.m_pmtOrient_tree->reset();
       fAnalysis.m_pmtOrient_leaf_dx->fill(pmtOrientation.x());
       fAnalysis.m_pmtOrient_leaf_dy->fill(pmtOrientation.y());
