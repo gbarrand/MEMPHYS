@@ -30,7 +30,7 @@ extern "C" {
   void BatchLabRioInitialize(Slash::Core::ISession&);
 }
 #endif
-#endif
+#endif //APP_USE_AIDA
 
 #ifdef APP_USE_INLIB_WROOT
 #ifdef INLIB_MEM
