@@ -31,11 +31,7 @@
     inlib::wroot::tree* m_Event_hit_tree;
     inlib::wroot::leaf<int>* m_Event_hit_leaf_tubeId;
     inlib::wroot::leaf<int>* m_Event_hit_leaf_totalPE;
-      
-      inlib::wroot::tree* m_Event_hit_pe_tree;
-      inlib::wroot::leaf<float>* m_Event_hit_pe_leaf_time;
-    inlib::wroot::leaf_object* m_Event_hit_leaf_pe;
-      
+    std::vector<float> m_Event_hit_pe_vec;
   inlib::wroot::leaf_object* m_Event_leaf_hit;
     
   inlib::wroot::leaf<int>* m_Event_leaf_nDigits;
