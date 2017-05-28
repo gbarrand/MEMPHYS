@@ -102,6 +102,11 @@ inline bool dump_tracks(AIDA::ITupleEntry* a_entry) {
   inlib::rroot::leaf<a__type>* leaf_##a__name;\
   if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
 
+#define FIND_LEAF_OBJECT(a__tree,a__name) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf_object* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
 #define READ_LEAF(a__tree,a__index,a__type,a__name) \
   a__type a__name;\
   if(!inlib::rroot::read_leaf((a__tree).file(),*br_##a__name,*leaf_##a__name,a__index,a__name)) return false;
@@ -123,19 +128,16 @@ inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
 
   FIND_LEAF(a_tree,int,tubeId)
   FIND_LEAF(a_tree,int,totalPE)
+  FIND_LEAF_OBJECT(a_tree,pe)
 
-  inlib::rroot::branch* br_pe_tree;
-  inlib::rroot::leaf_object* leaf_pe_tree;
-  if(!inlib::rroot::find_leaf(a_tree,"pe",br_pe_tree,leaf_pe_tree)) return false;
-  
   inlib::rroot::tree pe_tree(a_tree.file(),a_tree.fac());  
-  leaf_pe_tree->set_object(&pe_tree);
+  leaf_pe->set_object(&pe_tree);
 
   inlib::uint64 nentries = a_tree.entries();
   for(inlib::uint32 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,tubeId)
     READ_LEAF(a_tree,index,int,totalPE)
-    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_pe_tree,*leaf_pe_tree,index)) return false;
+    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_pe,*leaf_pe,index)) return false;
     if(!process_hits_times(pe_tree,aHisto)) return false;
   }
   return true;
@@ -217,15 +219,13 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   FIND_LEAF(*tree,int,nDigits)
   FIND_LEAF(*tree,double,sumPE)
 
-  inlib::rroot::branch* br_hit_tree;
-  inlib::rroot::leaf_object* leaf_hit_tree;
-  if(!inlib::rroot::find_leaf(*tree,"hit",br_hit_tree,leaf_hit_tree)) return false;
+  FIND_LEAF_OBJECT(*tree,hit)
   
   bool dump = false;
   dump = true;
   
   inlib::rroot::tree hit_tree(rfile,fac);
-  leaf_hit_tree->set_object(&hit_tree);
+  leaf_hit->set_object(&hit_tree);
   
   for(inlib::uint32 ievent=0;ievent<nentries;ievent++){
     READ_LEAF(*tree,ievent,int,eventId)
@@ -234,7 +234,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     READ_LEAF(*tree,ievent,int,nDigits)
     READ_LEAF(*tree,ievent,double,sumPE)
 
-    if(!inlib::rroot::read_leaf_object(rfile,*br_hit_tree,*leaf_hit_tree,ievent)) return false;
+    if(!inlib::rroot::read_leaf_object(rfile,*br_hit,*leaf_hit,ievent)) return false;
   
     if(dump)
     a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
