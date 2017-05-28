@@ -12,7 +12,7 @@ MEMPHYS::Analysis::Analysis(
  bool aBatch)
 :fBatch(aBatch)
 #ifdef APP_USE_INLIB_WROOT
-,m_file(std::cout,"MEMPHYS_inlib.root")
+,m_file(std::cout,"MEMPHYS.root")
 #include "Event_tree_zero.icc"
 #include "Geometry_tree_zero.icc"
 #endif
