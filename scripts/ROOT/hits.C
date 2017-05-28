@@ -40,6 +40,8 @@ void hits() {
     Event_hit->SetBranchAddress("tubeId",&tubeId_hit); //JEC 16/1/06   
     Int_t totalPE;  
     Event_hit->SetBranchAddress("totalPE",&totalPE);
+    std::vector<float>* pe = 0;
+    Event_hit->SetBranchAddress("pe",&pe);
     
     if(dump)
     std::cout << ">>>>>>>>>>>>> Event{" << i << "}: "
@@ -51,12 +53,8 @@ void hits() {
     //--------
     // The Hits
     //--------
-    Event_hit->GetBranch("pe")->SetFile(file);
 
     for (Int_t k=0; k<nTubeHits; ++k) {
-      
-      TTree* Hit_pe = new TTree();
-      Event_hit->SetBranchAddress("pe",&Hit_pe);
       
       int nbytes = Event_hit->GetEntry(k);
       if(nbytes<0) {
@@ -66,21 +64,13 @@ void hits() {
 
       if(dump) std::cout << "----> Hit{"<<k<<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
       
-      Float_t hit_time;
-      if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);	
-	
-      for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
-	Hit_pe->GetEntry(ki);
-	//std::cout << "<" << hit_time << ">";
-
-	//hits_ntuple->Fill(i,tubeId_hit,totalPE,hit_time);
+      for (size_t ki=0; ki<pe->size(); ++ki) {
+        Float_t hit_time = (*pe)[ki];
         hits_times->Fill(hit_time);
       }
       //      std::cout << std::endl;
-      delete Hit_pe;
     }//Loop on Hits
     
-    Event_hit->GetBranch("pe")->SetFile((TFile*)0);
     delete Event_hit;
   }//loop on event
 
