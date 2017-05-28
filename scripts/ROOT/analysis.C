@@ -217,39 +217,28 @@ void analysis()
     //--------
     // The Hits
     //--------
-    Event_hit->GetBranch("pe")->SetFile(file);
+    std::vector<float>* pe = 0;
+    Event_hit->SetBranchAddress("pe",&pe);
 
     for (Int_t khit=0; khit<nTubeHits; ++khit) {
       
-      TTree* Hit_pe = new TTree();
-      Event_hit->SetBranchAddress("pe",&Hit_pe);
-  
       Event_hit->GetEntry(khit);
-
-      Float_t hit_time;
-
-      if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);
 
       //JEC 16/1/06 add the tubeId_hit info
       if(dump_hits)
       std::cout << "----> Hit{"<< khit <<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
 
-      for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
-	Hit_pe->GetEntry(ki);
-
+      for (size_t ki=0; ki<pe->size(); ++ki) {
+        Float_t hit_time = (*pe)[ki];
         if(dump_hits) {
           std::cout << "<" << hit_time << ">";
 	  //std::cout << "<" << trk_length << ">";
 	}
-
         hits_times->Fill(hit_time);
-
         hit_count++;
       }
       if(dump_hits)
       std::cout << std::endl;
-
-      delete Hit_pe;
     }//Loop on Hits
 
     //--------
