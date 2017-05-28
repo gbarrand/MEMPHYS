@@ -73,9 +73,9 @@ void geom() {
     
     int nbytes = tGeom_pmtInfos->GetEntry(i);
     if(nbytes<0) {
-      std::cout << "problem with IO. " << nbytes << std::endl;
+      std::cout << "problem with IO." << std::endl;
       ::exit(1);
-      }
+    }
     
     Double_t dx = (*pmtOrient)[0];
     Double_t dy = (*pmtOrient)[1];
