@@ -648,46 +648,30 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
   fAnalysis.m_Event_track_leaf_parent->fill(parent);  
   fAnalysis.m_Event_track_leaf_timeStart->fill(timeStart);
 
-    fAnalysis.m_Event_track_direction_tree->reset();
-    fAnalysis.m_Event_track_direction_leaf_dx->fill(dx);
-    fAnalysis.m_Event_track_direction_leaf_dy->fill(dy);
-    fAnalysis.m_Event_track_direction_leaf_dz->fill(dz);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Event_track_direction_tree->fill(nbytes)) {
-      std::cout << "fAnalysis.m_Event_track_direction_tree fill failed." << std::endl;
-    }}
-   
+  fAnalysis.m_Event_track_direction_vec.clear();
+  fAnalysis.m_Event_track_direction_vec.push_back(dx);
+  fAnalysis.m_Event_track_direction_vec.push_back(dy);
+  fAnalysis.m_Event_track_direction_vec.push_back(dz);
+  
   fAnalysis.m_Event_track_leaf_mass->fill(mass);
   fAnalysis.m_Event_track_leaf_pTot->fill(pTot);
   fAnalysis.m_Event_track_leaf_ETot->fill(ETot);
 
-    fAnalysis.m_Event_track_momentum_tree->reset();
-    fAnalysis.m_Event_track_momentum_leaf_px->fill(px);
-    fAnalysis.m_Event_track_momentum_leaf_py->fill(py);
-    fAnalysis.m_Event_track_momentum_leaf_pz->fill(pz);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Event_track_momentum_tree->fill(nbytes)) {
-      std::cout << "fAnalysis.m_Event_track_momentum_tree fill failed." << std::endl;
-    }}
+  fAnalysis.m_Event_track_momentum_vec.clear();
+  fAnalysis.m_Event_track_momentum_vec.push_back(px);
+  fAnalysis.m_Event_track_momentum_vec.push_back(py);
+  fAnalysis.m_Event_track_momentum_vec.push_back(pz);
 
-    fAnalysis.m_Event_track_startPos_tree->reset();
-    fAnalysis.m_Event_track_startPos_leaf_x->fill(startPos_x);
-    fAnalysis.m_Event_track_startPos_leaf_y->fill(startPos_y);
-    fAnalysis.m_Event_track_startPos_leaf_z->fill(startPos_z);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Event_track_startPos_tree->fill(nbytes)) {
-      std::cout << "fAnalysis.m_Event_track_startPos_tree fill failed." << std::endl;
-    }}
+  fAnalysis.m_Event_track_startPos_vec.clear();
+  fAnalysis.m_Event_track_startPos_vec.push_back(startPos_x);
+  fAnalysis.m_Event_track_startPos_vec.push_back(startPos_y);
+  fAnalysis.m_Event_track_startPos_vec.push_back(startPos_z);
 
-    fAnalysis.m_Event_track_stopPos_tree->reset();
-    fAnalysis.m_Event_track_stopPos_leaf_x->fill(stopPos_x);
-    fAnalysis.m_Event_track_stopPos_leaf_y->fill(stopPos_y);
-    fAnalysis.m_Event_track_stopPos_leaf_z->fill(stopPos_z);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Event_track_stopPos_tree->fill(nbytes)) {
-      std::cout << "fAnalysis.m_Event_track_stopPos_tree fill failed." << std::endl;
-    }}
-   
+  fAnalysis.m_Event_track_stopPos_vec.clear();
+  fAnalysis.m_Event_track_stopPos_vec.push_back(stopPos_x);
+  fAnalysis.m_Event_track_stopPos_vec.push_back(stopPos_y);
+  fAnalysis.m_Event_track_stopPos_vec.push_back(stopPos_z);
+
   fAnalysis.m_Event_track_leaf_startVol->fill(startVol);
   fAnalysis.m_Event_track_leaf_stopVol->fill(stopVol);
    
