@@ -8,17 +8,16 @@ bush_home=../../../../softinex/bush
 ./build_app_sim           ${build_args}
 ./build_app_read_plot     ${build_args}
 
-${bush_home}/check_app aida-config 'aida-config program not found. MEMPHYS_[plot_ROOT,all_ROOT] not built.'
+${bush_home}/check_app aida-config 'aida-config program not found. MEMPHYS_aida_plot not built.'
 has_aida=$?
 if [ ${has_aida} = 0 ] ; then
   ./build_app_aida_plot  ${build_args}
 fi
 
-${bush_home}/check_app root-config 'root-config program not found. MEMPHYS_[plot_ROOT,all_ROOT] not built.'
+${bush_home}/check_app root-config 'root-config program not found. MEMPHYS_[read_plot_ROOT,all_ROOT,aida_plot_ROOT] not built.'
 has_root=$?
 if [ ${has_root} = 0 ] ; then
   ./build_app_read_plot_ROOT ${build_args}
-  ./build_app_plot_ROOT      ${build_args}
   ./build_app_all_ROOT       ${build_args}
   if [ ${has_aida} = 0 ] ; then
     ./build_app_aida_plot_ROOT ${build_args}
