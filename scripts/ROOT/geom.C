@@ -16,7 +16,7 @@ void geom() {
   tGeom->SetBranchAddress("pmtRadius",&pmtRadius);
   Int_t nPMTs;
   tGeom->SetBranchAddress("nPMTs",&nPMTs);
-  std::vector<double>* wcOffset;
+  std::vector<double>* wcOffset = 0;
   tGeom->SetBranchAddress("wcOffset",&wcOffset);
 
   TTree* tGeom_pmtInfos = new TTree();
@@ -59,9 +59,9 @@ void geom() {
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   Int_t pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
-  std::vector<double>* pmtOrient;
+  std::vector<double>* pmtOrient = 0;
   tGeom_pmtInfos->SetBranchAddress("pmtOrient",&pmtOrient);
-  std::vector<double>* pmtPosition;
+  std::vector<double>* pmtPosition = 0;
   tGeom_pmtInfos->SetBranchAddress("pmtPosition",&pmtPosition);
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
