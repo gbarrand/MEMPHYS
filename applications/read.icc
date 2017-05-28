@@ -213,6 +213,10 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   a__type a__name;\
   if(!inlib::rroot::read_leaf(rfile,*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
 
+  inlib::rroot::branch* br_hit;
+  inlib::rroot::leaf_object* leaf_hit;
+  if(!inlib::rroot::find_leaf(*tree,"hit",br_hit,leaf_hit)) return false;
+  
   bool dump = false;
   dump = true;
   
