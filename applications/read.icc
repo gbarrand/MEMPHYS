@@ -20,34 +20,22 @@
   a__type a__name;\
   if(!inlib::rroot::read_leaf((a__tree).file(),*br_##a__name,*leaf_##a__name,a__index,a__name)) return false;
 
-
-template <class H1D>
-inline bool process_hits_times(inlib::rroot::tree& a_tree,H1D& aHisto) {
-  FIND_LEAF(a_tree,float,time)
-  inlib::uint64 nentries = a_tree.entries();
-  for(inlib::uint64 index=0;index<nentries;index++) {
-    READ_LEAF(a_tree,index,float,time)
-    aHisto.Fill(time);
-  }
-  return true;
-}
-
 template <class H1D>
 inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
 
   FIND_LEAF(a_tree,int,tubeId)
   FIND_LEAF(a_tree,int,totalPE)
   
-  FIND_LEAF_OBJECT(a_tree,pe)
-  inlib::rroot::tree pe_tree(a_tree.file(),a_tree.fac());  
-  leaf_pe->set_object(&pe_tree);
-
+  inlib::rroot::branch_element* be_pe = inlib::rroot::find_branch_element(a_tree,"pe");
+  if(!be_pe) return false;
+  
   inlib::uint64 nentries = a_tree.entries();
   for(inlib::uint64 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,tubeId)
     READ_LEAF(a_tree,index,int,totalPE)
-    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_pe,*leaf_pe,index)) return false;
-    if(!process_hits_times(pe_tree,aHisto)) return false;
+    inlib::rroot::stl_vector<float>* pe = inlib::rroot::read_std_vec<float>(a_tree.file(),*be_pe,index);
+    if(!pe) return false;
+    inlib_vforcit(float,*pe,it) aHisto.fill(*it);
   }
   
   return true;
