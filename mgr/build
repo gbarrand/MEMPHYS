@@ -2,25 +2,45 @@
 
 bush_home=../../../../softinex/bush
 
-. ${bush_home}/args
+#. ${bush_home}/args
+build_aida=no
+build_root=no
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -aida) build_aida=yes;;
+    -root) build_root=yes;;
+     *) build_args="${build_args} $1";;
+  esac
+  shift
+done
+
+if [ ${build_aida} = yes ] ; then
+  ${bush_home}/check_app aida-config 'aida-config program not found.'
+  has_aida=$?
+  if [ ${has_aida} = 0 ] ; then
+    ./build_app_aida_plot  ${build_args}
+  fi
+fi
+
+if [ ${build_root} = yes ] ; then
+  ${bush_home}/check_app root-config 'root-config program not found.'
+  has_root=$?
+  if [ ${has_root} = 0 ] ; then
+    ./build_app_read_plot_ROOT ${build_args}
+    ./build_app_all_ROOT       ${build_args}
+    if [ ${build_aida} = yes ] ; then
+      if [ ${has_aida} = 0 ] ; then
+        ./build_app_aida_plot_ROOT ${build_args}
+      fi
+    fi
+  fi
+fi
+
+if [ ${build_aida} = yes ] ; then exit;fi
+if [ ${build_root} = yes ] ; then exit;fi
 
 ./build_lib_MEMPHYSCore   ${build_args}
 ./build_app_sim           ${build_args}
 ./build_app_read_plot     ${build_args}
-
-${bush_home}/check_app aida-config 'aida-config program not found. MEMPHYS_aida_plot not built.'
-has_aida=$?
-if [ ${has_aida} = 0 ] ; then
-  ./build_app_aida_plot  ${build_args}
-fi
-
-${bush_home}/check_app root-config 'root-config program not found. MEMPHYS_[read_plot_ROOT,all_ROOT,aida_plot_ROOT] not built.'
-has_root=$?
-if [ ${has_root} = 0 ] ; then
-  ./build_app_read_plot_ROOT ${build_args}
-  ./build_app_all_ROOT       ${build_args}
-  if [ ${has_aida} = 0 ] ; then
-    ./build_app_aida_plot_ROOT ${build_args}
-  fi
-fi
 
