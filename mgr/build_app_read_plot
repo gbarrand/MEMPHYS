@@ -10,12 +10,10 @@ bush_home=../../../../softinex/bush
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 
-#use_zlib=yes
-#. ${bush_home}/use/zlib
-
 use_exlib=yes
 use_inlib=yes
 use_freetype=yes
+use_zlib=yes
 use_GL=yes
 use_GLX=yes
 use_X11=yes
@@ -23,6 +21,7 @@ use_X11=yes
 . ${bush_home}/use/exlib
 . ${bush_home}/use/inlib
 . ${bush_home}/use/freetype
+. ${bush_home}/use/zlib
 . ${bush_home}/use/GL
 . ${bush_home}/use/GLX
 . ${bush_home}/use/X11
@@ -33,7 +32,7 @@ use_X11=yes
 
 objs=
 app_exe=MEMPHYS_read_plot
-app_src=../applications/read_plot.cxx
+app_src=../applications/read_plot.cpp
 
 . ${bush_home}/application
 
