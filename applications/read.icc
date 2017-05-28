@@ -157,6 +157,33 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
 
 #include <exlib/zlib>
 
+template <class TYPE>
+inline bool find_leaf(std::ostream& a_out,inlib::rroot::tree& a_tree,const std::string& a_name,
+                      inlib::rroot::branch*& a_branch,inlib::rroot::leaf<TYPE>*& a_leaf) {
+  inlib::rroot::base_leaf* base_leaf = a_tree.find_leaf(a_name);
+  if(!base_leaf) {
+    a_out << "find_leaf : base_leaf " << inlib::sout(a_name) << " not found." << std::endl;
+    a_branch = 0;
+    a_leaf = 0;
+    return false;
+  }
+  a_branch = a_tree.find_leaf_branch(*base_leaf);
+  if(!a_branch) {
+    a_out << "find_leaf : branch of base_leaf " << inlib::sout(a_name) << " not found." << std::endl;
+    a_branch = 0;
+    a_leaf = 0;
+    return false;
+  }
+  a_leaf = inlib::safe_cast<inlib::rroot::base_leaf, inlib::rroot::leaf<TYPE> >(*base_leaf);
+  if(!a_leaf) {
+    a_out << "find_leaf : base_leaf " << inlib::sout(a_name) << " is not a leaf<TYPE>." << std::endl;
+    a_branch = 0;
+    a_leaf = 0;
+    return false;
+  }
+  return true;
+}
+
 template <class H1D,class H2D>
 inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1D,H2D& aHisto2D) {
 
@@ -198,31 +225,48 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     a_out << "leaf : " << (*it)->name() << " " << (*it)->title()  << " " << (*it)->s_cls() << std::endl;
   }}
 
-  inlib::rroot::base_leaf* base_leaf_eventId = tree->find_leaf("eventId");
-  inlib::rroot::branch* br_eventId = tree->find_leaf_branch(*base_leaf_eventId);
-  inlib::rroot::leaf<int>* leaf_eventId = inlib::safe_cast<inlib::rroot::base_leaf, inlib::rroot::leaf<int> >(*base_leaf_eventId);
-/*
-  inlib::rroot::branch* br_nPart = tree->find_branch("nPart");
-  inlib::rroot::branch* br_nHits = tree->find_branch("nHits");
-  inlib::rroot::branch* br_nDigits = tree->find_branch("nDigits");
-  inlib::rroot::branch* br_sumPE = tree->find_branch("sumPE");
-  if(!br_eventId || !br_nPart || !br_nHits || !br_nDigits || !br_sumPE) {
-    a_out << "one branch not found." << std::endl;
-    return false;  
-  }*/
-  
-  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
-    unsigned int n;
-    if(!br_eventId->find_entry(rfile,ievent,n)) {
-      a_out << "br_eventId::find_entry() failed." << std::endl;
-      return false;     
-    }
-    int eventId = leaf_eventId->value();
-    a_out << "eventId : " << eventId << std::endl;
-  }
-/*
+#define FIND_LEAF(a__type,a__name) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf<a__type>* leaf_##a__name;\
+  if(!find_leaf(a_out,*tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
+  FIND_LEAF(int,eventId)
+  FIND_LEAF(int,nPart)
+  FIND_LEAF(int,nHits)
+  FIND_LEAF(int,nDigits)
+  FIND_LEAF(double,sumPE)
+
+#define READ_LEAF(a__type,a__name) \
+   {unsigned int n;\
+    if(!br_##a__name->find_entry(rfile,ievent,n)) {\
+      a_out << "br_" << #a__name << "::find_entry() failed." << std::endl;\
+      return false;\
+    }}\
+    a__type a__name = leaf_##a__name->value();
+
   bool dump = false;
   dump = true;
+  
+  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
+    READ_LEAF(int,eventId)
+    READ_LEAF(int,nPart)
+    READ_LEAF(int,nHits)
+    READ_LEAF(int,nDigits)
+    READ_LEAF(double,sumPE)
+    
+    if(dump)
+    a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
+    	      << " evt Id " << eventId 
+    	      <<" #tracks: " << nPart
+    	      <<" #hits: " << nHits
+              <<" #digits: " << nDigits
+              <<" sumPE " << sumPE
+    	      << std::endl;
+  }
+
+#undef READ_LEAF
+#undef FIND_LEAF
+/*
 
   int irow = 0;
   tuple->start();
