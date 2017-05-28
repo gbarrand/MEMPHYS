@@ -27,7 +27,7 @@ int main(int aArgc,char* aArgv[]) {
 
   geom();
 
-  gSystem->Run();
+  //gSystem->Run();
 
   return 1;
 }
