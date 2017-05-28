@@ -1,7 +1,5 @@
 #!/bin/sh -f
 
-# options : -clang_11 -sys_geant4
-
 bush_home=../../../../softinex/bush
 
 . ${bush_home}/args
