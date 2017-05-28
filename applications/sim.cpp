@@ -15,23 +15,6 @@
 #include "../MEMPHYS/TrackingAction.hh"
 #include "../MEMPHYS/SteppingAction.hh"
 
-#ifdef APP_USE_AIDA
-#include <AIDA/IAnalysisFactory.h>
-
-#ifdef APP_USE_ARCHIVE
-#ifdef INLIB_MEM
-#undef INLIB_MEM
-#include <BatchLab/Core/Main.h>
-#define INLIB_MEM
-#else
-#include <BatchLab/Core/Main.h>
-#endif
-extern "C" {
-  void BatchLabRioInitialize(Slash::Core::ISession&);
-}
-#endif
-#endif //APP_USE_AIDA
-
 #ifdef APP_USE_INLIB_WROOT
 #ifdef INLIB_MEM
 #include <inlib/mem>
@@ -47,27 +30,8 @@ int main(int aArgc,char** aArgv) {
 #endif //INLIB_MEM
 #endif
     
-#ifdef APP_USE_AIDA
-#ifdef APP_USE_ARCHIVE
-  BatchLab::Main* session = new BatchLab::Main(std::vector<std::string>());
-  Slash::Core::ILibraryManager* libraryManager = Slash::libraryManager(*session);
-  if(!libraryManager) {std::cout << "LibraryManager not found." << std::endl;return EXIT_FAILURE;}
-  Slash::Core::ILibrary* library = libraryManager->addLibrary("Rio","main","");
-  if(!library) {std::cout << "addLibrary() failed." << std::endl;return EXIT_FAILURE;}
-  ::BatchLabRioInitialize(*session);
-  AIDA::IAnalysisFactory* aida = static_cast<AIDA::IAnalysisFactory*>(session);
-#else
-  AIDA::IAnalysisFactory* aida = AIDA_createAnalysisFactory();
-#endif
-  if(!aida) {
-    std::cout << "MEMPHYS_batch : AIDA not found." << std::endl;
-  }  
-  //Book all the histo, tuple 
-  MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis(aida);
-#else  
   //Book all the histo, tuple 
   MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis();  
-#endif //APP_USE_AIDA
 
   // Construct the default run manager
   G4RunManager* runManager = new G4RunManager;
@@ -121,10 +85,6 @@ int main(int aArgc,char** aArgv) {
 
   delete runManager;
   delete analysis;
-  
-#ifdef APP_USE_AIDA
-  delete aida;
-#endif
   
 #ifdef APP_USE_INLIB_WROOT
 #ifdef INLIB_MEM
