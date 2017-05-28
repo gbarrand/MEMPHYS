@@ -15,37 +15,13 @@
     inlib::wroot::leaf<int>* m_Event_track_leaf_pId;
     inlib::wroot::leaf<int>* m_Event_track_leaf_parent;
     inlib::wroot::leaf<float>* m_Event_track_leaf_timeStart;
-      
-      inlib::wroot::tree* m_Event_track_direction_tree;
-      inlib::wroot::leaf<double>* m_Event_track_direction_leaf_dx;
-      inlib::wroot::leaf<double>* m_Event_track_direction_leaf_dy;
-      inlib::wroot::leaf<double>* m_Event_track_direction_leaf_dz;
-    inlib::wroot::leaf_object* m_Event_track_leaf_direction;
-      
+    std::vector<double> m_Event_track_direction_vec;
     inlib::wroot::leaf<double>* m_Event_track_leaf_mass;
     inlib::wroot::leaf<double>* m_Event_track_leaf_pTot;
     inlib::wroot::leaf<double>* m_Event_track_leaf_ETot;
-      
-      inlib::wroot::tree* m_Event_track_momentum_tree;
-      inlib::wroot::leaf<double>* m_Event_track_momentum_leaf_px;
-      inlib::wroot::leaf<double>* m_Event_track_momentum_leaf_py;
-      inlib::wroot::leaf<double>* m_Event_track_momentum_leaf_pz;
-    inlib::wroot::leaf_object* m_Event_track_leaf_momentum;
-      
-      
-      inlib::wroot::tree* m_Event_track_startPos_tree;
-      inlib::wroot::leaf<double>* m_Event_track_startPos_leaf_x;
-      inlib::wroot::leaf<double>* m_Event_track_startPos_leaf_y;
-      inlib::wroot::leaf<double>* m_Event_track_startPos_leaf_z;
-    inlib::wroot::leaf_object* m_Event_track_leaf_startPos;
-      
-      
-      inlib::wroot::tree* m_Event_track_stopPos_tree;
-      inlib::wroot::leaf<double>* m_Event_track_stopPos_leaf_x;
-      inlib::wroot::leaf<double>* m_Event_track_stopPos_leaf_y;
-      inlib::wroot::leaf<double>* m_Event_track_stopPos_leaf_z;
-    inlib::wroot::leaf_object* m_Event_track_leaf_stopPos;
-      
+    std::vector<double> m_Event_track_momentum_vec;
+    std::vector<double> m_Event_track_startPos_vec;
+    std::vector<double> m_Event_track_stopPos_vec;
     inlib::wroot::leaf<int>* m_Event_track_leaf_startVol;
     inlib::wroot::leaf<int>* m_Event_track_leaf_stopVol;
   inlib::wroot::leaf_object* m_Event_leaf_track;
