@@ -24,11 +24,11 @@ MEMPHYS::Analysis::Analysis(
   column += "double[] vtxPos, ";
   column += "int nPart, leptonIndex, protonIndex, ";
   column += "ITuple track = { int pId, parent, float timeStart, ";
-  column +=                  "ITuple direction = { double dx, dy, dz }, ";
+  column +=                  "double[] direction, ";
   column +=                  "double mass, pTot, ETot, ";
-  column +=                  "ITuple momentum  = { double px, py, pz }, ";
-  column +=                  "ITuple startPos  = { double  x,  y,  z }, ";
-  column +=                  "ITuple stopPos   = { double  x,  y,  z }, ";
+  column +=                  "double[] momentum, ";
+  column +=                  "double[] startPos, ";
+  column +=                  "double[] stopPos, ";
   column +=                  "int startVol, stopVol ";
   column +=                "}, ";
   column += "int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, ";
