@@ -56,8 +56,8 @@ use_cern_root=yes
 #//////////////////////////////////////////////////////
 
 objs=
-app_exe=MEMPHYS_plot_ROOT
-app_src=../applications/plot_ROOT.cpp
+app_exe=MEMPHYS_aida_plot_ROOT
+app_src=../applications/aida_plot_ROOT.cpp
 
 . ${bush_home}/application
 

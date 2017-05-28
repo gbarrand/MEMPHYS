@@ -62,8 +62,8 @@ use_X11=yes
 #//////////////////////////////////////////////////////
 
 objs=
-app_exe=MEMPHYS_plot
-app_src=../applications/plot.cpp
+app_exe=MEMPHYS_aida_plot
+app_src=../applications/aida_plot.cpp
 
 . ${bush_home}/application
 
