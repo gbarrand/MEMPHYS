@@ -50,8 +50,8 @@ inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
 
   FIND_LEAF(a_tree,int,tubeId)
   FIND_LEAF(a_tree,int,totalPE)
+  
   FIND_LEAF_OBJECT(a_tree,pe)
-
   inlib::rroot::tree pe_tree(a_tree.file(),a_tree.fac());  
   leaf_pe->set_object(&pe_tree);
 
