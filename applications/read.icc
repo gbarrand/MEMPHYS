@@ -84,7 +84,10 @@ inline bool get_XYZ(inlib::rroot::tree& a_tree,
   }
   READ_LEAF(a_tree,0,double,x)
   READ_LEAF(a_tree,0,double,y)
-  READ_LEAF(a_tree,0,double,z)  
+  READ_LEAF(a_tree,0,double,z)
+  a_x = x;
+  a_y = y;
+  a_z = z;
   return true;
 }
 
@@ -108,6 +111,18 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
   inlib::rroot::tree direction_tree(a_tree.file(),a_tree.fac());
   leaf_direction->set_object(&direction_tree);
   
+  FIND_LEAF_OBJECT(a_tree,momentum)
+  inlib::rroot::tree momentum_tree(a_tree.file(),a_tree.fac());
+  leaf_momentum->set_object(&momentum_tree);
+  
+  FIND_LEAF_OBJECT(a_tree,startPos)
+  inlib::rroot::tree startPos_tree(a_tree.file(),a_tree.fac());
+  leaf_startPos->set_object(&startPos_tree);
+  
+  FIND_LEAF_OBJECT(a_tree,stopPos)
+  inlib::rroot::tree stopPos_tree(a_tree.file(),a_tree.fac());
+  leaf_stopPos->set_object(&stopPos_tree);
+  
   inlib::uint64 nentries = a_tree.entries();
   for(inlib::uint32 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,pId)
@@ -120,18 +135,21 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
     READ_LEAF(a_tree,index,int,stopVol)
 
     if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_direction,*leaf_direction,index)) return false;
+    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_momentum,*leaf_momentum,index)) return false;
+    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_startPos,*leaf_startPos,index)) return false;
+    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_stopPos,*leaf_stopPos,index)) return false;
     
     double dx,dy,dz;
     if(!get_XYZ(direction_tree,"dx","dy","dz",dx,dy,dz)) return false;
 
     double px,py,pz;
-//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
+    if(!get_XYZ(momentum_tree,"px","py","pz",px,py,pz)) return false;
 
     double start_x,start_y,start_z;
-//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(8),start_x,start_y,start_z)) return false;
+    if(!get_XYZ(startPos_tree,"x","y","z",start_x,start_y,start_z)) return false;
 
     double stop_x,stop_y,stop_z;
-//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(9),stop_x,stop_y,stop_z)) return false;
+    if(!get_XYZ(stopPos_tree,"x","y","z",stop_x,stop_y,stop_z)) return false;
 
     a_tree.out() << "----> Tk{"<<index<<"}: " 
               << " pId " << pId
