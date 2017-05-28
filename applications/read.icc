@@ -184,6 +184,19 @@ inline bool find_leaf(std::ostream& a_out,inlib::rroot::tree& a_tree,const std::
   return true;
 }
 
+template <class TYPE>
+inline bool read_leaf(std::ostream& a_out,
+                      inlib::rroot::file& a_file,inlib::rroot::branch& a_branch,inlib::rroot::leaf<TYPE>& a_leaf,
+                      inlib::uint32 a_event,TYPE& a_value) {
+  unsigned int n;
+  if(!a_branch.find_entry(a_file,a_event,n)) {
+    a_out << "read_leaf : a_branch.find_entry() failed." << std::endl;
+    return false;
+  }
+  a_value = a_leaf.value();
+  return true;
+}
+
 template <class H1D,class H2D>
 inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1D,H2D& aHisto2D) {
 
@@ -237,17 +250,13 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   FIND_LEAF(double,sumPE)
 
 #define READ_LEAF(a__type,a__name) \
-   {unsigned int n;\
-    if(!br_##a__name->find_entry(rfile,ievent,n)) {\
-      a_out << "br_" << #a__name << "::find_entry() failed." << std::endl;\
-      return false;\
-    }}\
-    a__type a__name = leaf_##a__name->value();
+  a__type a__name;\
+  if(!read_leaf(a_out,rfile,*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
 
   bool dump = false;
   dump = true;
   
-  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
+  for(inlib::uint32 ievent=0;ievent<nentries;ievent++){
     READ_LEAF(int,eventId)
     READ_LEAF(int,nPart)
     READ_LEAF(int,nHits)
