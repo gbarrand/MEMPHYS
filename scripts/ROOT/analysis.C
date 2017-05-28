@@ -47,9 +47,13 @@ void analysis()
     new TH2D("digits_pe_time","Digits PE time",100,0,3000,100,0,10);
 
   int hit_count = 0;
-  bool dump = false;
-  //dump = true;
-
+  bool dump = true;
+  bool dump_tracks = false;
+  //dump_tracks = true;
+  bool dump_hits = false;
+  //dump_hits = true;
+  bool dump_digits = false;
+  //dump_digits = true;
   ////////////////////////////////////////////////////////
   /// Read data and fill histos //////////////////////////
   ////////////////////////////////////////////////////////
@@ -83,15 +87,15 @@ void analysis()
   tEvent->SetBranchAddress("nDigits",&nDigits);
   tEvent->SetBranchAddress("sumPE",&sumPE);
 
+  std::vector<double>* vtxPos;
+  tEvent->SetBranchAddress("vtxPos",&vtxPos);
+  
   Int_t nEvent = (Int_t)tEvent->GetEntries();  
   //nEvent = 1;
   //nEvent = 10000;
   std::cout << " nEvents = " << nEvent << std::endl;
 
   for (Int_t iev=0; iev<nEvent; ++iev) {
-
-    TTree* Event_vtxPos = new TTree();
-    tEvent->SetBranchAddress("vtxPos",&Event_vtxPos);
 
     TTree* Event_track = new TTree();
     tEvent->SetBranchAddress("track",&Event_track);
@@ -111,11 +115,10 @@ void analysis()
     //  }}
 
     // Bind sub tuple variables 
-    Double_t vx,vy,vz;
-    Event_vtxPos->SetBranchAddress("x",&vx);
-    Event_vtxPos->SetBranchAddress("y",&vy);
-    Event_vtxPos->SetBranchAddress("z",&vz);
-
+    Double_t vx = (*vtxPos)[0];
+    Double_t vy = (*vtxPos)[1];
+    Double_t vz = (*vtxPos)[2];
+    
     Int_t pId,parent;
     Float_t timeStart;
     Double_t mass, pTot, ETot;
@@ -149,16 +152,16 @@ void analysis()
     	      <<" #tracks: " << nPart
     	      <<" #hits: " << nHits
     	      <<" #digits: " << nDigits
+	      << std::endl
+	      << "vtxPos x: " << vx << ", y: " << vy << ", z:" << vz
     	      << std::endl;
 
-    Int_t nVtx = (Int_t)Event_vtxPos->GetEntries();
     Int_t nTracks = (Int_t)Event_track->GetEntries();
     Int_t nTubeHits = (Int_t)Event_hit->GetEntries();
     Int_t nTubeDigits = (Int_t)Event_digit->GetEntries();
 
     if(dump)
     std::cout << "Verif :" 
-              << " nVtx = " << nVtx 
               << " nTracks = " << nTracks 
     	      << " nTube Hits = " << nTubeHits
     	      << " nTube Digits = " << nTubeDigits
@@ -210,7 +213,7 @@ void analysis()
       if(Track_startPos->GetEntries()==1) Track_startPos->GetEntry(0);
       if(Track_stopPos->GetEntries()==1) Track_stopPos->GetEntry(0);
 
-      if(dump)
+      if(dump_tracks)
       std::cout << "----> Tk{"<< jtk <<"}: " 
 	   	<< " pId " << pId
 		<< " parent " << parent
@@ -249,13 +252,13 @@ void analysis()
       if(Hit_pe->SetBranchAddress("time",&hit_time)==TTree::kMissingBranch) ::exit(1);
 
       //JEC 16/1/06 add the tubeId_hit info
-      if(dump)
+      if(dump_hits)
       std::cout << "----> Hit{"<< khit <<"}: tube[" << tubeId_hit << "] total #PE " << totalPE << std::endl;
 
       for (Int_t ki=0; ki<Hit_pe->GetEntries(); ++ki) {
 	Hit_pe->GetEntry(ki);
 
-        if(dump) {
+        if(dump_hits) {
           std::cout << "<" << hit_time << ">";
 	  //std::cout << "<" << trk_length << ">";
 	}
@@ -264,7 +267,7 @@ void analysis()
 
         hit_count++;
       }
-      if(dump)
+      if(dump_hits)
       std::cout << std::endl;
 
       delete Hit_pe;
@@ -276,7 +279,7 @@ void analysis()
     for (Int_t l=0; l<nTubeDigits; ++l) {
       Event_digit->GetEntry(l);
       
-      if(dump)
+      if(dump_digits)
       std::cout << "----> Digit{"<<l<<"}: " 
 		<< "tube[" << tubeId_digit << "] = " 
 		<< " pe: " << digit_pe
@@ -287,7 +290,6 @@ void analysis()
 
     }//Loop on Digits
 
-    delete Event_vtxPos;
     delete Event_track;
     
     Event_hit->GetBranch("pe")->SetFile((TFile*)0);
