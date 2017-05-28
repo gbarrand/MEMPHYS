@@ -16,37 +16,17 @@
     m_Event_track_leaf_pId = m_Event_track_tree->create_leaf<int>("pId");
     m_Event_track_leaf_parent = m_Event_track_tree->create_leaf<int>("parent");
     m_Event_track_leaf_timeStart = m_Event_track_tree->create_leaf<float>("timeStart");
-      
-      m_Event_track_direction_tree = new inlib::wroot::tree(m_file.dir(),"direction","direction",false);
-      m_Event_track_direction_leaf_dx = m_Event_track_direction_tree->create_leaf<double>("dx");
-      m_Event_track_direction_leaf_dy = m_Event_track_direction_tree->create_leaf<double>("dy");
-      m_Event_track_direction_leaf_dz = m_Event_track_direction_tree->create_leaf<double>("dz");
-    m_Event_track_leaf_direction = m_Event_track_tree->create_leaf("direction",*m_Event_track_direction_tree);
-      
+    inlib::wroot::std_vector_be<double>* Event_track_branch_direction = m_Event_track_tree->create_std_vector_be<double>("direction",m_Event_track_direction_vec);
+    inlib::wroot::leaf_element* Event_track_leaf_direction = Event_track_branch_direction->create_leaf_element("direction","direction");
     m_Event_track_leaf_mass = m_Event_track_tree->create_leaf<double>("mass");
     m_Event_track_leaf_pTot = m_Event_track_tree->create_leaf<double>("pTot");
     m_Event_track_leaf_ETot = m_Event_track_tree->create_leaf<double>("ETot");
-      
-      m_Event_track_momentum_tree = new inlib::wroot::tree(m_file.dir(),"momentum","momentum",false);
-      m_Event_track_momentum_leaf_px = m_Event_track_momentum_tree->create_leaf<double>("px");
-      m_Event_track_momentum_leaf_py = m_Event_track_momentum_tree->create_leaf<double>("py");
-      m_Event_track_momentum_leaf_pz = m_Event_track_momentum_tree->create_leaf<double>("pz");
-    m_Event_track_leaf_momentum = m_Event_track_tree->create_leaf("momentum",*m_Event_track_momentum_tree);
-      
-      
-      m_Event_track_startPos_tree = new inlib::wroot::tree(m_file.dir(),"startPos","startPos",false);
-      m_Event_track_startPos_leaf_x = m_Event_track_startPos_tree->create_leaf<double>("x");
-      m_Event_track_startPos_leaf_y = m_Event_track_startPos_tree->create_leaf<double>("y");
-      m_Event_track_startPos_leaf_z = m_Event_track_startPos_tree->create_leaf<double>("z");
-    m_Event_track_leaf_startPos = m_Event_track_tree->create_leaf("startPos",*m_Event_track_startPos_tree);
-      
-      
-      m_Event_track_stopPos_tree = new inlib::wroot::tree(m_file.dir(),"stopPos","stopPos",false);
-      m_Event_track_stopPos_leaf_x = m_Event_track_stopPos_tree->create_leaf<double>("x");
-      m_Event_track_stopPos_leaf_y = m_Event_track_stopPos_tree->create_leaf<double>("y");
-      m_Event_track_stopPos_leaf_z = m_Event_track_stopPos_tree->create_leaf<double>("z");
-    m_Event_track_leaf_stopPos = m_Event_track_tree->create_leaf("stopPos",*m_Event_track_stopPos_tree);
-      
+    inlib::wroot::std_vector_be<double>* Event_track_branch_momentum = m_Event_track_tree->create_std_vector_be<double>("momentum",m_Event_track_momentum_vec);
+    inlib::wroot::leaf_element* Event_track_leaf_momentum = Event_track_branch_momentum->create_leaf_element("momentum","momentum");
+    inlib::wroot::std_vector_be<double>* Event_track_branch_startPos = m_Event_track_tree->create_std_vector_be<double>("startPos",m_Event_track_startPos_vec);
+    inlib::wroot::leaf_element* Event_track_leaf_startPos = Event_track_branch_startPos->create_leaf_element("startPos","startPos");
+    inlib::wroot::std_vector_be<double>* Event_track_branch_stopPos = m_Event_track_tree->create_std_vector_be<double>("stopPos",m_Event_track_stopPos_vec);
+    inlib::wroot::leaf_element* Event_track_leaf_stopPos = Event_track_branch_stopPos->create_leaf_element("stopPos","stopPos");
     m_Event_track_leaf_startVol = m_Event_track_tree->create_leaf<int>("startVol");
     m_Event_track_leaf_stopVol = m_Event_track_tree->create_leaf<int>("stopVol");
   m_Event_leaf_track = m_Event_tree->create_leaf("track",*m_Event_track_tree);
