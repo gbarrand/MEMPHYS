@@ -157,46 +157,6 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
 
 #include <exlib/zlib>
 
-template <class TYPE>
-inline bool find_leaf(std::ostream& a_out,inlib::rroot::tree& a_tree,const std::string& a_name,
-                      inlib::rroot::branch*& a_branch,inlib::rroot::leaf<TYPE>*& a_leaf) {
-  inlib::rroot::base_leaf* base_leaf = a_tree.find_leaf(a_name);
-  if(!base_leaf) {
-    a_out << "find_leaf : base_leaf " << inlib::sout(a_name) << " not found." << std::endl;
-    a_branch = 0;
-    a_leaf = 0;
-    return false;
-  }
-  a_branch = a_tree.find_leaf_branch(*base_leaf);
-  if(!a_branch) {
-    a_out << "find_leaf : branch of base_leaf " << inlib::sout(a_name) << " not found." << std::endl;
-    a_branch = 0;
-    a_leaf = 0;
-    return false;
-  }
-  a_leaf = inlib::safe_cast<inlib::rroot::base_leaf, inlib::rroot::leaf<TYPE> >(*base_leaf);
-  if(!a_leaf) {
-    a_out << "find_leaf : base_leaf " << inlib::sout(a_name) << " is not a leaf<TYPE>." << std::endl;
-    a_branch = 0;
-    a_leaf = 0;
-    return false;
-  }
-  return true;
-}
-
-template <class TYPE>
-inline bool read_leaf(std::ostream& a_out,
-                      inlib::rroot::file& a_file,inlib::rroot::branch& a_branch,inlib::rroot::leaf<TYPE>& a_leaf,
-                      inlib::uint32 a_event,TYPE& a_value) {
-  unsigned int n;
-  if(!a_branch.find_entry(a_file,a_event,n)) {
-    a_out << "read_leaf : a_branch.find_entry() failed." << std::endl;
-    return false;
-  }
-  a_value = a_leaf.value();
-  return true;
-}
-
 template <class H1D,class H2D>
 inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1D,H2D& aHisto2D) {
 
@@ -241,7 +201,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
 #define FIND_LEAF(a__type,a__name) \
   inlib::rroot::branch* br_##a__name;\
   inlib::rroot::leaf<a__type>* leaf_##a__name;\
-  if(!find_leaf(a_out,*tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+  if(!inlib::rroot::find_leaf(*tree,#a__name,br_##a__name,leaf_##a__name)) return false;
 
   FIND_LEAF(int,eventId)
   FIND_LEAF(int,nPart)
@@ -251,7 +211,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
 
 #define READ_LEAF(a__type,a__name) \
   a__type a__name;\
-  if(!read_leaf(a_out,rfile,*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
+  if(!inlib::rroot::read_leaf(rfile,*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
 
   bool dump = false;
   dump = true;
