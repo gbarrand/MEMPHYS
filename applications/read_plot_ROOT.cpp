@@ -1,20 +1,13 @@
 
-// A MEMPHYS.root file is read with the AIDA API and plotting is done with CERN-ROOT.
+// A MEMPHYS.root file is read with the inlib/rroot API and plotting is done with CERN-ROOT.
 
-#include "analysis.icc"
+#include "read.icc"
 
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TCanvas.h>
 #include <TSystem.h>
 #include <TApplication.h>
-
-#ifdef APP_USE_ARCHIVE
-#include <BatchLab/Core/Main.h>
-extern "C" {
-  void BatchLabRioInitialize(Slash::Core::ISession&);
-}
-#endif
 
 #include <inlib/args>
 #include <iostream>
@@ -41,29 +34,11 @@ int main(int a_argc,char* a_argv[]) {
   ////////////////////////////////////////////////////////
   /// Read data : ////////////////////////////////////////
   ////////////////////////////////////////////////////////
-#ifdef APP_USE_ARCHIVE
-  BatchLab::Main* session = new BatchLab::Main(std::vector<std::string>());
-  Slash::Core::ILibraryManager* libraryManager = Slash::libraryManager(*session);
-  if(!libraryManager) {std::cout << "LibraryManager not found." << std::endl;return EXIT_FAILURE;}
-  Slash::Core::ILibrary* library = libraryManager->addLibrary("Rio","main","");
-  if(!library) {std::cout << "addLibrary() failed." << std::endl;return EXIT_FAILURE;}
-  ::BatchLabRioInitialize(*session);
-  AIDA::IAnalysisFactory* aida = static_cast<AIDA::IAnalysisFactory*>(session);
-#else
-  AIDA::IAnalysisFactory* aida = AIDA_createAnalysisFactory();
-#endif
-  if(!aida) {
-    std::cout << "AIDA not found." << std::endl;
-    return EXIT_FAILURE;
-  }
 
-  if(!read_data(file,*aida,*hits_times,*digits_time_pe)) {
+  if(!read_data(std::cout,file,*hits_times,*digits_time_pe)) {
     std::cout << "can't read data file." << std::endl;
-    delete aida;
     return EXIT_FAILURE;
   }
-
-  delete aida;
 
   ////////////////////////////////////////////////////////
   /// plot histos : //////////////////////////////////////
