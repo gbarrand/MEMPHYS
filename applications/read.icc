@@ -104,30 +104,30 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
     READ_LEAF(a_tree,index,int,startVol)
     READ_LEAF(a_tree,index,int,stopVol)
 
-    std::vector<double> direction;
-    if(!inlib::rroot::read_std_vec(a_tree.file(),*be_direction,index,direction)) return false;
-    std::vector<double> momentum;
-    if(!inlib::rroot::read_std_vec(a_tree.file(),*be_momentum,index,momentum)) return false;
-    std::vector<double> startPos;
-    if(!inlib::rroot::read_std_vec(a_tree.file(),*be_startPos,index,startPos)) return false;
-    std::vector<double> stopPos;
-    if(!inlib::rroot::read_std_vec(a_tree.file(),*be_stopPos,index,stopPos)) return false;
+    inlib::rroot::stl_vector<double>* direction = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_direction,index);
+    if(!direction) return false;
+    inlib::rroot::stl_vector<double>* momentum = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_momentum,index);
+    if(!momentum) return false;
+    inlib::rroot::stl_vector<double>* startPos = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_startPos,index);
+    if(!startPos) return false;
+    inlib::rroot::stl_vector<double>* stopPos = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_stopPos,index);
+    if(!stopPos) return false;
     
-    double dx = direction[0];
-    double dy = direction[1];
-    double dz = direction[2];
+    double dx = (*direction)[0];
+    double dy = (*direction)[1];
+    double dz = (*direction)[2];
 
-    double px = momentum[0];
-    double py = momentum[1];
-    double pz = momentum[2];
+    double px = (*momentum)[0];
+    double py = (*momentum)[1];
+    double pz = (*momentum)[2];
 
-    double start_x = startPos[0];
-    double start_y = startPos[1];
-    double start_z = startPos[2];
+    double start_x = (*startPos)[0];
+    double start_y = (*startPos)[1];
+    double start_z = (*startPos)[2];
     
-    double stop_x = stopPos[0];
-    double stop_y = stopPos[1];
-    double stop_z = stopPos[2];
+    double stop_x = (*stopPos)[0];
+    double stop_y = (*stopPos)[1];
+    double stop_z = (*stopPos)[2];
 
     a_tree.out() << "----> Tk{"<<index<<"}: " 
               << " pId " << pId
@@ -234,8 +234,8 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     if(!inlib::rroot::read_leaf_object(rfile,*br_digit,*leaf_digit,ievent)) return false;
     if(!inlib::rroot::read_leaf_object(rfile,*br_track,*leaf_track,ievent)) return false;
 
-    std::vector<double> vtx;
-    if(!inlib::rroot::read_std_vec(rfile,*be_vtxPos,ievent,vtx)) return false;
+    inlib::rroot::stl_vector<double>* vtx = inlib::rroot::read_std_vec<double>(rfile,*be_vtxPos,ievent);
+    if(!vtx) return false;
     
     if(dump)
     a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
@@ -245,7 +245,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
               << " #digits: " << nDigits
               << " sumPE " << sumPE
 	      << std::endl
-	      << "vtxPos x: " << vtx[0] << ", y: " << vtx[1] << ", z:" << vtx[2]
+	      << "vtxPos x: " << (*vtx)[0] << ", y: " << (*vtx)[1] << ", z:" << (*vtx)[2]
     	      << std::endl;
 	      
     if(!process_hits(hit_tree,aHisto1D)) break;
