@@ -1,22 +1,5 @@
 
 /*
-#include <AIDA/IAnalysisFactory.h>
-#include <AIDA/ITreeFactory.h>
-#include <AIDA/ITree.h>
-#include <AIDA/IManagedObject.h>
-#include <AIDA/ITuple.h>
-#include <AIDA/ITupleEntry.h>
-
-#include <iostream>
-
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
-inline AIDA::ITuple* cast_Tuple(AIDA::ITupleEntry* aEntry) {
-  //return (AIDA::ITuple*)aEntry->cast("AIDA::ITuple");
-  return dynamic_cast<AIDA::ITuple*>(aEntry);
-}
 
 inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ) {
   if(!a_entry) return false;
@@ -30,67 +13,6 @@ inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ)
   aY = tuple->getDouble(1);
   aZ = tuple->getDouble(2);
 
-  return true;
-}
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-inline bool dump_tracks(AIDA::ITupleEntry* a_entry) {
-  if(!a_entry) return false;
-  AIDA::ITuple* tuple = cast_Tuple(a_entry);
-  if(!tuple) return false;
-
-  //if(nPart!=tracks->rows()) {
-  //  std::cout << "read: nPart / tracks mismatch " 
-  //              << nPart << " " << tracks->rows() << std::endl;
-  //  return false;
-  //}
-
-  tuple->start();
-  int irow = 0;
-  while(tuple->next()) {
-
-    int pId = tuple->getInt(0);
-    int parent = tuple->getInt(1);
-    float timeStart = tuple->getFloat(2);
-
-    double dx,dy,dz;
-    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(3),dx,dy,dz)) return false;
-
-    double mass = tuple->getDouble(4);
-    double pTot = tuple->getDouble(5);
-    double ETot = tuple->getDouble(6);
-
-    double px,py,pz;
-    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
-
-    double start_x,start_y,start_z;
-    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(8),start_x,start_y,start_z)) return false;
-
-    double stop_x,stop_y,stop_z;
-    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(9),stop_x,stop_y,stop_z)) return false;
-
-    int startVol = tuple->getInt(10);
-    int stopVol = tuple->getInt(11);
-
-    std::cout << "----> Tk{"<<irow<<"}: " 
-              << " pId " << pId
-              << " parent " << parent
-              << " creation time " << timeStart 
-              << " Volumes " << startVol << " " << stopVol << "\n"
-              << " Start Pos (" << start_x 
-              << "," << start_y << "," << start_z << ")\n"
-              << " Stop Pos (" << stop_x 
-              << "," << stop_y << "," << stop_z << ")\n"
-              << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
-              << " m " << mass
-              << " ETot " << ETot
-              << " pTot " << pTot
-              << " px,py,pz " << px << " " << py << " " << pz << "\n"
-              << std::endl;
-
-    irow++;
-  }
   return true;
 }
 */
@@ -154,6 +76,65 @@ inline bool process_digits(inlib::rroot::tree& a_tree,H2D& aHisto) {
     READ_LEAF(a_tree,index,double,pe)
     READ_LEAF(a_tree,index,double,time)
     aHisto.Fill(time,pe);
+  }
+  
+  return true;
+}
+
+inline bool process_tracks(inlib::rroot::tree& a_tree) {
+  //if(nPart!=tracks->rows()) {
+  //  std::cout << "read: nPart / tracks mismatch " 
+  //              << nPart << " " << tracks->rows() << std::endl;
+  //  return false;
+  //}
+
+  FIND_LEAF(a_tree,int,pId)
+  FIND_LEAF(a_tree,int,parent)
+  FIND_LEAF(a_tree,float,timeStart)
+  FIND_LEAF(a_tree,double,mass)
+  FIND_LEAF(a_tree,double,pTot)
+  FIND_LEAF(a_tree,double,ETot)
+  FIND_LEAF(a_tree,int,startVol)
+  FIND_LEAF(a_tree,int,stopVol)
+
+  inlib::uint64 nentries = a_tree.entries();
+  for(inlib::uint32 index=0;index<nentries;index++) {
+    READ_LEAF(a_tree,index,int,pId)
+    READ_LEAF(a_tree,index,int,parent)
+    READ_LEAF(a_tree,index,float,timeStart)
+    READ_LEAF(a_tree,index,double,mass)
+    READ_LEAF(a_tree,index,double,pTot)
+    READ_LEAF(a_tree,index,double,ETot)
+    READ_LEAF(a_tree,index,int,startVol)
+    READ_LEAF(a_tree,index,int,stopVol)
+
+    double dx,dy,dz;
+//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(3),dx,dy,dz)) return false;
+
+    double px,py,pz;
+//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
+
+    double start_x,start_y,start_z;
+//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(8),start_x,start_y,start_z)) return false;
+
+    double stop_x,stop_y,stop_z;
+//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(9),stop_x,stop_y,stop_z)) return false;
+
+    a_tree.out() << "----> Tk{"<<index<<"}: " 
+              << " pId " << pId
+              << " parent " << parent
+              << " creation time " << timeStart 
+              << " Volumes " << startVol << " " << stopVol << "\n"
+              << " Start Pos (" << start_x 
+              << "," << start_y << "," << start_z << ")\n"
+              << " Stop Pos (" << stop_x 
+              << "," << stop_y << "," << stop_z << ")\n"
+              << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
+              << " m " << mass
+              << " ETot " << ETot
+              << " pTot " << pTot
+              << " px,py,pz " << px << " " << py << " " << pz << "\n"
+              << std::endl;
   }
   
   return true;
@@ -223,6 +204,10 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   inlib::rroot::tree digit_tree(rfile,fac);
   leaf_digit->set_object(&digit_tree);
   
+  FIND_LEAF_OBJECT(*tree,track)
+  inlib::rroot::tree track_tree(rfile,fac);
+  leaf_track->set_object(&track_tree);
+  
   bool dump = false;
   dump = true;
   
@@ -235,6 +220,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
 
     if(!inlib::rroot::read_leaf_object(rfile,*br_hit,*leaf_hit,ievent)) return false;
     if(!inlib::rroot::read_leaf_object(rfile,*br_digit,*leaf_digit,ievent)) return false;
+    if(!inlib::rroot::read_leaf_object(rfile,*br_track,*leaf_track,ievent)) return false;
   
     if(dump)
     a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
@@ -246,9 +232,8 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     	      << std::endl;
 	      
     if(!process_hits(hit_tree,aHisto1D)) break;
-    if(!process_digits(digit_tree,aHisto2D)) break;
-    
-    //if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
+    if(!process_digits(digit_tree,aHisto2D)) break;    
+    if(!process_tracks(track_tree)) break;
   }
 
 #undef READ_LEAF
