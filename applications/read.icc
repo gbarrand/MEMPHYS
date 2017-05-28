@@ -109,25 +109,37 @@ inline bool process_hits_times(AIDA::ITupleEntry* a_entry,H1D& aHisto) {
   }
   return true;
 }
+*/
+
+#include <inlib/rroot/tree_manip>
+
+#define FIND_LEAF(a__tree,a__type,a__name) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf<a__type>* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
+#define READ_LEAF(a__tree,a__type,a__name) \
+  a__type a__name;\
+  if(!inlib::rroot::read_leaf((a__tree).file(),*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
+
+
 
 template <class H1D>
-inline bool process_hits(AIDA::ITupleEntry* a_entry,H1D& aHisto) {
-  if(!a_entry) return false;
+inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
 
-  AIDA::ITuple* tuple = cast_Tuple(a_entry);
-  if(!tuple) return false;
+  FIND_LEAF(a_tree,int,tubeId)
+  FIND_LEAF(a_tree,int,totalPE)
 
-  tuple->start();
-  while(tuple->next()) {
-
-    //int tubeId = tuple->getInt(0);
-    //int totalPE = tuple->getInt(1);
-    
-    if(!process_hits_times((AIDA::ITupleEntry*)tuple->getObject(2),aHisto)) return false;
+  inlib::uint64 nentries = a_tree.entries();
+  for(inlib::uint32 index=0;index<nentries;index++) {
+    READ_LEAF(a_tree,int,tubeId)
+    READ_LEAF(a_tree,int,totalPE)
+    //if(!process_hits_times((AIDA::ITupleEntry*)tuple->getObject(2),aHisto)) return false;
   }
   return true;
 }
 
+/*
 template <class H2D>
 inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
   if(!a_entry) return false;
@@ -152,7 +164,6 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
 //////////////////////////////////////////////////////////////////////////////
 #include <inlib/rroot/file>
 #include <inlib/rroot/fac>
-#include <inlib/rroot/tree_manip>
 #include <inlib/file>
 
 #include <exlib/zlib>
@@ -198,20 +209,11 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     a_out << "leaf : " << (*it)->name() << " " << (*it)->title()  << " " << (*it)->s_cls() << std::endl;
   }}
 
-#define FIND_LEAF(a__type,a__name) \
-  inlib::rroot::branch* br_##a__name;\
-  inlib::rroot::leaf<a__type>* leaf_##a__name;\
-  if(!inlib::rroot::find_leaf(*tree,#a__name,br_##a__name,leaf_##a__name)) return false;
-
-  FIND_LEAF(int,eventId)
-  FIND_LEAF(int,nPart)
-  FIND_LEAF(int,nHits)
-  FIND_LEAF(int,nDigits)
-  FIND_LEAF(double,sumPE)
-
-#define READ_LEAF(a__type,a__name) \
-  a__type a__name;\
-  if(!inlib::rroot::read_leaf(rfile,*br_##a__name,*leaf_##a__name,ievent,a__name)) return false;
+  FIND_LEAF(*tree,int,eventId)
+  FIND_LEAF(*tree,int,nPart)
+  FIND_LEAF(*tree,int,nHits)
+  FIND_LEAF(*tree,int,nDigits)
+  FIND_LEAF(*tree,double,sumPE)
 
   inlib::rroot::branch* br_hit_tree;
   inlib::rroot::leaf_object* leaf_hit_tree;
@@ -224,11 +226,11 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   leaf_hit_tree->set_object(&hit_tree);
   
   for(inlib::uint32 ievent=0;ievent<nentries;ievent++){
-    READ_LEAF(int,eventId)
-    READ_LEAF(int,nPart)
-    READ_LEAF(int,nHits)
-    READ_LEAF(int,nDigits)
-    READ_LEAF(double,sumPE)
+    READ_LEAF(*tree,int,eventId)
+    READ_LEAF(*tree,int,nPart)
+    READ_LEAF(*tree,int,nHits)
+    READ_LEAF(*tree,int,nDigits)
+    READ_LEAF(*tree,double,sumPE)
 
     if(!inlib::rroot::read_leaf_object(rfile,*br_hit_tree,*leaf_hit_tree,ievent)) return false;
   
@@ -241,8 +243,9 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
               <<" sumPE " << sumPE
     	      << std::endl;
 	      
+    if(!process_hits(hit_tree,aHisto1D)) break;
+    
     //if(!dump_tracks((AIDA::ITupleEntry*)tuple->getObject(8))) break;
-    //if(!process_hits((AIDA::ITupleEntry*)tuple->getObject(10),aHisto1D)) break;    
     //if(!process_digits((AIDA::ITupleEntry*)tuple->getObject(13),aHisto2D)) break;
   }
 
