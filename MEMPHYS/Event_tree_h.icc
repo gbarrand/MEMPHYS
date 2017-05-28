@@ -6,13 +6,7 @@
   inlib::wroot::leaf<int>* m_Event_leaf_inputEvtId;
   inlib::wroot::leaf<int>* m_Event_leaf_interMode;
   inlib::wroot::leaf<int>* m_Event_leaf_vtxVol;
-    
-    inlib::wroot::tree* m_Event_vtxPos_tree;
-    inlib::wroot::leaf<double>* m_Event_vtxPos_leaf_x;
-    inlib::wroot::leaf<double>* m_Event_vtxPos_leaf_y;
-    inlib::wroot::leaf<double>* m_Event_vtxPos_leaf_z;
-  inlib::wroot::leaf_object* m_Event_leaf_vtxPos;
-    
+  std::vector<double> m_Event_vtxPos_vec;
   inlib::wroot::leaf<int>* m_Event_leaf_nPart;
   inlib::wroot::leaf<int>* m_Event_leaf_leptonIndex;
   inlib::wroot::leaf<int>* m_Event_leaf_protonIndex;
