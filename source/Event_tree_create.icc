@@ -6,13 +6,8 @@
   m_Event_leaf_inputEvtId = m_Event_tree->create_leaf<int>("inputEvtId");
   m_Event_leaf_interMode = m_Event_tree->create_leaf<int>("interMode");
   m_Event_leaf_vtxVol = m_Event_tree->create_leaf<int>("vtxVol");
-    
-    m_Event_vtxPos_tree = new inlib::wroot::tree(m_file.dir(),"vtxPos","vtxPos",false);
-    m_Event_vtxPos_leaf_x = m_Event_vtxPos_tree->create_leaf<double>("x");
-    m_Event_vtxPos_leaf_y = m_Event_vtxPos_tree->create_leaf<double>("y");
-    m_Event_vtxPos_leaf_z = m_Event_vtxPos_tree->create_leaf<double>("z");
-  m_Event_leaf_vtxPos = m_Event_tree->create_leaf("vtxPos",*m_Event_vtxPos_tree);
-    
+  inlib::wroot::std_vector_be<double>* Event_branch_vtxPos = m_Event_tree->create_std_vector_be<double>("vtxPos",m_Event_vtxPos_vec);
+  inlib::wroot::leaf_element* Event_leaf_vtxPos = Event_branch_vtxPos->create_leaf_element("vtxPos","vtxPos");
   m_Event_leaf_nPart = m_Event_tree->create_leaf<int>("nPart");
   m_Event_leaf_leptonIndex = m_Event_tree->create_leaf<int>("leptonIndex");
   m_Event_leaf_protonIndex = m_Event_tree->create_leaf<int>("protonIndex");

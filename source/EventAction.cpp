@@ -742,6 +742,11 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
   fAnalysis.m_Event_leaf_interMode->fill(mode);
   fAnalysis.m_Event_leaf_vtxVol->fill(vtxvol);
 
+  fAnalysis.m_Event_vtxPos_vec.clear();
+  fAnalysis.m_Event_vtxPos_vec.push_back(vtx_x);
+  fAnalysis.m_Event_vtxPos_vec.push_back(vtx_y);
+  fAnalysis.m_Event_vtxPos_vec.push_back(vtx_z);
+  /*
     fAnalysis.m_Event_vtxPos_tree->reset();
     fAnalysis.m_Event_vtxPos_leaf_x->fill(vtx_x);
     fAnalysis.m_Event_vtxPos_leaf_y->fill(vtx_y);
@@ -750,6 +755,7 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
     if(!fAnalysis.m_Event_vtxPos_tree->fill(nbytes)) {
       std::cout << "m_Event_vtxPos_tree fill failed." << std::endl;
     }}
+  */
   
   fAnalysis.m_Event_leaf_nPart->fill(ntrack);
   fAnalysis.m_Event_leaf_leptonIndex->fill(leadingLeptonIndex);
