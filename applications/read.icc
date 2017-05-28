@@ -25,7 +25,7 @@ template <class H1D>
 inline bool process_hits_times(inlib::rroot::tree& a_tree,H1D& aHisto) {
   FIND_LEAF(a_tree,float,time)
   inlib::uint64 nentries = a_tree.entries();
-  for(inlib::uint32 index=0;index<nentries;index++) {
+  for(inlib::uint64 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,float,time)
     aHisto.Fill(time);
   }
@@ -43,7 +43,7 @@ inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
   leaf_pe->set_object(&pe_tree);
 
   inlib::uint64 nentries = a_tree.entries();
-  for(inlib::uint32 index=0;index<nentries;index++) {
+  for(inlib::uint64 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,tubeId)
     READ_LEAF(a_tree,index,int,totalPE)
     if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_pe,*leaf_pe,index)) return false;
@@ -59,7 +59,7 @@ inline bool process_digits(inlib::rroot::tree& a_tree,H2D& aHisto) {
   FIND_LEAF(a_tree,double,time)
 
   inlib::uint64 nentries = a_tree.entries();
-  for(inlib::uint32 index=0;index<nentries;index++) {
+  for(inlib::uint64 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,double,pe)
     READ_LEAF(a_tree,index,double,time)
     aHisto.Fill(time,pe);
@@ -94,7 +94,7 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
   if(!be_stopPos) return false;
   
   inlib::uint64 nentries = a_tree.entries();
-  for(inlib::uint32 index=0;index<nentries;index++) {
+  for(inlib::uint64 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,pId)
     READ_LEAF(a_tree,index,int,parent)
     READ_LEAF(a_tree,index,float,timeStart)
@@ -223,7 +223,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   bool dump = false;
   dump = true;
   
-  for(inlib::uint32 ievent=0;ievent<nentries;ievent++){
+  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
     READ_LEAF(*tree,ievent,int,eventId)
     READ_LEAF(*tree,ievent,int,nPart)
     READ_LEAF(*tree,ievent,int,nHits)
