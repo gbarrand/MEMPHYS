@@ -44,12 +44,12 @@ MEMPHYS::Analysis::Analysis(
   // Geometry "trees in trees" structure :
   //Needed for the visualization program.
   /*
-  std::string column =  "double wcRadius, wcLength, ITuple wcOffset = {double x, y, z}, ";
+  std::string column =  "double wcRadius, wcLength, double[] wcOffset, ";
   column += "double pmtRadius, int nPMTs,  ";
   column += "ITuple pmtInfos = { ";
   column +=                      "int pmtId, pmtLocation, ";
-  column +=                      "ITuple pmtOrient   = { double dx, dy, dz }, ";
-  column +=                      "ITuple pmtPosition = { double  x,  y,  z } ";
+  column +=                      "double[] pmtOrient, ";
+  column +=                      "double[] pmtPosition ";
   column +=                    "}";
   */
   
@@ -76,10 +76,7 @@ MEMPHYS::Analysis::~Analysis(){
   delete m_Event_hit_pe_tree;
   delete m_Event_digit_tree;
   
-  delete m_Geometry_wcOffset_tree;
   delete m_Geometry_pmtInfos_tree;
-  delete m_Geometry_pmtInfos_pmtOrient_tree;
-  delete m_Geometry_pmtInfos_pmtPosition_tree;
   
 #endif
 }

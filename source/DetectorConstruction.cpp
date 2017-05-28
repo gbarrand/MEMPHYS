@@ -1498,14 +1498,10 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   fAnalysis.m_Geometry_leaf_wcRadius->fill(WCCylInfo[0]);
   fAnalysis.m_Geometry_leaf_wcLength->fill(WCCylInfo[1]);
 
-    fAnalysis.m_Geometry_wcOffset_tree->reset();
-    fAnalysis.m_Geometry_wcOffset_leaf_x->fill(WCOffset.x()/cm);
-    fAnalysis.m_Geometry_wcOffset_leaf_y->fill(WCOffset.y()/cm);
-    fAnalysis.m_Geometry_wcOffset_leaf_z->fill(WCOffset.z()/cm);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Geometry_wcOffset_tree->fill(nbytes)) {
-      std::cout << "wcOffset tree fill failed." << std::endl;
-    }}
+  fAnalysis.m_Geometry_wcOffset_vec.clear();
+  fAnalysis.m_Geometry_wcOffset_vec.push_back(WCOffset.x()/cm);
+  fAnalysis.m_Geometry_wcOffset_vec.push_back(WCOffset.y()/cm);
+  fAnalysis.m_Geometry_wcOffset_vec.push_back(WCOffset.z()/cm);
   
   fAnalysis.m_Geometry_leaf_pmtRadius->fill(WCPMTSize);
   fAnalysis.m_Geometry_leaf_nPMTs->fill(totalNumPMTs);
@@ -1519,23 +1515,15 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
     fAnalysis.m_Geometry_pmtInfos_leaf_pmtId->fill(tubeID);
     fAnalysis.m_Geometry_pmtInfos_leaf_pmtLocation->fill(cylLocation);
 
-    fAnalysis.m_Geometry_pmtInfos_pmtOrient_tree->reset();
-    fAnalysis.m_Geometry_pmtInfos_pmtOrient_leaf_dx->fill(pmtOrientation.x());
-    fAnalysis.m_Geometry_pmtInfos_pmtOrient_leaf_dy->fill(pmtOrientation.y());
-    fAnalysis.m_Geometry_pmtInfos_pmtOrient_leaf_dz->fill(pmtOrientation.z());
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Geometry_pmtInfos_pmtOrient_tree->fill(nbytes)) {
-      std::cout << "pmtOrient tree fill failed." << std::endl;
-    }}
+    fAnalysis.m_Geometry_pmtInfos_pmtOrient_vec.clear();
+    fAnalysis.m_Geometry_pmtInfos_pmtOrient_vec.push_back(pmtOrientation.x());
+    fAnalysis.m_Geometry_pmtInfos_pmtOrient_vec.push_back(pmtOrientation.y());
+    fAnalysis.m_Geometry_pmtInfos_pmtOrient_vec.push_back(pmtOrientation.z());
 
-    fAnalysis.m_Geometry_pmtInfos_pmtPosition_tree->reset();
-    fAnalysis.m_Geometry_pmtInfos_pmtPosition_leaf_x->fill(newTransform.getTranslation().getX()/cm);
-    fAnalysis.m_Geometry_pmtInfos_pmtPosition_leaf_y->fill(newTransform.getTranslation().getY()/cm);
-    fAnalysis.m_Geometry_pmtInfos_pmtPosition_leaf_z->fill(newTransform.getTranslation().getZ()/cm);
-   {inlib::uint32 nbytes;
-    if(!fAnalysis.m_Geometry_pmtInfos_pmtPosition_tree->fill(nbytes)) {
-      std::cout << "pmtPosition tree fill failed." << std::endl;
-    }}
+    fAnalysis.m_Geometry_pmtInfos_pmtPosition_vec.clear();
+    fAnalysis.m_Geometry_pmtInfos_pmtPosition_vec.push_back(newTransform.getTranslation().getX()/cm);
+    fAnalysis.m_Geometry_pmtInfos_pmtPosition_vec.push_back(newTransform.getTranslation().getY()/cm);
+    fAnalysis.m_Geometry_pmtInfos_pmtPosition_vec.push_back(newTransform.getTranslation().getZ()/cm);
       
    {inlib::uint32 nbytes;
     if(!fAnalysis.m_Geometry_pmtInfos_tree->fill(nbytes)) {
