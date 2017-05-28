@@ -146,58 +146,51 @@ inline bool process_digits(AIDA::ITupleEntry* a_entry,H2D& aHisto) {
   }
   return true;
 }
+*/
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+#include <inlib/rroot/file>
+#include <inlib/rroot/fac>
+#include <inlib/rroot/tree_manip>
+#include <inlib/file>
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+#include <exlib/zlib>
+
 template <class H1D,class H2D>
-inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H1D& aHisto1D,H2D& aHisto2D) {
+inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1D,H2D& aHisto2D) {
 
-  AIDA::ITreeFactory* treeFactory = a_aida.createTreeFactory();
-  if(!treeFactory) {
-    std::cout << "can't get a TreeFactory." << std::endl;
+ {bool is;
+  inlib::file::is_root(a_file,is);
+  if(!is) {
+    a_out << " file is not a root file." << std::endl;
     return false;
-  }
+  }}
 
-  AIDA::ITree* tree = treeFactory->create(a_file,"root",true,false);
+  /////////////////////////////////////////////
+  //// open the data file : ///////////////////
+  /////////////////////////////////////////////
+  bool verbose = false;
+  inlib::rroot::file rfile(a_out,a_file,verbose);
+  rfile.add_unziper('Z',exlib::decompress_buffer);
+
+  std::string stree("Event");
+  inlib::rroot::fac fac(a_out);
+  inlib::rroot::tree* tree = inlib::rroot::find_tree(rfile,fac,stree);      
   if(!tree) {
-    std::cout << "can't open data file." << std::endl;
-    delete treeFactory;
+    a_out << " tree " << stree << " not found." << std::endl;
     return false;
   }
 
-  AIDA::IManagedObject* object = tree->find("Event");
-  if(!object) {
-    std::cout << "object Event not found in tree." << std::endl;
-    delete tree;
-    delete treeFactory;
-    return false;
-  }
-  
-  AIDA::ITuple* tuple = (AIDA::ITuple*)object->cast("AIDA::ITuple");
-  //AIDA::ITuple* tuple = dynamic_cast<AIDA::ITuple*>(object);
-  if(!tuple) {
-    std::cout << "object not an AIDA::ITuple." << std::endl;
-    delete tree;
-    delete treeFactory;
-    return false;
+  inlib::uint64 nentries = tree->entries();
+  if(!nentries) {
+    a_out << " tree " << stree << " empty." << std::endl;
+    return true;
   }
 
-  int coln = tuple->columns();
-  for(int index=0;index<coln;index++) {
-    std::cout << " icol = " << index
-              << ", label = " << tuple->columnName(index) 
-              << ", type = " << tuple->columnType(index) 
-              << std::endl;
-  }
+  a_out << "traitements de " << nentries << " entrees" << std::endl;
 
-  std::cout << "rows = " << tuple->rows() << std::endl;
-
-  int nentries = tuple->rows();
-  //nentries = 100000;
-  //nentries = 40;
-  std::cout << "traitements de " << nentries << " entrees" << std::endl;
-
+/*
   bool dump = false;
   dump = true;
 
@@ -219,7 +212,7 @@ inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H
     int nDigits = tuple->getInt(11);
     double sumPE = tuple->getDouble(12);
 
-    std::cout << ">>>>>>>>>>>>> Event{" << irow << "}: "
+    a_out << ">>>>>>>>>>>>> Event{" << irow << "}: "
     	      << " evt Id " << eventId 
     //	      << " evt Input Id " << inputEvtId
     //	      << "\n interaction mode " << interMode
@@ -239,9 +232,9 @@ inline bool read_data(const std::string& a_file,AIDA::IAnalysisFactory& a_aida,H
     irow++;
   }
 
-  delete tree;
   delete treeFactory;
+*/
+  delete tree;
 
   return true;
 }
-*/
