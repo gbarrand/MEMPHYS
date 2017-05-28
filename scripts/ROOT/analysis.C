@@ -43,8 +43,7 @@ void analysis()
   ////////////////////////////////////////////////////////
   TH1D* hits_times = new TH1D("hits_times","Hits times",100,0,3000);
 
-  TH2D* digits_time_pe = 
-    new TH2D("digits_pe_time","Digits PE time",100,0,3000,100,0,10);
+  TH2D* digits_time_pe = new TH2D("digits_pe_time","Digits PE time",100,0,3000,100,0,10);
 
   int hit_count = 0;
   bool dump = true;
@@ -87,7 +86,7 @@ void analysis()
   tEvent->SetBranchAddress("nDigits",&nDigits);
   tEvent->SetBranchAddress("sumPE",&sumPE);
 
-  std::vector<double>* vtxPos;
+  std::vector<double>* vtxPos = 0;
   tEvent->SetBranchAddress("vtxPos",&vtxPos);
   
   Int_t nEvent = (Int_t)tEvent->GetEntries();  
@@ -132,13 +131,13 @@ void analysis()
     Event_track->SetBranchAddress("startVol",&startVol);
     Event_track->SetBranchAddress("stopVol",&stopVol);
 
-    std::vector<double>* direction;
+    std::vector<double>* direction = 0;
     Event_track->SetBranchAddress("direction",&direction);
-    std::vector<double>* momentum;
+    std::vector<double>* momentum = 0;
     Event_track->SetBranchAddress("momentum",&momentum);
-    std::vector<double>* startPos;
+    std::vector<double>* startPos = 0;
     Event_track->SetBranchAddress("startPos",&startPos);
-    std::vector<double>* stopPos;
+    std::vector<double>* stopPos = 0;
     Event_track->SetBranchAddress("stopPos",&stopPos);
     
     Int_t tubeId_hit; //JEC 16/1/06

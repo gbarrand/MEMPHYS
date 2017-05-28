@@ -3,7 +3,7 @@ void geom() {
   //see Analysis AIDA Tuple definition
 
   bool dump = false;
-  //dump = true;
+  dump = true;
   
   TFile* file = new TFile("MEMPHYS.root");
   TTree* tGeom = (TTree*)file->Get("Geometry");
@@ -16,9 +16,8 @@ void geom() {
   tGeom->SetBranchAddress("pmtRadius",&pmtRadius);
   Int_t nPMTs;
   tGeom->SetBranchAddress("nPMTs",&nPMTs);
-  
-  TTree* tGeom_wcOffset = new TTree();
-  tGeom->SetBranchAddress("wcOffset",&tGeom_wcOffset);
+  std::vector<double>* wcOffset;
+  tGeom->SetBranchAddress("wcOffset",&wcOffset);
 
   TTree* tGeom_pmtInfos = new TTree();
   tGeom->SetBranchAddress("pmtInfos",&tGeom_pmtInfos);
@@ -35,17 +34,9 @@ void geom() {
   
   if(dump) std::cout << "WC Radius " << wcRadius << " Length " <<wcLength << std::endl;  
   
-  if ( tGeom_wcOffset->GetEntries() !=1 ) {
-    std::cout << "Very suspect, #entries in wcOffset Tuple = " << tGeom_wcOffset->GetEntries()
-	      << std::endl;
-    ::exit(1);
-  }
-  
-  Double_t xWC,yWC,zWC;
-  tGeom_wcOffset->SetBranchAddress("x",&xWC);
-  tGeom_wcOffset->SetBranchAddress("y",&yWC);
-  tGeom_wcOffset->SetBranchAddress("z",&zWC);
-  tGeom_wcOffset->GetEntry(0);
+  Double_t xWC = (*wcOffset)[0];
+  Double_t yWC = (*wcOffset)[1];
+  Double_t zWC = (*wcOffset)[2];
 
   if(dump)
   std::cout << "WC center: (" 
@@ -68,50 +59,29 @@ void geom() {
   tGeom_pmtInfos->SetBranchAddress("pmtId",&pmtId);
   Int_t pmtLocation;
   tGeom_pmtInfos->SetBranchAddress("pmtLocation",&pmtLocation);
+  std::vector<double>* pmtOrient;
+  tGeom_pmtInfos->SetBranchAddress("pmtOrient",&pmtOrient);
+  std::vector<double>* pmtPosition;
+  tGeom_pmtInfos->SetBranchAddress("pmtPosition",&pmtPosition);
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
   tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile(file);
-  tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile(file);
-  tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile(file);
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
-
-    TTree* tGeom_pmtInfos_pmtOrient = new TTree();
-    tGeom_pmtInfos->SetBranchAddress("pmtOrient",&tGeom_pmtInfos_pmtOrient);
-
-    TTree* tGeom_pmtInfos_pmtPosition = new TTree();
-    tGeom_pmtInfos->SetBranchAddress("pmtPosition",&tGeom_pmtInfos_pmtPosition);
-  
+    
     int nbytes = tGeom_pmtInfos->GetEntry(i);
     if(nbytes<0) {
       std::cout << "problem with IO. " << std::endl;
       ::exit(1);
     }
     
-    if ( tGeom_pmtInfos_pmtOrient->GetEntries() !=1 ) {
-      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtOrient Tuple = " << tGeom_pmtInfos_pmtOrient->GetEntries()
-                << std::endl;
-      ::exit(1);
-      //continue;
-    }
-    if ( tGeom_pmtInfos_pmtPosition->GetEntries() !=1 ) {
-      std::cout << "Very suspect, #entries in tGeom_pmtInfos_pmtPosition Tuple = " << tGeom_pmtInfos_pmtPosition->GetEntries()
-                << std::endl;
-      ::exit(1);
-      //continue;
-    }
-  
-    Double_t dx, dy, dz;
-    tGeom_pmtInfos_pmtOrient->SetBranchAddress("dx",&dx);
-    tGeom_pmtInfos_pmtOrient->SetBranchAddress("dy",&dy);
-    tGeom_pmtInfos_pmtOrient->SetBranchAddress("dz",&dz);
-    tGeom_pmtInfos_pmtOrient->GetEntry(0);
+    Double_t dx = (*pmtOrient)[0];
+    Double_t dy = (*pmtOrient)[1];
+    Double_t dz = (*pmtOrient)[2];
 
-    Double_t xPMT, yPMT, zPMT;
-    tGeom_pmtInfos_pmtPosition->SetBranchAddress("x",&xPMT);
-    tGeom_pmtInfos_pmtPosition->SetBranchAddress("y",&yPMT);
-    tGeom_pmtInfos_pmtPosition->SetBranchAddress("z",&zPMT);
-    tGeom_pmtInfos_pmtPosition->GetEntry(0);
+    Double_t xPMT = (*pmtPosition)[0];
+    Double_t yPMT = (*pmtPosition)[1];
+    Double_t zPMT = (*pmtPosition)[2];
 
     if(dump)
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
