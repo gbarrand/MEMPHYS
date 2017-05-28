@@ -31,7 +31,7 @@ MEMPHYS::Analysis::Analysis(
   column +=                  "double[] stopPos, ";
   column +=                  "int startVol, stopVol ";
   column +=                "}, ";
-  column += "int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, ";
+  column += "int nHits, ITuple hit = { int tubeId, int totalPE, float[] pe }, ";
   column += "int nDigits, double sumPE, ";
   column += "ITuple digit = { int tubeId, double pe, time }";
   */
@@ -73,7 +73,6 @@ MEMPHYS::Analysis::~Analysis(){
 
   delete m_Event_track_tree;
   delete m_Event_hit_tree;
-  delete m_Event_hit_pe_tree;
   delete m_Event_digit_tree;
   
   delete m_Geometry_pmtInfos_tree;

@@ -439,14 +439,14 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       tubeID_hit = (*WCHC)[i]->GetTubeID(); //JEC 16/1/06
       totalPE = (*WCHC)[i]->GetTotalPe();
 
-      std::vector<float> times;
+      fAnalysis.m_Event_hit_pe_vec.clear();  
       for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
 	peArrivalTime = (*WCHC)[i]->GetTime(j); 
-	times.push_back(peArrivalTime);
+	fAnalysis.m_Event_hit_pe_vec.push_back(peArrivalTime);
         fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
       
-      fill_hit(tubeID_hit,totalPE,times,hits);
+      fill_hit(tubeID_hit,totalPE,hits);
     }
   }//Hit container
   
@@ -682,20 +682,11 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif 
 }
  
-void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,const std::vector<float>& times,void* container) {
+void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,void* container) {
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_Event_hit_leaf_tubeId->fill(tubeID_hit);
   fAnalysis.m_Event_hit_leaf_totalPE->fill(totalPE);
-
-    fAnalysis.m_Event_hit_pe_tree->reset();
-    for (size_t j=0; j<times.size();j++) {
-      fAnalysis.m_Event_hit_pe_leaf_time->fill(times[j]);
-      inlib::uint32 nbytes;
-      if(!fAnalysis.m_Event_hit_pe_tree->fill(nbytes)) {
-        std::cout << "fAnalysis.m_Event_hit_pe_tree fill failed." << std::endl;
-      }
-    }   
-  
+  //fAnalysis.m_Event_hit_pe_vec = a_times;  
  {inlib::uint32 nbytes;
   if(!fAnalysis.m_Event_hit_tree->fill(nbytes)) {
     std::cout << "fAnalysis.m_Event_hit_tree fill failed." << std::endl;

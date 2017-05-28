@@ -36,11 +36,8 @@
     m_Event_hit_tree = new inlib::wroot::tree(m_file.dir(),"hit","hit",false);
     m_Event_hit_leaf_tubeId = m_Event_hit_tree->create_leaf<int>("tubeId");
     m_Event_hit_leaf_totalPE = m_Event_hit_tree->create_leaf<int>("totalPE");
-      
-      m_Event_hit_pe_tree = new inlib::wroot::tree(m_file.dir(),"pe","pe",false);
-      m_Event_hit_pe_leaf_time = m_Event_hit_pe_tree->create_leaf<float>("time");
-    m_Event_hit_leaf_pe = m_Event_hit_tree->create_leaf("pe",*m_Event_hit_pe_tree);
-      
+    inlib::wroot::std_vector_be<float>* Event_hit_branch_pe = m_Event_hit_tree->create_std_vector_be<float>("pe",m_Event_hit_pe_vec);
+    inlib::wroot::leaf_element* Event_hit_leaf_pe = Event_hit_branch_pe->create_leaf_element("pe","pe");
   m_Event_leaf_hit = m_Event_tree->create_leaf("hit",*m_Event_hit_tree);
     
   m_Event_leaf_nDigits = m_Event_tree->create_leaf<int>("nDigits");
