@@ -1,28 +1,15 @@
 
-/*
-
-inline bool get_XYZ(AIDA::ITupleEntry* a_entry,double& aX,double& aY,double& aZ) {
-  if(!a_entry) return false;
-  AIDA::ITuple* tuple = cast_Tuple(a_entry);
-  if(!tuple) return false;
-
-  tuple->start();
-  if(!tuple->next()) return false;
-
-  aX = tuple->getDouble(0);
-  aY = tuple->getDouble(1);
-  aZ = tuple->getDouble(2);
-
-  return true;
-}
-*/
-
 #include <inlib/rroot/tree_manip>
 
 #define FIND_LEAF(a__tree,a__type,a__name) \
   inlib::rroot::branch* br_##a__name;\
   inlib::rroot::leaf<a__type>* leaf_##a__name;\
   if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
+#define FIND_LEAF_NAME(a__tree,a__type,a__name,a__sname) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf<a__type>* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,a__sname,br_##a__name,leaf_##a__name)) return false;
 
 #define FIND_LEAF_OBJECT(a__tree,a__name) \
   inlib::rroot::branch* br_##a__name;\
@@ -81,6 +68,26 @@ inline bool process_digits(inlib::rroot::tree& a_tree,H2D& aHisto) {
   return true;
 }
 
+inline bool get_XYZ(inlib::rroot::tree& a_tree,
+                    const std::string& a_sx,const std::string& a_sy,const std::string& a_sz,
+                    double& a_x,double& a_y,double& a_z) {
+  FIND_LEAF_NAME(a_tree,double,x,a_sx)
+  FIND_LEAF_NAME(a_tree,double,y,a_sy)
+  FIND_LEAF_NAME(a_tree,double,z,a_sz)
+  inlib::uint64 nentries = a_tree.entries();
+  if(nentries!=1) {
+    a_tree.out() << "getXYZ : tree has not only one entry." << std::endl;
+    a_x = 0;
+    a_y = 0;
+    a_z = 0;
+    return false;
+  }
+  READ_LEAF(a_tree,0,double,x)
+  READ_LEAF(a_tree,0,double,y)
+  READ_LEAF(a_tree,0,double,z)  
+  return true;
+}
+
 inline bool process_tracks(inlib::rroot::tree& a_tree) {
   //if(nPart!=tracks->rows()) {
   //  std::cout << "read: nPart / tracks mismatch " 
@@ -97,6 +104,10 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
   FIND_LEAF(a_tree,int,startVol)
   FIND_LEAF(a_tree,int,stopVol)
 
+  FIND_LEAF_OBJECT(a_tree,direction)
+  inlib::rroot::tree direction_tree(a_tree.file(),a_tree.fac());
+  leaf_direction->set_object(&direction_tree);
+  
   inlib::uint64 nentries = a_tree.entries();
   for(inlib::uint32 index=0;index<nentries;index++) {
     READ_LEAF(a_tree,index,int,pId)
@@ -108,8 +119,10 @@ inline bool process_tracks(inlib::rroot::tree& a_tree) {
     READ_LEAF(a_tree,index,int,startVol)
     READ_LEAF(a_tree,index,int,stopVol)
 
+    if(!inlib::rroot::read_leaf_object(a_tree.file(),*br_direction,*leaf_direction,index)) return false;
+    
     double dx,dy,dz;
-//    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(3),dx,dy,dz)) return false;
+    if(!get_XYZ(direction_tree,"dx","dy","dz",dx,dy,dz)) return false;
 
     double px,py,pz;
 //    if(!get_XYZ((AIDA::ITupleEntry*)tuple->getObject(7),px,py,pz)) return false;
