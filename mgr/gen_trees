@@ -24,7 +24,7 @@ script="${script}                  double[] startPos, "
 script="${script}                  double[] stopPos, "
 script="${script}                  int startVol, stopVol "
 script="${script}                }, "
-script="${script} int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, "
+script="${script} int nHits, ITuple hit = { int tubeId, int totalPE, float[] pe}, "
 script="${script} int nDigits, double sumPE, ITuple digit = { int tubeId, double pe, time }"
 
 #echo ${script}
