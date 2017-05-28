@@ -75,7 +75,7 @@ fi
 
 objs=
 app_exe=MEMPHYS_sim
-app_src=../applications/sim.cxx
+app_src=../applications/sim.cpp
 
 . ${bush_home}/application
 

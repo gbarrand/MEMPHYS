@@ -57,7 +57,7 @@ use_cern_root=yes
 
 objs=
 app_exe=MEMPHYS_plot_ROOT
-app_src=../applications/plot_ROOT.cxx
+app_src=../applications/plot_ROOT.cpp
 
 . ${bush_home}/application
 

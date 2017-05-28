@@ -63,7 +63,7 @@ use_X11=yes
 
 objs=
 app_exe=MEMPHYS_plot
-app_src=../applications/plot.cxx
+app_src=../applications/plot.cpp
 
 . ${bush_home}/application
 
