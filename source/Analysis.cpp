@@ -71,7 +71,6 @@ MEMPHYS::Analysis::~Analysis(){
   }}  
   m_file.close(); // m_file dstor will delete m_Event_tree, m_Geometry_tree.
 
-  delete m_Event_vtxPos_tree;
   delete m_Event_track_tree;
   delete m_Event_track_direction_tree;
   delete m_Event_track_momentum_tree;
