@@ -21,7 +21,7 @@ MEMPHYS::Analysis::Analysis(
   /*
   //JEC 16/11/05: add tubeId in the hit structure
   std::string column = "int eventId, inputEvtId, interMode, vtxVol, "; 
-  column += "ITuple vtxPos = { double x, y, z }, ";
+  column += "double[] vtxPos, ";
   column += "int nPart, leptonIndex, protonIndex, ";
   column += "ITuple track = { int pId, parent, float timeStart, ";
   column +=                  "ITuple direction = { double dx, dy, dz }, ";
@@ -72,10 +72,6 @@ MEMPHYS::Analysis::~Analysis(){
   m_file.close(); // m_file dstor will delete m_Event_tree, m_Geometry_tree.
 
   delete m_Event_track_tree;
-  delete m_Event_track_direction_tree;
-  delete m_Event_track_momentum_tree;
-  delete m_Event_track_startPos_tree;
-  delete m_Event_track_stopPos_tree;
   delete m_Event_hit_tree;
   delete m_Event_hit_pe_tree;
   delete m_Event_digit_tree;
