@@ -191,6 +191,35 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
 
   a_out << "traitements de " << nentries << " entrees" << std::endl;
 
+  std::vector<inlib::rroot::base_leaf*> leaves;
+  tree->find_leaves(leaves);
+
+ {inlib_vforcit(inlib::rroot::base_leaf*,leaves,it) {
+    a_out << "leaf : " << (*it)->name() << " " << (*it)->title()  << " " << (*it)->s_cls() << std::endl;
+  }}
+
+  inlib::rroot::base_leaf* base_leaf_eventId = tree->find_leaf("eventId");
+  inlib::rroot::branch* br_eventId = tree->find_leaf_branch(*base_leaf_eventId);
+  inlib::rroot::leaf<int>* leaf_eventId = inlib::safe_cast<inlib::rroot::base_leaf, inlib::rroot::leaf<int> >(*base_leaf_eventId);
+/*
+  inlib::rroot::branch* br_nPart = tree->find_branch("nPart");
+  inlib::rroot::branch* br_nHits = tree->find_branch("nHits");
+  inlib::rroot::branch* br_nDigits = tree->find_branch("nDigits");
+  inlib::rroot::branch* br_sumPE = tree->find_branch("sumPE");
+  if(!br_eventId || !br_nPart || !br_nHits || !br_nDigits || !br_sumPE) {
+    a_out << "one branch not found." << std::endl;
+    return false;  
+  }*/
+  
+  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
+    unsigned int n;
+    if(!br_eventId->find_entry(rfile,ievent,n)) {
+      a_out << "br_eventId::find_entry() failed." << std::endl;
+      return false;     
+    }
+    int eventId = leaf_eventId->value();
+    a_out << "eventId : " << eventId << std::endl;
+  }
 /*
   bool dump = false;
   dump = true;
