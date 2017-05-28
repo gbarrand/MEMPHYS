@@ -21,14 +21,6 @@ class G4LogicalVolume;
 class G4AssemblyVolume;
 class G4VPhysicalVolume;
 
-
-
-#ifdef APP_USE_AIDA
-namespace AIDA {
-  class ITuple;
-}
-#endif
-
 namespace MEMPHYS {
 
 class Analysis; 
@@ -97,9 +89,6 @@ private:
 
   //JEC FIXME is it necessary to maintain fAnalysis?
   Analysis&  fAnalysis;            //the Analysis JEC 18/11/05
-#ifdef APP_USE_AIDA
-  AIDA::ITuple*     geomTuple;            //the Geometry tuple
-#endif
   
   // Sensitive Detectors. We declare the pointers here because we need
   // to check their state if we change the geometry.
@@ -111,10 +100,8 @@ private:
   //Glass, Cathode surface in PMTs
   G4OpticalSurface * OpGlassCathodeSurface;
 
-
   // The messenger we use to change the geometry.
   DetectorMessenger* messenger;
-
 
   //---Volume lengths
 

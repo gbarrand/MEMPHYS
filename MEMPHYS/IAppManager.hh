@@ -7,7 +7,6 @@ class IAppManager  {
 public:        
   virtual ~IAppManager() {}
 public:        
-  virtual void closeTree() = 0;
   virtual bool initialize() = 0;
 };
 

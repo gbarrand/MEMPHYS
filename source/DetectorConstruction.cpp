@@ -43,16 +43,9 @@
 #include "G4RunManager.hh"
 #include "globals.hh"
 
-//std
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-
-// AIDA :
-#include <AIDA/ITree.h>
-#include <AIDA/IManagedObject.h>
-#include <AIDA/ITuple.h>
-
 
 //MEMPHYS
 #include "../MEMPHYS/WCSD.hh"
@@ -62,34 +55,8 @@
 
 MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis) 
 :fAnalysis(aAnalysis)
-#ifdef APP_USE_AIDA
-,geomTuple(0)
-#endif
 {
 
-#ifdef APP_USE_AIDA
-  //Get User Histo pointers
-  AIDA::ITree* usrTree = aAnalysis.tree();
-  if (!usrTree) {
-    G4cout << "MEMPHYS::DetectorConstruction: FATAL: cannot get Analysis Tree" << G4endl;
-    exit(0);
-  }
-
-  AIDA::IManagedObject* obj = usrTree->find("Geometry");
-  if(!obj) {
-    G4cout << "DetectorConstruction: WARNING: no tuple Geometry" << G4endl;
-    usrTree->ls();
-    //exit(0);   
-  } else {
-    geomTuple =  CAST(obj,AIDA::ITuple);
-    if (!geomTuple) {
-      G4cout << "DetectorConstruction: FATAL: geomtuple not a AIDA::ITuple" << G4endl;
-      usrTree->ls();
-      exit(0);
-    }
-  }
-#endif
-  
   //-----------------
   // Create Materials
   //-----------------
@@ -139,20 +106,6 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
 
   messenger = new DetectorMessenger(this);
 
-#ifdef APP_USE_AIDA
-  obj = usrTree->find("Geometry");
-  if(!obj) {
-    G4cout << "DetectorConstruction: FATAL: no tuple Geometry" << G4endl;
-    usrTree->ls();
-    exit(0);
-  }  
-  geomTuple =  CAST(obj,AIDA::ITuple);
-  if (!geomTuple) {
-    G4cout << "DetectorConstruction: FATAL: geomtuple not a Tuple" << G4endl;
-    usrTree->ls();
-    exit(0);
-  }
-#endif
 }//Ctor
 
 //-----------------------------------------------------------------------------------------------
@@ -1540,61 +1493,6 @@ void MEMPHYS::DetectorConstruction::FillGeometryTuple() {
   G4Vector3D pmtOrientation;
   cyl_location cylLocation;
 
-#ifdef APP_USE_AIDA
-  if(geomTuple) {
-
-  //JEC Have a look at MEMPHYS::Analysis for the description of the Tuple variables
-  geomTuple->fill(0, WCCylInfo[0]);                                   //wcRadius
-  
-  geomTuple->fill(1, WCCylInfo[1]);                                   //wcLength
-  
-  AIDA::ITuple* wcOffset = geomTuple->getTuple( 2 );
-  wcOffset->fill(0, WCOffset.x()/cm);                                //wcOffset
-  wcOffset->fill(1, WCOffset.y()/cm);
-  wcOffset->fill(2, WCOffset.z()/cm);
-  wcOffset->addRow();
-
-  geomTuple->fill(3, WCPMTSize);                                     //pmtRadius
-  
-  geomTuple->fill(4, totalNumPMTs);                                  //nPMTs
-
-  AIDA::ITuple* pmtInfos = geomTuple->getTuple( 5 );                //pmtInfos (JEC 21/4/06 fix: should be placed here)
-
-  G4cout << "DetectorConstruction::FillGeometryTuple : " 
-         << " totalNumPMTs = " << totalNumPMTs 
-         << G4endl;
-
-  for ( int tubeID = 1; tubeID <= totalNumPMTs; tubeID++){
-    cylLocation    = tubeCylLocation[tubeID];
-    newTransform   = tubeIDMap[tubeID];
-    pmtOrientation = newTransform * nullOrient;
-    
-    pmtInfos->fill(0, tubeID);                                          //pmtId 
-    pmtInfos->fill(1, cylLocation);                                     //pmtLocation
-    
-    //std::cout << "PMT [" << tubeID <<"]: loc. " <<  cylLocation << std::endl;
-    
-    AIDA::ITuple* pmtOrient = pmtInfos->getTuple( 2 );                   //pmtOrient
-    // Get tube orientation vector
-    pmtOrient->fill(0, pmtOrientation.x());                                 //dx
-    pmtOrient->fill(1, pmtOrientation.y());                                 //dy
-    pmtOrient->fill(2, pmtOrientation.z());                                 //dz
-    pmtOrient->addRow();
-
-    AIDA::ITuple* pmtPosition = pmtInfos->getTuple( 3 );                //pmtPosition
-    pmtPosition->fill(0,  newTransform.getTranslation().getX()/cm);        //x
-    pmtPosition->fill(1,  newTransform.getTranslation().getY()/cm);        //y
-    pmtPosition->fill(2,  newTransform.getTranslation().getZ()/cm);        //z
-    pmtPosition->addRow();
-
-    //add the new PMT
-    pmtInfos->addRow();
-  }//eo loop on PMTs 
-
-  //Save the geom
-  geomTuple->addRow();}
-#endif //APP_USE_AIDA
-  
 #ifdef APP_USE_INLIB_WROOT
 
   fAnalysis.m_Geometry_leaf_wcRadius->fill(WCCylInfo[0]);

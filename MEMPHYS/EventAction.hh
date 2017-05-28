@@ -15,11 +15,6 @@
 
 class G4Event;
 
-//JEC 10/11/05 introduce AIDA
-#ifdef APP_USE_AIDA
-namespace AIDA {class ITuple;}
-#endif
-
 //JEC 10/1/06 introduce MEMPHYS
 namespace MEMPHYS {
 
@@ -66,10 +61,6 @@ class EventAction : public G4UserEventAction {
   PrimaryGeneratorAction* generatorAction;      //the Generator 
   DetectorConstruction*   detectorConstructor;  //the Detector
 
-#ifdef APP_USE_AIDA
-  AIDA::ITuple*           eventTuple;           //the Event tuple
-  AIDA::ITuple*           hitTimeTuple;         //the Hit Time tuple JEC 5/4/06
-#endif
 };
 
 }
