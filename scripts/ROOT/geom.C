@@ -95,9 +95,6 @@ void geom() {
 	      << dz << ")"
 	      << std::endl;
     
-    delete tGeom_pmtInfos_pmtOrient;
-    delete tGeom_pmtInfos_pmtPosition;
-    
   }//Loop on PMTs
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile((TFile*)0);
@@ -105,7 +102,6 @@ void geom() {
   tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile((TFile*)0);
   tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile((TFile*)0);
   
-  delete tGeom_wcOffset;
   delete tGeom_pmtInfos;
   
 }
