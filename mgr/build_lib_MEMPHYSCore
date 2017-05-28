@@ -20,13 +20,6 @@ if [ ${build_use_wroot} = yes ] ; then
   . ${bush_home}/use/zlib
 fi
 
-build_use_aida=yes    
-if [ ${build_use_aida} = yes ] ; then    
-  cppflags="${cppflags} -DAPP_USE_AIDA"
-  use_AIDA=yes
-  . ${bush_home}/use/AIDA
-fi    
-    
 cppfiles=
 cppfiles="${cppfiles} ../source/Analysis.cpp"
 cppfiles="${cppfiles} ../source/DetectorConstruction.cpp"
