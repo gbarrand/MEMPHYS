@@ -163,7 +163,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
  {bool is;
   inlib::file::is_root(a_file,is);
   if(!is) {
-    a_out << " file is not a root file." << std::endl;
+    a_out << "file is not a root file." << std::endl;
     return false;
   }}
 
@@ -171,6 +171,7 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   //// open the data file : ///////////////////
   /////////////////////////////////////////////
   bool verbose = false;
+  //verbose = true;
   inlib::rroot::file rfile(a_out,a_file,verbose);
   rfile.add_unziper('Z',exlib::decompress_buffer);
 
@@ -178,13 +179,13 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   inlib::rroot::fac fac(a_out);
   inlib::rroot::tree* tree = inlib::rroot::find_tree(rfile,fac,stree);      
   if(!tree) {
-    a_out << " tree " << stree << " not found." << std::endl;
+    a_out << "tree " << stree << " not found." << std::endl;
     return false;
   }
 
   inlib::uint64 nentries = tree->entries();
   if(!nentries) {
-    a_out << " tree " << stree << " empty." << std::endl;
+    a_out << "tree " << stree << " empty." << std::endl;
     return true;
   }
 
