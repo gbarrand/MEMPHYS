@@ -4,7 +4,7 @@
 //  This script produces a MEMPHYS.root file
 // with dummy data but with the same "TTree within TTree"
 // structure than the file produced by the MEMPHYS_batch 
-// program (see Analyis.cxx file).
+// program (see Analyis.cpp file).
 //
 //  Usage :
 //    OS> <setup ROOT>

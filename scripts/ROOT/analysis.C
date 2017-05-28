@@ -1,7 +1,7 @@
 //
 //  This script shows how to read, with ROOT, a MEMPHYS.root 
 // file having the "TTree within TTree" of the MEMPHYS_batch
-// progrem (see Analysis.cxx).
+// progrem (see Analysis.cpp).
 //
 //  Usage :
 //    OS> <setup ROOT>
