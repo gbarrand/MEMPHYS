@@ -49,7 +49,7 @@ void analysis()
   int hit_count = 0;
   bool dump = true;
   bool dump_tracks = false;
-  //dump_tracks = true;
+  dump_tracks = true;
   bool dump_hits = false;
   //dump_hits = true;
   bool dump_digits = false;
@@ -132,6 +132,15 @@ void analysis()
     Event_track->SetBranchAddress("startVol",&startVol);
     Event_track->SetBranchAddress("stopVol",&stopVol);
 
+    std::vector<double>* direction;
+    Event_track->SetBranchAddress("direction",&direction);
+    std::vector<double>* momentum;
+    Event_track->SetBranchAddress("momentum",&momentum);
+    std::vector<double>* startPos;
+    Event_track->SetBranchAddress("startPos",&startPos);
+    std::vector<double>* stopPos;
+    Event_track->SetBranchAddress("stopPos",&stopPos);
+    
     Int_t tubeId_hit; //JEC 16/1/06
     Int_t totalPE;    
     Event_hit->SetBranchAddress("tubeId",&tubeId_hit); //JEC 16/1/06   
@@ -142,7 +151,7 @@ void analysis()
     Event_digit->SetBranchAddress("tubeId",&tubeId_digit);
     Event_digit->SetBranchAddress("pe",&digit_pe);
     Event_digit->SetBranchAddress("time",&digit_time);
-
+    
     if(dump)
     std::cout << ">>>>>>>>>>>>> Event{" << iev << "}: "
     	      << " evt Id " << eventId 
@@ -167,52 +176,28 @@ void analysis()
     	      << " nTube Digits = " << nTubeDigits
     	      << std::endl;
 
+    
+    
     for (Int_t jtk=0; jtk<nTracks; ++jtk) {
-
-      //Sub tuples of Event_tracks :
-      TTree* Track_direction = new TTree();
-      Event_track->SetBranchAddress("direction",&Track_direction);
-      TTree* Track_momentum = new TTree();
-      Event_track->SetBranchAddress("momentum",&Track_momentum);
-      TTree* Track_startPos = new TTree();
-      Event_track->SetBranchAddress("startPos",&Track_startPos);
-      TTree* Track_stopPos = new TTree();
-      Event_track->SetBranchAddress("stopPos",&Track_stopPos);
 
       Event_track->GetEntry(jtk);
 
-      Double_t dx,dy,dz;
-      Track_direction->SetBranchAddress("dx",&dx);
-      Track_direction->SetBranchAddress("dy",&dy);
-      Track_direction->SetBranchAddress("dz",&dz);
+      double dx = (*direction)[0];
+      double dy = (*direction)[1];
+      double dz = (*direction)[2];
 
-      Double_t px,py,pz;
-      Track_momentum->SetBranchAddress("px",&px);
-      Track_momentum->SetBranchAddress("py",&py);
-      Track_momentum->SetBranchAddress("pz",&pz);
-
-      Double_t start_x,start_y,start_z;
-      Track_startPos->SetBranchAddress("x",&start_x);
-      Track_startPos->SetBranchAddress("y",&start_y);
-      Track_startPos->SetBranchAddress("z",&start_z);
-
-      Double_t stop_x,stop_y,stop_z;
-      Track_stopPos->SetBranchAddress("x",&stop_x);
-      Track_stopPos->SetBranchAddress("y",&stop_y);
-      Track_stopPos->SetBranchAddress("z",&stop_z);
-
-      // One entry only :
-      //std::cout << "debug : " 
-      //          << " " << Track_direction->GetEntries()
-      //          << " " << Track_momentum->GetEntries()
-      //          << " " << Track_startPos->GetEntries()
-      //          << " " << Track_stopPos->GetEntries()
-      //          << std::endl;
-      if(Track_direction->GetEntries()==1) Track_direction->GetEntry(0);
-      if(Track_momentum->GetEntries()==1)   Track_momentum->GetEntry(0);
-      if(Track_startPos->GetEntries()==1) Track_startPos->GetEntry(0);
-      if(Track_stopPos->GetEntries()==1) Track_stopPos->GetEntry(0);
-
+      double px = (*momentum)[0];
+      double py = (*momentum)[1];
+      double pz = (*momentum)[2];
+  
+      double start_x = (*startPos)[0];
+      double start_y = (*startPos)[1];
+      double start_z = (*startPos)[2];
+      
+      double stop_x = (*stopPos)[0];
+      double stop_y = (*stopPos)[1];
+      double stop_z = (*stopPos)[2];
+      
       if(dump_tracks)
       std::cout << "----> Tk{"<< jtk <<"}: " 
 	   	<< " pId " << pId
@@ -221,17 +206,12 @@ void analysis()
 		<< " Volumes " << startVol << " " << stopVol << "\n"
 		<< " Start Pos (" << start_x << "," << start_y << "," << start_z << ")\n"
 		<< " Stop Pos (" << stop_x << "," << stop_y << "," << stop_z << ")\n"
-		<< " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
+	        << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
 		<< " m " << mass
 		<< " ETot " << ETot
 		<< " pTot " << pTot
 		<< " px,py,pz " << px << " " << py << " " << pz << "\n"
                 << std::endl;
-
-      delete Track_direction;
-      delete Track_momentum;
-      delete Track_startPos;
-      delete Track_stopPos;
 
     }//loop on Tracks
 
