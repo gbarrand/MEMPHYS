@@ -18,14 +18,14 @@
 
 #include <iostream>
 
-#include "../scripts/ROOT/analysis.C"
+#include "../scripts/ROOT/geom.C"
 
 int main(int aArgc,char* aArgv[]) {
   //ROOT::GetROOT();
   
   new TApplication("MEMPHYS_analysis_ROOT",&aArgc,aArgv);
 
-  analysis();
+  geom();
 
   gSystem->Run();
 
