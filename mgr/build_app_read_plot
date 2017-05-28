@@ -9,9 +9,11 @@ bush_home=../../../../softinex/bush
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
+cppflags="${cppflags} -DINLIB_USE_CSZ"
 
 use_exlib=yes
 use_inlib=yes
+use_csz=yes
 use_freetype=yes
 use_zlib=yes
 use_GL=yes
@@ -20,6 +22,7 @@ use_X11=yes
 
 . ${bush_home}/use/exlib
 . ${bush_home}/use/inlib
+. ${bush_home}/use/csz
 . ${bush_home}/use/freetype
 . ${bush_home}/use/zlib
 . ${bush_home}/use/GL
