@@ -239,6 +239,9 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
   inlib::rroot::tree track_tree(rfile,fac);
   leaf_track->set_object(&track_tree);
   
+  inlib::rroot::branch_element* be_vtxPos = inlib::rroot::find_branch_element(*tree,"vtxPos");
+  if(!be_vtxPos) return false;
+  
   bool dump = false;
   dump = true;
   
@@ -252,14 +255,19 @@ inline bool read_data(std::ostream& a_out,const std::string& a_file,H1D& aHisto1
     if(!inlib::rroot::read_leaf_object(rfile,*br_hit,*leaf_hit,ievent)) return false;
     if(!inlib::rroot::read_leaf_object(rfile,*br_digit,*leaf_digit,ievent)) return false;
     if(!inlib::rroot::read_leaf_object(rfile,*br_track,*leaf_track,ievent)) return false;
-  
+
+    std::vector<double> vtx;
+    if(!inlib::rroot::read_std_vec(rfile,*be_vtxPos,ievent,vtx)) return false;
+    
     if(dump)
     a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
     	      << " evt Id " << eventId 
-    	      <<" #tracks: " << nPart
-    	      <<" #hits: " << nHits
-              <<" #digits: " << nDigits
-              <<" sumPE " << sumPE
+    	      << " #tracks: " << nPart
+    	      << " #hits: " << nHits
+              << " #digits: " << nDigits
+              << " sumPE " << sumPE
+	      << std::endl
+	      << "vtxPos x: " << vtx[0] << ", y: " << vtx[1] << ", z:" << vtx[2]
     	      << std::endl;
 	      
     if(!process_hits(hit_tree,aHisto1D)) break;
