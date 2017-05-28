@@ -4,32 +4,14 @@
   inlib::wroot::tree* m_Geometry_tree;
   inlib::wroot::leaf<double>* m_Geometry_leaf_wcRadius;
   inlib::wroot::leaf<double>* m_Geometry_leaf_wcLength;
-    
-    inlib::wroot::tree* m_Geometry_wcOffset_tree;
-    inlib::wroot::leaf<double>* m_Geometry_wcOffset_leaf_x;
-    inlib::wroot::leaf<double>* m_Geometry_wcOffset_leaf_y;
-    inlib::wroot::leaf<double>* m_Geometry_wcOffset_leaf_z;
-  inlib::wroot::leaf_object* m_Geometry_leaf_wcOffset;
-    
+  std::vector<double> m_Geometry_wcOffset_vec;
   inlib::wroot::leaf<double>* m_Geometry_leaf_pmtRadius;
   inlib::wroot::leaf<int>* m_Geometry_leaf_nPMTs;
     
     inlib::wroot::tree* m_Geometry_pmtInfos_tree;
     inlib::wroot::leaf<int>* m_Geometry_pmtInfos_leaf_pmtId;
     inlib::wroot::leaf<int>* m_Geometry_pmtInfos_leaf_pmtLocation;
-      
-      inlib::wroot::tree* m_Geometry_pmtInfos_pmtOrient_tree;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtOrient_leaf_dx;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtOrient_leaf_dy;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtOrient_leaf_dz;
-    inlib::wroot::leaf_object* m_Geometry_pmtInfos_leaf_pmtOrient;
-      
-      
-      inlib::wroot::tree* m_Geometry_pmtInfos_pmtPosition_tree;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtPosition_leaf_x;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtPosition_leaf_y;
-      inlib::wroot::leaf<double>* m_Geometry_pmtInfos_pmtPosition_leaf_z;
-    inlib::wroot::leaf_object* m_Geometry_pmtInfos_leaf_pmtPosition;
-      
+    std::vector<double> m_Geometry_pmtInfos_pmtOrient_vec;
+    std::vector<double> m_Geometry_pmtInfos_pmtPosition_vec;
   inlib::wroot::leaf_object* m_Geometry_leaf_pmtInfos;
     
