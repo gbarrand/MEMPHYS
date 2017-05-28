@@ -66,14 +66,16 @@ void geom() {
 
   tGeom_pmtInfos->GetBranch("pmtId")->SetFile(file);
   tGeom_pmtInfos->GetBranch("pmtLocation")->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtOrient")->SetFile(file);
+  tGeom_pmtInfos->GetBranch("pmtPosition")->SetFile(file);
   
   for (Int_t i=0; i<nPMTInfos; ++i) {
     
     int nbytes = tGeom_pmtInfos->GetEntry(i);
     if(nbytes<0) {
-      std::cout << "problem with IO. " << std::endl;
+      std::cout << "problem with IO. " << nbytes << std::endl;
       ::exit(1);
-    }
+      }
     
     Double_t dx = (*pmtOrient)[0];
     Double_t dy = (*pmtOrient)[1];
@@ -85,14 +87,8 @@ void geom() {
 
     if(dump)
     std::cout << "PMT [" << pmtId <<"]: loc. " <<  pmtLocation
-              << " pos. (" 
-	      << xPMT << " , "
-	      << yPMT << " , "
-	      << zPMT << ")"
-	      << " dir. (" 
-	      << dx << " , "
-	      << dy << " , "
-	      << dz << ")"
+              << " pos. (" << xPMT << " , " << yPMT << " , " << zPMT << ")"
+      	      << " dir. (" << dx << " , " << dy << " , " << dz << ")"
 	      << std::endl;
     
   }//Loop on PMTs
