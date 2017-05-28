@@ -17,11 +17,11 @@ script="int eventId, inputEvtId, interMode, vtxVol, "
 script="${script} double[] vtxPos, "
 script="${script} int nPart, leptonIndex, protonIndex, "
 script="${script} ITuple track = { int pId, parent, float timeStart, "
-script="${script}                  ITuple direction = { double dx, dy, dz }, "
+script="${script}                  double[] direction, "
 script="${script}                  double mass, pTot, ETot, "
-script="${script}                  ITuple momentum  = { double px, py, pz }, "
-script="${script}                  ITuple startPos  = { double  x,  y,  z }, "
-script="${script}                  ITuple stopPos   = { double  x,  y,  z }, "
+script="${script}                  double[] momentum, "
+script="${script}                  double[] startPos, "
+script="${script}                  double[] stopPos, "
 script="${script}                  int startVol, stopVol "
 script="${script}                }, "
 script="${script} int nHits, ITuple hit = { int tubeId, int totalPE, ITuple pe = { float time} }, "
@@ -43,12 +43,12 @@ ${inlib_app} -script="${script}" -name=${name} -title="${title}" -icc  >& ../sou
 #//////////////////////////////////////////////////////////////
 #// Geometry : ////////////////////////////////////////////////
 #//////////////////////////////////////////////////////////////
-script="double wcRadius, wcLength, ITuple wcOffset = {double x, y, z}, "
+script="double wcRadius, wcLength, double[] wcOffset, "
 script="${script}  double pmtRadius, int nPMTs,  "
 script="${script}  ITuple pmtInfos = { "
 script="${script}                      int pmtId, pmtLocation, "
-script="${script}                      ITuple pmtOrient   = { double dx, dy, dz }, "
-script="${script}                      ITuple pmtPosition = { double  x,  y,  z } "
+script="${script}                      double[] pmtOrient, "
+script="${script}                      double[] pmtPosition "
 script="${script}                    }"
   
 name=Geometry
