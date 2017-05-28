@@ -123,9 +123,10 @@ inline void set_region_style(inlib::sg::plotter& a_plotter) {
   //gStyle->SetLabelSize(0.05,"XYZ"); //ROOT def 0.04. SoPlotter def 0.014.  
   
 }
-inline bool plot(inlib::histo::h1d& aHisto1D,inlib::histo::h2d& aHisto2D) {
+
+inline bool plot(std::ostream& a_out,inlib::histo::h1d& aHisto1D,inlib::histo::h2d& aHisto2D) {
   
-  exlib::EXLIB_SCREEN_MGR::session smgr(std::cout);
+  exlib::EXLIB_SCREEN_MGR::session smgr(a_out);
   if(!smgr.is_valid()) return false;
 
   exlib::EXLIB_SCREEN_MGR::plotter plotter(smgr,1,2,0,0,800,600);
@@ -160,18 +161,12 @@ inline bool plot(inlib::histo::h1d& aHisto1D,inlib::histo::h2d& aHisto2D) {
   return true;
 }
 
-#ifdef APP_USE_ARCHIVE
-#include <BatchLab/Core/Main.h>
-extern "C" {
-  void BatchLabRioInitialize(Slash::Core::ISession&);
-}
-#endif
-
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 #include <inlib/args>
+#include <iostream>
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 int main(int a_argc,char** a_argv) {
   
 #ifdef INLIB_MEM
@@ -191,18 +186,15 @@ int main(int a_argc,char** a_argv) {
   ////////////////////////////////////////////////////////
   /// Read data : ////////////////////////////////////////
   ////////////////////////////////////////////////////////
-  /*
-  if(!read_data(file,*aida,hits_times,digits_time_pe)) {
+  if(!read_data(std::cout,file,hits_times,digits_time_pe)) {
     std::cout << "can't read data file." << std::endl;
-    delete aida;
     return EXIT_FAILURE;
   }
-  */
 
   ////////////////////////////////////////////////////////
   /// plot histos : //////////////////////////////////////
   ////////////////////////////////////////////////////////
-  plot(hits_times,digits_time_pe);
+  plot(std::cout,hits_times,digits_time_pe);
 
 #ifdef INLIB_MEM
   }inlib::mem::balance(std::cout);
