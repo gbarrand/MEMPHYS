@@ -64,7 +64,7 @@ void MEMPHYS::WCDigitizer::Digitize() {
   G4float tc;
   for (G4int i = 0 ; i < WCHC->entries() ; i++) {
     
-    (*WCHC)[i]->SortHitTimes(); //JEC FIXME this is mandatory (see WCHit.cxx)
+    (*WCHC)[i]->SortHitTimes(); //JEC FIXME this is mandatory (see WCHit.cpp)
 
     tc = (*WCHC)[i]->GetTime(0);
     //JEC  20/4/06  if ( tc < MinTime ) MinTime = tc;

@@ -127,7 +127,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
 
   
-  //JEC 10/11/05 see Analysis.cxx to get the Tuple variables
+  //JEC 10/11/05 see Analysis.cpp to get the Tuple variables
 
   // --------------------
   //  Get Event Information
