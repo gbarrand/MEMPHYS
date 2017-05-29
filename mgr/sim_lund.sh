@@ -16,6 +16,6 @@ G4RADIOACTIVEDATA="${G4DATA}/RadioactiveDecay";export G4RADIOACTIVEDATA
 G4LEDATA="${G4DATA}/G4EMLOW";export G4LEDATA
 
 cd ../data
-../mgr/bin_gnu/MEMPHYS_sim 
+../mgr/bin_gnu/MEMPHYS_sim -pid_root
 
 sleep 1m
