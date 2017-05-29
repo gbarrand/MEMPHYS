@@ -56,7 +56,18 @@ void analysis()
   ////////////////////////////////////////////////////////
   /// Read data and fill histos //////////////////////////
   ////////////////////////////////////////////////////////
-  TFile* file = new TFile("MEMPHYS.root");
+  std::string root_file = "MEMPHYS.root";
+  if(gApplication) {
+    int argc = gApplication->Argc();
+    char** argv = gApplication->Argv();
+    for(int iarg=0;iarg<argc;iarg++) {
+      if(!strncmp(argv[iarg],"-file=",6)) {
+	root_file = argv[iarg];
+	root_file = root_file.substr(6,root_file.size()-6+1);
+      }
+    }
+  }
+  TFile* file = new TFile(root_file.c_str());
   TTree* tEvent = (TTree*)file->Get("Event");
 
  {TObjArray* brs = tEvent->GetListOfBranches();
