@@ -21,6 +21,8 @@
 #endif
 #endif
 
+#include <inlib/system>
+
 #include <iostream>
 
 int main(int aArgc,char** aArgv) {
@@ -29,6 +31,23 @@ int main(int aArgc,char** aArgv) {
   inlib::mem::set_check_by_class(true);{
 #endif //INLIB_MEM
 #endif
+
+  if(!inlib::is_env("NeutronHPCrossSections")) {
+    std::cout << "env variable NeutronHPCrossSections not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if(!inlib::is_env("G4LEVELGAMMADATA")) {
+    std::cout << "env variable G4LEVELGAMMADATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if(!inlib::is_env("G4RADIOACTIVEDATA")) {
+    std::cout << "env variable G4RADIOACTIVEDATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if(!inlib::is_env("G4LEDATA")) {
+    std::cout << "env variable G4LEDATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
     
   //Book all the histo, tuple 
   MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis();  
