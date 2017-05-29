@@ -23,6 +23,9 @@
 
 #include <inlib/system>
 #include <inlib/args>
+#include <inlib/snpf>
+#include <inlib/sys/process>
+#include <inlib/net/base_socket>
 
 #include <iostream>
 
@@ -53,8 +56,20 @@ int main(int a_argc,char** a_argv) {
   }
 
   std::string root_file;
-  if(!args.file(root_file)) root_file = "MEMPHYS.root";
   
+  if(args.is_arg("-pid_root")) {
+    char spid[128];
+    inlib::snpf(spid,sizeof(spid),"%d",inlib::process_id());
+    std::string host;
+    if(!inlib::net::host_name(std::cout,host)) {
+      std::cout << "inlib::host_name failed." << std::endl;
+      return EXIT_FAILURE;
+    }
+    root_file = "MEMPHYS_"+host+"_"+spid+".root";
+  } else {
+    if(!args.file(root_file)) root_file = "MEMPHYS.root";
+  }
+ 
   //Book all the histo, tuple 
   MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis(root_file);  
 
