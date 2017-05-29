@@ -35,7 +35,7 @@ inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
     READ_LEAF(a_tree,index,int,totalPE)
     inlib::rroot::stl_vector<float>* pe = inlib::rroot::read_std_vec<float>(a_tree.file(),*be_pe,index);
     if(!pe) return false;
-    inlib_vforcit(float,*pe,it) aHisto.fill(*it);
+    inlib_vforcit(float,*pe,it) aHisto.Fill(*it);
   }
   
   return true;
