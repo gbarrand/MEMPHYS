@@ -18,6 +18,7 @@ G4LEDATA="${G4DATA}/G4EMLOW";export G4LEDATA
 cd ../data
 
 # -pid_root : it will create an output file name of the form MEMPHYS_<host>_<pid>.root.
+
 ../mgr/bin_gnu/MEMPHYS_sim -pid_root
 
 cd ../mgr
