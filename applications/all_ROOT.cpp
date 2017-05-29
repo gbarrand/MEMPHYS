@@ -21,7 +21,6 @@
 #include "../scripts/ROOT/analysis.C"
 
 int main(int aArgc,char* aArgv[]) {
-  //ROOT::GetROOT();
   
   new TApplication("MEMPHYS_all_ROOT",&aArgc,aArgv);
 
