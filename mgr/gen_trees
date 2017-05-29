@@ -7,7 +7,7 @@ inlib_home="${bush_home}/../inexlib/inlib"
 save_dir=`pwd`
 
 inlib_app=./inlib_wroot_trees
-c++ -o ${inlib_app} -I${inlib_home} ${inlib_home}/apps/wroot_trees.cpp
+c++ -o ${inlib_app} -DINLIB_MEM -I${inlib_home} ${inlib_home}/apps/wroot_trees.cpp
 use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 
 #//////////////////////////////////////////////////////////////
