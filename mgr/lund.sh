@@ -4,4 +4,4 @@
 echo "we are on the node :"
 echo "hostname : `hostname`"
 echo "whoami : `whoami`"
-sleep 2m
+#sleep 2m
