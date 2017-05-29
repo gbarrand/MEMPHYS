@@ -67,6 +67,8 @@ void analysis()
       }
     }
   }
+  //std::cout << "\"" << root_file << "\"" << std::endl;
+  
   TFile* file = new TFile(root_file.c_str());
   TTree* tEvent = (TTree*)file->Get("Event");
 
