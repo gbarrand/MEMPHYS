@@ -66,10 +66,11 @@ int main(int a_argc,char** a_argv) {
       return EXIT_FAILURE;
     }
     root_file = "MEMPHYS_"+host+"_"+spid+".root";
+    std::cout << "output file is " << inlib::sout(root_file) << std::endl;  
   } else {
     if(!args.file(root_file)) root_file = "MEMPHYS.root";
   }
- 
+
   //Book all the histo, tuple 
   MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis(root_file);  
 
