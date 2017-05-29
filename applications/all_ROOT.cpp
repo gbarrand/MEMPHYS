@@ -23,7 +23,7 @@
 int main(int aArgc,char* aArgv[]) {
   //ROOT::GetROOT();
   
-  new TApplication("MEMPHYS_analysis_ROOT",&aArgc,aArgv);
+  new TApplication("MEMPHYS_all_ROOT",&aArgc,aArgv);
 
   analysis();
 
