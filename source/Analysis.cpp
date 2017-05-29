@@ -8,11 +8,10 @@
 #include <vector>
 #include <string>
 
-MEMPHYS::Analysis::Analysis(
- bool aBatch)
-:fBatch(aBatch)
+MEMPHYS::Analysis::Analysis(const std::string& a_file)
+:m_file_name(a_file)
 #ifdef APP_USE_INLIB_WROOT
-,m_file(std::cout,"MEMPHYS.root")
+,m_file(std::cout,a_file)
 #include "Event_tree_zero.icc"
 #include "Geometry_tree_zero.icc"
 #endif
