@@ -18,7 +18,7 @@ class Analysis  : public virtual IAppManager {
   public: //IAppManager
     virtual bool initialize() {return true;}
   public:        
-    Analysis(bool aBatch = true);
+    Analysis(const std::string& a_file);
     virtual ~Analysis();
   protected:
 #ifdef APP_USE_INLIB_WROOT
@@ -26,14 +26,14 @@ class Analysis  : public virtual IAppManager {
 #endif
     Analysis& operator=(const Analysis& a_from) {return *this;}
   private:
-    bool fBatch;
+    std::string m_file_name; 
 #ifdef APP_USE_INLIB_WROOT
   public:
     inlib::wroot::file m_file;
   public:
 #include "Event_tree_h.icc"
 #include "Geometry_tree_h.icc"
-#endif  
+#endif
 };
 
 }
