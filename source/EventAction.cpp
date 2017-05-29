@@ -439,10 +439,14 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       tubeID_hit = (*WCHC)[i]->GetTubeID(); //JEC 16/1/06
       totalPE = (*WCHC)[i]->GetTotalPe();
 
-      fAnalysis.m_Event_hit_pe_vec.clear();  
+#ifdef APP_USE_INLIB_WROOT
+      fAnalysis.m_Event_hit_pe_vec.clear();
+#endif      
       for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
 	peArrivalTime = (*WCHC)[i]->GetTime(j); 
+#ifdef APP_USE_INLIB_WROOT
 	fAnalysis.m_Event_hit_pe_vec.push_back(peArrivalTime);
+#endif	
         fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
       
