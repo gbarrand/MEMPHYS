@@ -22,16 +22,19 @@
 #endif
 
 #include <inlib/system>
+#include <inlib/args>
 
 #include <iostream>
 
-int main(int aArgc,char** aArgv) {
+int main(int a_argc,char** a_argv) {
 #ifdef APP_USE_INLIB_WROOT
 #ifdef INLIB_MEM
   inlib::mem::set_check_by_class(true);{
 #endif //INLIB_MEM
 #endif
 
+  inlib::args args(a_argc,a_argv);
+    
   if(!inlib::is_env("NeutronHPCrossSections")) {
     std::cout << "env variable NeutronHPCrossSections not defined." << std::endl;
     return EXIT_FAILURE;
@@ -48,9 +51,12 @@ int main(int aArgc,char** aArgv) {
     std::cout << "env variable G4LEDATA not defined." << std::endl;
     return EXIT_FAILURE;
   }
-    
+
+  std::string root_file;
+  if(!args.file(root_file)) root_file = "MEMPHYS.root";
+  
   //Book all the histo, tuple 
-  MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis();  
+  MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis(root_file);  
 
   // Construct the default run manager
   G4RunManager* runManager = new G4RunManager;
