@@ -15,7 +15,7 @@
   UNIX> <if needed edit ../cern_root_setup[.sh,.csh] to setup CERN-ROOT environment>
     sh> . ../cern_root_setup.sh
   or if under a csh shell :
-   csh> . ../cern_root_setup.csh
+   csh> source ../cern_root_setup.csh
  and then :
   UNIX> root analysis.C                                  # on the default MEMPHYS.root file.
   UNIX> root -file=MEMPHYS_<job>_<task>.root analysis.C  # on a MEMPHYS root file produced by a slurm task.
