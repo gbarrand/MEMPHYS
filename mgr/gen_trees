@@ -1,6 +1,6 @@
 #!/bin/sh -f
 
-bush_home=../../../../softinex/bush
+. ./find_bush
 
 inlib_home="${bush_home}/../inexlib/inlib"
 

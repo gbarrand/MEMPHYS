@@ -4,3 +4,8 @@ if [ -d ../../bush ] ; then
 else
   bush_home="`pwd`/../../../../softinex/bush"
 fi
+
+if [ ! -d ${bush_home} ] ; then
+  echo "directory ${bush_home} not found."
+  exit
+fi
