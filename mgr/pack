@@ -78,6 +78,7 @@ done
 
 /bin/cp -R ./mgr     ${to}/${app}/.
 /bin/cp -R ./scripts ${to}/${app}/.
+/bin/cp -R ./exa_run ${to}/${app}/.
 
 /bin/mkdir -p ${to}/inexlib/inlib
 /bin/mkdir -p ${to}/inexlib/exlib
