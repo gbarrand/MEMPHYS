@@ -8,7 +8,7 @@ else
  #set root_home=/usr/local/ROOT/6.08.06
 endif
 
-cd ${root_home}
+cd ${root_home}/bin
 
 source ./thisroot.csh
 
