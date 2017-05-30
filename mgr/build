@@ -13,6 +13,8 @@ while test $# -ge 1 ; do
   shift
 done
 
+. ${bush_home}/ourex_header # build the below build distrib.
+
 if [ ${build_root} = yes ] ; then
   ${bush_home}/check_app root-config 'root-config program not found.'
   has_root=$?
@@ -28,3 +30,65 @@ else
   ./build_app_read_plot     ${build_args}
 
 fi
+
+if [ ${build_distrib} = "yes" ] ; then
+  version="`${bush_home}/app_vers MEMPHYS`"
+  
+  install_dir=./${build_dir}/distrib/MEMPHYS/${version}
+
+  /bin/rm -R -f ${install_dir}/bin
+  /bin/mkdir -p ${install_dir}/bin
+
+  apps="MEMPHYS_sim MEMPHYS_read_plot MEMPHYS_read_plot_ROOT MEMPHYS_all_ROOT"
+
+  for item in ${apps} ; do  
+    if [ ${build_visual} = "yes" ] ; then
+      if [ -x ./${build_dir}/${item}.exe ] ; then
+        /bin/cp ./${build_dir}/${item}.exe ${install_dir}/bin/.
+      else
+        echo "MEMPHYS/mgr/build : distrib : ./${build_dir}/${item}.exe not found."
+      fi
+      if [ -f ./${build_dir}/${item}.exe.manifest ] ; then
+        /bin/cp ./${build_dir}/${item}.exe.manifest ${install_dir}/bin/.
+      fi
+    else
+      if [ -x ./${build_dir}/${item} ] ; then
+        /bin/cp ./${build_dir}/${item} ${install_dir}/bin/.
+      else
+        echo "MEMPHYS/mgr/build : distrib : ./${build_dir}/${item} not found."
+      fi      
+    fi      
+  done
+    
+  /bin/rm -R -f ${install_dir}/res
+  /bin/mkdir -p ${install_dir}/res
+  
+  /bin/mkdir -p ${install_dir}/res/fonts
+  /bin/cp ../data/times.ttf ${install_dir}/res/fonts/.
+  
+  /bin/mkdir -p ${install_dir}/res/MEMPHYS/scripts
+  /bin/cp -R ../scripts/ROOT ${install_dir}/res/MEMPHYS/scripts/.
+  /bin/cp -R ../scripts/geant4 ${install_dir}/res/MEMPHYS/scripts/.
+
+  platform=`${bush_home}/platform "${cpp_compiler}"`
+  if [ "${platform}" = "" ] ; then
+    echo "bush/app_distrib : can't guess platform for ${cpp_compiler}."
+    exit
+  fi
+  
+  save_dir=`pwd`
+  
+  ${bush_home}/check_app zip 'zip not found, we use tar.'
+  use_status=$?;
+  if [ ${use_status} != 0 ] ; then
+    cd ${build_path}/distrib
+    tar cf MEMPHYS-${version}-${platform}.tar ./MEMPHYS
+    cd ${save_dir}
+  else
+    cd ${build_path}/distrib
+    zip -qr MEMPHYS-${version}-${platform}.zip ./MEMPHYS
+    cd ${save_dir}
+  fi
+   
+fi
+
