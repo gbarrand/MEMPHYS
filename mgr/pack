@@ -1,0 +1,136 @@
+#!/bin/sh -f
+
+bush_home=`pwd`/../../bush
+
+inlib_home="${bush_home}/../inexlib/inlib"
+exlib_home="${bush_home}/../inexlib/exlib"
+
+app="`${bush_home}/app_name`"
+version="`${bush_home}/app_vers`"
+
+save_dir=`pwd`
+
+cd ../..
+
+inlib_incs=./inlib_incs
+c++ -o ${inlib_incs} ${inlib_home}/apps/incs.cpp
+use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+
+to=/tmp/${app}
+/bin/rm -R -f /tmp/${app}
+/bin/rm -f /tmp/${app}_source-${version}.zip
+
+/bin/mkdir -p ${to}
+
+#verbose=-verbose
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+dirs=./inexlib/inlib:./inexlib/exlib
+
+nos='exlib/cbk/wall:wall_client'
+
+configs="batch X11 Windows Android WebGL"
+for config in ${configs} ; do
+  /bin/rm -f ./tmp_0
+  /bin/cp ${exlib_home}/exlib/app/${config}/app_main_cpp ./tmp_0
+  sed -e "s:EXLIB_APP:${app}:g" ./tmp_0 > ./${app}/mgr/main.cpp
+  /bin/rm -f ./tmp_0
+  ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ./${app}/mgr/main.cpp
+  /bin/cp ${exlib_home}/exlib/app/${config}/app_main_cpp ${to}/inexlib/exlib/exlib/app/${config}/.
+done
+
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ./${app}/Cocoa/main.mm
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ./${app}/Cocoa/GLView.mm
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ./${app}/iOS/Classes/GLView.mm
+
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/cpp/platform.cpp
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/visual/windef.c
+
+/bin/rm -f ${inlib_incs}
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+/bin/cp -R ${bush_home} ${to}/.
+/bin/cp ${bush_home}/app_README ${to}/README
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+/bin/mkdir -p ${to}/inexlib/ourex
+
+items=
+items="${items} glutess freetype jpeg png csz expat gl2ps zlib"
+for item in ${items} ; do
+  /bin/cp -R ./inexlib/ourex/${item} ${to}/inexlib/ourex/.
+done
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+
+/bin/cp -R ./${app}/mgr ${to}/${app}/.
+/bin/cp -R ./${app}/res ${to}/${app}/.
+/bin/cp -R ./${app}/comres ${to}/${app}/.
+
+/bin/cp -R ./${app}/Android ${to}/${app}/.
+
+/bin/cp ./inexlib/exlib/exlib/app/Android/Main_java ${to}/inexlib/exlib/exlib/app/Android/.
+
+/bin/cp -R ./${app}/Cocoa ${to}/${app}/.
+/bin/cp -R ./${app}/iOS ${to}/${app}/.
+
+/bin/cp -R ./inexlib/inlib/mgr ${to}/inexlib/inlib/.
+/bin/cp -R ./inexlib/exlib/mgr ${to}/inexlib/exlib/.
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+${bush_home}/find_rm ${to} 'bin_*'
+${bush_home}/find_rm ${to} 'CVS'
+${bush_home}/find_rm ${to} '.git'
+${bush_home}/find_rm ${to} '.DS_Store'
+${bush_home}/find_rm ${to} 'DerivedData'
+${bush_home}/find_rm ${to} 'out*_log'
+${bush_home}/find_rm ${to} 'err*_log'
+${bush_home}/find_rm ${to} 'out*.log'
+${bush_home}/find_rm ${to} 'out*.fits'
+${bush_home}/find_rm ${to} 'out*.ps'
+${bush_home}/find_rm ${to} 'out*.root'
+${bush_home}/find_rm ${to} '*.o'
+${bush_home}/find_rm ${to} 'term_*.hist'
+${bush_home}/find_rm ${to} 'secure.properties'
+
+/bin/rm -R -f ${to}/${app}/Android/bin
+/bin/rm -R -f ${to}/${app}/Android/gen
+/bin/rm -R -f ${to}/${app}/Android/libs
+/bin/rm -R -f ${to}/${app}/Android/obj
+
+/bin/rm -R -f ${to}/${app}/Cocoa/build
+/bin/rm -R -f ${to}/${app}/Cocoa/${app}.xcodeproj/project.xcworkspace
+/bin/rm -R -f ${to}/${app}/Cocoa/${app}.xcodeproj/xcuserdata
+
+/bin/rm -R -f ${to}/${app}/iOS/build
+/bin/rm -R -f ${to}/${app}/iOS/${app}.xcodeproj/project.xcworkspace
+/bin/rm -R -f ${to}/${app}/iOS/${app}.xcodeproj/xcuserdata
+
+/bin/rm -f ${to}/${app}/mgr/inlib_platform
+
+${bush_home}/find_rm ${to}/${app}/mgr '*.zip'
+
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+if [ ${app} = ArcheryTune ] ; then
+  ${bush_home}/replace WALL_DATA_CLIENT RM_WALL_DATA_CLIENT ${to}/bush/app_header
+fi
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+#///////////////////////////////////////////////////
+cd ${to}/${app}/mgr
+cd /tmp
+zip -qr ./${app}_source-${version}.zip ${app}
+
+cd ${save_dir}
