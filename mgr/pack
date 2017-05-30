@@ -1,6 +1,10 @@
 #!/bin/sh -f
 
-bush_home="`pwd`/../../../../softinex/bush"
+if [ -d ../../bush ] ; then
+  bush_home=../../bush
+else
+  bush_home="`pwd`/../../../../softinex/bush"
+fi
 
 inlib_home="${bush_home}/../inexlib/inlib"
 exlib_home="${bush_home}/../inexlib/exlib"
