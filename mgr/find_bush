@@ -1,0 +1,6 @@
+
+if [ -d ../../bush ] ; then
+  bush_home=../../bush
+else
+  bush_home="`pwd`/../../../../softinex/bush"
+fi
