@@ -37,6 +37,10 @@ nos='exlib/cbk/wall:wall_client'
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/MEMPHYS ./applications/sim.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/MEMPHYS ./applications/read_plot.cpp
 
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/MEMPHYS ./applications/read_plot_ROOT.cpp
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/MEMPHYS ./applications/all_ROOT.cpp
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/MEMPHYS ./applications/geom_ROOT.cpp
+
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/cpp/platform.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/visual/windef.c
 
