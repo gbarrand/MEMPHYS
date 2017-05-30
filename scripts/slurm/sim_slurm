@@ -12,7 +12,11 @@ echo "pwd : `pwd`"
 . ../run_setup.sh
 
 # build output root file name :
-root_file="MEMPHYS_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root"
+if [ "${SLURM_ARRAY_JOB_ID}" = "" ] ; then
+  root_file="MEMPHYS.root"
+else    
+  root_file="MEMPHYS_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root"
+fi
 
 ../bin/MEMPHYS_sim ${root_file}
 
