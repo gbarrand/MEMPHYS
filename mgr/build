@@ -86,6 +86,8 @@ if [ ${build_distrib} = "yes" ] ; then
   /bin/cp ../scripts/geant4/inputEventfile ${exa_run_dir}/.
   /bin/cp ../scripts/geant4/jobOptions.mac ${exa_run_dir}/.
   /bin/cp ../scripts/slurm/sim_slurm       ${exa_run_dir}/.
+  /bin/cp ../scripts/ROOT/analysis.C       ${exa_run_dir}/.
+  /bin/cp ../scripts/ROOT/hits.C           ${exa_run_dir}/.
 
   platform=`${bush_home}/platform "${cpp_compiler}"`
   if [ "${platform}" = "" ] ; then
