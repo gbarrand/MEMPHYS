@@ -12,4 +12,7 @@
     csh> source ./cern_root_setup.csh
    UNIX> ./build -root
 
- 
+ At end a distrib ready file should be under :
+   bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
+
+
