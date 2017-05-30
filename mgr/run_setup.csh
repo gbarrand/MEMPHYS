@@ -1,5 +1,5 @@
 
-if ( "`uname -n | grep iridium.lunarc.lu.se`" != "" ) then
+if ( "`uname -n | grep iridium`" != "" ) then
   setenv G4DATA /nfs/users/gbarrand/usr/local/geant4/data_82
 else
   setenv G4DATA /usr/local/geant4/data_82
