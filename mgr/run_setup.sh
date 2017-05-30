@@ -3,7 +3,8 @@ if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
   G4DATA=/nfs/users/gbarrand/usr/local/geant4/data_82
 else
   G4DATA=/usr/local/geant4/data_82
-endif
+fi
+
 export G4DATA
 
 NeutronHPCrossSections="${G4DATA}/G4NDL";export NeutronHPCrossSections
