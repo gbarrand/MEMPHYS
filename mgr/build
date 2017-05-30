@@ -60,6 +60,11 @@ if [ ${build_distrib} = "yes" ] ; then
     fi      
   done
     
+  /bin/cp run_setup.sh ${install_dir}/.
+  /bin/cp cern_root_setup.sh ${install_dir}/.
+  /bin/cp run_setup.csh ${install_dir}/.
+  /bin/cp cern_root_setup.csh ${install_dir}/.
+
   /bin/rm -R -f ${install_dir}/res
   /bin/mkdir -p ${install_dir}/res
   
