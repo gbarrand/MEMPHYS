@@ -72,7 +72,7 @@ if [ ${build_distrib} = "yes" ] ; then
   /bin/mkdir -p ${install_dir}/res
   
   /bin/mkdir -p ${install_dir}/res/fonts
-  /bin/cp ../data/times.ttf ${install_dir}/res/fonts/.
+  /bin/cp ../exa_run/times.ttf ${install_dir}/res/fonts/.
   
   /bin/mkdir -p ${install_dir}/res/MEMPHYS/scripts
   /bin/cp -R ../scripts/ROOT ${install_dir}/res/MEMPHYS/scripts/.
@@ -82,7 +82,7 @@ if [ ${build_distrib} = "yes" ] ; then
   # exa run env :
   exa_run_dir="${install_dir}/exa_run"
   /bin/mkdir -p ${exa_run_dir}
-  /bin/cp ../data/times.ttf                ${exa_run_dir}/.
+  /bin/cp ../exa_run/times.ttf             ${exa_run_dir}/.
   /bin/cp ../scripts/geant4/init.g4m       ${exa_run_dir}/.
   /bin/cp ../scripts/geant4/inputEventfile ${exa_run_dir}/.
   /bin/cp ../scripts/geant4/jobOptions.mac ${exa_run_dir}/.
