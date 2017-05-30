@@ -32,9 +32,11 @@ else
 fi
 
 if [ ${build_distrib} = "yes" ] ; then
+    /bin/rm -R -f ${build_path}/distrib
+    
   version="`${bush_home}/app_vers MEMPHYS`"
   
-  install_dir=./${build_dir}/distrib/MEMPHYS/${version}
+  install_dir="${build_path}/distrib/MEMPHYS/${version}"
 
   /bin/rm -R -f ${install_dir}/bin
   /bin/mkdir -p ${install_dir}/bin
@@ -43,19 +45,19 @@ if [ ${build_distrib} = "yes" ] ; then
 
   for item in ${apps} ; do  
     if [ ${build_visual} = "yes" ] ; then
-      if [ -x ./${build_dir}/${item}.exe ] ; then
-        /bin/cp ./${build_dir}/${item}.exe ${install_dir}/bin/.
+      if [ -x ${build_path}/${item}.exe ] ; then
+        /bin/cp ${build_path}/${item}.exe ${install_dir}/bin/.
       else
-        echo "MEMPHYS/mgr/build : distrib : ./${build_dir}/${item}.exe not found."
+        echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item}.exe not found."
       fi
-      if [ -f ./${build_dir}/${item}.exe.manifest ] ; then
-        /bin/cp ./${build_dir}/${item}.exe.manifest ${install_dir}/bin/.
+      if [ -f ${build_path}/${item}.exe.manifest ] ; then
+        /bin/cp ${build_path}/${item}.exe.manifest ${install_dir}/bin/.
       fi
     else
-      if [ -x ./${build_dir}/${item} ] ; then
-        /bin/cp ./${build_dir}/${item} ${install_dir}/bin/.
+      if [ -x ${build_path}/${item} ] ; then
+        /bin/cp ${build_path}/${item} ${install_dir}/bin/.
       else
-        echo "MEMPHYS/mgr/build : distrib : ./${build_dir}/${item} not found."
+        echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item} not found."
       fi      
     fi      
   done
