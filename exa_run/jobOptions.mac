@@ -1,8 +1,0 @@
-# Choose hadronic interaction model.
-# Options:
-#   GHEISHA   (Original Geant4 model)
-#   BERTINI   (Bertini intra-nuclear cascade model)
-#   BINARY    (Binary intra-nuclear cascade model) -- this is the default
-/MEMPHYS/physics/secondaries/model BINARY
-#Choose Detector configuration (8inch only for the moment)
-#/MEMPHYS/WCgeom 8inch
