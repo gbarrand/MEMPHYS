@@ -1,0 +1,5 @@
+if [ "${use_Cocoa}" = "yes" ] ; then
+  if [ `uname` = Darwin ] ; then
+    libs="${libs} -framework Cocoa"
+  fi
+fi

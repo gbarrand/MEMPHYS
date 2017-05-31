@@ -1,0 +1,20 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_glutess
+#define exlib_glutess
+
+#ifdef EXLIB_USE_NATIVE_GLUTESS
+#include <GL/gl.h>
+#include <GL/glu.h>
+typedef GLenum GLUenum;
+#else
+//#include <glutess/ourex_glutess.h>
+#include <inlib/glutess/glutess>
+
+#endif
+
+//exlib_build_use inlib_glutess
+//exlib_build_use inlib
+
+#endif

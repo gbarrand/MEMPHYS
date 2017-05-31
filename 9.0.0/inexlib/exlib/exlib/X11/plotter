@@ -1,0 +1,198 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_X11_plotter
+#define exlib_X11_plotter
+
+#include "session"
+
+#include <inlib/sg/noderef>
+#include <inlib/sg/ortho>
+#include <inlib/sg/h2plot>
+#include <inlib/sg/f2plot>
+#include <inlib/sg/xy2plot>
+#include <inlib/sg/fit2plot>
+#include <inlib/sg/plots>
+
+#include "../sg/viewer"
+#include "../sg/text_freetype"
+
+#include "simple_dispatcher"
+
+namespace exlib {
+namespace X11 {
+
+class plotter : public sg::viewer {
+  typedef sg::viewer parent;
+private:
+  class dispatcher : public exlib::X11::simple_dispatcher {
+    typedef exlib::X11::simple_dispatcher parent;
+  public:
+    virtual void win_render() {m_plotter.win_render();}
+    virtual void set_size(unsigned int a_width,unsigned int a_height) {
+      m_plotter.set_size(a_width,a_height);
+      m_plotter.m_plots.adjust_size(a_width,a_height);
+    }
+    virtual dispatcher* copy() const {return new dispatcher(*this);}
+  public:
+    dispatcher(plotter& a_plotter)
+    :parent(a_plotter.m_session,a_plotter.m_win)
+    ,m_plotter(a_plotter){}
+    virtual ~dispatcher(){}
+  protected:
+    dispatcher(const dispatcher& a_from)
+    :parent(a_from)
+    ,m_plotter(a_from.m_plotter)
+    {}
+    dispatcher& operator=(const dispatcher& a_from) {
+      parent::operator=(a_from);
+      return *this;
+    }
+  protected:
+    plotter& m_plotter;
+  };
+
+public:
+  plotter(session& a_session,
+          unsigned int a_cols = 1,unsigned int a_rows = 1,
+          int a_x = 0,int a_y = 0,
+          unsigned int a_width = 500,unsigned int a_height = 500)
+  :parent(a_session.out(),a_width,a_height)
+  ,m_session(a_session)
+  ,m_win(0)
+  ,m_ttf() //before m_plots.
+  ,m_plots(m_ttf)
+  {
+    //////////////////////////////////////////////////////////
+    /// windowing ////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if(!m_session.display()) return; //throw
+    m_win = m_session.create_window("",a_x,a_y,a_width,a_height);
+    if(!m_win) return; //throw
+    m_session.add_dispatcher(new dispatcher(*this));
+
+    //////////////////////////////////////////////////////////
+    /// scene graph //////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    m_camera.height = 1;
+    float z = 10*1;
+    m_camera.znear = 0.1f*z;
+    m_camera.zfar = 10*z; //100*z induces problems with lego rendering.
+    m_camera.position = inlib::vec3f(0,0,z);
+    m_camera.orientation = inlib::rotf(inlib::vec3f(0,0,1),0);
+    m_camera.focal = z;
+    m_sg.add(new inlib::sg::noderef(m_camera));
+
+    m_plots.cols = a_cols;
+    m_plots.rows = a_rows;
+    m_plots.adjust_size(a_width,a_height);
+
+    m_sg.add(new inlib::sg::noderef(m_plots));
+  }
+  virtual ~plotter() {
+    //std::cout << "debug : ~plotter" << std::endl;
+    if(m_win) {
+      m_session.remove_dispatchers_with_window(m_win);
+      m_session.delete_window(m_win);
+    }
+  }
+public:
+  plotter(const plotter& a_from)
+  :parent(a_from)
+  ,m_session(a_from.m_session)
+  ,m_win(a_from.m_win)
+  ,m_camera(a_from.m_camera)
+  ,m_plots(a_from.m_plots)  
+  {}
+  plotter& operator=(const plotter& a_from){
+    parent::operator=(a_from);
+    m_win = a_from.m_win;
+    m_camera = a_from.m_camera;
+    m_plots = a_from.m_plots;
+    return *this;
+  }
+public:
+  bool has_window() const {return m_win?true:false;} //for SWIG
+
+  Window window() const {return m_win;}
+
+  bool show() {
+    if(!m_win) return false;
+    m_session.show_window(m_win);
+    return true;
+  }
+
+  void win_render() {
+    if(!m_win) return;
+#ifdef EXLIB_X11_NO_GL
+#else
+    if(::glXMakeCurrent(m_session.display(),m_win,m_session.context())==False){
+      m_session.out() << "X11::plotter::win_render :"
+                      << " glXMakeCurrent failed."
+                      << std::endl;
+      return;
+    }
+#endif
+    render(); //viewer::render()
+#ifdef EXLIB_X11_NO_GL
+#else
+    ::glXSwapBuffers(m_session.display(),m_win);
+#endif
+  }
+
+public: 
+  //proxies to have less verbose user programming :
+
+  //WARNING : the plotter must have at least 1x1 plotting area,
+  //          else the below will crash because current_plotter()
+  //          will return a null pointer.
+
+  inlib::sg::plots& plots() {return m_plots;}
+  const inlib::sg::plots& plots() const {return m_plots;}
+
+  inlib::sg::plottable* plot(const inlib::histo::h1d& a_histo) {
+    inlib::sg::plottable* p = new inlib::sg::h1d2plot(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::h2d& a_histo) {
+    inlib::sg::plottable* p = new inlib::sg::h2d2plot(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  template <class T>
+  inlib::sg::plottable* plot(const T& a_func) {
+    inlib::sg::plottable* p = new inlib::sg::f1d2plot<T>(a_func);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+
+  template <class T>
+  inlib::sg::plottable* plot(const std::vector<T>& a_xs,const std::vector<T>& a_ys) {
+    inlib::sg::plottable* p = new inlib::sg::xy2plot<T>(a_xs,a_ys);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+
+  inlib::sg::plottable* plot_fit(const std::vector<std::string>& a_names,const std::vector<double>& a_output) {
+    inlib::sg::plottable* p = new inlib::sg::fit2plot(a_names,a_output);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+
+protected:
+  session& m_session;
+  Window m_win;
+  inlib::sg::ortho m_camera;
+  sg::text_freetype m_ttf;
+  inlib::sg::plots m_plots;
+};
+
+}}
+
+//exlib_build_use inlib X11 GLX GL inlib_glutess freetype
+
+#endif
+

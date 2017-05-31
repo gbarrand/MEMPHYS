@@ -1,0 +1,11 @@
+
+if [ "${use_XmOpenGLArea}" = "yes" ] ; then
+  if [ "${XmOpenGLArea_home}" = "" ] ; then
+    echo 'bush/use/XmOpenGLArea : variable XmOpenGLArea_home not defined.'
+    exit
+  fi
+  cppflags="${cppflags} -I${XmOpenGLArea_home}"
+  ourex_pack_name=XmOpenGLArea
+  . ${bush_home}/use/ourex_use
+fi
+

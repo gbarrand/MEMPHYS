@@ -1,0 +1,18 @@
+
+if [ "${use_geant4}" = "yes" ] ; then
+
+  if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
+    geant4_home=/nfs/users/gbarrand/usr/local
+  else
+    geant4_home=/usr/local
+  fi
+  
+  cppflags="${cppflags} -I${geant4_home}/CLHEP/2.0.4.2/include"
+
+  cppflags="${cppflags} -I${geant4_home}/geant4/8.2/include"
+
+  libs="${libs} -L${geant4_home}/geant4/8.2/lib -lG4readout -lG4run -lG4event -lG4tracking -lG4processes -lG4digits_hits -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global"
+
+  libs="${libs} -L${geant4_home}/CLHEP/2.0.4.2/lib -lCLHEP"
+  
+fi

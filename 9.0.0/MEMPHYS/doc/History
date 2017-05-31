@@ -1,0 +1,17 @@
+
+08 July 2006 : G.Barrand
+- Analysis.cxx : book tuples only if in batch.
+  Else, if working with MEMPHYS_session, we book in memory the tuples 
+  and especially the geometry one that consumes memory.
+- DetectorConstruction.cxx, EventAction.cxx : be able to run without 
+  having booked tuples ; for example if running with MEMPHYS_session. 
+
+23 June 2006 : G.Barrand
+- Analyis, MEMPHYS_batch, MEMPHYS_session, MEMPHYS_analyis : 
+  handle first command arg to be able to AIDA chanage file format
+  (to test HDF5 over MEMPHYS).
+- Analysis, DetectorConstruction, EventActiona, 
+  MEMPHYS_batch, MEMPHYS_session : 
+  arrange to be able to run MEMPHYS_batch over a dummy AIDA implementation.
+  For example with OpenScientist/Falsetto. This may be usefull to 
+  see the overhead of the AIDA IO.

@@ -1,0 +1,73 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_newdel
+#define inlib_newdel
+
+#ifdef INLIB_MEM
+#include "mem"
+#endif
+
+#include <cstddef>
+
+namespace inlib {
+
+template <class T>
+inline T* mnew(size_t a_n){
+  T* p = new T[a_n];
+#ifdef INLIB_MEM
+  if(p) mem::increment(s_new().c_str());
+#endif
+  return p;
+}
+
+template <class T>
+inline void mdel(T*& a_p){
+#ifdef INLIB_MEM
+  if(a_p) mem::decrement(s_new().c_str());
+#endif
+  delete [] a_p;
+  a_p = 0;
+}
+
+}
+
+#include <cstring> //memcpy
+
+namespace inlib {
+
+template <class T>
+inline bool mrealloc(T*& a_pointer,size_t a_new_size,size_t a_old_size,bool a_init = false) {
+  if(!a_new_size) { 
+    mdel(a_pointer); 
+    return true;
+  }
+  if(!a_pointer) {
+    a_pointer = mnew<T>(a_new_size);
+    return a_pointer?true:false;
+  }
+  if(a_old_size==a_new_size) return true;
+  T* pointer = mnew<T>(a_new_size);
+  if(!pointer) {
+    mdel(a_pointer); 
+    return false;
+  }
+  if(a_new_size>a_old_size) {
+    ::memcpy(pointer,a_pointer,a_old_size*sizeof(T));
+    if(a_init){
+      size_t num = a_new_size-a_old_size;   
+      T* pos = pointer+a_old_size;
+      for(size_t i=0;i<num;i++,pos++) *pos = T();
+    }
+  } else {
+    ::memcpy(pointer,a_pointer,a_new_size*sizeof(T));
+  }
+  mdel(a_pointer);
+  a_pointer = pointer;
+  return true;
+}
+
+}
+
+#endif
+

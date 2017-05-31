@@ -1,0 +1,203 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_Windows_window
+#define exlib_Windows_window
+
+#include <windows.h>
+#include <windowsx.h>
+#include <string>
+
+namespace exlib {
+namespace Windows {
+
+class window {
+  static const std::string& s_class() {
+    static const std::string s_v("exlib::Windows::window");
+    return s_v;
+  }
+  static void register_class(){
+    static bool s_done = false; //not const, then not thread safe.
+    if(!s_done) {
+      WNDCLASS         wc;
+      wc.style         = CS_HREDRAW | CS_VREDRAW;
+      wc.lpfnWndProc   = (WNDPROC)proc;
+      wc.cbClsExtra    = 0;
+      wc.cbWndExtra    = 0;
+      wc.hInstance     = ::GetModuleHandle(NULL);
+      wc.hIcon         = LoadIcon(NULL,IDI_APPLICATION);
+      wc.hCursor       = LoadCursor(NULL,IDC_ARROW);
+      wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+      wc.lpszMenuName  = s_class().c_str();
+      wc.lpszClassName = s_class().c_str();
+      ::RegisterClass(&wc);
+      s_done = true;
+    }
+  }
+public:
+  virtual void key_up(){}
+  virtual void key_down(){}
+  virtual void key_left(){}
+  virtual void key_right(){}
+  virtual void key_escape(){}
+  virtual void close(){
+    //if(m_window) ::PostMessage(m_window,WM_QUIT,0,0);
+    ::PostQuitMessage(0);
+  }
+public:
+  window(unsigned int a_w,unsigned int a_h,unsigned int a_mask = WS_OVERLAPPEDWINDOW)
+  :m_window(0)
+  ,m_key_shift(false)
+  ,m_key_ctrl(false)
+  {
+    register_class();
+    m_window = ::CreateWindow(s_class().c_str(),
+                              NULL,
+                              a_mask,
+                              CW_USEDEFAULT,CW_USEDEFAULT, 
+                              a_w,a_h,
+                              NULL,NULL,
+                              ::GetModuleHandle(NULL),
+                              NULL);
+    if(!m_window) return;
+    ::SetWindowLongPtr(m_window,GWLP_USERDATA,LONG_PTR(this));
+  }
+  virtual ~window(){
+    if(m_window) {
+      ::SetWindowLongPtr(m_window,GWLP_USERDATA,LONG_PTR(NULL));
+      ::DestroyWindow(m_window);
+      m_window = 0;
+    }
+  }
+public:
+  window(const window& a_from)
+  :m_window(0)
+  ,m_key_shift(a_from.m_key_shift)
+  ,m_key_ctrl(a_from.m_key_ctrl)
+  {
+    if(!a_from.m_window) return;
+    int w,h;
+    get_size(a_from.m_window,w,h);
+    register_class();
+    m_window = ::CreateWindow(s_class().c_str(),
+                              NULL,
+                              WS_OVERLAPPEDWINDOW,
+                              CW_USEDEFAULT,CW_USEDEFAULT, 
+                              w,h,
+                              NULL,NULL,
+                              ::GetModuleHandle(NULL),
+                              NULL);
+    if(!m_window) return;
+    ::SetWindowLongPtr(m_window,GWLP_USERDATA,LONG_PTR(this));
+  }
+  window& operator=(const window& a_from){
+    m_key_shift = a_from.m_key_shift;
+    m_key_ctrl = a_from.m_key_ctrl;
+    return *this;
+  }
+public:
+  bool key_shift() const {return m_key_shift;}
+  HWND hwnd() const {return m_window;}
+protected:
+  static LRESULT CALLBACK proc(HWND a_window,UINT a_msg,WPARAM a_wparam,LPARAM a_lparam) {
+    switch (a_msg) { 
+    // Else :
+    case WM_SIZE:{ // Assume one child window ! FIXME : have a message if not.
+      int width = LOWORD(a_lparam);
+      int height = HIWORD(a_lparam);
+      HWND hwnd = GetFirstChild(a_window);
+      if(hwnd) {
+        ::MoveWindow(hwnd,0,0,width,height,TRUE);
+      }
+    }return 0;
+
+    case WM_KEYDOWN:{
+      switch(a_wparam){
+      case VK_SHIFT:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->m_key_shift = true;
+        return 0;
+      }
+      case VK_CONTROL:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->m_key_ctrl = true;
+        return 0;
+      }
+      case VK_UP:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->key_up();
+        return 0;
+      }
+      case VK_DOWN:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->key_down();
+        return 0;
+      }
+      case VK_LEFT:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->key_left();
+        return 0;
+      }
+      case VK_RIGHT:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->key_right();
+        return 0;
+      }
+      case VK_ESCAPE:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->key_escape();
+        return 0;
+      }
+      } //end switch(a_wparam)
+      break;
+    }
+    case WM_KEYUP:{
+      switch(a_wparam){
+      case VK_SHIFT:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->m_key_shift = false;
+        return 0;
+      }
+      case VK_CONTROL:{
+        window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+        if(th_is) th_is->m_key_ctrl = false;
+        return 0;
+      }
+      } //end switch(a_wparam)
+      break;
+    }
+
+    case WM_CLOSE:{
+      window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+      if(th_is) th_is->close();
+    }break; //NOTE : can't be return 0.
+    case WM_DESTROY:wm__destroy(a_window);return 0;
+    }
+    return (DefWindowProc(a_window,a_msg,a_wparam,a_lparam));
+  }
+  static void wm__destroy(HWND a_window) { 
+    window* th_is = (window*)::GetWindowLongPtr(a_window,GWLP_USERDATA);
+    if(th_is) { //How to be sure that we have a window* ???
+      if(th_is->m_window!=a_window) {
+        //::printf("WinTk::Component::wm_destroy : HWND mismatch !\n");
+      }
+      th_is->m_window = 0;
+    }
+    ::SetWindowLongPtr(a_window,GWLP_USERDATA,LONG_PTR(NULL));
+  }
+protected:
+  void get_size(HWND a_hwnd,int& a_w,int& a_h){
+    RECT rect;
+    ::GetWindowRect(a_hwnd,&rect);
+    a_w = rect.right-rect.left;
+    a_h = rect.bottom-rect.top;
+  }
+protected:
+  HWND m_window;
+  bool m_key_shift;
+  bool m_key_ctrl;
+};
+
+}}
+
+#endif

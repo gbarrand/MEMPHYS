@@ -1,0 +1,12 @@
+
+build_args=
+build_what=build_none
+
+while test $# -ge 1 ; do
+  case $1 in
+    -*) build_args="${build_args} $1";;
+     *) build_args="${build_args} $1";if [ $# = 1 ] ; then build_what=$1; fi;;
+  esac
+  shift
+done
+

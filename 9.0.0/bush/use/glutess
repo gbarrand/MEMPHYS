@@ -1,0 +1,24 @@
+
+if [ "${use_glutess}" = "yes" ] ; then
+if [ "${build_use_not_our_glutess}" = "yes" ] ; then
+  use_sys_glutess=yes
+  use_our_glutess=no
+else
+  use_sys_glutess=no
+  use_our_glutess=yes
+fi
+fi
+
+if [ "${use_our_glutess}" = "yes" ] ; then
+  if [ "${glutess_home}" = "" ] ; then
+    echo 'bush/use/glutess : variable glutess_home not defined.'
+    exit
+  fi
+
+  ccflags="${ccflags} -I${glutess_home}"
+  cppflags="${cppflags} -I${glutess_home}"
+
+  ourex_pack_name=glutess
+  . ${bush_home}/use/ourex_use
+fi
+

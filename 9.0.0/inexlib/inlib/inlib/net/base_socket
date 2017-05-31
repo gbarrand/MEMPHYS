@@ -1,0 +1,855 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_base_socket
+#define inlib_base_socket
+
+#include "../typedefs"
+#include "../platform"
+#include "../file"
+#include "../buffer"
+#include "../mnmx"
+#include "../newdel"
+#include "../forit"
+
+//#define INLIB_SOCKET_DUMP_PID
+#ifdef INLIB_SOCKET_DUMP_PID
+#include "../sys/process"
+#endif
+
+#ifdef INLIB_MEM
+#include "../mem"
+#endif
+
+#ifdef _WIN32
+#include <io.h>
+//#include <winsock2.h>
+#include <winsock.h>
+inline int inlib_net_SD_BOTH() {return 0x02;}
+#else
+#include <sys/socket.h>
+#include <errno.h>
+#include <unistd.h>
+#include <cstring>
+typedef int SOCKET;
+#define INVALID_SOCKET (-1)
+#endif
+
+#ifdef __APPLE__
+#define INLIB_NET_SIGPIPE
+#endif
+
+#ifdef INLIB_NET_SIGPIPE
+#include <csignal>
+//#include <csetjmp>
+#endif
+
+#include <ostream>
+#include <sstream>
+
+namespace inlib {
+namespace net {
+
+inline std::string serror() {
+   std::ostringstream strm;
+#ifdef _WIN32
+   strm << (int)WSAGetLastError();
+   return std::string(" error : ")+strm.str()+".";
+#else
+   strm << (int)errno;
+   return std::string(" error : ")+strm.str()+ " : " +std::string(strerror(errno))+".";
+#endif
+}
+
+inline bool host_name(std::ostream& a_out,std::string& a_host){
+  char s[512];
+  if(::gethostname(s,sizeof(s))<0) {
+    a_out << "inlib::net::host_name :"
+          << " gethostname() :" << serror()
+          << std::endl;
+    a_host.clear();
+    return false;
+  }
+  a_host = s;
+  return true;
+}
+
+inline bool set_reuse_addr(std::ostream& a_out,SOCKET a_socket) {
+  int val = 1;
+  if(::setsockopt(a_socket,SOL_SOCKET,SO_REUSEADDR,(char*)&val,sizeof(val))<0) {
+    a_out << "inlib::net::set_reuse_addr :"
+          << " setsockopt() :" << serror()
+          << std::endl;
+    return false;
+  }
+  return true;
+}
+
+inline bool set_input_timer(std::ostream& a_out,int a_socket,unsigned int a_micro_secs) {
+  struct timeval val;
+  val.tv_sec = 0;
+  val.tv_usec = a_micro_secs;
+  if(::setsockopt(a_socket,SOL_SOCKET,SO_RCVTIMEO,(char*)&val,sizeof(val))<0) {
+    a_out << "inlib::base_socket::set_input_timer :"
+          << " setsockopt():" << serror()
+          << std::endl;
+    return false;
+  }
+  return true;
+}
+
+inline bool is_there_input(const std::vector<int>& a_socks,bool& a_is,unsigned int a_micro_secs = 10) {
+  a_is = false;
+  if(a_socks.empty()) return false;
+  
+  struct timeval timeout;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = a_micro_secs;
+  
+  fd_set mask;
+  FD_ZERO(&mask);
+  int nfds = 0;
+ {inlib_vforcit(int,a_socks,it) {
+    FD_SET(*it,&mask);
+    nfds = mx(nfds,*it);
+  }}
+  nfds++;
+
+  if(::select(nfds,&mask,0,0,&timeout)==(-1)) {
+    a_is = false;
+    return false;
+  }
+  
+ {inlib_vforcit(int,a_socks,it) {
+    if(FD_ISSET(*it,&mask)) {
+      a_is = true;
+      break;
+    }
+  }}
+
+  return true;
+}
+
+inline bool wait_input(const std::vector<int>& a_socks,std::vector<bool>& a_has) {
+  a_has.resize(a_socks.size(),false);
+
+  if(a_socks.empty()) return false;
+
+  fd_set mask;
+  FD_ZERO(&mask);
+  int nfds = 0;
+ {inlib_vforcit(int,a_socks,it) {
+    FD_SET(*it,&mask);
+    nfds = mx(nfds,*it);
+  }}
+  nfds++;
+
+  if(::select(nfds,&mask,0,0,0)==(-1)) return false;
+  
+ {size_t index = 0;
+  inlib_vforcit(int,a_socks,it) {
+    a_has[index] = FD_ISSET(*it,&mask)?true:false;
+    index++;
+  }}
+  return true;
+}
+
+class base_socket {
+#ifdef INLIB_MEM
+  INLIB_SCLASS(inlib::net::base_socket)
+#endif
+public:
+  virtual void disconnect() = 0;
+  virtual bool fetch_cbk(uint64) {return true;}
+public:
+  base_socket(std::ostream& a_out,bool a_verbose)
+  :m_out(a_out)
+  ,m_verbose(a_verbose)
+  ,m_socket(INVALID_SOCKET)           
+  ,m_is_LE(true)
+  { 
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+    m_is_LE = is_little_endian();
+  }
+  virtual ~base_socket(){
+    close();
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+protected:
+  base_socket(const base_socket& aFrom)
+  :m_out(aFrom.m_out)
+  ,m_verbose(aFrom.m_verbose)
+  ,m_socket(aFrom.m_socket)           
+  ,m_is_LE(aFrom.m_is_LE)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  base_socket& operator=(const base_socket& aFrom){ 
+    m_verbose = aFrom.m_verbose;
+    m_socket = aFrom.m_socket;
+    m_is_LE = aFrom.m_is_LE;
+    return *this;
+  }
+public:
+  bool verbose() const {return m_verbose;}
+  void set_verbose(bool a_v) {m_verbose = a_v;}
+  bool is_connected() const {return (m_socket==INVALID_SOCKET?false:true);}
+  SOCKET socket() const {return m_socket;}
+  std::ostream& out() const {return m_out;}
+  void close(){
+    if(m_socket==INVALID_SOCKET) return; //done
+#ifdef _WIN32
+    if(::shutdown(m_socket,inlib_net_SD_BOTH())<0) { 
+      if(WSAGetLastError()==WSAENOTCONN) {
+#else
+    if(::shutdown(m_socket,SHUT_RDWR)<0) { 
+      if(errno==ENOTCONN) { 
+#endif
+        // ok, the "other side" may have already done a shutdown.
+      } else {
+        m_out << "inlib::base_socket::close :"
+              << " for socket : " << m_socket
+              << ", shutdown : " << serror()
+              << std::endl;
+      }
+    } else {
+      if(m_verbose) {
+        m_out << "inlib::base_socket::close :"
+              << " shutdown() ok."
+              << " Socket was " << m_socket << "."
+              << std::endl;
+      }
+    }
+    //NOTE : reset m_socket before the close. It permits to sort out
+    //       the case where a close is used to enforce an exit of
+    //       a blocking accept() in a thread. (Case of the exit
+    //       of the wall_master if no data client is here).
+    SOCKET id = m_socket;
+    m_socket = INVALID_SOCKET;
+#ifdef _WIN32
+    ::closesocket(id);
+#else
+    ::close(id);
+#endif
+  }
+protected:
+#ifdef INLIB_NET_SIGPIPE
+/*
+  //NOTE : it seems to have no way to pass a jmp_buf pointer
+  //       to a sig handler. Then we use a writable static,
+  //       which is not thread safe.
+  static jmp_buf& s_jmp_buf() {
+    //WARNING : writable static, then not thread safe.
+    static jmp_buf s_jmp_buf;
+    return s_jmp_buf;
+  }
+  static void sigpipe_handler(int) {
+    ::longjmp(s_jmp_buf(),1);
+  }
+*/
+#endif
+public:
+
+  bool send_buffer(const char* a_buffer,uint64 a_length,uint64 a_BLOCK = 65536) {
+    if(!a_length) return true;
+    if(m_socket==INVALID_SOCKET) return false;
+
+#ifdef INLIB_NET_SIGPIPE
+    void (*old_sigpipe_handler)(int) = ::signal(SIGPIPE,SIG_IGN);
+/*
+    void (*old_sigpipe_handler)(int) = ::signal(SIGPIPE,sigpipe_handler);
+    if(::setjmp(s_jmp_buf())) {
+      // a longjmp had been activated.
+      disconnect();
+      ::signal(SIGPIPE,old_sigpipe_handler);
+      m_out << "inlib::base_socket::send_buffer :"
+            << " WARNING : we had a SIGPIPE."
+            << std::endl;
+      return false;
+    }
+*/
+#endif
+
+    char* buf = (char*)a_buffer;
+    uint64 sent = 0;
+    while(true) {
+      int64 to_send = mn<int64>(a_BLOCK,a_length-sent);
+      if(to_send==0) break;    
+      if(to_send<0) {
+        m_out << "inlib::base_socket::send_buffer :"
+              << " to_send (" << to_send << ") < 0 !"
+              << std::endl;
+        break;    
+      }
+#ifdef _WIN32
+      int num_char = ::send(m_socket,(char*)buf,(int)to_send,0);
+#elif __linux__
+      ssize_t num_char = ::send(m_socket,(char*)buf,(size_t)to_send,MSG_NOSIGNAL); // MSG_NOSIGNAL -> no SIGPIPEs.
+#else
+      ssize_t num_char = ::send(m_socket,(char*)buf,(size_t)to_send,0);
+#endif
+/* from xrootd :
+      ssize_t num_char = ::write(m_socket,(char*)buf,(size_t)to_send);
+*/
+/* from tntnet :
+      // block SIGPIPE
+      sigset_t sigpipeMask, oldSigmask;
+      sigemptyset(&sigpipeMask);
+      sigaddset(&sigpipeMask, SIGPIPE);
+      pthread_sigmask(SIG_BLOCK, &sigpipeMask, &oldSigmask);
+      // execute send
+      num_char ::send(m_socket,(char*)buf,(size_t)to_send, 0);
+      // clear possible SIGPIPE
+      sigset_t pending;
+      sigemptyset(&pending);
+      sigpending(&pending);
+      if (sigismember(&pending, SIGPIPE)) {
+        static const struct timespec nowait = { 0, 0 };
+        while (sigtimedwait(&sigpipeMask, 0, &nowait) == -1 && errno == EINTR);
+      }
+      // unblock SIGPIPE
+      pthread_sigmask(SIG_SETMASK, &oldSigmask, 0);
+*/
+      if(num_char<0) {
+        m_out << "inlib::base_socket::send_buffer :"
+              << " send : " << serror()
+              << std::endl;
+        disconnect();
+#ifdef INLIB_NET_SIGPIPE
+        ::signal(SIGPIPE,old_sigpipe_handler);
+#endif
+        return false;
+      }
+      if(num_char==0) {
+        m_out << "inlib::base_socket::send_buffer :"
+              << " send : returned 0."
+              << std::endl;
+      }
+  
+      //NOTE : num_char not necessary equal to to_send.
+      buf += num_char;
+      sent += num_char;
+    }  
+
+#ifdef INLIB_NET_SIGPIPE
+    ::signal(SIGPIPE,old_sigpipe_handler);
+#endif
+
+    return true;
+  }
+
+  bool fetch_buffer(char* a_buffer,uint64 a_length,uint64 a_BLOCK = 65536){
+    if(!a_length) return true;
+    if(m_socket==INVALID_SOCKET) return false;
+    char* buf = a_buffer;
+    uint64 got = 0;
+    while(true) {
+      int64 to_get = mn<int64>(a_BLOCK,a_length-got);
+      if(to_get==0) break;
+      if(to_get<0) {
+        m_out << "inlib::base_socket::fetch_buffer :"
+              << " to_get (" << to_get << ") < 0 !"
+              << std::endl;
+        break;    
+      }
+#ifdef _WIN32
+      int num_char = ::recv(m_socket,buf,(int)to_get,0);
+#else
+      ssize_t num_char = ::recv(m_socket,buf,(size_t)to_get,0);
+#endif
+      if(num_char<0) {
+        //ECONNRESET
+        m_out << "inlib::base_socket::fetch_buffer :"
+#ifdef INLIB_SOCKET_DUMP_PID
+              << " with pid " << process_id()
+#endif
+              << " recv : " << serror()
+              << std::endl;
+        disconnect();
+        return false;
+      }
+      if(num_char==0) {
+        m_out << "inlib::base_socket::fetch_buffer :"
+              << " recv : returned 0."
+              << std::endl;
+        disconnect();
+        return false;      
+      }
+
+      //NOTE : num_char not necessary equal to to_get.
+      buf += num_char;
+      got += num_char;
+    }
+    return true;
+  }
+
+  bool fetch_upto_char(char a_char,char*& a_buffer,uint64& a_length,unsigned int a_BLOCK = 65536){
+    a_buffer = 0;
+    a_length = 0;    
+    if(m_socket==INVALID_SOCKET) return false;
+    char* buf = new char[a_BLOCK];
+    if(!buf) return false; 
+    while(true) {
+#ifdef _WIN32
+      int
+#else
+      ssize_t
+#endif
+      num_char = ::recv(m_socket,buf,(size_t)a_BLOCK,0);
+      if(num_char<0) {
+        m_out << "inlib::base_socket::fetch_upto_char :"
+              << " recv : " << serror()
+              << std::endl;
+        disconnect();
+        delete [] a_buffer;
+        a_buffer = 0;
+        a_length = 0;    
+        delete [] buf;    
+        return false;
+      }
+      if(num_char==0) {
+        m_out << "inlib::base_socket::fetch_upto_char :"
+              << " recv : returned 0."
+              << std::endl;
+        delete [] a_buffer;
+        a_buffer = 0;
+        a_length = 0;    
+        delete [] buf;    
+        return false;      
+      }
+
+      if(m_verbose) {
+        m_out << "inlib::base_socket::fetch_upto_char :"
+              << " recv : " << (int)num_char
+             << std::endl;
+      }
+
+      if(!mrealloc<char>(a_buffer,(size_t)(a_length+num_char),(size_t)a_length,false)) {
+        a_length = 0;    
+        delete [] buf;    
+        return false;
+      }
+      ::memcpy(a_buffer+a_length,buf,num_char);
+      a_length += num_char;
+
+/*
+     {char oldc = buf[num_char-1];
+      buf[num_char-1] = 0;
+      ::printf("debug : buffer : |\"%s\"|\n",buf);
+      ::printf("debug : last : %d %d\n",buf[num_char-2],oldc);
+      buf[num_char-1] = oldc;}
+*/
+
+     {char* pos = buf;    
+      for(unsigned int index=0;index<(unsigned int)num_char;index++,pos++) {
+        //::printf("debug : %d : %d : %c\n",index,*pos,*pos);
+        if(*pos==a_char) { //found
+          // 01234
+          //  ^
+          a_length -= (num_char-(index+1));
+          delete [] buf;
+          return true;
+        }
+      }}
+  
+      //a_char not in buf, continue.
+    }
+  }
+
+  bool fetch_one_shoot(char*& a_buffer,uint64& a_length,unsigned int a_BLOCK = 65536){
+    //used in net/mail.
+    a_buffer = 0;
+    a_length = 0;    
+    if(m_socket==INVALID_SOCKET) return false;
+    char* buf = new char[a_BLOCK];
+    if(!buf) return false; 
+
+#ifdef _WIN32
+    int
+#else
+    ssize_t
+#endif
+    num_char = ::recv(m_socket,buf,(size_t)a_BLOCK,0);
+    if(num_char<0) {
+      m_out << "inlib::base_socket::fetch_one_shoot :"
+            << " recv : " << serror()
+            << std::endl;
+      disconnect();
+      delete [] a_buffer;
+      a_buffer = 0;
+      a_length = 0;    
+      delete [] buf;    
+      return false;
+    }
+    if(num_char==0) {
+      m_out << "inlib::base_socket::fetch_one_shoot :"
+            << " recv : returned 0."
+            << std::endl;
+      delete [] a_buffer;
+      a_buffer = 0;
+      a_length = 0;    
+      delete [] buf;    
+      return false;      
+    }
+
+    if(m_verbose) {
+      m_out << "inlib::base_socket::fetch_one_shoot :"
+            << " recv : " << (int)num_char
+            << std::endl;
+    }
+
+    a_buffer = new char[num_char+1];
+    if(!a_buffer) {
+      a_length = 0;    
+      delete [] buf;    
+      return false;
+    }
+    ::memcpy(a_buffer,buf,num_char);
+    a_length = num_char;
+    a_buffer[a_length] = 0; //have a C string like buffer.
+
+    delete [] buf;    
+    return true;
+  }
+
+  bool fetch_upto_end(char*& a_buffer,uint64& a_length,unsigned int a_BLOCK = 65536){
+    //NOTE : a_buffer is (a_length+1) allocated and null terminated.
+    a_buffer = 0;
+    a_length = 0;    
+    if(m_socket==INVALID_SOCKET) return false;
+
+    char* buf = new char[a_BLOCK];
+    if(!buf) return false; 
+
+    while(true) {
+      //m_out << "inlib::base_socket::fetch_upto_end :"
+      //      << " recv... "
+      //      << std::endl;
+#ifdef _WIN32
+      int
+#else
+      ssize_t
+#endif
+      num_char = ::recv(m_socket,buf,(size_t)a_BLOCK,0);
+      if(num_char<0) {
+        //if(errno==EAGAIN) continue;
+        m_out << "inlib::base_socket::fetch_upto_end :"
+              << " recv : " << serror()
+              << std::endl;
+        disconnect();
+        delete [] a_buffer;
+        a_buffer = 0;
+        a_length = 0;    
+        delete [] buf;
+        return false;
+      }
+      if(num_char==0) {
+        if(m_verbose) {
+          m_out << "inlib::base_socket::fetch_upto_end :"
+                << " end."
+                << std::endl;
+        }
+        delete [] buf;
+        return true;
+      }
+
+      if(m_verbose) {
+        m_out << "inlib::base_socket::fetch_upto_end :"
+              << " recv : " << (int)num_char
+              << std::endl;
+      }
+
+      // add one char to null terminate the buffer.
+      if(!mrealloc<char>(a_buffer,(size_t)(a_length+num_char+1),(size_t)a_length,false)) {
+        delete [] a_buffer;
+        a_buffer = 0;
+        a_length = 0;    
+        delete [] buf;    
+        return false;
+      }
+      ::memcpy(a_buffer+a_length,buf,num_char);
+      a_length += num_char;
+      a_buffer[a_length] = 0;
+    }
+  }
+
+  bool fetch_upto_end(FILE* a_FILE,uint64& a_length,unsigned int a_BLOCK = 65536){
+    a_length = 0;    
+    if(m_socket==INVALID_SOCKET) return false;
+
+    char* buf = new char[a_BLOCK];
+    if(!buf) return false; 
+
+    while(true) {
+      //m_out << "inlib::base_socket::fetch_upto_end(FILE) :"
+      //      << " recv... "
+      //      << std::endl;
+#ifdef _WIN32
+      int
+#else
+      ssize_t
+#endif
+      num_char = ::recv(m_socket,buf,(size_t)a_BLOCK,0);
+      if(num_char<0) {
+        //if(errno==EAGAIN) continue;
+        m_out << "inlib::base_socket::fetch_upto_end(FILE) :"
+              << " recv : " << serror()
+              << std::endl;
+        disconnect();
+        a_length = 0;    
+        delete [] buf;
+        return false;
+      }
+      if(num_char==0) {
+        if(m_verbose) {
+          m_out << "inlib::base_socket::fetch_upto_end(FILE) :"
+                << " end."
+                << std::endl;
+        }
+        delete [] buf;
+        return true;
+      }
+
+      if(m_verbose) {
+        m_out << "inlib::base_socket::fetch_upto_end(FILE) :"
+              << " recv : " << (int)num_char
+              << std::endl;
+      }
+  
+      if(::fwrite((char*)buf,num_char,(size_t)1,a_FILE)!=1) {
+        a_length = 0;    
+        delete [] buf;    
+        return false;
+      }
+      a_length += num_char;
+      if(!fetch_cbk(a_length)) {
+        m_out << "inlib::base_socket::fetch_upto_end(FILE) :"
+              << " fetch_cbk returns false, stop recv data."
+              << std::endl;
+        delete [] buf;    
+        return false;
+      }
+    }
+  }
+
+  /////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////
+  template <class T>
+  bool send(const T& a_value) {
+    char buffer[sizeof(T)];
+    write_buffer<T>(a_value,buffer);
+    return send_buffer(buffer,sizeof(T));
+  }
+
+  template <class T>
+  bool fetch(T& a_value) {
+    char buffer[sizeof(T)];
+    if(!fetch_buffer(buffer,sizeof(T))) return false;
+    read_buffer<T>(buffer,a_value);
+    return true;
+  }
+
+  bool send_uchar(unsigned char a_value) {
+    char buffer[1];
+    ::memcpy(buffer,&a_value,1);
+    return send_buffer(buffer,1);
+  }
+
+  bool fetch_uchar(unsigned char& a_value) {
+    char buffer[1];
+    if(!fetch_buffer(buffer,1)) return false;
+    ::memcpy(&a_value,buffer,1);
+    return true;
+  }
+
+  bool send_bool(bool a_value) {
+    unsigned char c = a_value?1:0;
+    return send_uchar(c);
+  }
+
+  bool fetch_bool(bool& a_value) {
+    unsigned char c;
+    if(!fetch_uchar(c)) {a_value = false;return false;}
+    a_value = (c==1?true:false);
+    return true;
+  }
+
+  bool send_string(const std::string& a_string) {
+    if(!send<uint64>(a_string.size())) return false;
+    return send_buffer(a_string.c_str(),a_string.size());
+  }
+
+  bool fetch_string(std::string& a_string) {
+    uint64 length;
+    if(!fetch<uint64>(length)) {
+      a_string.clear();
+      return false;
+    }
+    a_string.resize((std::string::size_type)length);
+    if(!fetch_buffer((char*)a_string.c_str(),length)) {
+      a_string.clear();
+      return false;
+    }
+    return true;
+  }
+  
+  bool send_text(const std::vector<std::string>& a_text) { 
+    size_t number = a_text.size();
+    if(!send<uint64>(number)) return false;
+    for(size_t index=0;index<number;index++) {
+      if(!send_string(a_text[index])) return false;
+    }
+    return true;
+  }
+
+  bool fetch_text(std::vector<std::string>& a_text){ 
+    uint64 number;
+    if(!fetch<uint64>(number)) {
+      a_text.clear();
+      return false;
+    }
+    for(unsigned int index=0;index<number;index++) {
+      std::string s;
+      if(!fetch_string(s)) {
+        a_text.clear();
+        return false;
+      }
+      a_text.push_back(s);
+    }
+    return true;
+  }
+
+  bool send_file(const std::string& a_file) {
+    char* buffer;
+    long length;
+    if(!file::read_bytes(a_file,buffer,length)) {
+      m_out << "inlib::base_socket::send_file : "
+            << " can't read file \"" << a_file << "\"."
+            << std::endl;
+      return false;
+    }
+    if(!send<uint64>((uint64)length)) {
+      mdel(buffer);
+      return false;
+    }
+    bool stat = send_buffer(buffer,length);
+    mdel(buffer);
+    return stat;
+  }
+
+  bool fetch_file(const std::string& a_file) {
+    uint64 length;
+    if(!fetch<uint64>(length)) return false;
+    char* buffer = 0;
+    if(length) {
+      buffer = new char[(size_t)length];
+      if(!buffer) return false;
+    }
+    if(!fetch_buffer(buffer,length)) {
+      delete [] buffer;
+      return false;
+    }
+    bool stat = file::write_bytes(a_file,buffer,(size_t)length);
+    if(!stat) {
+      m_out << "inlib::base_socket::send_file : "
+            << " can't write file \"" << a_file << "\"."
+            << std::endl;
+    }
+    delete [] buffer;
+    return stat;
+  }
+
+  bool is_there_input(bool& a_is,unsigned int a_micro_secs = 10) {
+    a_is = false;
+    if(m_socket==INVALID_SOCKET) return false;
+  
+    fd_set mask;
+    FD_ZERO(&mask);
+    FD_SET(m_socket,&mask);
+  
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = a_micro_secs;
+  
+    int nfds = 0;
+    nfds = mx(nfds,int(m_socket));
+    nfds++;
+    if(::select(nfds,&mask,0,0,&timeout)==(-1)) {
+      a_is = false;
+      return false;
+    }
+  
+    a_is = FD_ISSET(m_socket,&mask)?true:false;
+    return true;
+  }
+
+  bool is_active(unsigned int a_micro_secs = 10) {
+    if(m_socket==INVALID_SOCKET) return false;
+
+    fd_set mask;
+    FD_ZERO(&mask);
+    FD_SET(m_socket,&mask);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = a_micro_secs;
+
+    int nfds = 0;
+    nfds = mx(nfds,int(m_socket));
+    nfds++;
+    if(::select(nfds,&mask,0,0,&timeout)==(-1)) return false;
+    return true;
+  }
+
+/*
+  bool is_active2() {
+    if(m_socket==INVALID_SOCKET) return false;
+    int error = 0;
+#ifdef _WIN32
+    int len = sizeof(error);
+    int retval = ::getsockopt(m_socket,SOL_SOCKET,SO_ERROR,(char*)&error,&len);
+#else
+    socklen_t len = sizeof(error);
+    int retval = ::getsockopt(m_socket,SOL_SOCKET,SO_ERROR,&error,&len);
+#endif
+    return retval==0?true:false;
+  }
+  bool is_active3() {
+    if(m_socket==INVALID_SOCKET) return false;
+
+    void (*old_sigpipe_handler)(int) = ::signal(SIGPIPE,SIG_IGN);
+    char buf[1];
+    buf[0] = 0;
+    size_t to_send = 0;
+#ifdef _WIN32
+    int
+#else
+    ssize_t
+#endif
+    num_char = ::send(m_socket,buf,to_send,0);
+    ::signal(SIGPIPE,old_sigpipe_handler);
+    if(num_char!=1) return false;
+
+    return true;
+  }
+*/
+protected:        
+  std::ostream& m_out;
+  bool m_verbose;
+  SOCKET m_socket;
+  bool m_is_LE;
+};
+  
+
+}}
+  
+//inlib_build_use socket
+
+#endif

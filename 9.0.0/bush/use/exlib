@@ -1,0 +1,9 @@
+
+if [ "${use_exlib}" = "yes" ] ; then
+  if [ "${exlib_home}" = "" ] ; then
+    exlib_home=${bush_home}/../inexlib/exlib
+  fi
+
+  cppflags="${cppflags} -I${exlib_home}"
+fi
+

@@ -1,0 +1,20 @@
+
+  // code produced automatically by the inlib wroot_trees app.
+
+  m_Geometry_tree = new inlib::wroot::tree(m_file.dir(),"Geometry","MEMPHYS WC Geometry");
+  m_Geometry_leaf_wcRadius = m_Geometry_tree->create_leaf<double>("wcRadius");
+  m_Geometry_leaf_wcLength = m_Geometry_tree->create_leaf<double>("wcLength");
+  inlib::wroot::std_vector_be<double>* Geometry_branch_wcOffset = m_Geometry_tree->create_std_vector_be<double>("wcOffset",m_Geometry_wcOffset_vec);
+  inlib::wroot::leaf_element* Geometry_leaf_wcOffset = Geometry_branch_wcOffset->create_leaf_element("wcOffset","wcOffset");
+  m_Geometry_leaf_pmtRadius = m_Geometry_tree->create_leaf<double>("pmtRadius");
+  m_Geometry_leaf_nPMTs = m_Geometry_tree->create_leaf<int>("nPMTs");
+    
+    m_Geometry_pmtInfos_tree = new inlib::wroot::tree(m_file.dir(),"pmtInfos","pmtInfos",false);
+    m_Geometry_pmtInfos_leaf_pmtId = m_Geometry_pmtInfos_tree->create_leaf<int>("pmtId");
+    m_Geometry_pmtInfos_leaf_pmtLocation = m_Geometry_pmtInfos_tree->create_leaf<int>("pmtLocation");
+    inlib::wroot::std_vector_be<double>* Geometry_pmtInfos_branch_pmtOrient = m_Geometry_pmtInfos_tree->create_std_vector_be<double>("pmtOrient",m_Geometry_pmtInfos_pmtOrient_vec);
+    inlib::wroot::leaf_element* Geometry_pmtInfos_leaf_pmtOrient = Geometry_pmtInfos_branch_pmtOrient->create_leaf_element("pmtOrient","pmtOrient");
+    inlib::wroot::std_vector_be<double>* Geometry_pmtInfos_branch_pmtPosition = m_Geometry_pmtInfos_tree->create_std_vector_be<double>("pmtPosition",m_Geometry_pmtInfos_pmtPosition_vec);
+    inlib::wroot::leaf_element* Geometry_pmtInfos_leaf_pmtPosition = Geometry_pmtInfos_branch_pmtPosition->create_leaf_element("pmtPosition","pmtPosition");
+  m_Geometry_leaf_pmtInfos = m_Geometry_tree->create_leaf("pmtInfos",*m_Geometry_pmtInfos_tree);
+    

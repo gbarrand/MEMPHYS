@@ -1,0 +1,122 @@
+#!/bin/sh -f
+
+# NOTE : it must be executed from the mgr dir of an app.
+
+bush_home=../../bush
+
+version="`${bush_home}/app_vers`"
+app="`${bush_home}/app_name`"
+
+save_dir=`pwd`
+
+batch_exe=./bin_batch/distrib/${app}/${version}/bin/${app}
+if [ ! -x ${batch_exe} ] ; then
+  echo "${batch_exe} not found."
+  exit
+fi
+if [ ! -f ./batch_icon ] ; then
+  echo "./batch_icon not found."
+  exit
+fi
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+sizes='16 32 36 48 57 64 72 76 114 120 128 144 152 256 512 1024'
+
+for size in ${sizes} ; do
+  ${batch_exe} -orders=batch_icon -ww=${size} -wh=${size}
+  /bin/mv icon.png icon_${size}.png
+done
+
+# not square icons :
+${batch_exe} -orders=batch_icon -ww=320 -wh=480
+/bin/mv icon.png icon_320_480.png
+
+${batch_exe} -orders=batch_icon -ww=640 -wh=960
+/bin/mv icon.png icon_640_960.png
+
+${batch_exe} -orders=batch_icon -ww=640 -wh=1136
+/bin/mv icon.png icon_640_1136.png
+
+${batch_exe} -orders=batch_icon -ww=1024 -wh=500
+/bin/mv icon.png icon_1024_500.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+${batch_exe} -orders=batch_GUI -ww=1440 -wh=900
+/bin/mv icon.png GUI_1440_900.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+${batch_exe} -orders=batch_front -ww=1136 -wh=640
+/bin/mv icon.png front_1136_640.png
+
+${batch_exe} -orders=batch_front -ww=1334 -wh=750
+/bin/mv icon.png front_1334_750.png
+
+${batch_exe} -orders=batch_front -ww=2208 -wh=1242
+/bin/mv icon.png front_2208_1242.png
+
+${batch_exe} -orders=batch_front -ww=2732 -wh=2048
+/bin/mv icon.png front_2732_2048.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+${batch_exe} -orders=batch_side -ww=1136 -wh=640
+/bin/mv icon.png side_1136_640.png
+
+${batch_exe} -orders=batch_side -ww=1334 -wh=750
+/bin/mv icon.png side_1334_750.png
+
+${batch_exe} -orders=batch_side -ww=2208 -wh=1242
+/bin/mv icon.png side_2208_1242.png
+
+${batch_exe} -orders=batch_side -ww=2732 -wh=2048
+/bin/mv icon.png side_2732_2048.png
+
+${batch_exe} -orders=batch_side -ww=1440 -wh=900
+/bin/mv icon.png side_1440_900.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+${batch_exe} -orders=batch_3D -ww=1136 -wh=640
+/bin/mv icon.png 3D_1136_640.png
+
+${batch_exe} -orders=batch_3D -ww=1334 -wh=750
+/bin/mv icon.png 3D_1334_750.png
+
+${batch_exe} -orders=batch_3D -ww=2208 -wh=1242
+/bin/mv icon.png 3D_2208_1242.png
+
+${batch_exe} -orders=batch_3D -ww=2732 -wh=2048
+/bin/mv icon.png 3D_2732_2048.png
+
+${batch_exe} -orders=batch_3D -ww=1440 -wh=900
+/bin/mv icon.png 3D_1440_900.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+# build Cocoa/<app>.iconset :
+iconset_dir=../Cocoa/${app}.iconset
+/bin/mkdir -p ${iconset_dir}
+sizes='16 32 128 256 512'
+for size in ${sizes} ; do
+  /bin/cp icon_${size}.png ${iconset_dir}/.
+done
+/bin/cp icon_32.png   ${iconset_dir}/icon_16@2x.png
+/bin/cp icon_64.png   ${iconset_dir}/icon_32@2x.png
+/bin/cp icon_256.png  ${iconset_dir}/icon_128@2x.png
+/bin/cp icon_512.png  ${iconset_dir}/icon_256@2x.png
+/bin/cp icon_1024.png ${iconset_dir}/icon_512@2x.png
+# build Cocoa/<app>.icns :
+if [ `uname` = Darwin ] ; then
+  cd ../Cocoa
+  iconutil -c icns ${app}.iconset
+  cd ${save_dir}
+fi

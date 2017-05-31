@@ -1,0 +1,16 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_lpat
+#define inlib_sg_lpat
+
+namespace inlib {
+namespace sg {
+
+typedef unsigned short lpat;
+
+}}
+
+#endif
+
+

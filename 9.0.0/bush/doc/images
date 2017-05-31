@@ -1,0 +1,3 @@
+#!/bin/sh -f
+
+grep '@image' $1 >> ./tmp_images

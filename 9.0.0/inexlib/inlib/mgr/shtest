@@ -1,0 +1,3 @@
+#!/bin/sh -f
+xxx=`./test.exe | tr -d '\n\r'`
+echo "|debug_${xxx}|"

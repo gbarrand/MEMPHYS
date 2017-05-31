@@ -1,0 +1,45 @@
+
+  // code produced automatically by the inlib wroot_trees app.
+
+  inlib::wroot::tree* m_Event_tree;
+  inlib::wroot::leaf<int>* m_Event_leaf_eventId;
+  inlib::wroot::leaf<int>* m_Event_leaf_inputEvtId;
+  inlib::wroot::leaf<int>* m_Event_leaf_interMode;
+  inlib::wroot::leaf<int>* m_Event_leaf_vtxVol;
+  std::vector<double> m_Event_vtxPos_vec;
+  inlib::wroot::leaf<int>* m_Event_leaf_nPart;
+  inlib::wroot::leaf<int>* m_Event_leaf_leptonIndex;
+  inlib::wroot::leaf<int>* m_Event_leaf_protonIndex;
+    
+    inlib::wroot::tree* m_Event_track_tree;
+    inlib::wroot::leaf<int>* m_Event_track_leaf_pId;
+    inlib::wroot::leaf<int>* m_Event_track_leaf_parent;
+    inlib::wroot::leaf<float>* m_Event_track_leaf_timeStart;
+    std::vector<double> m_Event_track_direction_vec;
+    inlib::wroot::leaf<double>* m_Event_track_leaf_mass;
+    inlib::wroot::leaf<double>* m_Event_track_leaf_pTot;
+    inlib::wroot::leaf<double>* m_Event_track_leaf_ETot;
+    std::vector<double> m_Event_track_momentum_vec;
+    std::vector<double> m_Event_track_startPos_vec;
+    std::vector<double> m_Event_track_stopPos_vec;
+    inlib::wroot::leaf<int>* m_Event_track_leaf_startVol;
+    inlib::wroot::leaf<int>* m_Event_track_leaf_stopVol;
+  inlib::wroot::leaf_object* m_Event_leaf_track;
+    
+  inlib::wroot::leaf<int>* m_Event_leaf_nHits;
+    
+    inlib::wroot::tree* m_Event_hit_tree;
+    inlib::wroot::leaf<int>* m_Event_hit_leaf_tubeId;
+    inlib::wroot::leaf<int>* m_Event_hit_leaf_totalPE;
+    std::vector<float> m_Event_hit_pe_vec;
+  inlib::wroot::leaf_object* m_Event_leaf_hit;
+    
+  inlib::wroot::leaf<int>* m_Event_leaf_nDigits;
+  inlib::wroot::leaf<double>* m_Event_leaf_sumPE;
+    
+    inlib::wroot::tree* m_Event_digit_tree;
+    inlib::wroot::leaf<int>* m_Event_digit_leaf_tubeId;
+    inlib::wroot::leaf<double>* m_Event_digit_leaf_pe;
+    inlib::wroot::leaf<double>* m_Event_digit_leaf_time;
+  inlib::wroot::leaf_object* m_Event_leaf_digit;
+    

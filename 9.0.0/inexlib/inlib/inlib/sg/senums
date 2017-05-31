@@ -1,0 +1,33 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_senums
+#define inlib_sg_senums
+
+// string version of sg::enums.
+
+#include "../S_STRING"
+#include <string>
+
+namespace inlib {
+namespace sg {
+
+INLIB_GLOBAL_STRING(gsto_mode)
+// values :
+INLIB_GLOBAL_STRING(gsto_gl_vbo)
+INLIB_GLOBAL_STRING(gsto_gl_list)
+INLIB_GLOBAL_STRING(gsto_memory)
+
+INLIB_GLOBAL_STRING(camera_type)
+// values :
+INLIB_GLOBAL_STRING(camera_ortho)
+INLIB_GLOBAL_STRING(camera_perspective)
+
+//INLIB_GLOBAL_STRING(layout_policy)
+// values :
+INLIB_GLOBAL_STRING(layout_text_under_image)
+INLIB_GLOBAL_STRING(layout_text_at_left_of_image)
+
+}}
+
+#endif

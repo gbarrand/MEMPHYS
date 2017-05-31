@@ -1,0 +1,12 @@
+
+if [ "${use_gtkglarea}" = "yes" ] ; then
+  if [ "${gtkglarea_home}" = "" ] ; then
+    echo 'bush/use/gtkglarea : variable gtkglarea_home not defined.'
+    exit
+  fi
+  ccflags="${ccflags} -I${gtkglarea_home}"
+  cppflags="${cppflags} -I${gtkglarea_home}"
+  ourex_pack_name=gtkglarea
+  . ${bush_home}/use/ourex_use
+fi
+

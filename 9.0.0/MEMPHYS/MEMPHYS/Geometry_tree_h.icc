@@ -1,0 +1,17 @@
+
+  // code produced automatically by the inlib wroot_trees app.
+
+  inlib::wroot::tree* m_Geometry_tree;
+  inlib::wroot::leaf<double>* m_Geometry_leaf_wcRadius;
+  inlib::wroot::leaf<double>* m_Geometry_leaf_wcLength;
+  std::vector<double> m_Geometry_wcOffset_vec;
+  inlib::wroot::leaf<double>* m_Geometry_leaf_pmtRadius;
+  inlib::wroot::leaf<int>* m_Geometry_leaf_nPMTs;
+    
+    inlib::wroot::tree* m_Geometry_pmtInfos_tree;
+    inlib::wroot::leaf<int>* m_Geometry_pmtInfos_leaf_pmtId;
+    inlib::wroot::leaf<int>* m_Geometry_pmtInfos_leaf_pmtLocation;
+    std::vector<double> m_Geometry_pmtInfos_pmtOrient_vec;
+    std::vector<double> m_Geometry_pmtInfos_pmtPosition_vec;
+  inlib::wroot::leaf_object* m_Geometry_leaf_pmtInfos;
+    

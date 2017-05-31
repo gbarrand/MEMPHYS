@@ -1,0 +1,24 @@
+
+if [ "${use_pythia8}" = "yes" ] ; then
+if [ "${build_use_not_our_pythia8}" = "yes" ] ; then
+  use_sys_pythia8=yes
+  use_our_pythia8=no
+else
+  use_sys_pythia8=no
+  use_our_pythia8=yes
+fi
+fi
+
+if [ "${use_sys_pythia8}" = "yes" ] ; then
+
+  echo "bush/use/pythia8 : use ourex pythia8."
+  exit
+
+fi
+
+
+if [ "${use_our_pythia8}" = "yes" ] ; then
+  ourex_pack_name=pythia8
+  . ${bush_home}/use/ourex_use
+  ccfiles="${ccfiles} ${pythia8_home}/LHAPDFDummy.cc"
+fi

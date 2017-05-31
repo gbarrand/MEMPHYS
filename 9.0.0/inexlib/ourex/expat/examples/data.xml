@@ -1,0 +1,80 @@
+<widget>
+  <class>Window</class>
+  <usize>500 500</usize>
+  <title>Lab/Main</title>
+  <!-- //////////////////////////////////// -->
+  <widget>
+    <class>VBox</class>
+    <widget>
+      <class>MenuBar</class>
+      <widget> <!-- /////////// File /////////// -->
+        <class>CascadeButton</class>
+	<label>File</label>
+        <widget>
+          <class>Menu</class>
+          <widget> <!-- File / Console -->
+            <class>MenuItem</class>
+	    <label>Console</label>
+	    <activate>tcl> UI_show consoleWindow </activate>
+          </widget>
+          <widget> <!-- File / Exec tcl... -->
+            <class>MenuItem</class>
+	    <label>Exec tcl...</label>
+	    <activate>tcl> setTclFileChooser;UI_show fileChooser </activate>
+          </widget>
+          <widget> <!-- File / session.tcl... -->
+            <class>MenuItem</class>
+	    <label>session.tcl</label>
+	    <activate>tcl> source session.tcl </activate>
+          </widget>
+          <widget> <!-- File / Continue -->
+            <class>MenuItem</class>
+	    <label>Continue</label>
+	    <activate>tcl> UI_exit </activate>
+          </widget>
+          <widget> <!-- File / Exit -->
+            <class>MenuItem</class>
+	    <label>Exit</label>
+	    <activate>tcl> UI_exit </activate>
+          </widget>
+        </widget>
+      </widget>
+
+      <widget> <!-- /////////// Viewer /////////// -->
+        <class>CascadeButton</class>
+	<label>Viewer</label>
+        <widget>
+          <class>Menu</class>
+          <widget> <!-- Viewer / next -->
+            <class>MenuItem</class>
+	    <label>next</label>
+	    <activate>tcl> Do3 set region next </activate>
+          </widget>
+          <widget> <!-- Viewer / 1x1 -->
+            <class>MenuItem</class>
+	    <label>1x1</label>
+	    <activate>tcl> Do3 page 1 1</activate>
+          </widget>
+          <widget> <!-- Viewer / 2x2 -->
+            <class>MenuItem</class>
+	    <label>2x2</label>
+	    <activate>tcl> Do3 page 2 2</activate>
+          </widget>
+        </widget>
+      </widget>
+
+      <widget> <!-- /////////// Viewers /////////// -->
+        <class>CascadeButton</class>
+	<label>Viewers</label>
+        <widget>
+          <class>Menu</class>
+          <name>viewers</name>
+        </widget>
+      </widget>
+
+    </widget>
+    <widget>
+      <class>Viewer</class>
+    </widget>
+  </widget>
+</widget>

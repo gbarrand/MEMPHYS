@@ -1,0 +1,12 @@
+
+if [ "${use_gl2ps}" = "yes" ] ; then
+  if [ "${gl2ps_home}" = "" ] ; then
+    echo 'bush/use/gl2ps : variable graphviz_home not defined.'
+    exit
+  fi
+  ccflags="${ccflags} -I${gl2ps_home}"
+  cppflags="${cppflags} -I${gl2ps_home}"
+  ourex_pack_name=gl2ps
+  . ${bush_home}/use/ourex_use
+fi
+
