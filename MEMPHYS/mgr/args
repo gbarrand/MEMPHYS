@@ -1,0 +1,26 @@
+
+#. ${bush_home}/args
+
+build_geant4_10x=no
+build_geant4_95=no
+build_geant4_82=no
+
+found=no
+
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -g410x) build_geant4_10x=yes;found=yes;;
+    -g495) build_geant4_95=yes;found=yes;;
+    -g482) build_geant4_82=yes;found=yes;;
+    
+     *) build_args="${build_args} $1";;
+  esac
+  shift
+done
+
+if [ ${found} = "no"  ] ; then build_geant4_10x=yes;fi
+
+if [ ${build_geant4_10x} = "yes" ] ; then
+  build_args="${build_args} -cpp_11 -bdir_suffix=_11"     
+fi

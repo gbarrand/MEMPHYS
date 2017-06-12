@@ -1,0 +1,61 @@
+
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+if [ ${build_geant4_10x} = "yes" ] ; then
+
+  if [ "${use_geant4}" = "yes" ] ; then
+    if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
+      geant4_home=/nfs/users/gbarrand/usr/local/geant4/10.03.p01
+    else
+      geant4_home=/usr/local/geant4/10.03.p01
+     #geant4_home=/usr/local/geant4/10.03.p01_g
+    fi
+  
+    cppflags="${cppflags} -I${geant4_home}/include/Geant4"
+
+    libs="${libs} -L${geant4_home}/lib -lG4readout -lG4run -lG4event -lG4tracking -lG4processes -lG4digits_hits -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global -lG4clhep"
+    libs="${libs} -lG4zlib"
+
+  fi
+  
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+elif [ ${build_geant4_95} = "yes" ] ; then
+  . ${bush_home}/use/geant4
+
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+elif [ ${build_geant4_82} = "yes" ] ; then
+
+  # geant4 82 :
+  if [ "${use_geant4}" = "yes" ] ; then
+
+    if [ "`uname -n | grep iridium.lunarc.lu.se`" != "" ] ; then
+      CLHEP_home=/nfs/users/gbarrand/usr/local/CLHEP/2.0.4.2
+      geant4_home=/nfs/users/gbarrand/usr/local/geant4/8.2
+    else
+      CLHEP_home=/usr/local/CLHEP/2.0.4.2
+      geant4_home=/usr/local/geant4/8.2
+    fi
+  
+    cppflags="${cppflags} -I${CLHEP_home}/include"
+
+    cppflags="${cppflags} -I${geant4_home}/include"
+
+    libs="${libs} -L${geant4_home}/lib -lG4readout -lG4run -lG4event -lG4tracking -lG4processes -lG4digits_hits -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global"
+
+    libs="${libs} -L${CLHEP_home}/lib -lCLHEP"
+  
+  fi
+  
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+else
+  echo 'use_geant4 : geant4 version not specified.'
+  exit
+fi
+
