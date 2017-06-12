@@ -116,11 +116,19 @@ void MEMPHYS::Trajectory::ShowTrajectory(std::ostream& os) const {
 
 //----------------------------------------------------------------------------------------------------
 
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand
+void MEMPHYS::Trajectory::DrawTrajectory() const {
+  // Invoke the default implementation in G4VTrajectory...
+  G4VTrajectory::DrawTrajectory();
+  // ... or override with your own code here.
+}//DrawTrajectory
+#else
 void MEMPHYS::Trajectory::DrawTrajectory(G4int i_mode) const {
   // Invoke the default implementation in G4VTrajectory...
   G4VTrajectory::DrawTrajectory(i_mode);
   // ... or override with your own code here.
 }//DrawTrajectory
+#endif
 
 //----------------------------------------------------------------------------------------------------
 

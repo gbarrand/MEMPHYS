@@ -32,7 +32,7 @@ G4ClassificationOfNewTrack MEMPHYS::StackingAction::ClassifyNewTrack (const G4Tr
       { 0.00, .0139, .0854, .169,  .203,  .206,  .211,   .202,   .188,   .167, 
 	.140,  .116, .0806, .0432, .0265, .0146, .00756, .00508, .00158, 0.00};
 
-    G4float photonWavelength = (2.0*M_PI*197.3)/(aTrack->GetTotalEnergy()/eV);
+    G4float photonWavelength = (2.0*CLHEP::pi*197.3)/(aTrack->GetTotalEnergy()/CLHEP::eV);
     G4float wavelengthQE  = 0.0;
     
     if ( photonWavelength <= 280.0 || photonWavelength >= 660.0) return fKill;

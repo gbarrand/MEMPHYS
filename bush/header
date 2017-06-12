@@ -2,10 +2,8 @@
 # to be sourced from an <app>/mgr/build scripts.
 
 build_gnu=no
-build_gnu_11=no
 build_intel=no
 build_clang=no
-build_clang_11=no
 build_visual=no
 build_sdk_mac=no
 build_sdk_mac_gnu=no
@@ -16,6 +14,7 @@ build_sdk_android=no
 
 build_m32=no
 
+build_cpp_11=no
 build_debug=no
 build_set_x=no
 build_verbose=no
@@ -50,6 +49,7 @@ build_g4flags=no
 
 build_bin_dir=
 build_ourex_bin_dir=
+build_bin_dir_suffix=
 
 build_args_file=
 
@@ -67,10 +67,8 @@ for arg in ${build_args} ; do
     # WARNING : if adding args here, look also for the ourex_args section in bush/ourex_args.
 
     -gnu)         build_gnu=yes;;
-    -gnu_11)      build_gnu_11=yes;;
     -intel)       build_intel=yes;;
     -clang)       build_clang=yes;;
-    -clang_11)    build_clang_11=yes;;
     -visual)      build_visual=yes;;
     -sdk_mac)     build_sdk_mac=yes;;
     -sdk_mac_gnu) build_sdk_mac_gnu=yes;;
@@ -79,6 +77,7 @@ for arg in ${build_args} ; do
     -sdk_iossim)  build_sdk_iossim=yes;;
     -sdk_android) build_sdk_android=yes;;
 
+    -cpp_11)       build_cpp_11=yes;;
     -g)            build_debug=yes;;
     -debug)        build_debug=yes;;
     -x)            build_set_x=yes;;
@@ -87,7 +86,8 @@ for arg in ${build_args} ; do
     -a_only)       build_shlib=no;;
     -m32)          build_m32=yes;;
     -bin_*)        build_bin_dir=${arg};;
-    -ourex_bin_*)  build_ourex_bin_dir=${arg};;   # See buse/use/ourex_use. Used in wall/mgr/build.
+    -ourex_bin_*)  build_ourex_bin_dir=${arg};;   # See bush/use/ourex_use. Used in wall/mgr/build.
+    -bdir_suffix*) build_bin_dir_suffix=${arg};;
 
     -clean)        build_clean=yes;;
 
@@ -168,6 +168,12 @@ if [ "${build_bin_dir}" != "" ] ; then
 else
   build_dir="bin_${config_name}"
   if [ ${build_m32} = yes ] ; then build_dir="${build_dir}_m32"; fi
+fi
+
+if [ "${build_bin_dir_suffix}" != "" ] ; then
+  # exa -bdir_suffix=_11
+  build_bin_dir_suffix=`echo ${build_bin_dir_suffix} | sed 's:.*\=::'`
+  build_dir="${build_dir}${build_bin_dir_suffix}"
 fi
 
 if [ ${build_debug} = "yes" ] ; then

@@ -16,6 +16,7 @@
 #include "G4DigiManager.hh"
 #include "G4UnitsTable.hh"
 #include "G4UIcmdWith3VectorAndUnit.hh"
+#include "G4Version.hh"
 
 //std
 #include <set>
@@ -34,6 +35,11 @@
 #include "../MEMPHYS/WCDigitizer.hh"
 #include "../MEMPHYS/DetectorConstruction.hh"
 
+#include <inlib/mnmx>
+
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand.
+using namespace CLHEP;
+#endif
 
 MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,
 				  MEMPHYS::RunAction* myRun, 
@@ -135,7 +141,11 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   
   int startVol = -1;
   int stopVol  = -1;
+
+  bool dump_track = false;
+  //dump_track = true;  
   
+  if(dump_track)
   G4cout << "----> Tk{Beam}: " 
 	 << " pId " << pId
 	 << " parent " << parent
@@ -148,21 +158,17 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << " px,py,pz " << px << " " << py << " " << pz << "\n"
 	 << G4endl;
 
-  void* tracks = 0;
-  void* hits = 0;
-  void* digits = 0;
-
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_Event_track_tree->reset();
   fAnalysis.m_Event_hit_tree->reset();
   fAnalysis.m_Event_digit_tree->reset();
 #endif
-    
+
   fill_track(pId,parent,timeStart,dx,dy,dz,
              mass,pTot,ETot,px,py,pz,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             startVol,stopVol,tracks);
+             startVol,stopVol);
 
   //----------------
   // The target
@@ -204,6 +210,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   startVol = -1;
   stopVol  = -1;
 
+  if(dump_track)
   G4cout << "----> Tk{Target}: " 
 	 << " pId " << pId
 	 << " parent " << parent
@@ -220,7 +227,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
              mass,pTot,ETot,px,py,pz,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             startVol,stopVol,tracks);
+             startVol,stopVol);
 
   // --------------------------
   //  Loop over Trajectories
@@ -349,6 +356,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     stopVolumeName = trj->GetStoppingVolume()->GetName();
     stopVol  = EventFindStoppingVolume(stopVolumeName);
     
+    if(dump_track)
     G4cout << "----> Tk{"<<ntrack<<"}: " 
 	   << " pId " << pId
 	   << " parent " << parent
@@ -367,7 +375,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
                mass,pTot,ETot,px,py,pz,
                start.x()/cm,start.y()/cm,start.z()/cm,
                stop.x()/cm,stop.y()/cm,stop.z()/cm,
-               startVol,stopVol,tracks);
+               startVol,stopVol);
     
     ntrack++;
 
@@ -405,6 +413,9 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     G4int collectionID = SDman->GetCollectionID(name);
     WCHC = (WCHitsCollection*)HCE->GetHC(collectionID);
   }
+  if (!WCHC) {
+    G4cout << "(JEC:EndOfEventAction): WARNING no WC hits collection found" << G4endl;
+  }
 
   
   //JEC 14/6/06 START the Digitization should be done before manipulation of hit (ie. sorting the time!)
@@ -427,8 +438,6 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     WCDM->Digitize();
     //JEC 14/6/06 END
 
-    //nHits = std::min(500,WCHC->entries());                              //JEC: limit the number of hits
-
     nHits = WCHC->entries();
  
     //JEC FIWME save the time information also later
@@ -442,7 +451,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 #ifdef APP_USE_INLIB_WROOT
       fAnalysis.m_Event_hit_pe_vec.clear();
 #endif      
-      for (G4int j=0; j<std::min(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
+      for (G4int j=0; j<inlib::mn<G4int>(100,totalPE) ; j++) {                  //JEC: limit the number of "impacts"
 	peArrivalTime = (*WCHC)[i]->GetTime(j); 
 #ifdef APP_USE_INLIB_WROOT
 	fAnalysis.m_Event_hit_pe_vec.push_back(peArrivalTime);
@@ -450,7 +459,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
         fill_hit_time(peArrivalTime); //JEC 5/4/06 fill the Hit time tuple
       }
       
-      fill_hit(tubeID_hit,totalPE,hits);
+      fill_hit(tubeID_hit,totalPE);
     }
   }//Hit container
   
@@ -497,12 +506,19 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 
       tubeTime           = (*WCDC)[i]->GetTime();
       
-      fill_digit(tubeID,tubePhotoElectrons,tubeTime,digits);
+      fill_digit(tubeID,tubePhotoElectrons,tubeTime);
       //	(*WCDC)[i]->Print();
     }//loop on digits
   } else {
     G4cout << "(JEC) EventAction: No Digits for Event: "  << event_id << G4endl;
   }//digits collection
+
+  G4cout << "----> Event : " 
+	 << " nHits " << nHits
+	 << " nDigits " << nDigits
+	 << " ntrack " << ntrack
+	 << " sumPE " << sumPE
+	 << G4endl;
   
   fill_event(event_id,vecRecNumber,mode,vtxvol,
              vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,ntrack,
@@ -646,7 +662,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
                                       double mass,double pTot, double ETot,double px,double py,double pz,
                                       double startPos_x,double startPos_y,double startPos_z,
                                       double stopPos_x,double stopPos_y,double stopPos_z,
-             	                      int startVol,int stopVol,void* container) {
+             	                      int startVol,int stopVol) {
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_Event_track_leaf_pId->fill(pId);
   fAnalysis.m_Event_track_leaf_parent->fill(parent);  
@@ -686,7 +702,7 @@ void MEMPHYS::EventAction::fill_track(int pId,int parent,float timeStart,
 #endif 
 }
  
-void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,void* container) {
+void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE) {
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_Event_hit_leaf_tubeId->fill(tubeID_hit);
   fAnalysis.m_Event_hit_leaf_totalPE->fill(totalPE);
@@ -698,7 +714,7 @@ void MEMPHYS::EventAction::fill_hit(int tubeID_hit,int totalPE,void* container) 
 #endif   
 }
 
-void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime,void* container) {
+void MEMPHYS::EventAction::fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime) {
 #ifdef APP_USE_INLIB_WROOT
   fAnalysis.m_Event_digit_leaf_tubeId->fill(tubeID);
   fAnalysis.m_Event_digit_leaf_pe->fill(tubePhotoElectrons);

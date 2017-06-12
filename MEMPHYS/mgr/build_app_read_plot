@@ -2,7 +2,7 @@
 
 . ./find_bush
 
-. ${bush_home}/args
+. ./args
 
 . ${bush_home}/ourex_header
 
@@ -17,8 +17,13 @@ use_csz=yes
 use_freetype=yes
 use_zlib=yes
 use_GL=yes
-use_GLX=yes
-use_X11=yes
+
+if [ ${build_visual} = "yes" ] ; then
+  use_win32=yes
+else
+  use_GLX=yes
+  use_X11=yes
+fi
 
 . ${bush_home}/use/exlib
 . ${bush_home}/use/inlib
@@ -28,6 +33,7 @@ use_X11=yes
 . ${bush_home}/use/GL
 . ${bush_home}/use/GLX
 . ${bush_home}/use/X11
+. ${bush_home}/use/win32
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////

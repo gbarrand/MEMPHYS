@@ -43,6 +43,12 @@ if [ "${use_sys_Python}" = "yes" ] ; then
 
     #Python_home=/cygdrive/c/usr/local/Python27
     Python_home=c:/usr/local/Python27
+
+    if [ ! -d "${Python_home}" ] ; then
+      echo "bush/use/Python : WARNING : not found under ${Python_home}"
+      exit
+    fi
+
     cppflags="${cppflags} -I${Python_home}/include"
     libs="${libs} ${Python_home}/libs/python27.lib"
 

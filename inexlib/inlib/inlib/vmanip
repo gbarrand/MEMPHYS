@@ -214,6 +214,25 @@ inline bool add(std::vector<T>& a_vec,const std::vector<T>& a_v){
 }
 
 template <class T>
+inline bool vequ(const std::vector<T>& a_vec,const std::vector<T>& a_v){
+  if(a_vec.size()!=a_v.size()) return false;
+  typedef typename std::vector<T>::const_iterator it_t;
+  typedef typename std::vector<T>::const_iterator cit_t;
+  it_t it = a_vec.begin();
+  cit_t vit = a_v.begin();
+  //size_t count = 0;
+  for(;it!=a_vec.end();++it,++vit
+  //  ,count++
+  ) {
+    if((*it)!=(*vit))
+    //{::printf("debug : %lu : %d %d\n",count,(*it),(*vit));
+      return false;
+    //}
+  }
+  return true;
+}
+
+template <class T>
 inline bool vadd(std::vector<T>& a_vec,const std::vector<T>& a_v) {return add<T>(a_vec,a_v);}
 
 template <class T>

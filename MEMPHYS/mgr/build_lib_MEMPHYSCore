@@ -2,7 +2,8 @@
 
 . ./find_bush
 
-. ${bush_home}/args
+. ./args
+
 . ${bush_home}/ourex_header
 
 libname=MEMPHYSCore
@@ -21,11 +22,12 @@ if [ ${build_use_wroot} = yes ] ; then
 fi
 
 cppfiles=
+
+cppfiles="${cppfiles} ../source/PhysicsList.cpp"
 cppfiles="${cppfiles} ../source/Analysis.cpp"
 cppfiles="${cppfiles} ../source/DetectorConstruction.cpp"
 cppfiles="${cppfiles} ../source/DetectorMessenger.cpp"
 cppfiles="${cppfiles} ../source/EventAction.cpp"
-cppfiles="${cppfiles} ../source/PhysicsList.cpp"
 cppfiles="${cppfiles} ../source/PhysicsMessenger.cpp"
 cppfiles="${cppfiles} ../source/PrimaryGeneratorAction.cpp"
 cppfiles="${cppfiles} ../source/PrimaryGeneratorMessenger.cpp"
@@ -49,8 +51,9 @@ cppfiles="${cppfiles} ../source/WCSD.cpp"
 use_inlib=yes
 use_geant4=yes
 
+. ./use_geant4
+
 . ${bush_home}/use/inlib
-. ./geant4_82
 
 #////////////////////////////////////
 #////////////////////////////////////

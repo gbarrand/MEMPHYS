@@ -92,7 +92,11 @@ cd "${save_dir}"
 /bin/cp ./doxygen/table.html "${web_dir}"/.
 /bin/cp ${bush_home}/doc/table.css "${web_dir}"/.
 
-/bin/cp ./doxygen/icon.png "${web_dir}"/.
+if [ -f ./doxygen/icon.png ] ; then
+  /bin/cp ./doxygen/icon.png "${web_dir}"/.
+else
+  echo 'file ./doxygen/icon.png not found.'
+fi    
 
 # we take the doxygen.css of the 16.8. Recent
 # doxygen.css makes that the table font is more

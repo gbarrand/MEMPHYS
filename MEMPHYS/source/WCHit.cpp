@@ -159,7 +159,7 @@ void MEMPHYS::WCHit::Print() {
 	 << "\tTime: "; 
 
   for (int i = 0; i < totalPe; i++) {
-    G4cout << time[i]/ns << " ";
+    G4cout << time[i]/CLHEP::ns << " ";
     if ( i%10 == 0 && i != 0) 
       G4cout << G4endl << "\t";
   }

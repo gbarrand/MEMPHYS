@@ -83,10 +83,15 @@
 #define inflateReset ourex_zlib_inflateReset
 #define inflateReset2 ourex_zlib_inflateReset2
 #define inflateUndermine ourex_zlib_inflateUndermine
-#define zError ourex_zlib_zError
-#define zlibCompileFlags ourex_zlib_zlibCompileFlags
-#define zlibVersion ourex_zlib_zlibVersion
 */
+
+/* to avoid clash with libG4zlib : */
+#define _dist_code       ourex_zlib__dist_code
+#define _length_code     ourex_zlib__length_code
+#define z_errmsg         ourex_zlib_zerrmsg
+#define zError           ourex_zlib_zError
+#define zlibCompileFlags ourex_zlib_zlibCompileFlags
+#define zlibVersion      ourex_zlib_zlibVersion
 
 #include "_zlib.h"
 

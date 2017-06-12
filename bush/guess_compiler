@@ -1,13 +1,9 @@
 
 if [ ${build_gnu} = "yes" ] ; then
   echo dummy > /dev/null
-elif [ ${build_gnu_11} = "yes" ] ; then
-  echo dummy > /dev/null
 elif [ ${build_intel} = "yes" ] ; then
   echo dummy > /dev/null
 elif [ ${build_clang} = "yes" ] ; then
-  echo dummy > /dev/null
-elif [ ${build_clang_11} = "yes" ] ; then
   echo dummy > /dev/null
 elif [ ${build_visual} = "yes" ] ; then
   echo dummy > /dev/null
@@ -36,4 +32,3 @@ else
     build_gnu=yes
   fi
 fi
-

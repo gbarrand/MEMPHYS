@@ -29,7 +29,7 @@ bush_home=`dirname $0`
 if [ "${max_depth}" = "" ] ; then
   find ${directory_path} -name '*' -type f -print > tmp_0
 else    
-  find ${directory_path} -name '*' -maxdepth ${max_depth} -type f -print > tmp_0
+  find ${directory_path} -maxdepth ${max_depth} -name '*' -type f -print > tmp_0
 fi
 
 cc -o c_count ${bush_home}/c/c_count.c

@@ -19,7 +19,7 @@ fi
 mkdir -p ../Android/res/raw
 
 # maxdepth 1 to not include python lib content.
-find ../comres -name '*' -maxdepth 1 -type f -print > ./comres_tmp
+find ../comres -maxdepth 1 -name '*' -type f -print > ./comres_tmp
 grep -v favicon.ico ./comres_tmp > ./tmp_0;mv ./tmp_0 ./comres_tmp
 ${bush_home}/find_rm ../Android/res/raw '*_*'
 for file in $(cat ./comres_tmp) ; do

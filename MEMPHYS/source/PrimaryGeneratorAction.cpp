@@ -20,21 +20,48 @@
 #include "../MEMPHYS/DetectorConstruction.hh"
 #include "../MEMPHYS/PrimaryGeneratorMessenger.hh"
 
+// Returns a vector with the tokens
+inline std::vector<std::string> tokenize( std::string separators, std::string input )  {
+  std::string::size_type startToken = 0, endToken; // Pointers to the token pos
+  std::vector<std::string> tokens;  // Vector to keep the tokens
+  
+  if( separators.size() > 0 && input.size() > 0 ) 
+    {
+    
+      while( startToken < input.size() )
+	{
+	  // Find the start of token
+	  startToken = input.find_first_not_of( separators, startToken );
+      
+	  // If found...
+	  if( startToken != input.npos ) 
+	    {
+	      // Find end of token
+	      endToken = input.find_first_of( separators, startToken );
+	      if( endToken == input.npos )
+		// If there was no end of token, assign it to the end of string
+		endToken = input.size();
+        
+	      // Extract token
+	      tokens.push_back( input.substr( startToken, endToken - startToken ) );
+        
+	      // Update startToken
+	      startToken = endToken;
+	    }
+	}
+    }
+  
+  return tokens;
+}//tokenize
 
-using std::vector;
-using std::string;
-using std::fstream;
-
-vector<string> tokenize( string separators, string input );
-
-inline vector<string> readInLine(fstream& inFile, int lineSize, char* inBuf) {
+inline std::vector<std::string> readInLine(std::fstream& inFile, int lineSize, char* inBuf) {
   // Read in line break it up into tokens
   inFile.getline(inBuf,lineSize);
   return tokenize(" $", inBuf);
 }//readInLine
 
-inline float atof( const string& s ) {return std::atof( s.c_str() );}
-inline int   atoi( const string& s ) {return std::atoi( s.c_str() );}
+inline float atof( const std::string& s ) {return std::atof( s.c_str() );}
+inline int   atoi( const std::string& s ) {return std::atoi( s.c_str() );}
 
 
 
@@ -53,7 +80,7 @@ MEMPHYS::PrimaryGeneratorAction::PrimaryGeneratorAction(MEMPHYS::DetectorConstru
   
   G4int n_particle = 1;
   particleGun = new G4ParticleGun(n_particle);
-  particleGun->SetParticleEnergy(1.0*GeV);
+  particleGun->SetParticleEnergy(1.0*CLHEP::GeV);
   particleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.0));
 
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
@@ -62,7 +89,7 @@ MEMPHYS::PrimaryGeneratorAction::PrimaryGeneratorAction(MEMPHYS::DetectorConstru
     SetParticleDefinition(particleTable->FindParticle(particleName="mu+"));
 
   particleGun->
-    SetParticlePosition(G4ThreeVector(0.*m,0.*m,0.*m));
+    SetParticlePosition(G4ThreeVector(0.*CLHEP::m,0.*CLHEP::m,0.*CLHEP::m));
     
   messenger = new PrimaryGeneratorMessenger(this);
   useMulineEvt = false;
@@ -108,7 +135,7 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     if (useNuanceTextFormat) {
       const int lineSize=100;
       char      inBuf[lineSize];
-      vector<string> token(1);
+      std::vector<std::string> token(1);
       
       token = readInLine(inputFile, lineSize, inBuf);
       
@@ -125,9 +152,9 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	// Read the Vertex line
 	
 	token = readInLine(inputFile, lineSize, inBuf);
-	vtx = G4ThreeVector(atof(token[1])*cm,
-			    atof(token[2])*cm,
-			    atof(token[3])*cm);
+	vtx = G4ThreeVector(atof(token[1])*CLHEP::cm,
+			    atof(token[2])*CLHEP::cm,
+			    atof(token[3])*CLHEP::cm);
 	
 	// true : Generate vertex in Rock , false : Generate vertex in WC tank
 	SetGenerateVertexInRock(false);
@@ -146,13 +173,13 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	if (IsGeneratingVertexInRock()){
 	  
 	  if (beamprofile_is_18m){  //  beam size(xy) is 36 x 36 m (+-18m)
-	    wclen = rockthickness*2. + 34.5*m; 
+	    wclen = rockthickness*2. + 34.5*CLHEP::m; 
 	  }  else { //  beam size(xy) is 8 x 8 m (+-4m)
-	    wclen = rockthickness+1.48*m; //vertex is inside the upstream rock
+	    wclen = rockthickness+1.48*CLHEP::m; //vertex is inside the upstream rock
 	  }//eo if beamprofile
 	  
 	  //JEC 18/11/05 use a default value FIXME
-	  wczpos = -21.92*m - rockthickness + wclen/2.; // curved rock wall -23.68*m
+	  wczpos = -21.92*CLHEP::m - rockthickness + wclen/2.; // curved rock wall -23.68*m
 	  //	      if (_myconfiguration==2){
 	  //	      } else { // _myconfiguration==1
 	  //	      wczpos = -21.92*m - rockthickness + wclen/2.; // curved rock wall -23.68*m
@@ -163,8 +190,8 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	  // 		}
 	  //} 
 	} else { // vertex is inside Water tank
-	  wclen = 16.0*m; // TO DO this should be retrieved!
-	  wczpos = 0.*m;  // TO DO this should be retrieved!
+	  wclen = 16.0*CLHEP::m; // TO DO this should be retrieved!
+	  wczpos = 0.*CLHEP::m;  // TO DO this should be retrieved!
 	}//eo if Vertex in Rock
 	
 	if (fabs(vtx[2]) < 0.000001) {
@@ -199,7 +226,7 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	
 	token = readInLine(inputFile, lineSize, inBuf);
 	beampdg = atoi(token[1]);
-	beamenergy = atof(token[2])*MeV;
+	beamenergy = atof(token[2])*CLHEP::MeV;
 	beamdir = G4ThreeVector(atof(token[3]),
 				atof(token[4]),
 				atof(token[5]));
@@ -208,7 +235,7 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	
 	token = readInLine(inputFile, lineSize, inBuf);
 	targetpdg = atoi(token[1]);
-	targetenergy = atof(token[2])*MeV;
+	targetenergy = atof(token[2])*CLHEP::MeV;
 	targetdir = G4ThreeVector(atof(token[3]),
 				  atof(token[4]),
 				  atof(token[5]));
@@ -227,7 +254,7 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	  // that leave the nucleus, tagged by "0"
 	  if ( token[6] == "0") {
 	    G4int pdgid = atoi(token[1]);
-	    G4double energy = atof(token[2])*MeV;
+	    G4double energy = atof(token[2])*CLHEP::MeV;
 	    G4ThreeVector dir = G4ThreeVector(atof(token[3]),
 					      atof(token[4]),
 					      atof(token[5]));
@@ -275,38 +302,4 @@ void MEMPHYS::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 }//GeneratePrimaries
 
 //-------------------------------------------------------------------------------------------------
-
-// Returns a vector with the tokens
-vector<string> tokenize( string separators, string input )  {
-  unsigned int startToken = 0, endToken; // Pointers to the token pos
-  vector<string> tokens;  // Vector to keep the tokens
-  
-  if( separators.size() > 0 && input.size() > 0 ) 
-    {
-    
-      while( startToken < input.size() )
-	{
-	  // Find the start of token
-	  startToken = input.find_first_not_of( separators, startToken );
-      
-	  // If found...
-	  if( startToken != input.npos ) 
-	    {
-	      // Find end of token
-	      endToken = input.find_first_of( separators, startToken );
-	      if( endToken == input.npos )
-		// If there was no end of token, assign it to the end of string
-		endToken = input.size();
-        
-	      // Extract token
-	      tokens.push_back( input.substr( startToken, endToken - startToken ) );
-        
-	      // Update startToken
-	      startToken = endToken;
-	    }
-	}
-    }
-  
-  return tokens;
-}//tokenize
 

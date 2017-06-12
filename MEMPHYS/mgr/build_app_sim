@@ -2,7 +2,8 @@
 
 . ./find_bush
 
-. ${bush_home}/args
+. ./args
+
 . ${bush_home}/ourex_header
 
 #//////////////////////////////////////////////////////
@@ -13,17 +14,20 @@ cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
 use_geant4=yes
 use_inlib=yes
 use_zlib=yes
+use_socket=yes
 
-. ./geant4_82
+. ./use_geant4
+
 . ${bush_home}/use/inlib
 . ${bush_home}/use/zlib
+. ${bush_home}/use/socket
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 
 if [ ${build_visual} = "yes" ] ; then
-  libs="${build_path}/MEMPHYSCore.lib ${libs}"
+  libs="${build_path}/libMEMPHYSCore.a ${libs}"
 else
   libs="-L${build_path} -lMEMPHYSCore ${libs}"
 fi

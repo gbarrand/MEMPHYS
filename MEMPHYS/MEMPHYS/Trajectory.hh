@@ -11,6 +11,7 @@
 #include "G4TrajectoryPoint.hh"
 #include "G4Track.hh"
 #include "G4Step.hh"
+#include "G4Version.hh"
 
 //std
 #include <stdlib.h>
@@ -55,7 +56,11 @@ class Trajectory : public G4VTrajectory {
   { return (*positionRecord)[i]; }
   //JEC FIXME what to do with these Show/Draw routines...
   virtual void ShowTrajectory(std::ostream& os=G4cout) const;
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand
+  virtual void DrawTrajectory() const;
+#else
   virtual void DrawTrajectory(G4int i_mode=0) const;
+#endif
 
   //Used by G.Barrand (not yet 6/4/06)
   virtual const std::map<G4String,G4AttDef>* GetAttDefs() const;

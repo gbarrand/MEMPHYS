@@ -20,11 +20,6 @@ if [ ${build_gnu} = "yes" ] ; then
     cc_linker=gcc
   fi
 
-elif [ ${build_gnu_11} = "yes" ] ; then
-  config_name=gnu_11
-  cc_compiler=gcc
-  cc_linker=gcc
-
 elif [ ${build_intel} = "yes" ] ; then
   config_name=intel
   cc_compiler=icc
@@ -32,11 +27,6 @@ elif [ ${build_intel} = "yes" ] ; then
 
 elif [ ${build_clang} = "yes" ] ; then
   config_name=clang
-  cc_compiler=clang
-  cc_linker=clang
-
-elif [ ${build_clang_11} = "yes" ] ; then
-  config_name=clang_11
   cc_compiler=clang
   cc_linker=clang
 

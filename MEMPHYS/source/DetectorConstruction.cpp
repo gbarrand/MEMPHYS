@@ -42,6 +42,7 @@
 #include "G4SDManager.hh"
 #include "G4RunManager.hh"
 #include "globals.hh"
+#include "G4Version.hh"
 
 #include <fstream>
 #include <sstream>
@@ -51,7 +52,11 @@
 #include "../MEMPHYS/WCSD.hh"
 #include "../MEMPHYS/DetectorMessenger.hh"
 #include "../MEMPHYS/Cast.hh"
-#include "../MEMPHYS/Analysis.hh"
+#include "../MEMPHYS/Analysis.hh" //on Windows may bring <windows.h> that 
+
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand.
+using namespace CLHEP;
+#endif
 
 MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis) 
 :fAnalysis(aAnalysis)
@@ -1665,7 +1670,7 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
     
   //---Vaccuum
   G4double density     = universe_mean_density;              //from PhysicalConstants.h
-  G4double pressure    = 1.e-19*pascal;
+  G4double pressure    = 1.e-19*hep_pascal;
   G4double temperature = 0.1*kelvin;
   G4double a = 1.01*g/mole;
   new G4Material("Vaccuum", 1., a, density,

@@ -2,7 +2,7 @@
 
 . ./find_bush
 
-. ${bush_home}/args
+. ./args
 
 . ${bush_home}/ourex_header
 

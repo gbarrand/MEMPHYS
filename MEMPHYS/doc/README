@@ -4,7 +4,9 @@
  To run MEMPHYS_sim on Lund iridium :
 
     UNIX> cd <install_path>/MEMPHYS/<version>
-    UNIX> <if needed edit run_setup[.sh,.csh] to point to geant4 data file directories>
+    UNIX> <if needed edit run_g410x_setup[.sh,.csh] to point to geant4 10.x data file directories>
+   Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
+  ( csh> source gcc_493.csh # on Lund iridium )
     UNIX> cd exa_run
     UNIX> ./sim_slurm       # to run on your local machine.
     UNIX> sbatch sim_slurm  # to spawn a batch on the iridium cluster.
@@ -14,8 +16,11 @@
  //////////////////////////////////////////////////////////////////////////////////////
  To analyse a MEMPHYS root file produced by a MEMPHYS_sim program :
  
+    UNIX> ../bin/MEMPHYS_read_plot_offscreen                  # on the default MEMPHYS.root file.
     UNIX> ../bin/MEMPHYS_read_plot                            # on the default MEMPHYS.root file.
     UNIX> ../bin/MEMPHYS_read_plot MEMPHYS_<job>_<task>.root  # on a MEMPHYS root file produced by a slurm task.
+
+ Note that the MEMPHYS_read_plot_offscreen program produces read_plot_offscreen[.png,.ps,_zb.ps] files without the need to tie to any interactive GUI and graphics system.
 
  //////////////////////////////////////////////////////////////////////////////////////
  //////////////////////////////////////////////////////////////////////////////////////

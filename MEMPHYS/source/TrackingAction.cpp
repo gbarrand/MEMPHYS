@@ -61,7 +61,7 @@ void MEMPHYS::TrackingAction::PreUserTrackingAction(const G4Track* aTrack) {
   // due to lazy evaluation of the 'or' in C++ the order is important
   //    G4cout << aTrack->GetParentID() << "\n";
 
-  G4double thresholdTobeSaved = 10.0*MeV; //JEC FIXME put in the messenger
+  G4double thresholdTobeSaved = 10.0*CLHEP::MeV; //JEC FIXME put in the messenger
 
   if( ( aTrack->GetParentID()==0 ) || 
       ( (creatorProcess!=0) && ProcessList.count(creatorProcess->GetProcessName()) ) || 

@@ -46,9 +46,9 @@ class EventAction : public G4UserEventAction {
                   double mass,double pTot, double ETot,double px,double py,double pz,
                   double startPos_x,double startPos_y,double startPos_z,
                   double stopPos_x,double stopPos_y,double stopPos_z,
-                  int startVol,int stopVol,void*);
-  void fill_hit(int tubeID_hit,int totalPE,void*);
-  void fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime,void*);
+                  int startVol,int stopVol);
+  void fill_hit(int tubeID_hit,int totalPE);
+  void fill_digit(int tubeID,double tubePhotoElectrons,double tubeTime);
   void fill_event(int event_id,int vecRecNumber,int mode,int vtxVol,
                   double vtx_x,double vtx_y,double vtx_z,int ntrack,
                   int leadingLeptonIndex,int outgoingProtonIndex,

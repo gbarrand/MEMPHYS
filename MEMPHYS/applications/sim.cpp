@@ -2,11 +2,11 @@
 #include "G4ios.hh"
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
+#include "G4Version.hh"
 
 //MEMPHYS:
 #include "../MEMPHYS/Analysis.hh"
 #include "../MEMPHYS/DetectorConstruction.hh"
-#include "../MEMPHYS/PhysicsList.hh"
 #include "../MEMPHYS/PhysicsMessenger.hh"
 #include "../MEMPHYS/PrimaryGeneratorAction.hh"
 #include "../MEMPHYS/EventAction.hh"
@@ -14,6 +14,8 @@
 #include "../MEMPHYS/StackingAction.hh"
 #include "../MEMPHYS/TrackingAction.hh"
 #include "../MEMPHYS/SteppingAction.hh"
+
+#include "../MEMPHYS/PhysicsList.hh"
 
 #ifdef APP_USE_INLIB_WROOT
 #ifdef INLIB_MEM
@@ -37,24 +39,10 @@ int main(int a_argc,char** a_argv) {
 #endif
 
   inlib::args args(a_argc,a_argv);
-    
-  if(!inlib::is_env("NeutronHPCrossSections")) {
-    std::cout << "env variable NeutronHPCrossSections not defined." << std::endl;
-    return EXIT_FAILURE;
-  }
-  if(!inlib::is_env("G4LEVELGAMMADATA")) {
-    std::cout << "env variable G4LEVELGAMMADATA not defined." << std::endl;
-    return EXIT_FAILURE;
-  }
-  if(!inlib::is_env("G4RADIOACTIVEDATA")) {
-    std::cout << "env variable G4RADIOACTIVEDATA not defined." << std::endl;
-    return EXIT_FAILURE;
-  }
-  if(!inlib::is_env("G4LEDATA")) {
-    std::cout << "env variable G4LEDATA not defined." << std::endl;
-    return EXIT_FAILURE;
-  }
 
+  //////////////////////////////////////////////////////////////////////////////
+  /// args /////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   std::string root_file;
   
   if(args.is_arg("-pid_root")) {
@@ -69,6 +57,40 @@ int main(int a_argc,char** a_argv) {
     std::cout << "output file is " << inlib::sout(root_file) << std::endl;  
   } else {
     if(!args.file(root_file)) root_file = "MEMPHYS.root";
+  }
+
+  unsigned int nevent;
+  args.find<unsigned int>("-events",nevent,10);
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  
+ {std::string _G4VERSION_NUMBER;
+  inlib::num2s(G4VERSION_NUMBER,_G4VERSION_NUMBER);
+  std::cout << "G4VERSION_NUMBER : " << _G4VERSION_NUMBER << std::endl;}
+  
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=950
+  if(!inlib::is_env("G4NEUTRONHPDATA")) {
+    std::cout << "env variable G4NEUTRONHPDATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+#else  
+  if(!inlib::is_env("NeutronHPCrossSections")) {
+    std::cout << "env variable NeutronHPCrossSections not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+#endif  
+  if(!inlib::is_env("G4LEVELGAMMADATA")) {
+    std::cout << "env variable G4LEVELGAMMADATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if(!inlib::is_env("G4RADIOACTIVEDATA")) {
+    std::cout << "env variable G4RADIOACTIVEDATA not defined." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if(!inlib::is_env("G4LEDATA")) {
+    std::cout << "env variable G4LEDATA not defined." << std::endl;
+    return EXIT_FAILURE;
   }
 
   //Book all the histo, tuple 
@@ -120,7 +142,7 @@ int main(int a_argc,char** a_argv) {
     UI->ApplyCommand("/control/execute "+file);  
   }
 
-  runManager->BeamOn(10);
+  runManager->BeamOn(nevent);
 
   //JEC interactive session  delete visManager;
 

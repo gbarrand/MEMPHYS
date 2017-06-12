@@ -22,12 +22,14 @@ public:
   void Digitize();
   
 private:
+  template <class T> static T mn(const T& a,const T& b) {return (a<b?a:b);}    
   static void Threshold(double& pe,int& iflag){
     double x = pe+0.1; iflag=0;
     double thr; double RDUMMY,err;
     if ( x<1.1) {
-      thr = std::min(1.0,
-	     -0.06374+x*(
+      //thr = std::min(1.0, //problem with Windows/VC++.
+      thr = mn(1.0,
+	       -0.06374+x*(
 	        3.748+x*(
 	       -63.23+x*(
 		452.0+x*(

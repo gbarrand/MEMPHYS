@@ -192,6 +192,11 @@ public:
     return parent::base_divide(a_histo);
   }
 
+  bool equals_TH(const h2& a_from,const TW& a_prec,TW(*a_fabs)(TW)) const {
+    if(!parent::equals_TH(a_from,a_prec,a_fabs,true)) return false;    
+    return true;
+  }
+  
 public: //CERN-ROOT API
   bool Fill(TC aX,TC aY,TW aWeight = 1) {return fill(aX,aY,aWeight);}
   

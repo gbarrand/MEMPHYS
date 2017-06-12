@@ -1,9 +1,13 @@
 
  To build 
    UNIX> cd MEMPHYS/mgr
-   UNIX> <in geant4_82 edit geant4_home to point to your geant4 installation>
-   UNIX> <in run_setup[.sh,.csh] edit G4DATA env variable to point to the geant4 data>
+   UNIX> <in ./use_geant4 edit geant4_home to point to your geant4 10.x installation>
+   UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+  Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
+  ( csh> source gcc_493.csh # on Lund iridium )
    UNIX> ./build
+  (UNIX> ./build -v  # to see built files.)
+  (UNIX> ./build -x  # for a full trace.)
 
  If having CERN-ROOT :
    UNIX> <in cern_root_setup[.sh,.csh] edit root_home to point to your CERN-ROOT installation>
@@ -12,7 +16,7 @@
     csh> source ./cern_root_setup.csh
    UNIX> ./build -root
 
- At end a distrib ready file should be under :
+ At end of build a zip file ready for distribution should be under :
    bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
 
 

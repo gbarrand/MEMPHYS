@@ -24,12 +24,9 @@ if [ ${build_gnu} = "yes" ] ; then
     cpp_linker=g++
   fi
 
-elif [ ${build_gnu_11} = "yes" ] ; then
-  config_name=gnu_11
-  cpp_compiler=g++
-  cpp_linker=g++
-
-  cppflags="${cppflags} -std=c++11"
+  if [ ${build_cpp_11} = "yes" ] ; then
+    cppflags="${cppflags} -std=c++11"
+  fi
 
 elif [ ${build_intel} = "yes" ] ; then
   config_name=intel
@@ -41,12 +38,9 @@ elif [ ${build_clang} = "yes" ] ; then
   cpp_compiler=clang++
   cpp_linker=clang++
 
-elif [ ${build_clang_11} = "yes" ] ; then
-  config_name=clang_11
-  cpp_compiler=clang++
-  cpp_linker=clang++
-
-  cppflags="${cppflags} -std=c++11 -stdlib=libc++"
+  if [ ${build_cpp_11} = "yes" ] ; then
+    cppflags="${cppflags} -std=c++11 -stdlib=libc++"
+  fi
 
 elif [ ${build_sdk_mac} = "yes" -o ${build_sdk_mac_gnu} = "yes" ] ; then
 
@@ -334,9 +328,6 @@ elif [ ${build_intel} = "yes" ] ; then
 elif [ ${build_clang} = "yes" ] ; then
   G4_cppflags="-Wno-non-virtual-dtor -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
 
-elif [ ${build_gnu_11} = "yes" ] ; then
-  G4_cppflags="-W -Wall -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
-
 elif [ ${build_sdk_ios} = "yes" -o ${build_sdk_iossim} = "yes" ] ; then
   G4_cppflags="-Wno-non-virtual-dtor -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
 
@@ -344,8 +335,14 @@ elif [ ${build_sdk_android} = "yes" ] ; then
   echo dummy > /dev/null
 
 else
-  G4_cppflags="-W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
-  G4_cppflags="${G4_cppflags} -Wshadow"
+
+  if [ ${build_cpp_11} = "yes" ] ; then
+    G4_cppflags="-W -Wall -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
+  else
+    G4_cppflags="-W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual"
+    G4_cppflags="${G4_cppflags} -Wshadow"
+  fi
+  
 fi
 
 if [ ${build_g4flags} = "yes" ] ; then

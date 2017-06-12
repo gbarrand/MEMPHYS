@@ -221,6 +221,11 @@ public:
     return true;
   }
   
+  bool equals_TH(const h1& a_from,const TW& a_prec,TW(*a_fabs)(TW)) const {
+    if(!parent::equals_TH(a_from,a_prec,a_fabs,true)) return false;    
+    return true;
+  }
+  
 public: //CERN-ROOT API (for MEMPHYS sim).
   bool Fill(TC aX,TW aWeight = 1) {return fill(aX,aWeight);}
   
@@ -235,6 +240,7 @@ public:
 public:
   h1(const h1& a_from):parent(a_from){}
   h1& operator=(const h1& a_from){
+    if(&a_from==this) return *this;
     parent::operator=(a_from);
     return *this;
   }

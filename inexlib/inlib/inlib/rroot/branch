@@ -462,12 +462,12 @@ public:
     for(uint32 i=0;i<m_write_basket;i++) {
       uint64 first = fBasketEntry[i];
       uint64 last = fBasketEntry[i+1]-1;
-      m_first_last.push_back(std::pair<uint32,uint32>(first,last));
+      m_first_last.push_back(std::pair<uint64,uint64>(first,last));
     }
     if(m_entry_number) {
       uint64 first = fBasketEntry[m_write_basket];
       uint64 last = m_entry_number-1;
-      m_first_last.push_back(std::pair<uint32,uint32>(first,last));
+      m_first_last.push_back(std::pair<uint64,uint64>(first,last));
     }}
     //_dump_first_last();
 

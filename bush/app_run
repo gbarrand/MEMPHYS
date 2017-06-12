@@ -12,10 +12,8 @@ while test $# -ge 1 ; do
   case $1 in
     # to find build_out dir :
     -gnu)         build_args="${build_args} $1";;
-    -gnu_11)      build_args="${build_args} $1";;
     -intel)       build_args="${build_args} $1";;
     -clang)       build_args="${build_args} $1";;
-    -clang_11)    build_args="${build_args} $1";;
     -visual)      build_args="${build_args} $1";;
 
     -no_screen)   build_args="${build_args} $1";;

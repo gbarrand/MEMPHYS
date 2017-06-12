@@ -9,7 +9,8 @@ echo "hostname : `hostname`"
 echo "whoami : `whoami`"
 echo "pwd : `pwd`"
 
-. ../run_setup.sh
+. ../gcc_493_setup.sh
+. ../run_g410x_setup.sh
 
 # build output root file name :
 if [ "${SLURM_ARRAY_JOB_ID}" = "" ] ; then

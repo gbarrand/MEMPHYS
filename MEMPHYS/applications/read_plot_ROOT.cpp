@@ -21,7 +21,12 @@ int main(int a_argc,char* a_argv[]) {
   inlib::args args(a_argc,a_argv);
   std::string file;
   if(!args.file(file)) file = "MEMPHYS.root";
+
+  bool verbose = args.is_arg("-verbose");
   
+  ////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
   new TApplication("MEMPHYS_analysis_aida_ROOT",&a_argc,a_argv);
 
   ////////////////////////////////////////////////////////
@@ -35,7 +40,7 @@ int main(int a_argc,char* a_argv[]) {
   /// Read data : ////////////////////////////////////////
   ////////////////////////////////////////////////////////
 
-  if(!read_data(std::cout,file,*hits_times,*digits_time_pe)) {
+  if(!read_data(std::cout,file,*hits_times,*digits_time_pe,verbose)) {
     std::cout << "can't read data file." << std::endl;
     return EXIT_FAILURE;
   }
