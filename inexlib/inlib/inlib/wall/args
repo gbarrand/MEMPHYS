@@ -1,0 +1,29 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_wall_args
+#define inlib_wall_args
+
+#include "../args"
+#include "strings"
+
+namespace inlib {
+namespace wall {
+
+inline bool s2params(const std::string& a_s,
+                     unsigned int& a_ww,unsigned int& a_wh,
+                     unsigned int& a_bw,unsigned int& a_bh,
+                     unsigned int& a_cols,unsigned int& a_rows){
+  args _args(a_s,"\n",false);
+  if(!_args.find(s_ww(),a_ww)) return false;
+  if(!_args.find(s_wh(),a_wh)) return false;
+  if(!_args.find(s_bw(),a_bw)) return false;
+  if(!_args.find(s_bh(),a_bh)) return false;
+  if(!_args.find(s_cols(),a_cols)) return false;
+  if(!_args.find(s_rows(),a_rows)) return false;
+  return true;
+}
+
+}}
+
+#endif

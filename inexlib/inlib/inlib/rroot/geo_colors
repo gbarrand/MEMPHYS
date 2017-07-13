@@ -1,0 +1,60 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_rroot_geo_colors
+#define inlib_rroot_geo_colors
+
+// map a material-A to a color in inlib::sg::style_ROOT_colormap()
+
+#include <vector>
+
+namespace inlib {
+namespace rroot {
+
+inline void geo_colors(std::vector<unsigned int>& col) {
+  col.resize(250,18);
+  
+  //here we should create a new TColor with the same rgb as in the default
+  //CERN-ROOT colors used below
+  col[  8] = 15;
+  col[  9] = 16;
+  col[ 10] = 17;
+  col[ 11] = 21;
+  col[ 12] = 20;
+  col[ 13] = 18;
+  col[ 14] = 23;
+  col[ 15] = 24;
+  col[ 16] = 24+100;
+  col[ 17] = 24+150;
+  col[ 18] = 23+150;
+  col[ 19] = 23+100;
+  col[ 20] = 25;
+  col[ 21] = 26;
+  col[ 22] = 26+100;
+  col[ 23] = 26+150;
+  col[ 24] = 27;
+  col[ 25] = 28;
+  col[ 26] = 17; //29;
+  col[ 27] = 30;
+  col[ 28] = 30+100;
+  col[ 29] = 30+150;
+  col[ 30] = 14;
+  col[ 31] = 31;
+  col[ 32] = 31+100;
+  col[ 33] = 31+150;
+  col[ 38] = 33;
+  col[ 39] = 2;
+  col[ 41] = 38;
+  col[ 42] = 40;
+  col[ 45] = 37;
+  col[ 55] = 41;
+  col[ 63] = 42;
+  col[ 64] = 44;
+  col[169] = 45;
+  col[170] = 50;
+  col[207] = 38;
+}
+
+}}
+
+#endif

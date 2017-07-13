@@ -1,0 +1,87 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_count_action
+#define inlib_sg_count_action
+
+#include "bbox_action"
+
+namespace inlib {
+namespace sg {
+
+class count_action : public bbox_action {
+  typedef bbox_action parent;
+protected:
+  virtual bool add_point(float,float,float,float) {
+    m_number_of_points++;
+    return true;
+  }
+
+  virtual bool add_point(float,float,float,float,
+                         float,float,float,float) {
+    m_number_of_points++;
+    return true;
+  }
+
+  virtual bool add_line(float,float,float,float,
+                        float,float,float,float) {
+    m_number_of_points += 2;
+    return true;
+  }
+
+  virtual bool add_line(float a_bx,float a_by,float a_bz,float a_bw,
+                        float,float,float,float,
+                        float a_ex,float a_ey,float a_ez,float a_ew,
+                        float,float,float,float) {
+    return add_line(a_bx,a_by,a_bz,a_bw,
+                    a_ex,a_ey,a_ez,a_ew);
+  }
+
+  virtual bool add_triangle(float,float,float,float,
+                            float,float,float,float,
+                            float,float,float,float){
+    m_number_of_points += 3;
+    return true;
+  }
+
+  virtual bool add_triangle(float a_p1x,float a_p1y,float a_p1z,float a_p1w,
+                              float,float,float,float,
+                            float a_p2x,float a_p2y,float a_p2z,float a_p2w,
+                              float,float,float,float,
+                            float a_p3x,float a_p3y,float a_p3z,float a_p3w,
+                              float,float,float,float){
+    return count_action::add_triangle(a_p1x,a_p1y,a_p1z,a_p1w,
+                                     a_p2x,a_p2y,a_p2z,a_p2w,
+                                     a_p3x,a_p3y,a_p3z,a_p3w);
+  }
+
+public:
+  count_action(std::ostream& a_out)
+  :parent(a_out)
+  ,m_number_of_points(0)
+  {}
+  virtual ~count_action(){}
+public:
+  count_action(const count_action& a_from)
+  :parent(a_from)
+  ,m_number_of_points(0)
+  {}
+  count_action& operator=(const count_action& a_from){
+    if(&a_from==this) return *this;
+    parent::operator=(a_from);
+    m_number_of_points = 0;
+    return *this;
+  }
+public:
+  void reset() {
+    parent::reset();
+    m_number_of_points = 0;
+  }
+  unsigned int number_of_points() const {return m_number_of_points;}
+protected:
+  unsigned int m_number_of_points;
+};
+
+}}
+
+#endif

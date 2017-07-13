@@ -1,0 +1,593 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_zip
+#define exlib_zip
+
+#ifdef EXLIB_USE_NATIVE_ZIP
+#include <zip.h>
+#include <unzip.h>
+#else
+#include <ourex_zip.h>
+#include <ourex_unzip.h>
+#endif
+
+#include <string>
+#include <ostream>
+
+#include <cstdio> //EOF
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#include <inlib/S_STRING>
+#endif
+
+namespace exlib {
+
+// used to open a zip file and browse the entries. 
+
+class base_zip {
+#ifdef INLIB_MEM
+  INLIB_SCLASS(exlib::base_zip)
+#endif
+public:
+  virtual bool visit_entry(const std::string&,unsigned int,const char*) = 0;
+public:
+  base_zip(std::ostream& a_out):m_out(a_out){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~base_zip(){
+#ifdef INLIB_MEM
+    inlib::mem::decrement(s_class().c_str());
+#endif
+  }
+protected:
+  base_zip(const base_zip& a_from):m_out(a_from.m_out){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  base_zip& operator=(const base_zip&){return *this;}
+public:
+  bool load_file(const std::string& a_file,bool a_verbose = false) {
+    if(a_verbose) {
+      m_out << "exlib::base_zip::load_file :"
+            << " load " << a_file << std::endl;
+    }
+
+    unzFile uf = ::unzOpen(a_file.c_str());
+    if(!uf) {
+      m_out << "exlib::base_zip::load_file :"
+            << " error opening " << a_file << std::endl;
+      return false;
+    }
+
+    unz_global_info gi;
+   {int err = ::unzGetGlobalInfo(uf,&gi);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::base_zip::load_file :"
+            << " error in file " << a_file << std::endl;
+      ::unzClose(uf);
+      return false;
+    }}
+
+    if(a_verbose) {
+      m_out << "exlib::base_zip::load_file :"
+            << " number of entries " << int(gi.number_entry)
+            << std::endl;
+    }
+
+    for (uLong i=0;i<gi.number_entry;i++) {
+  
+      //uLong ratio=0;
+
+      unz_file_info file_info;
+      char file_in_zip[1024];
+     {int err = ::unzGetCurrentFileInfo
+        (uf,&file_info,file_in_zip,sizeof(file_in_zip),NULL,0,NULL,0);
+      if(err!=UNZ_OK) {
+        m_out << "exlib::base_zip::load_file :"
+              << " error in file " << a_file << std::endl;
+        ::unzClose(uf);
+        return false;
+      }}
+  
+     {int err = ::unzOpenCurrentFilePassword(uf,NULL);
+      if(err!=UNZ_OK) {
+        m_out << "exlib::base_zip::load_file :"
+            << " error in file " << a_file << std::endl;
+        ::unzClose(uf);
+        return false;
+      }}
+  
+      uLong size_buf = file_info.uncompressed_size;
+      if(size_buf) {
+        char* buf = new char[size_buf];
+#ifdef INLIB_MEM
+        //inlib::mem::increment(inlib::s_new().c_str());
+#endif
+        int nread = ::unzReadCurrentFile(uf,buf,size_buf);
+        if(nread<0) {
+          m_out << "exlib::base_zip::load_file :"
+                << " error in file " << a_file << std::endl;
+          delete [] buf;
+          ::unzClose(uf);
+          return false;
+        }
+/*
+        if(nread>0) {
+          for(int i=0;i<nread;i++) printf("%c",buf[i]);
+          printf("\n");
+        }
+*/
+        if(a_verbose) {
+          m_out << "exlib::base_zip::load_file :"
+                << " entry " << (unsigned int)i
+                << " " << std::string(file_in_zip)
+                << " nread " << nread << "."
+                << std::endl;
+        }
+
+        if(!visit_entry(file_in_zip,nread,buf)) {
+          delete [] buf;
+          ::unzClose(uf);
+          return false;
+        }
+        delete [] buf;
+      } else {
+        if(a_verbose) {
+          m_out << "exlib::base_zip::load_file :"
+                << " entry " << (unsigned int)i
+                << " " << std::string(file_in_zip)
+                << " empty."
+                << std::endl;
+        }
+  
+        if(!visit_entry(file_in_zip,0,0)) {
+          ::unzClose(uf);
+          return false;
+        }
+      }
+  
+      if (i<gi.number_entry-1) {
+        int err = ::unzGoToNextFile(uf);
+        if(err!=UNZ_OK) {
+          m_out << "exlib::base_zip::load_file :"
+              << " error in file " << a_file << std::endl;
+          ::unzClose(uf);
+          return false;
+        }
+      }
+    }
+
+
+   {int err = ::unzClose(uf);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::base_zip::load_file :"
+            << " error in closing file " << a_file << std::endl;
+      return false;
+    }}
+
+    if(a_verbose) {
+      m_out << "exlib::base_zip::load_file :"
+            << " close."
+            << std::endl;
+    }
+
+    return true;
+  }
+
+protected:
+  std::ostream& m_out; 
+};
+
+class zip_iterator {
+protected:
+  zip_iterator(std::ostream& a_out,bool a_verbose = false)
+  :m_out(a_out),m_verbose(a_verbose),m_index(0),m_uf(0) {
+    m_gi.number_entry = 0;
+  }
+  virtual ~zip_iterator(){close_();}
+protected:
+  zip_iterator(const zip_iterator& a_from)
+  :m_out(a_from.m_out),m_verbose(a_from.m_verbose),m_index(0),m_uf(0)
+  {}
+  zip_iterator& operator=(const zip_iterator& a_from){
+    if(&a_from==this) return *this;
+    m_verbose = a_from.m_verbose;
+    m_index = 0;
+    close_();
+    return *this;
+  }
+protected:
+  unsigned int index_() const {return m_index;}
+
+  unsigned int entries_() const {return (unsigned int)m_gi.number_entry;}
+
+  bool next_() {
+    if(!m_uf) return false;
+
+    if((m_index+1)<m_gi.number_entry) {
+      m_index++;
+      int err = ::unzGoToNextFile(m_uf);
+      if(err!=UNZ_OK) {
+        m_out << "exlib::zip_iterator::open :"
+            << " error in file " << m_file << std::endl;
+        close_();
+        return false;
+      }
+    } else {
+      m_index = m_gi.number_entry;
+    }
+
+    return true;
+  }
+
+  bool rewind_() {
+    if(!m_uf) return false;
+    int err = ::unzGoToFirstFile(m_uf);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::zip_iterator::rewind :"
+            << " error in file " << m_file << std::endl;
+      close_();
+      return false;
+    }
+    m_index = 0;
+    return true;
+  }
+
+  bool open_(const std::string& a_file) {
+    if(m_uf) {
+      m_out << "exlib::zip_iterator::open :"
+            << " a file (" << a_file << " ?) is already opened."
+            << std::endl;
+      return false;
+    }
+
+    m_file.clear();
+    m_uf = 0;
+    m_gi.number_entry = 0;
+    m_index = 0;
+
+    if(m_verbose) {
+      m_out << "exlib::zip_iterator::open :"
+            << " open " << a_file << " ..." << std::endl;
+    }
+
+    m_uf = ::unzOpen(a_file.c_str());
+    if(!m_uf) {
+      m_out << "exlib::zip_iterator::open :"
+            << " error opening " << a_file << std::endl;
+      return false;
+    }
+
+   {int err = ::unzGetGlobalInfo(m_uf,&m_gi);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::zip_iterator::open :"
+            << " error in file " << a_file << std::endl;
+      close_();
+      return false;
+    }}
+
+    m_file = a_file;
+
+    if(m_verbose) {
+      m_out << "exlib::zip_iterator::open :"
+            << " number of entries " << int(m_gi.number_entry)
+            << std::endl;
+    }
+
+    return true;
+  }
+
+  bool close_() {
+    if(!m_uf) {
+      m_out << "exlib::zip_iterator::close :"
+            << " no file opened." << std::endl;
+      return false;
+    }
+
+    int err = ::unzClose(m_uf);
+
+    m_file.clear();
+    m_uf = 0;
+    m_gi.number_entry = 0;
+    m_index = 0;
+
+    if(err!=UNZ_OK) {
+      m_out << "exlib::zip_iterator::close :"
+            << " error in closing file " << m_file << std::endl;
+      return false;
+    }
+
+    if(m_verbose) {
+      m_out << "exlib::zip_iterator::close :"
+            << " closed."
+            << std::endl;
+    }
+
+    return true;
+  }
+
+protected:
+  bool read_(std::string& a_name,size_t& a_size,char*& a_buffer) {
+    // NOTE : a_buf would have to be deleted by the caller with "delete []".
+
+    a_name.clear();
+    a_size = 0;
+    a_buffer = 0;
+    if(!m_uf) return false;
+
+    if(m_index>=m_gi.number_entry) return false;
+
+    unz_file_info file_info;
+    char file_name[1024];
+   {int err = ::unzGetCurrentFileInfo
+      (m_uf,&file_info,file_name,sizeof(file_name),NULL,0,NULL,0);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::zip_iterator::read :"
+            << " error in file " << m_file << std::endl;
+      close_();
+      return false;
+    }}
+  
+   {int err = ::unzOpenCurrentFilePassword(m_uf,NULL);
+    if(err!=UNZ_OK) {
+      m_out << "exlib::zip_iterator::read :"
+          << " error in file " << m_file << std::endl;
+      close_();
+      return false;
+    }}
+  
+    uLong size_buf = file_info.uncompressed_size;
+    if(size_buf) {
+      char* buf = new char[size_buf];
+#ifdef INLIB_MEM
+      inlib::mem::increment(inlib::s_new().c_str());
+#endif
+      int nread = ::unzReadCurrentFile(m_uf,buf,size_buf);
+      if(nread<0) {
+        m_out << "exlib::zip_iterator::read :"
+              << " error in file " << m_file << std::endl;
+#ifdef INLIB_MEM
+        inlib::mem::decrement(inlib::s_new().c_str());
+#endif
+        delete [] buf;
+        close_();
+        return false;
+      }
+
+/*
+      if(nread>0) {
+        for(int i=0;i<nread;i++) printf("%c",buf[i]);
+        printf("\n");
+      }
+*/
+
+      if(m_verbose) {
+        m_out << "exlib::zip_iterator::read :"
+              << " entry " << m_index << " " << std::string(file_name)
+              << " nread " << nread << "."
+              << std::endl;
+      }
+
+      a_name = file_name;
+      a_size = nread;
+      a_buffer = buf;
+
+    } else {
+      if(m_verbose) {
+        m_out << "exlib::zip_iterator::read :"
+              << " entry " << m_index << " " << std::string(file_name)
+              << " empty."
+              << std::endl;
+      }
+
+      a_name = file_name; //directory
+      a_size = 0;
+      a_buffer = 0;
+    }
+
+    return true;
+  }
+
+protected:
+  std::ostream& m_out; 
+  bool m_verbose;
+  unsigned int m_index;
+protected:
+  std::string m_file;
+  unzFile m_uf;
+  unz_global_info m_gi;
+};
+
+}
+
+#include <sstream>
+#include <ostream>
+
+namespace exlib {
+
+// used to write a zip file.
+
+class ozip : public std::streambuf, public std::ostream {
+public:
+  ozip(const std::string& a_name,std::ostream& a_out)
+  :std::streambuf() //WARNING : must come before the below.
+//,std::ostream((std::streambuf*)this)
+  ,std::ostream(0)
+  ,m_out(a_out)
+  ,m_name(a_name)
+  ,m_size(4095)
+  ,m_buffer(0)
+  ,m_count(0)
+  ,m_zipFile(0)
+  ,m_entry_opened(false)
+  {
+    std::ostream::rdbuf(this);
+    m_buffer = new char[m_size];
+    m_zipFile = ::zipOpen(a_name.c_str(),APPEND_STATUS_CREATE);
+    if(!m_zipFile) {
+      m_out << "exlib::ozip::ozip :"
+            << " zipOpen error for \"" << a_name << "\"." 
+            << std::endl;
+    }
+  }
+
+  virtual ~ozip(){
+    if(m_zipFile) {
+      if(::zipClose(m_zipFile,NULL)!=ZIP_OK) {
+        m_out << "exlib::ozip::~ozip :"
+              << " closing zip file \"" << m_name << "\" failed."
+              << std::endl;
+      }
+    }
+    delete [] m_buffer;
+  }
+protected:
+  ozip(const ozip& a_from)
+  :std::basic_ios<char, std::char_traits<char> >()
+  ,std::basic_streambuf<char, std::char_traits<char> >()
+#ifdef INLIB_STL
+  ,std::streambuf(a_from)
+#endif
+  ,std::ostream((std::streambuf*)&a_from)
+  ,m_out(a_from.m_out)
+  {}
+  ozip& operator=(const ozip&){return *this;}
+public:
+  bool opened() const {return m_zipFile?true:false;}
+
+  void close() {
+    if(!m_zipFile) return; // Already closed.
+    if(::zipClose(m_zipFile,NULL)!=ZIP_OK) {
+      m_out << "exlib::ozip::close :"
+            << " closing zip file \"" << m_name << "\" failed."
+            << std::endl;
+    }
+    m_zipFile = 0;
+    m_count = 0;
+    m_entry_opened = false;
+  }
+
+  bool open_entry(const std::string& a_name) {
+    if(!m_zipFile) return false;
+
+    if(m_entry_opened) {
+      m_out << "exlib::ozip::open_entry :"
+            << " bad open/close_entry balance. An entry is already opened."
+            << std::endl;
+      return false;
+    }
+
+    zip_fileinfo zi;
+
+    zi.tmz_date.tm_sec = 0;
+    zi.tmz_date.tm_min = 0;
+    zi.tmz_date.tm_hour = 0;
+    zi.tmz_date.tm_mday = 0;
+    zi.tmz_date.tm_mon = 0;
+    zi.tmz_date.tm_year = 0;
+    //filetime(filenameinzip,&zi.tmz_date,&zi.dosDate);
+  
+    zi.dosDate = 0;
+    zi.internal_fa = 0;
+    zi.external_fa = 0;
+  
+    int err = 
+      //zipOpenNewFileInZip3(zf,file_in_zip.c_str(),&zi,
+      ::zipOpenNewFileInZip(m_zipFile,a_name.c_str(),&zi,
+        NULL,0,NULL,0,NULL /* comment*/,
+        Z_DEFLATED,Z_DEFAULT_COMPRESSION);
+    if(err!=ZIP_OK) {
+      m_out << "exlib::ozip::open_entry :"
+            << " can't open entry \"" << a_name << "\""
+            << " in file \"" << m_name << "\"."
+            << std::endl;
+      close();
+      return false;
+    }
+  
+    m_entry_opened = true;
+    return true;
+  }
+  bool close_entry() {
+    if(!m_zipFile) return false;
+
+    if(!m_entry_opened) {
+      m_out << "exlib::ozip::close_entry :"
+            << " bad open/close_entry balance. No entry opened."
+            << std::endl;
+      return false;
+    }
+
+    if(::zipCloseFileInZip(m_zipFile)!=ZIP_OK) {
+      m_out << "exlib::ozip::close_entry :"
+            << " can't close entry in file \"" << m_name << "\"."
+            << std::endl;
+      close();
+      return false;
+    }
+    m_entry_opened = false;
+    return true;
+  }
+
+public: //std::streambuf mechanism
+  int overflow(int a_char) {
+    int result = 0;
+    //01234 = 5
+    if(m_count>=m_size) {
+      result = z_write();
+      m_count = 0; //WARNING : must be done after the upper line.
+    }
+    m_buffer[m_count] = a_char;
+    m_count++;
+    return result;
+  }
+  int sync() {
+    int result = z_write();
+    m_count = 0; //WARNING : must be done after the upper line.
+    return result;
+  }
+#ifdef _MSC_VER
+  int underflow() {return 0;}
+#endif
+
+protected:
+  int z_write() { //prefix with gz_ to avoid clash with std::.
+    if(!m_zipFile) return EOF;
+    if(!m_entry_opened) {
+      m_out << "exlib::ozip::z_write :"
+            << " no entry opened."
+            << std::endl;
+      return false;
+    }
+    if(::zipWriteInFileInZip(m_zipFile,m_buffer,m_count)!=ZIP_OK) {
+      m_out << "exlib::ozip::z_write :"
+            << " error writing in file \"" << m_name << "\"."
+            << std::endl;
+      close();
+      return EOF;
+    }
+    return 0;
+  }
+
+protected:
+  std::ostream& m_out;
+  std::string m_name;
+  unsigned int m_size;
+  char* m_buffer;
+  unsigned int m_count;
+  // zip specific :
+  zipFile m_zipFile;
+  bool m_entry_opened;
+};
+
+}
+
+//exlib_build_use inlib zlib zip
+
+#endif
+

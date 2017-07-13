@@ -1,0 +1,159 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_sg_GL_VIEWER
+#define exlib_sg_GL_VIEWER
+
+#include "GL_action"
+
+#define EXLIB_GL_VIEWER_METHODS \
+public:\
+  virtual void render() {\
+    parent::check_gui_cursor();\
+    if(!parent::m_ww||!parent::m_wh) return;\
+    if(parent::m_vr_mode) {\
+      unsigned int half_ww = parent::m_ww*0.5;\
+      if(m_mgr_gra.begin_render(0,0,half_ww,parent::m_wh,\
+                                       parent::m_clear_color.r(),\
+                                       parent::m_clear_color.g(),\
+                                       parent::m_clear_color.b(),\
+                                       parent::m_clear_color.a(),true)) {\
+        exlib::sg::GL_action action(m_mgr_gra,parent::m_out,half_ww,parent::m_wh);\
+        action.state().m_use_gsto = parent::m_use_gsto;\
+        parent::m_sg.render(action);\
+        if(!action.end()) {\
+          parent::m_out << "EXLIB_GL_VIEWER_METHODS::render() :"\
+                        << " bad gl_action end."\
+                        << std::endl;\
+        }\
+      }\
+      if(m_mgr_gra.begin_render(half_ww,0,half_ww,parent::m_wh,\
+                                       parent::m_clear_color.r(),\
+                                       parent::m_clear_color.g(),\
+                                       parent::m_clear_color.b(),\
+                                       parent::m_clear_color.a(),false)) {\
+        exlib::sg::GL_action action(m_mgr_gra,parent::m_out,half_ww,parent::m_wh);\
+        action.state().m_use_gsto = parent::m_use_gsto;\
+        parent::m_sg.render(action);\
+        if(!action.end()) {\
+          parent::m_out << "EXLIB_GL_VIEWER_METHODS::render() :"\
+                        << " bad gl_action end."\
+                        << std::endl;\
+        }\
+      }\
+      m_mgr_gra.end_render();\
+    } else {\
+      if(m_mgr_gra.begin_render(0,0,parent::m_ww,parent::m_wh,\
+                                       parent::m_clear_color.r(),\
+                                       parent::m_clear_color.g(),\
+                                       parent::m_clear_color.b(),\
+                                       parent::m_clear_color.a())) {\
+        exlib::sg::GL_action action(m_mgr_gra,parent::m_out,parent::m_ww,parent::m_wh);\
+        action.state().m_use_gsto = parent::m_use_gsto;\
+        parent::m_sg.render(action);\
+        if(!action.end()) {\
+          parent::m_out << "EXLIB_GL_VIEWER_METHODS::render() :"\
+                        << " bad gl_action end."\
+                        << std::endl;\
+        }\
+        after_render();\
+        m_mgr_gra.end_render();\
+      }\
+    }\
+  }\
+public:/*public for iOS*/\
+  void after_render() {\
+    /*WARNING : it does OpenGL. Under Android it should be executed in the OpenGL thread.*/\
+    /*WARNING : if having more m_produce_xxx, look exlib/app/iOS/GLView_mm.*/\
+    \
+    std::ostream& _out = parent::m_out;\
+    const std::string& _out_dir = parent::out_dir();\
+    if(parent::m_produce_out_jpg) {\
+      parent::m_produce_out_jpg = false;\
+      \
+      std::string file;\
+      if(_out_dir.size()) {\
+        if(!inlib::check_dir(_out,_out_dir)) {\
+          parent::map_warn_failed();\
+          return;\
+        }\
+        file = _out_dir+inlib::sep();\
+      }\
+      file += "out.jpg";\
+      \
+      unsigned int bpp = 4;\
+      unsigned char* buffer = exlib::sg::GL_manager::get_rgbas(parent::m_ww,parent::m_wh);\
+      if(!buffer) {\
+        _out << "EXLIB_GL_VIEWER_METHODS::after_render() :"\
+             << " can't get image."\
+             << std::endl;\
+        parent::map_warn_failed();\
+        return;\
+      }\
+      \
+      /*NOTE : jpeg wants bpp=3.*/\
+      inlib::img_byte rgba(parent::m_ww,parent::m_wh,bpp,buffer,true); /*true=img owns buffer.*/\
+      inlib::img_byte rgb;\
+      if(!rgba.rgba2rgb(rgb)) {\
+        _out << "EXLIB_GL_VIEWER_METHODS::after_render() :"\
+             << " can't convert rgba image to rgb."\
+             << std::endl;\
+        parent::map_warn_failed();\
+        return;\
+      }\
+      \
+      if(!exlib::jpeg::write(_out,file,rgb.buffer(),rgb.width(),rgb.height(),rgb.bpp(),100)) {\
+        parent::map_warn_failed();\
+      }\
+    }\
+    \
+    if(parent::m_produce_out_png) {\
+      parent::m_produce_out_png = false;\
+      \
+      std::string file;\
+      if(_out_dir.size()) {\
+        if(!inlib::check_dir(_out,_out_dir)) {\
+          parent::map_warn_failed();\
+          return;\
+        }\
+        file = _out_dir+inlib::sep();\
+      }\
+      file += "out.png";\
+      \
+      unsigned int bpp = 4;\
+      unsigned char* buffer = exlib::sg::GL_manager::get_rgbas(parent::m_ww,parent::m_wh);\
+      if(!buffer) {\
+        _out << "EXLIB_GL_VIEWER_METHODS::after_render() :"\
+             << " can't get image."\
+             << std::endl;\
+        parent::map_warn_failed();\
+        return;\
+      }\
+      \
+      if(!exlib::png::write(_out,file,buffer,parent::m_ww,parent::m_wh,bpp)) {\
+        parent::map_warn_failed();\
+      }\
+      delete [] buffer;\
+    }\
+  }\
+public:\
+  virtual void gl_infos(std::vector<std::string>& a_v) const {\
+    a_v.clear();\
+    {const char* _sv = (const char*)::glGetString(GL_VERSION);\
+     if(_sv) a_v.push_back("GL_VERSION : "+std::string(_sv));}\
+    {const char* _sv = (const char*)::glGetString(GL_VENDOR);\
+     if(_sv) a_v.push_back("GL_VENDOR : "+std::string(_sv));}\
+    {const char* _sv = (const char*)::glGetString(GL_RENDERER);\
+     if(_sv) a_v.push_back("GL_RENDERER : "+std::string(_sv));}\
+   /*{const char* _sv = (const char*)::glGetString(GL_EXTENSIONS);\
+     if(_sv) a_v.push_back("GL_EXTENSIONS : "+std::string(_sv));}*/\
+    {GLint iv;\
+     ::glGetIntegerv(GL_MAX_TEXTURE_SIZE, &iv);\
+     std::string _s;\
+     if(inlib::num2s(iv,_s)) a_v.push_back("GL_MAX_TEXTURE_SIZE : "+_s);}\
+    /*GLint gl_buffer_size;::glGetIntegerv(GL_BUFFER_SIZE, &gl_buffer_size);*/\
+  }
+
+#endif
+
+//exlib_build_use inlib png jpeg zlib GL

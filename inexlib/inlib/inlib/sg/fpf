@@ -1,0 +1,605 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_fpf
+#define inlib_sg_fpf
+
+// fpf = fit plot function
+
+#include "plot_func"
+
+#include "../fit_func"
+#include "../ival_func"
+#include "../scast"
+#include "../S_STRING"
+
+#ifdef INLIB_MEM
+#include "../mem"
+#endif
+
+namespace inlib {
+namespace sg {
+
+class base_ff
+:public virtual fit_func
+,public virtual sg::plot_func
+,public virtual ival_func
+{
+public:
+  INLIB_SCLASS(inlib::sg::base_ff)
+public: //ival_func
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<base_ff>(this,a_class)) {return p;}
+    else return 0;
+  }
+  virtual const std::string& name() const {return m_name;}
+  virtual size_t number_of_arguments() const {return 1;}
+  typedef std::vector<inlib::value> args; //inlib:: is needed.
+  virtual bool eval(const args& a_args,inlib::value& a_return,std::string& /*a_serr*/) {
+    if(a_args.size()!=1) return false;
+    const inlib::value& arg = a_args[0];
+    if(arg.type()!=inlib::value::DOUBLE) return false;
+    sg::plot_func* pf = static_cast<sg::plot_func*>(this);
+    a_return.set(pf->value(arg.get_double()));
+    return true;
+  }
+public: //sg::plot_func
+  virtual unsigned int xdomain_number_of_steps() const {return 100;}
+  virtual double xdomain_min() const {return -1;}
+  virtual double xdomain_max() const {return 1;}
+  virtual unsigned int ydomain_number_of_steps() const {return 100;}
+  virtual double ydomain_min() const {return -1;}
+  virtual double ydomain_max() const {return 1;}
+public:
+
+  class parameter {
+  public:
+    parameter():m_value(0) {}
+    virtual ~parameter(){}
+  public:
+    parameter(const parameter& a_from)
+    :m_name(a_from.m_name)
+    ,m_value(a_from.m_value)
+    {}
+    parameter& operator=(const parameter& a_from){
+      m_name = a_from.m_name;
+      m_value = a_from.m_value;
+      return *this;
+    }
+  public:
+    std::string m_name;  
+    double m_value;  
+  };
+
+public:
+  base_ff()
+  :m_params()
+  ,m_name()
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~base_ff(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  base_ff(const base_ff& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,m_params(a_from.m_params)
+  ,m_name(a_from.m_name)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  base_ff& operator=(const base_ff& a_from){
+    m_params = a_from.m_params;
+    m_name = a_from.m_name;
+    return *this;
+  }
+public:
+  const std::vector<parameter>& params() const {return m_params;}
+protected:
+  std::vector<parameter> m_params;  
+  std::string m_name;
+};
+
+template <class T>
+class fit_plot_func : public base_ff {
+public:  //fit_func :
+  virtual double value(const fit_func::point& a_pt) const {
+    return m_T.value(a_pt[0]);
+  }
+public: //sg::plot_func :
+  virtual bool in_domain(double) const {return true;}
+  virtual double value(double a_x) const {return m_T.value(a_x);}
+public:
+  fit_plot_func():base_ff(){}
+  virtual ~fit_plot_func(){}
+public:
+  fit_plot_func(const fit_plot_func& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,base_ff(a_from)
+  ,m_T(a_from.m_T)
+  {}
+  fit_plot_func& operator=(const fit_plot_func& a_from){
+    base_ff::operator=(a_from);
+    m_T = a_from.m_T;
+    return *this;
+  }
+protected:
+  T m_T;
+};
+
+}}
+
+#include "ui"
+#include "plotter"
+
+namespace inlib {
+namespace sg {
+
+class anim_func {
+protected:
+public:
+  anim_func(sg::ui& a_gv,sg::plotter& a_plotter)
+  :m_gv(a_gv)
+  ,m_plotter(a_plotter)
+  ,m_refresh_rate(1) //full speed.
+  ,m_refresh_count(0)
+  {}
+  virtual ~anim_func(){}
+public:
+  anim_func(const anim_func& a_from)
+  :m_gv(a_from.m_gv)
+  ,m_plotter(a_from.m_plotter)
+  ,m_refresh_rate(a_from.m_refresh_rate)
+  ,m_refresh_count(a_from.m_refresh_count)
+  {}
+  anim_func& operator=(const anim_func& a_from){
+    m_refresh_rate = a_from.m_refresh_rate;
+    m_refresh_count = a_from.m_refresh_count;
+    return *this;
+  }
+public:
+  bool update()  {
+    if(m_refresh_rate) {
+      unsigned int i = m_refresh_count/m_refresh_rate;
+      if(i*m_refresh_rate==m_refresh_count) {
+        m_plotter.touch();
+        m_gv.win_render();
+        if(m_gv.stop_works()) return false;
+      }
+      m_refresh_count++;
+    }
+    return true;
+  }
+public:
+  sg::ui& m_gv;  
+  sg::plotter& m_plotter;  
+  unsigned int m_refresh_rate;
+  unsigned int m_refresh_count;
+};
+
+}}
+
+
+#include "../func"
+
+namespace inlib {
+namespace sg {
+
+class gauss_fpf
+:public fit_plot_func<func::gaussian>
+,public anim_func {
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    m_T.set(a_params[0],a_params[1],a_params[2]);
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual ival_func* copy() const {return new gauss_fpf(*this);}
+public:
+  gauss_fpf(sg::ui& a_gv,sg::plotter& a_plotter)
+  :fit_plot_func<func::gaussian>()
+  ,anim_func(a_gv,a_plotter)
+  {
+    base_ff::m_name = "gaussian";
+    base_ff::m_params.resize(3);
+    base_ff::m_params[0].m_name = "amplitude"; //AIDA naming.
+    base_ff::m_params[0].m_value = m_T.scale();            
+    base_ff::m_params[1].m_name = "mean";      
+    base_ff::m_params[1].m_value = m_T.mean();
+    base_ff::m_params[2].m_name = "sigma";
+    base_ff::m_params[2].m_value = m_T.sigma(); 
+  }
+  virtual ~gauss_fpf(){}
+public:
+  gauss_fpf(const gauss_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,fit_plot_func<func::gaussian>(a_from)
+  ,anim_func(a_from)
+  {}
+  gauss_fpf& operator=(const gauss_fpf& a_from){
+    fit_plot_func<func::gaussian>::operator=(a_from);
+    anim_func::operator=(a_from);
+    return *this;
+  }
+};
+
+class bw_fpf
+:public fit_plot_func<func::bw> 
+,public anim_func {
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    m_T.set(a_params[0],a_params[1],a_params[2]);
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual ival_func* copy() const {return new bw_fpf(*this);}
+public:
+  bw_fpf(sg::ui& a_gv,sg::plotter& a_plotter)
+  :fit_plot_func<func::bw>()
+  ,anim_func(a_gv,a_plotter)
+  {
+    base_ff::m_name = "breit_wigner";
+    base_ff::m_params.resize(3);
+    base_ff::m_params[0].m_name = "amplitude"; //AIDA naming
+    base_ff::m_params[0].m_value = m_T.height();            
+    base_ff::m_params[1].m_name = "origin";      
+    base_ff::m_params[1].m_value = m_T.center();
+    base_ff::m_params[2].m_name = "width";
+    base_ff::m_params[2].m_value = m_T.width();
+  }
+  virtual ~bw_fpf(){}
+public:
+  bw_fpf(const bw_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,fit_plot_func<func::bw>(a_from)
+  ,anim_func(a_from)
+  {}
+  bw_fpf& operator=(const bw_fpf& a_from){
+    fit_plot_func<func::bw>::operator=(a_from);
+    anim_func::operator=(a_from);
+    return *this;
+  }
+};
+
+class exp_hbook_fpf
+:public fit_plot_func<func::expo> 
+,public anim_func {
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    m_T.set(a_params[0],a_params[1]);
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual ival_func* copy() const {return new exp_hbook_fpf(*this);}
+public:
+  exp_hbook_fpf(sg::ui& a_gv,sg::plotter& a_plotter)
+  :fit_plot_func<func::expo>()
+  ,anim_func(a_gv,a_plotter)
+  {
+    base_ff::m_name = "exp_hbook";
+    //   Lib, CERN-HBOOK, CERN-ROOT : exp(par[0] + par[1] * x)
+    //   AIDA : par[0] * exp(par[1]*x)
+    base_ff::m_params.resize(2);
+    base_ff::m_params[0].m_name = "A";
+    base_ff::m_params[0].m_value = m_T.a();            
+    base_ff::m_params[1].m_name = "B";      
+    base_ff::m_params[1].m_value = m_T.b();
+  }
+  virtual ~exp_hbook_fpf(){}
+public:
+  exp_hbook_fpf(const exp_hbook_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,fit_plot_func<func::expo>(a_from)
+  ,anim_func(a_from)
+  {}
+  exp_hbook_fpf& operator=(const exp_hbook_fpf& a_from){
+    fit_plot_func<func::expo>::operator=(a_from);
+    anim_func::operator=(a_from);
+    return *this;
+  }
+};
+
+class exp_aida_fpf
+:public fit_plot_func<func::expa> 
+,public anim_func {
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    m_T.set(a_params[0],a_params[1]);
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual ival_func* copy() const {return new exp_aida_fpf(*this);}
+public:
+  exp_aida_fpf(sg::ui& a_gv,sg::plotter& a_plotter)
+  :fit_plot_func<func::expa>()
+  ,anim_func(a_gv,a_plotter)
+  {
+    base_ff::m_name = "exp_aida";
+    //   Lib, AIDA, CERN-ROOT : exp(par[0] + par[1] * x)
+    //   AIDA : par[0] * exp(par[1]*x)
+    base_ff::m_params.resize(2);
+    base_ff::m_params[0].m_name = "amplitude";
+    base_ff::m_params[0].m_value = m_T.a();            
+    base_ff::m_params[1].m_name = "exponent";      
+    base_ff::m_params[1].m_value = m_T.b();
+  }
+  virtual ~exp_aida_fpf(){}
+public:
+  exp_aida_fpf(const exp_aida_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,fit_plot_func<func::expa>(a_from)
+  ,anim_func(a_from)
+  {}
+  exp_aida_fpf& operator=(const exp_aida_fpf& a_from){
+    fit_plot_func<func::expa>::operator=(a_from);
+    anim_func::operator=(a_from);
+    return *this;
+  }
+};
+
+class polynomial_fpf
+:public fit_plot_func<func::polynomial> 
+,public anim_func {
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    m_T.set(a_params);
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual ival_func* copy() const {return new polynomial_fpf(*this);}
+public:
+  polynomial_fpf(sg::ui& a_gv,sg::plotter& a_plotter,
+                 const std::vector<double>& a_ps)
+  :fit_plot_func<func::polynomial>()
+  ,anim_func(a_gv,a_plotter)
+  {
+    base_ff::m_name = "polynomial";
+    // P[0] + P[1] x + P[2] x**2 + ...
+    // a_ps.size() is the degree.
+    base_ff::m_params.resize(a_ps.size());
+    for(unsigned int i=0;i<a_ps.size();i++) {
+      sprintf(base_ff::m_params[i].m_name,32,"p%d",i); //AIDA naming
+      base_ff::m_params[i].m_value = a_ps[i];
+    }
+  }
+  virtual ~polynomial_fpf(){}
+public:
+  polynomial_fpf(const polynomial_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,fit_plot_func<func::polynomial>(a_from)
+  ,anim_func(a_from)
+  {}
+  polynomial_fpf& operator=(const polynomial_fpf& a_from){
+    fit_plot_func<func::polynomial>::operator=(a_from);
+    anim_func::operator=(a_from);
+    return *this;
+  }
+};
+
+class linear_fpf : public polynomial_fpf {
+  typedef polynomial_fpf parent;
+public: //ival_func
+  virtual ival_func* copy() const {return new linear_fpf(*this);}
+public:
+  linear_fpf(sg::ui& a_gv,sg::plotter& a_plotter,
+             double a_a,double a_b)
+  :polynomial_fpf(a_gv,a_plotter,std::vector<double>(2,0))
+  {
+    // a_a+a_b*x
+    parent::m_name = "linear";
+    parent::m_params[0].m_value = a_a;
+    parent::m_params[1].m_value = a_b;
+  }
+  virtual ~linear_fpf(){}
+public:
+  linear_fpf(const linear_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,polynomial_fpf(a_from)
+  {}
+  linear_fpf& operator=(const linear_fpf& a_from){
+    polynomial_fpf::operator=(a_from);
+    return *this;
+  }
+};
+
+class sqric_fpf : public polynomial_fpf {
+  typedef polynomial_fpf parent;
+public: //ival_func
+  virtual ival_func* copy() const {return new sqric_fpf(*this);}
+public:
+  sqric_fpf(sg::ui& a_gv,sg::plotter& a_plotter,
+            double a_a,double a_b,double a_c)
+  :polynomial_fpf(a_gv,a_plotter,std::vector<double>(3,0))
+  {
+    // a_a+a_b*x+a_c*x*x
+    parent::m_name = "sqric";
+    parent::m_params[0].m_value = a_a;
+    parent::m_params[1].m_value = a_b;
+    parent::m_params[2].m_value = a_c;
+  }
+  virtual ~sqric_fpf(){}
+public:
+  sqric_fpf(const sqric_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,polynomial_fpf(a_from)
+  {}
+  sqric_fpf& operator=(const sqric_fpf& a_from){
+    polynomial_fpf::operator=(a_from);
+    return *this;
+  }
+};
+
+class cubic_fpf : public polynomial_fpf {
+  typedef polynomial_fpf parent;
+public: //ival_func
+  virtual ival_func* copy() const {return new cubic_fpf(*this);}
+public:
+  cubic_fpf(sg::ui& a_gv,sg::plotter& a_plotter,
+            double a_a,double a_b,double a_c,double a_d)
+  :polynomial_fpf(a_gv,a_plotter,std::vector<double>(4,0))
+  {
+    // a_a+a_b*x+a_c*x*x+a_d*x*x*x
+    parent::m_name = "cubic";
+    parent::m_params[0].m_value = a_a;
+    parent::m_params[1].m_value = a_b;
+    parent::m_params[2].m_value = a_c;
+    parent::m_params[3].m_value = a_d;
+  }
+  virtual ~cubic_fpf(){}
+public:
+  cubic_fpf(const cubic_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,polynomial_fpf(a_from)
+  {}
+  cubic_fpf& operator=(const cubic_fpf& a_from){
+    polynomial_fpf::operator=(a_from);
+    return *this;
+  }
+};
+
+}}
+
+#include "../valop_exec"
+
+namespace inlib {
+namespace sg {
+
+class valop_fpf : public base_ff,public anim_func {
+public:  //fit_func :
+  virtual double value(const fit_func::point& a_pt) const {
+    return value(a_pt[0]);
+  }
+public: //sg::plot_func :
+  virtual bool in_domain(double) const {
+    //FIXME : to be implemented properly.
+    return true;
+  }
+  virtual double value(double a_x) const {
+    valop_fpf& self = const_cast<valop_fpf&>(*this);
+    return self._value(a_x);
+  }
+public: //fit_func
+  virtual bool set(const double a_params[])  {
+    double* pos = (double*)a_params;
+    std::vector<base_ff*>::iterator it;
+    for(it=m_ffs.begin();it!=m_ffs.end();++it){
+      const std::vector<parameter>& pms = (*it)->params();
+      (*it)->set(pos);      
+      pos += pms.size();
+    }
+    return anim_func::update();
+  }
+public: //ival_func
+  virtual bool eval(const args&,inlib::value&,std::string&) {return false;}
+  virtual ival_func* copy() const {return new valop_fpf(*this);}
+public:
+  valop_fpf(sg::ui& a_gv,sg::plotter& a_plotter,const valop& a_valop)
+  :base_ff()
+  ,anim_func(a_gv,a_plotter)
+  ,m_valop(a_valop)
+  ,m_input(1)
+  ,m_serror()
+  ,m_exec(m_input,m_serror)
+  {
+    base_ff::m_name = "valop";
+
+    _get_funcs();
+
+    m_params.clear();    
+    std::vector<base_ff*>::const_iterator it;
+    for(it=m_ffs.begin();it!=m_ffs.end();++it){
+      const std::vector<parameter>& pms = (*it)->params();
+      for(unsigned int i=0;i<pms.size();i++) m_params.push_back(pms[i]);
+    }
+  }
+  virtual ~valop_fpf(){}
+public:
+  valop_fpf(const valop_fpf& a_from)
+  :fit_func(a_from)
+  ,sg::plot_func(a_from)
+  ,ival_func(a_from)
+  ,base_ff(a_from)
+  ,anim_func(a_from)
+  ,m_valop(a_from.m_valop)
+  ,m_input(a_from.m_input)
+  ,m_serror(a_from.m_serror)
+  ,m_exec(a_from.m_exec)
+  {
+    _get_funcs();
+  }
+  valop_fpf& operator=(const valop_fpf& a_from){
+    base_ff::operator=(a_from);
+    anim_func::operator=(a_from);
+
+    if(&a_from==this) return *this;
+
+    m_valop = a_from.m_valop;
+    m_input = a_from.m_input;
+    m_serror = a_from.m_serror;
+    m_exec = a_from.m_exec;
+
+    _get_funcs();
+
+    return *this;
+  }
+protected:
+  double _value(double a_x) {
+    m_input[0].set(a_x);
+    m_serror.clear();
+    if(!m_exec.visit(m_valop)) return 0;
+    double rval;      
+    m_exec.ret().to_double(rval);
+    //::printf("debug : %g %g\n",a_x,rval);
+    return rval;
+  }
+  bool _get_funcs() {
+    get_funcs v;
+    v.m_nodes.clear();
+    v.visit(m_valop);  
+    m_ffs.clear();
+    std::vector<valop*>::const_iterator it;
+    for(it=v.m_nodes.begin();it!=v.m_nodes.end();++it){
+      base_ff* ff = safe_cast<ival_func,base_ff>(*((*it)->m_function));
+      if(ff) m_ffs.push_back(ff);
+      //(*it)->m_function may be not a base_ff (for exa cfunc sqrt).
+    }
+    return true;
+  }
+protected:
+  valop m_valop;
+  std::vector<base_ff*> m_ffs;
+  std::vector<inlib::value> m_input;
+  std::string m_serror;
+  valop_exec m_exec;
+};
+
+}}
+
+#endif

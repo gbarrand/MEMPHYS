@@ -1,0 +1,25 @@
+#!/bin/sh -f
+
+echo "Not yet ready."
+exit
+
+save_dir=`pwd`
+
+unzip_home=../../ourex_zips/unzip11
+
+#verbose=-verbose
+
+find ./include -name '*.h' -exec /bin/rm -f {} \;
+find ./src -name '*.c' -exec /bin/rm -f {} \;
+
+/bin/cp ${unzip_home}/zip.c ./source/.
+/bin/cp ${unzip_home}/unzip.c ./source/.
+/bin/cp ${unzip_home}/ioapi.c ./source/.
+/bin/cp ${unzip_home}/crypt.h ./source/.
+
+/bin/cp ${unzip_home}/zip.h ./include/.
+/bin/cp ${unzip_home}/unzip.h ./include/.
+/bin/cp ${unzip_home}/ioapi.h ./include/.
+
+
+

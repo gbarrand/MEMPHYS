@@ -1,0 +1,25 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_alert
+#define inlib_sg_alert
+
+#include <string>
+#include <ostream>
+
+namespace inlib {
+namespace sg {
+
+class alert {
+public:
+  virtual void warn(const std::string& a_msg,bool a_warn = true) = 0;
+  virtual std::ostream& out_stream() const = 0;
+
+  virtual void show_console(const std::string& a_msg) = 0;
+public:
+  virtual ~alert(){}
+};
+
+}}
+
+#endif

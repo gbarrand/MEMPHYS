@@ -1,0 +1,12 @@
+#!/bin/sh -f
+
+#$ -j y
+
+mpi_home=/usr/lib64/openmpi
+export PATH="${PATH}:${mpi_home}/bin"
+export LD_LIBRARY_PATH="${mpi_home}/lib"
+
+bin_dir=/afs/in2p3.fr/home/b/barrand/bin
+
+mpirun -np 2 ${bin_dir}/mpi -verbose
+

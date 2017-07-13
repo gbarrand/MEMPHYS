@@ -1,0 +1,360 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_guib
+#define inlib_sg_guib
+
+#include "ui"
+#include "alert"
+#include "sf"
+#include "node"
+#include "gui_params"
+
+#include "../sys/atime"
+#include "../file_finder"
+#include "../dirmanip"
+
+namespace inlib {
+namespace sg {
+
+class guib : public virtual ui, public virtual alert {
+protected:
+  virtual node* create_main_menu() = 0;
+  //virtual void show_main_menu() = 0;
+  virtual void ask_to_rebuild_gui() = 0;
+public:
+  guib(bool a_verbose)
+  :m_params()
+  ,m_data_dirs()
+  //,m_cookie()
+  ,m_verbose(a_verbose)
+  ,m_file_finder(0)
+  {
+    m_file_finder = new finder(*this);
+  }
+  virtual ~guib(){
+    clear_lists();
+    delete m_file_finder;
+  }
+public:
+  guib(const guib& a_from)
+  :ui(a_from)
+  ,alert(a_from)
+  ,m_params(a_from.m_params)
+  ,m_uitems(a_from.m_uitems)
+  ,m_app_name(a_from.m_app_name)
+  ,m_app_version(a_from.m_app_version)
+  ,m_tmp_dir(a_from.m_tmp_dir)
+  ,m_res_dir(a_from.m_res_dir)
+  ,m_pwd(a_from.m_pwd)
+  ,m_data_dirs(a_from.m_data_dirs)
+  //,m_cookie(a_from.m_cookie)
+  ,m_verbose(a_from.m_verbose)
+  ,m_file_finder(0)
+  { 
+    delete m_file_finder;
+    m_file_finder = a_from.m_file_finder?a_from.m_file_finder->copy():0;
+  }
+  guib& operator=(const guib& a_from){
+    ui::operator=(a_from);
+    //alert::operator=(a_from);
+    m_params = a_from.m_params;
+    m_app_name = a_from.m_app_name;
+    m_app_version = a_from.m_app_version;
+    m_tmp_dir = a_from.m_tmp_dir;
+    m_res_dir = a_from.m_res_dir;
+    m_pwd = a_from.m_pwd;
+    m_data_dirs = a_from.m_data_dirs;
+    //m_cookie = a_from.m_cookie;
+    m_verbose = a_from.m_verbose;
+    if(&a_from==this) return *this;
+    m_uitems.clear(); //FIXME uuuu
+    delete m_file_finder;
+    m_file_finder = a_from.m_file_finder?a_from.m_file_finder->copy():0;
+    return *this;
+  }
+public:
+  node* current_list() const {
+    if(m_uitems.empty()) return 0;
+    return m_uitems[m_uitems.size()-1];
+  }
+  void push_list(node* a_list){
+    m_uitems.push_back(a_list);
+    ask_to_rebuild_gui();
+  }
+  node* pop_list(bool a_delete = true){
+    node* node = 0;
+    if(m_uitems.size()) {
+      node = m_uitems.back();
+      if(a_delete) {delete node;node=0;}
+      m_uitems.pop_back();
+    }
+    ask_to_rebuild_gui();
+    return node;
+  }
+
+  void clear_lists(){
+    safe_clear<node>(m_uitems);
+  }
+
+  void set_uitems(const std::vector<node*>& a_uitems){
+    clear_lists();
+    m_uitems = a_uitems; //take ownership of all node*
+    ask_to_rebuild_gui();
+  }
+
+  void push_back_item(){
+    if(m_uitems.size()>=2) { //do not remove the home list.
+      pop_list();
+    }
+  }
+
+  void push_home(){
+    clear_lists();
+    node* _node = create_main_menu();
+    if(_node) m_uitems.push_back(_node);
+    ask_to_rebuild_gui();
+  }
+
+public:
+  void map_warn_failed() {warn("failed");}
+  void map_warn_fit_failed() {warn("fit failed");}
+  void map_warn_no_plot() {warn("no plot");}
+  void map_warn_empty() {warn("empty");}
+  void map_warn_no_vis() {warn("no vis");}
+  void map_warn_not_found() {warn("not found");}
+  void map_warn_bad_syntax() {warn("bad syntax");}
+  void map_warn_bad_type() {warn("bad type");}
+  void map_warn_nan() {warn("not a number");}
+  void map_warn_nab() {warn("not a boolean");}
+  void map_warn_naf() {warn("not a float");}
+  void map_warn_naui() {warn("not an unsigned int");}
+  void map_warn_mem_limit() {warn("mem limit");}
+  void map_warn_unknown_action() {warn("unknown action");}
+  void map_warn_not_connected() {warn("not connected");}
+  void map_warn_net_error() {warn("network error");}
+
+  //template <class T>
+  //void show_value(const T& a_v,bool a_warn = true) {
+  //  warn(to<T>(a_v),a_warn);
+  //}
+
+  bool tow(const std::string& a_s,bool& a_v){
+    if(!to(a_s,a_v)) {map_warn_nab();return false;}
+    return true;
+  }
+
+  template <class T>
+  bool tow(const std::string& a_s,T& a_v){
+    if(!to<T>(a_s,a_v)) {map_warn_nan();return false;}
+    return true;
+  }
+
+  //warn with "ok" color :
+  void map_warn_done() {warn("done",false);}
+
+public: //m_params
+  float wanted_size() const {
+    return m_params.m_node_height>0?m_params.m_node_height:1;
+  }
+
+  std::string plane_exam_button_label() const {
+    return m_params.m_plane_viewer?"2D":"3D";
+  }
+
+  std::string single_shoot_button_label() const {
+    return m_params.m_single_shoot?"step":"anim";
+  }
+  std::string single_shoot_image_button_file() const {
+    return m_params.m_single_shoot?"flip_flop.jpg":"crazyeye_run.jpg";
+  }
+
+  std::string around_focal_button_label() const {
+    return m_params.m_anim_around_focal?"focal":"camera";
+  }
+
+  std::string viewing_button_label() const {
+    return m_params.m_viewing?"viewing":"picking";
+  }
+
+  std::string rot_90_button_label() const {
+    return m_params.m_90?"90":"";
+  }
+  std::string rot_90_image_button_file() const {
+    return m_params.m_90?"move2red.jpg":"";
+  }
+
+  bool plane_viewer() const {return m_params.m_plane_viewer;}
+  void set_plane_viewer(bool a_value) {m_params.m_plane_viewer = a_value;}
+
+public:
+  const std::string& app_name() const {return m_app_name;}
+  const std::string& app_version() const {return m_app_version;}
+  const std::string& tmp_dir() const {return m_tmp_dir;}
+  const std::string& res_dir() const {return m_res_dir;}
+  const std::string& pwd() const {return m_pwd;}
+  const std::vector<std::string>& data_dirs() const {return m_data_dirs;}
+
+  bool first_data_dir(std::string& a_s) const {
+    if(m_data_dirs.empty()) {a_s.clear();return false;}
+    a_s = m_data_dirs[0];
+    return true;
+  }
+
+  //const std::string& cookie() const {return m_cookie;}
+  //void set_cookie(const std::string& a_v) {m_cookie = a_v;}
+
+  void set_verbose(bool a_value) {m_verbose = a_value;}
+  bool verbose() const {return m_verbose;}
+
+public: //wall
+  ///////////////////////////////////////////////////
+  /// virtual for wall/screen_main : ////////////////
+  ///////////////////////////////////////////////////
+  virtual bool is_wall_screen_app() {return false;}
+
+  virtual bool get_data_sub_dirs(const std::string& a_path_from_first_data_dir,std::vector<std::string>& a_dirs){
+    std::string path;
+    first_data_dir(path);
+    if(path.empty()) {a_dirs.clear();return false;}
+    if(a_path_from_first_data_dir.size()) {
+      path += sep();
+      path += a_path_from_first_data_dir;
+    }
+    return dir::dirs(path,a_dirs,false); 
+  }
+
+  virtual bool get_data_files(std::vector<std::string>& a_files){
+    a_files.clear();
+   {std::string path;
+    first_data_dir(path);
+    if(path.size()) {
+      if(!dir::entries(path,a_files,false)) return false;
+    }}
+   {std::vector<std::string> v;
+    if(!dir::entries(res_dir(),v,false)) return false;
+    append(a_files,v);}
+    return true;
+  }
+
+  virtual bool get_data_sub_dir_files(
+    const std::string& a_path_from_first_data_dir,
+    std::vector<std::string>& a_files //absolute path.
+  ){
+    std::string path;
+    first_data_dir(path);
+    if(path.empty()) {a_files.clear();return false;}
+    if(a_path_from_first_data_dir.size()) {
+      path += sep();
+      path += a_path_from_first_data_dir;
+    }
+    std::vector<std::string> ls;
+    if(!dir::entries(path,ls,true)) {
+      out_stream() << "inlib::sg::guib::get_data_sub_dir_files :"
+            << " can't get entrie of " << path << "."
+            << std::endl;
+      a_files.clear();
+      return false; 
+    }
+    std::vector<std::string>::const_iterator it;
+    for(it=ls.begin();it!=ls.end();++it) {
+      bool is_dir;
+      if(!dir::is_a(*it,is_dir)||is_dir) continue;
+      a_files.push_back(path);
+    }
+    return true;
+  }
+
+  virtual bool get_time_now(atime& a_v) const {
+    a_v = atime::now();
+    return true;
+  }
+
+public:
+  void set_file_finder(file::finder* a_ff) {
+    //WARNING : we take ownership of a_ff.
+    delete m_file_finder;
+    m_file_finder = a_ff;
+  }
+  //file::finder* file_finder() const {return m_file_finder;}
+
+  bool find_file(const std::string& a_what,std::string& a_path) {
+    if(!m_file_finder) return false;
+    return m_file_finder->find(a_what,a_path);
+  }
+
+  bool find_dir(const std::string& a_what,std::string& a_path) {
+    if(!m_file_finder) return false;
+    return m_file_finder->find(a_what,a_path,false);
+  }
+
+  bool file_findable(const std::string& a_what) {
+    if(!m_file_finder) return false;
+    std::string _path;
+    return m_file_finder->find(a_what,_path);
+  }
+
+protected:
+  class finder : public virtual file::finder {
+#ifdef INLIB_MEM
+    INLIB_SCLASS(inlib::sg::guib::finder)
+#endif
+  public:
+    virtual file::finder* copy() const {return new finder(*this);}
+    virtual bool find(const std::string& a_what,
+                      std::string& a_path,
+                      bool a_file = true){ //false dir
+      //for pmx, agora in order to find det and vds files in res dir.
+      std::vector<std::string> dirs = m_gv.data_dirs();
+      dirs.push_back(m_gv.res_dir());
+      if(a_file) {
+        return find_with_dirs(m_gv.out_stream(),dirs,a_what,a_path);
+      } else {
+        return find_dir_with_dirs(m_gv.out_stream(),dirs,a_what,a_path);
+      }
+    }
+  public:
+    finder(guib& a_gv):m_gv(a_gv){
+#ifdef INLIB_MEM
+      mem::increment(s_class().c_str());
+#endif
+    }
+    virtual ~finder() {
+#ifdef INLIB_MEM
+      mem::decrement(s_class().c_str());
+#endif
+    }
+  public:
+    finder(const finder& a_from)
+    :file::finder(a_from)
+    ,m_gv(a_from.m_gv)
+    {
+#ifdef INLIB_MEM
+      mem::increment(s_class().c_str());
+#endif
+    }
+    finder& operator=(const finder&){return *this;}
+  protected:
+    guib& m_gv;
+  };
+
+public:
+  gui_params m_params;
+protected:
+  std::vector<node*> m_uitems;
+  std::string m_app_name;
+  std::string m_app_version;
+  std::string m_tmp_dir;
+  std::string m_res_dir;
+  std::string m_pwd;
+  std::vector<std::string> m_data_dirs;
+  //std::string m_cookie;
+  bool m_verbose;
+  file::finder* m_file_finder;
+};
+
+}}
+
+//inlib_build_use kernel
+
+#endif

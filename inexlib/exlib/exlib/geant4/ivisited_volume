@@ -1,0 +1,31 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_ivisited_volume
+#define exlib_geant4_ivisited_volume
+ 
+class G4VPhysicalVolume;
+class G4VSolid;
+class G4Material;
+
+namespace inlib{class mat4d;}
+
+namespace exlib {
+namespace geant4 {
+
+class ivisited_volume {
+public:
+  virtual ~ivisited_volume() {}
+public:
+  virtual bool begin_volume(G4VPhysicalVolume&,
+                            G4VSolid*,G4Material*,
+                            const inlib::mat4d&,
+                            bool& a_do_daugters) = 0; 
+  virtual void end_volume(G4VPhysicalVolume&) {}
+  virtual void begin_daughters(G4VPhysicalVolume&,int) {}
+  virtual void end_daughters(G4VPhysicalVolume&,int) {}
+};
+
+}}
+
+#endif

@@ -1,0 +1,37 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_SDL}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/SDL : cl.exe : SDL not yet supported."
+    exit
+  fi
+
+  if [ `uname` = Darwin ] ; then
+
+    if [ ! -d /opt/local/include/SDL ] ; then
+      echo 'bush/use/SDL : SDL not found under /opt/local/include.'
+      exit
+    fi
+
+    ccflags="${ccflags} -I/opt/local/include"
+    cppflags="${cppflags} -I/opt/local/include"
+
+    libs="${libs} -L/opt/local/lib -lSDL"
+
+  else
+
+    SDL_home=/usr
+    if [ ! -f ${SDL_home}/include/SDL/SDL.h ] ; then
+      echo "bush/use/SDL : ${SDL_home}/include/SDL/SDL.h not found."
+      exit
+    fi
+
+    ccflags="${ccflags} -I${SDL_home}/include"
+    cppflags="${cppflags} -I${SDL_home}/include"
+
+    libs="${libs} -L${SDL_home}/${lib} -lSDL"
+
+  fi
+
+fi

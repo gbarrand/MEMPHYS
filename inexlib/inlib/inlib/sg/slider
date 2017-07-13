@@ -1,0 +1,251 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_slider
+#define inlib_sg_slider
+
+#include "nodekit"
+#include "back_area"
+
+#include "matrix"
+
+#include "cbks"
+#include "../colorf"
+#include "../mathf"
+#include "enums"
+
+namespace inlib {
+namespace sg {
+
+class slider : public back_area {
+  INLIB_NODE(slider,inlib::sg::slider,back_area)
+public:
+  sf<float> value; //[0,1] //percent of width.
+  sf<float> size;
+  //sf<bool> horizontal;
+
+  sf_vec<colorf,float> color;
+  sf<bool> back_visible;  
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::slider)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(value)
+      INLIB_ADD_FIELD_DESC(size)
+      INLIB_ADD_FIELD_DESC(color)
+      INLIB_ADD_FIELD_DESC(back_visible)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&value);
+    add_field(&size);
+    //add_field(&horizontal);
+
+    add_field(&color);
+    add_field(&back_visible);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    if(back_visible.value()) m_back_sep.render(a_action);
+    m_sep.render(a_action);
+  }
+
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    nodekit_pick(a_action,m_sep,this);
+  }
+
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    if(back_visible.value()) {
+      m_back_sep.search(a_action);
+      if(a_action.done()) return;
+    }
+    m_sep.search(a_action);
+    if(a_action.done()) return;
+  }
+
+  virtual void bbox(bbox_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    if(back_visible.value()) m_back_sep.bbox(a_action);
+    m_sep.bbox(a_action);
+  }
+
+public:
+  slider()
+  :parent()
+  ,value(0)
+  ,size(0.1f)
+  //,horizontal(true)
+
+  ,color(colorf_black())
+  ,back_visible(true)
+  {
+    add_fields();
+  }
+  virtual ~slider(){}
+public:
+  slider(const slider& a_from)
+  :parent(a_from)
+  ,value(a_from.value)
+  ,size(a_from.size)
+  //,horizontal(a_from.horizontal)
+
+  ,color(a_from.color)
+  ,back_visible(a_from.back_visible)
+
+  ,m_begs(a_from.m_begs)
+  ,m_drags(a_from.m_drags)
+  ,m_ends(a_from.m_ends)
+  {
+    add_fields();
+  }
+  slider& operator=(const slider& a_from){
+    parent::operator=(a_from);
+
+    value = a_from.value;
+    size = a_from.size;
+    //horizontal = a_from.horizontal;
+
+    color = a_from.color;
+    back_visible = a_from.back_visible;
+
+    m_begs = a_from.m_begs;
+    m_drags = a_from.m_drags;
+    m_ends = a_from.m_ends;
+
+    return *this;
+  }
+public:
+  void check_value() {
+    float v = value;
+    if(v>1) value = 1;
+    else if(v<0) value = 0;
+  }
+  void add_begin_callback(bcbk* a_cbk) {m_begs.add(a_cbk);}
+  void add_drag_callback(bcbk* a_cbk) {m_drags.add(a_cbk);}
+  void add_end_callback(bcbk* a_cbk) {m_ends.add(a_cbk);}
+
+  const std::vector<bcbk*>& begs() const  {return m_begs.callbacks();}
+  const std::vector<bcbk*>& drags() const {return m_drags.callbacks();}
+  const std::vector<bcbk*>& ends() const  {return m_ends.callbacks();}
+
+  void clear_cbks() {
+    m_begs.clear();
+    m_drags.clear();
+    m_ends.clear();
+  }
+
+  bool set_value(const state& a_state,const move_event& a_event) {
+    float ox,oy,oz;
+    if(!a_state.screen2wc(a_event.ox(),a_event.oy(),ox,oy,oz)) return false; 
+    float x,y,z;
+    if(!a_state.screen2wc(a_event.x(),a_event.y(),x,y,z)) return false;
+    float dx = x-ox; // "delta touch" in slider local coords :
+    value = value+dx/width.value();
+    check_value();
+    return true;
+  }
+
+protected:
+  void update_sg() {
+    parent::update_sg();
+
+    m_sep.clear();
+
+    if(width.value()<=0) return;
+    if(height.value()<=0) return;
+    if(size.value()<=0) return;
+
+    float fact = value; //percent of width.
+    if(fact>1) fact = 1;
+    if(fact<0) fact = 0;
+
+    float pos =  width*fact; //relative to the left.
+
+    float xb = -width*0.5f+pos-size*0.5f;
+    float xe =  xb+size;
+
+    float xmn = -width*0.5f;
+    float xmx =  width*0.5f;
+    if(xb<xmn) xb = xmn;
+    if(xe>xmx) xe = xmx;
+
+    float yb = -height*0.5f;
+    float ye =  height*0.5f;
+
+    //sf<float> zfront ?
+    float zborder = back_visible.value()?0.01f:0;
+    float zthumb = zborder*0.5f;
+
+   {// thumb :
+    sg::rgba* mat = new sg::rgba();
+    mat->color = color;
+    m_sep.add(mat);
+
+    normal* nm = new normal;
+    //nm->vec.value(); //default is z. ok.
+    m_sep.add(nm);
+
+    vertices* vtxs = new vertices;
+    vtxs->mode = gl::triangle_fan();
+    m_sep.add(vtxs);
+
+    float zz = zthumb;
+    vtxs->add(xb,yb,zz);
+    vtxs->add(xe,yb,zz);
+    vtxs->add(xe,ye,zz);
+    vtxs->add(xb,ye,zz);}
+
+   {//thumb border :
+    sg::rgba* mat = new sg::rgba();
+    mat->color = border_color;
+    m_sep.add(mat);
+
+    draw_style* ds = new draw_style;
+    ds->style = draw_style::lines;
+    ds->line_width = 1;
+    m_sep.add(ds);
+
+    vertices* vtxs = new vertices;
+    vtxs->mode = gl::line_strip();
+    m_sep.add(vtxs);
+
+    float zz = zborder;
+    vtxs->add(xb,yb,zz);
+    vtxs->add(xe,yb,zz);
+    vtxs->add(xe,ye,zz);
+    vtxs->add(xb,ye,zz);
+    vtxs->add(xb,yb,zz);}
+
+  }
+
+protected:
+  separator m_sep;
+  cbks m_begs;
+  cbks m_drags;
+  cbks m_ends;
+};
+
+}}
+
+#endif

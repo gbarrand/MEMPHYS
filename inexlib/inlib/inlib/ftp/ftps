@@ -1,0 +1,104 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_ftp_ftps
+#define inlib_ftp_ftps
+
+#include "client"
+
+#include "../forit"
+#include "../b2s"
+#include "../file"
+#include "../xml/tree"
+
+namespace inlib {
+namespace ftp {
+
+class ftps : public std::vector<client> {
+  typedef std::vector<client> parent;
+public:
+  ftps(){}
+  virtual ~ftps(){}
+public:
+  ftps(const ftps& a_from):parent(a_from){}
+  ftps& operator=(const ftps& a_from){parent::operator=(a_from);return *this;}
+public:
+  void add(const std::string& a_host,const std::string& a_user,
+           const std::string& a_pass,const std::string& a_dir,bool a_active){
+    //look if already in the list :
+    inlib_vforcit(client,*this,it) {
+      if( ((*it).host()==a_host) && 
+          ((*it).user()==a_user) &&
+          ((*it).pass()==a_pass) &&
+          ((*it).dir()==a_dir)   &&
+          ((*it).active()==a_active) 
+        ) return;
+    }
+    parent::push_back(client(a_host,a_user,a_pass,a_dir,a_active));
+  }
+  bool save(const std::string& a_path) const {
+    std::vector<std::string> lines;
+    std::string stmp;
+    lines.push_back("<ftps>");
+    inlib_vforcit(client,*this,it) {
+      lines.push_back("  <ftp>");
+      lines.push_back("    <host>"+(*it).host()+"</host>");
+      lines.push_back("    <user>"+(*it).user()+"</user>");
+      lines.push_back("    <pass>"+(*it).pass()+"</pass>");
+      lines.push_back("    <dir>"+(*it).dir()+"</dir>");
+      b2s((*it).active(),stmp);
+      lines.push_back("    <active>"+stmp+"</active>");
+      lines.push_back("  </ftp>");
+    }    
+    lines.push_back("</ftps>");
+    return file::write(a_path,lines);
+  }
+
+public:
+  bool scan_tree(const xml::tree& a_tree) {
+    const std::string& tag = a_tree.tag_name();
+    if(tag=="ftps") {
+    } else if(tag=="ftp") {   
+      load(a_tree);
+    }
+  
+    // scan children :
+   {xml::looper _for(a_tree);
+    while(xml::tree* _tree = _for.next_tree()) {
+      if(!scan_tree(*_tree)) return false;
+    }}
+  
+    return true;
+  }
+  
+  void load(const xml::tree& a_tree) {
+    std::string host,user,pass,dir;
+    bool active = true;
+
+   {xml::looper _for(a_tree);
+    while(xml::element* _elem = _for.next_element()) {
+
+      if(_elem->name()=="host") {
+        host = _elem->value();
+      } else if(_elem->name()=="user") {
+        user = _elem->value();
+      } else if(_elem->name()=="pass") {
+        pass = _elem->value();
+      } else if(_elem->name()=="dir") {
+        dir = _elem->value();
+      } else if(_elem->name()=="active") {
+        if(!to(_elem->value(),active)) { //return false ?
+          active = true;
+        }
+      }
+
+    }}  
+
+    if(host.size() && user.size() && dir.size()) add(host,user,pass,dir,active);
+  }
+
+};
+
+}}
+
+#endif

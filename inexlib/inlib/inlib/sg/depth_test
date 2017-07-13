@@ -1,0 +1,61 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_depth_test
+#define inlib_sg_depth_test
+
+#include "node"
+#include "sf"
+#include "render_action"
+
+namespace inlib {
+namespace sg {
+
+class depth_test : public node {
+  INLIB_NODE(depth_test,inlib::sg::depth_test,node)
+public:
+  sf<bool> on;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::depth_test)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(on)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&on);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    a_action.set_depth_test(on.value());
+    a_action.state().m_GL_DEPTH_TEST = on.value(); //for separator
+  }
+public:
+  depth_test()
+  :parent()
+  ,on(true)
+  {
+    add_fields();
+  }
+  virtual ~depth_test(){}
+public:
+  depth_test(const depth_test& a_from)
+  :parent(a_from)
+  ,on(a_from.on)
+  {
+    add_fields();
+  }
+  depth_test& operator=(const depth_test& a_from){
+    parent::operator=(a_from);
+    on = a_from.on;
+    return *this;
+  }
+};
+
+}}
+
+#endif

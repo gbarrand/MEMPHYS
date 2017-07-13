@@ -1,0 +1,97 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_lut
+#define inlib_lut
+
+#include <cstddef> //size_t
+
+namespace inlib {
+
+// TB = Borne
+template <class TB>
+class lut {
+public:  
+  lut(const TB& a_min = TB(0),const TB& a_max = TB(1),size_t a_coln = 12)
+  :m_min(a_min)
+  ,m_max(a_max)
+  ,m_coln(a_coln)
+  ,m_dx(0)
+  {
+    //NOTE : we should have a_max>a_min and a_coln >=3.
+
+    // a_coln = 5 :
+    // <>  |  <>  |  <>  |  <>  |  <>  // a_coln <>
+    //    min                  max
+    // there are :
+    //   5 <> 
+    // and :
+    //   4 | (borne)
+    if(m_max<=m_min) m_max = m_min+1; //throw
+    if(m_coln<3)     m_coln = 3;      //throw
+    m_dx = (m_max-m_min)/(m_coln-2);
+    //if(m_dx==TB(0)) //throw
+  }
+  virtual ~lut(){}
+public:
+  lut(const lut& a_from)
+  :m_min(a_from.m_min)
+  ,m_max(a_from.m_max)
+  ,m_coln(a_from.m_coln)
+  ,m_dx(a_from.m_dx)
+  {}
+  lut& operator=(const lut& a_from){
+    //if(&a_from==this) return *this;
+    m_min = a_from.m_min;
+    m_max = a_from.m_max;
+    m_coln = a_from.m_coln;
+    m_dx = a_from.m_dx;
+    return *this;
+  }
+public:
+  size_t apply(const TB& a_x) const {    
+    // a_coln = 5 :
+    // <>  |  <>  |  <>  |  <>  |  <>  // a_coln <>
+    //    min                  max
+    // return :
+    //  0     1      2      3      4
+
+    // return something in [0,a_coln-1]
+    if(a_x<m_min) return 0;
+    if(a_x>=m_max) return m_coln-1;
+    return size_t((a_x-m_min)/m_dx)+1;
+/*
+    TB pos = m_min;
+    TO num = m_coln-1;
+    for(TO i=0;i<num;i++,pos+=m_dx) {
+      if(a_x<pos) return i;
+    }
+    return num;
+*/
+  }
+  bool operator==(const lut& a_r) const {
+    if(m_min!=a_r.m_min) return false;
+    if(m_max!=a_r.m_max) return false;
+    if(m_coln!=a_r.m_coln) return false;
+    return true;
+  }
+  bool operator!=(const lut& a_r) const {
+    return !operator==(a_r);
+  }
+public:
+  TB mn() const {return m_min;}
+  TB mx() const {return m_max;}
+  size_t coln() const {return m_coln;}
+protected:
+  TB m_min,m_max;
+  size_t m_coln;
+  TB m_dx;
+
+private: static void check_instantiation() {lut<double> l(0,1,256);l.apply(0.5);}
+};
+
+typedef lut<float> lut_float;
+
+}
+
+#endif

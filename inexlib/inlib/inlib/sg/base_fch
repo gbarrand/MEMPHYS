@@ -1,0 +1,294 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_base_fch
+#define inlib_sg_base_fch
+
+// fch = file_chooser.
+
+#include "list"
+#include "../path"
+#include "../file_format"
+
+#include "sf_string"
+
+namespace inlib {
+namespace sg {
+
+class base_fch : public list {
+  INLIB_HEADER(base_fch,inlib::sg::base_fch,list)
+public:
+  virtual bool get_dirs(std::ostream& /*a_out*/,
+                        const std::string& a_path,
+                        std::vector<std::string>& a_dirs) = 0;
+  virtual bool get_files(std::ostream& a_out,
+                         const std::string& a_path,
+                         const std::string& a_ext,
+                         std::vector<std::string>& a_paths) = 0;
+public:
+  mf_string exts;
+  mf_string dirs;
+
+  sf_string value;
+  sf_string format;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::base_fch)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(exts)
+      INLIB_ADD_FIELD_DESC(dirs)
+      INLIB_ADD_FIELD_DESC(value)
+      INLIB_ADD_FIELD_DESC(format)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&exts);
+    add_field(&dirs);
+    add_field(&value);
+    add_field(&format);
+  }
+public:
+  base_fch(const base_freetype& a_ttf)
+  :parent(a_ttf)
+  ,exts()
+  ,dirs()
+  ,value()
+  ,format(file::s_format_guessed())
+
+  ,m_cbks()
+  {
+    add_fields();
+  }
+  virtual ~base_fch(){}
+public:
+  base_fch(const base_fch& a_from)
+  :ilist(a_from)
+  ,parent(a_from)
+  ,exts(a_from.exts)
+  ,dirs(a_from.dirs)
+  ,value(a_from.value)
+  ,format(a_from.format)
+
+  ,m_cbks(a_from.m_cbks)
+  ,m_stack(a_from.m_stack)
+  {
+    add_fields();
+  }
+  base_fch& operator=(const base_fch& a_from){
+    parent::operator=(a_from);
+    exts = a_from.exts;
+    dirs = a_from.dirs;
+    value = a_from.value;
+    format = a_from.format;
+
+    m_cbks = a_from.m_cbks;
+    m_stack = a_from.m_stack;
+
+    return *this;
+  }
+public:
+  void add_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cbks.callbacks().push_back(a_cbk);
+    touch();
+  }
+  void clear_cbks(){
+    m_cbks.clear();
+    touch();
+  }
+public:
+  void initialize(std::ostream& a_out) {
+    clear();   
+    label.value().clear();
+
+   {const std::vector<std::string>& vs = dirs.values();
+    if(vs.size()>=2){
+      inlib_vforcit(std::string,vs,it) {
+        _cbk* cbk_ = new _cbk(*this,a_out,action_choose_dir());
+        cbk_->m_path = *it;
+        add(base_name(*it),cbk_,true);
+      }
+    } else if(vs.size()==1) {
+      _cbk* cbk_ = new _cbk(*this,a_out,action_choose_dir());
+      cbk_->m_path = vs[0];
+      add(base_name(vs[0]),cbk_,true);
+    }}
+
+    m_stack.clear();
+    m_stack.push_back(stack_item(label.value(),items));
+
+    clear_cancel_cbks();
+    add_cancel_callback(new _cbk(*this,a_out,action_up()));
+    cancel_label = "up";
+  }
+protected:
+  static unsigned int action_choose_dir() {return 0;}
+  static unsigned int action_choose_ext() {return 1;}
+  static unsigned int action_choose_fmt() {return 2;}
+  static unsigned int action_open()       {return 3;}
+  static unsigned int action_up()         {return 5;}
+
+public:
+  class _cbk : public acbk {
+    INLIB_CLASS_STRING(format_)
+  public:
+    virtual return_action action() {
+
+      if(m_action==action_up()) {
+        if(m_this.m_stack.size()>=2) {
+          m_this.m_stack.pop_back();
+          m_this.clear();
+          m_this.label = m_this.m_stack.back().first;
+          m_this.items = m_this.m_stack.back().second;
+        } else {
+          m_this.initialize(m_out);
+        }
+        return return_to_render;
+
+      } else if(m_action==action_choose_dir()) {
+
+        m_this.clear();
+        m_this.label.value().clear();
+
+        //sub dirs :
+       {std::vector<std::string> _dirs;
+        if(m_this.get_dirs(m_out,m_path,_dirs)) {
+          inlib_vforcit(std::string,_dirs,it) {
+            _cbk* cbk_ = new _cbk(m_this,m_out,action_choose_dir());
+            cbk_->m_path = *it;
+            m_this.add(base_name(*it),cbk_,true);
+          }
+        }}
+
+       {const std::vector<std::string>& vs = m_this.exts.values();
+        if(vs.size()>=2){
+          inlib_vforcit(std::string,vs,it) {
+            _cbk* cbk_ = new _cbk(m_this,m_out,action_choose_ext());
+            cbk_->m_path = m_path;
+            cbk_->m_ext = *it;
+            m_this.add(*it,cbk_);
+          }
+        } else if(vs.size()==1) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_choose_ext());
+          cbk_->m_path = m_path;
+          cbk_->m_ext = vs[0];
+          m_this.add(vs[0],cbk_);
+        }}
+    
+        m_this.m_stack.push_back
+          (stack_item(m_this.label.value(),m_this.items));
+
+        return return_to_render;
+
+      } else if(m_action==action_choose_ext()) {
+
+        m_this.clear();
+        m_this.label.value().clear();
+
+        std::vector<std::string> paths;
+        if(!m_this.get_files(m_out,m_path,m_ext,paths)){}
+  
+       {inlib_vforcit(std::string,paths,it) {
+          if(m_ext=="*") {
+            _cbk* cbk_ = new _cbk(m_this,m_out,action_choose_fmt());
+            cbk_->m_path = *it;
+            m_this.add(base_name(*it),cbk_);
+          } else {
+            _cbk* cbk_ = new _cbk(m_this,m_out,action_open());
+            cbk_->m_ext = m_ext;
+            cbk_->m_path = *it;
+            cbk_->m_fmt = file::ext_fmt(m_ext);
+            list_item item(base_name(*it),cbk_);
+            item.copy_cbks(m_this.m_cbks,false);
+            m_this.items.add(item);
+          }
+        }}
+
+        m_this.m_stack.push_back
+          (stack_item(m_this.label.value(),m_this.items));
+
+        return return_to_render;
+
+      } else if(m_action==action_choose_fmt()) {
+
+        std::string::size_type sz = s_format_().size();
+
+        m_this.clear();
+        m_this.label = "formats";
+
+        std::vector<std::string> fmts;
+        file::formats(fmts);
+       {inlib_vforcit(std::string,fmts,it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_open());
+          cbk_->m_path = m_path;
+          cbk_->m_fmt = *it;
+          std::string label = (*it).substr(sz,(*it).size()-sz);
+          list_item item(label,cbk_);
+          item.copy_cbks(m_this.m_cbks,false);
+          m_this.items.add(item);
+        }}
+
+        m_this.m_stack.push_back(stack_item(m_this.label.value(),m_this.items));
+
+        return return_to_render;
+
+      } else if(m_action==action_open()) {
+
+        m_this.value = m_path;
+        m_this.format = m_fmt;
+        return return_none;
+
+      } else {
+        m_out << "inlib::sg::base_fch::_cbk::action :"
+              << " unknown action"
+              << std::endl;
+      }
+
+      return return_none;
+    }
+    virtual bcbk* copy() const {return new _cbk(*this);}
+  public:
+    _cbk(base_fch& a_this,std::ostream& a_out,unsigned int a_action)
+    :acbk(a_action)    
+    ,m_this(a_this)
+    ,m_out(a_out)
+    {}
+    virtual ~_cbk(){}
+  public:
+    _cbk(const _cbk& a_from)
+    :acbk(a_from)
+    ,m_this(a_from.m_this)
+    ,m_out(a_from.m_out)
+    ,m_ext(a_from.m_ext)
+    ,m_path(a_from.m_path)
+    ,m_fmt(a_from.m_fmt)
+    {}
+    _cbk& operator=(const _cbk& a_from){
+      acbk::operator=(a_from);
+      m_ext = a_from.m_ext;
+      m_path = a_from.m_path;
+      m_fmt = a_from.m_fmt;
+      return *this;
+    }
+  protected:
+    base_fch& m_this;
+    std::ostream& m_out;
+  public:
+    std::string m_ext;
+    std::string m_path;
+    std::string m_fmt;
+  };
+
+protected:
+  cbks m_cbks;
+  typedef mf_list_item mf_t;
+  typedef std::pair<std::string,mf_t> stack_item;  
+  std::vector<stack_item> m_stack;  
+};
+
+}}
+
+#endif

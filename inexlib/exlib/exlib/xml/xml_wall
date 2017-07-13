@@ -1,0 +1,31 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_xml_wall
+#define exlib_xml_wall
+
+#include "loader"
+
+#include <inlib/xml/walls>
+
+namespace exlib {
+namespace xml {
+
+inline bool load_wall_file(std::ostream& a_out,inlib::xml::walls& a_walls,const std::string& a_file) {
+  inlib::xml::default_factory factory;
+  exlib::xml::loader ml(factory,a_out,false);
+  std::vector<std::string> tags;
+  tags.push_back("walls");
+  tags.push_back("wall");
+  ml.set_tags(tags);
+  if(!ml.load_file(a_file,false)) return false;
+  inlib::xml::tree* top = ml.top_item();
+  if(!top) return true; //File could be empty.
+  return a_walls.scan_tree(*top);
+}
+
+}}
+
+#endif
+
+//exlib_build_use inlib expat

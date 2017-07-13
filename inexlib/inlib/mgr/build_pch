@@ -1,0 +1,59 @@
+#!/bin/sh -f
+
+bush_home=`dirname $0`/../../../bush
+
+#////////////////////////////////////
+#/// args : /////////////////////////
+#////////////////////////////////////
+what=
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -*) build_args="${build_args} $1";;
+     *) if [ $# = 1 ] ; then what=$1; else echo "unknown option : $1"; fi;;
+  esac
+  shift
+done
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+if [ "${what}" = "" ] ; then
+  find ../inlib -name '*' -type f -exec ./build_pch ${build_args} {} \;
+  exit
+fi
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+dir=`dirname ${what}`
+name=`basename ${what}`
+group=`basename ${dir}`
+
+#////////////////////////////////////
+#/// to skip : //////////////////////
+#////////////////////////////////////
+if [ "`echo ${what} | grep '\.pch'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.help'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.icc'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.ic'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.js'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.txt'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.out'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.ps'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.style'`" != "" ] ; then exit; fi
+if [ ${name} = "README" ] ; then exit;fi
+
+. ${bush_home}/header
+
+/bin/mkdir -p "./${build_dir}/inlib/inlib"
+
+#echo ${build_dir}
+#echo ${what}
+#echo ${dir}
+
+target_dir="./${build_dir}/inlib/inlib/${dir}"
+/bin/mkdir -p "${target_dir}"
+
+clang++ -x c++-header ${what} -o ${target_dir}/${name}.pch

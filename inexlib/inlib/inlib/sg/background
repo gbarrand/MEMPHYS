@@ -1,0 +1,30 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_background
+#define inlib_sg_background
+
+// used to popup on the background.
+
+#include "node"
+
+namespace inlib {
+namespace sg {
+
+class background : public node {
+public:
+  INLIB_NODE(background,inlib::sg::background,node)
+public:
+  background():parent() {}
+  virtual ~background(){}
+public:
+  background(const background& a_from):parent(a_from) {}
+  background& operator=(const background& a_from){
+    parent::operator=(a_from);
+    return *this;
+  }
+};
+
+}}
+
+#endif

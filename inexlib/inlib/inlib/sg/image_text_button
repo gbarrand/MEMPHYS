@@ -1,0 +1,154 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_image_text_button
+#define inlib_sg_image_text_button
+
+#include "image_button"
+#include "text"
+#include "noderef"
+
+namespace inlib {
+namespace sg {
+
+class image_text_button : public image_button {
+  INLIB_NODE(image_text_button,inlib::sg::image_text_button,image_button)
+public:
+  sf_enum<layout_policy> layout;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::image_text_button)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(layout)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&layout);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    parent::render(a_action);
+    m_sep.render(a_action);
+  }
+public:
+  image_text_button(const base_freetype& a_ttf)
+  :parent()
+  ,layout(layout_text_under_image)
+//,layout(layout_text_at_left_of_image)
+  ,m_text(a_ttf)
+  {
+    add_fields();
+  }
+  virtual ~image_text_button(){}
+public:
+  image_text_button(const image_text_button& a_from)
+  :parent(a_from)
+  ,layout(a_from.layout)
+  ,m_text(a_from.m_text)
+  {
+    add_fields();
+  }
+  image_text_button& operator=(const image_text_button& a_from){
+    parent::operator=(a_from);
+    layout = a_from.layout;
+    return *this;
+  }
+public:
+  sg::text& text() {return m_text;}
+
+  void set_label(const std::string& a_label) {
+    m_text.strings.clear();
+    m_text.strings.add(a_label);
+  }
+protected:
+  void update_sg() {
+    
+    if(!img.value().is_empty() && !m_text.is_empty() &&
+       (layout.value()==layout_text_at_left_of_image)) {
+      hjust = right; //image at right
+    }
+
+    parent::update_sg();
+
+    m_sep.clear();
+
+    if(width.value()<=0) return;
+    if(height.value()<=0) return;
+    if(m_text.is_empty()) return;
+
+    //sf<float> zfront ?
+    float zz = parent::back_visible.value()?0.01f:0;
+
+    if(img.value().is_empty()) {
+
+      //matrix* tsf = new matrix;
+      //tsf->set_translate(0,0,zz);
+      //m_sep.add(tsf);
+
+      m_text.width = width * 0.9f;
+      m_text.height = height * hmargin_factor;
+      m_text.hmargin_factor = 1;
+      m_text.hjust = center;
+      m_text.confine = true;
+
+    } else {
+ 
+      if(layout.value()==layout_text_under_image) {
+        float himg = height * hmargin_factor; //image height
+        float htext = (height-himg)*0.5f;
+        matrix* tsf = new matrix;
+        tsf->set_translate(0,-height*0.5f+htext*0.5f,zz);
+        m_sep.add(tsf);
+        m_text.height = htext;
+        m_text.hmargin_factor = 0.95f;
+        m_text.width = width * 0.9f;
+        m_text.hjust = center;
+        m_text.confine = true;
+
+      } else if(layout.value()==layout_text_at_left_of_image) {
+        // same image_button::update()
+        float himg = height * hmargin_factor; //image height
+        float aimg = float(img.value().width())/float(img.value().height());
+        float wimg = aimg*himg;
+        float hmarg = height * (1.0f-hmargin_factor) * 0.5f;
+        float wmarg = hmarg;
+        // end same.
+
+        float htext = himg*0.95f;
+        float wtext = width-wimg-2*wmarg-wmarg;
+
+        m_text.height = htext;
+        m_text.width = wtext;
+        m_text.hmargin_factor = 1;
+        m_text.wmargin_factor = 1;
+        m_text.hjust = left;
+        //m_text.hjust = center;
+        m_text.confine = true;
+
+        float x = -width*0.5f+wtext*0.5f+wmarg;
+
+        matrix* tsf = new matrix;
+        tsf->set_translate(x,0,zz);
+        m_sep.add(tsf);
+      }
+    }
+
+    m_text.back_visible = false;
+    m_sep.add(new noderef(m_text));
+  }
+protected:
+  separator m_sep;
+  sg::text m_text;
+};
+
+}}
+
+#endif

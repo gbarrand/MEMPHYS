@@ -1,0 +1,65 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_file_iterator
+#define inlib_file_iterator
+
+// to loop on files from a directory or a zip file.
+
+#include <ostream>
+#include "S_STRING"
+
+#ifdef INLIB_MEM
+#include "mem"
+#endif
+
+namespace inlib {
+
+class file_iterator {
+public:
+  INLIB_SCLASS(inlib::file_iterator)
+public:
+  virtual size_t entries() const = 0;
+  virtual size_t index() const = 0;
+  virtual bool next() = 0;
+  virtual bool rewind() = 0;
+public:
+  virtual bool open(const std::string&) = 0;
+  //virtual bool close() = 0;
+
+  virtual bool begin_buffer(size_t&,char*&) = 0;
+  virtual bool end_buffer(char*&) = 0;
+public:
+  file_iterator(std::ostream& a_out,bool a_verbose = false)
+  :m_out(a_out),m_verbose(a_verbose){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~file_iterator(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  file_iterator(const file_iterator& a_from)
+  :m_out(a_from.m_out)
+  ,m_verbose(a_from.m_verbose)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  file_iterator& operator=(const file_iterator& a_from){
+    if(&a_from==this) return *this;
+    m_verbose = a_from.m_verbose;
+    return *this;
+  }
+protected:
+  std::ostream& m_out; 
+  bool m_verbose;
+};
+
+}
+
+#endif

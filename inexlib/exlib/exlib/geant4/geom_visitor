@@ -1,0 +1,241 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_geom_visitor
+#define exlib_geant4_geom_visitor
+ 
+#include "ivisited_volume"
+
+#include <G4VPhysicalVolume.hh>
+#include <G4LogicalVolume.hh>
+#include <G4VPVParameterisation.hh>
+#include <G4VSolid.hh>
+#include <G4Material.hh>
+
+#include <inlib/mat4d>
+
+namespace exlib {
+namespace geant4 {
+
+class geom_visitor {
+public:
+  geom_visitor(std::ostream& a_out)
+  :m_out(a_out)
+  ,m_min_depth(0)
+  ,m_max_depth(1)
+  {}
+  virtual ~geom_visitor() {}
+public:
+  geom_visitor(const geom_visitor& a_from)
+  :m_out(a_from.m_out)
+  ,m_min_depth(a_from.m_min_depth)
+  ,m_max_depth(a_from.m_max_depth)
+  {}
+  geom_visitor& operator=(const geom_visitor& a_from){
+    m_min_depth = a_from.m_min_depth;
+    m_max_depth = a_from.m_max_depth;
+    return *this;
+  }
+public:
+  // From Geant4/source/visualization/modeling/G4PhysicalVolumeModel.
+  bool visit(G4VPhysicalVolume& a_pv,
+             const inlib::mat4d& a_transform,
+             ivisited_volume& a_visited_volume,
+             unsigned int a_depth){
+
+    if(a_depth>=m_max_depth) return true; //stop descending.
+
+    // Visits geometry structure to a given depth (a_depth), starting
+    //   at given physical volume with given starting transformation and
+    //   describes volumes to the scene handler.
+    // a_transform is the Accumulated Transformation.
+    //
+    // Do not hold unnecessary variables on the stack during traversal.
+    if (a_pv.IsReplicated()) {
+      if(a_pv.GetParameterisation()) {  // Parametrised volume.
+        G4VPVParameterisation* params = a_pv.GetParameterisation();
+        G4int nReplicas; // Only this one is used latter.
+       {EAxis axis;
+        G4double width;
+        G4double offset;
+        G4bool consuming;
+        a_pv.GetReplicationData(axis,nReplicas,width,offset,consuming);}
+        for (int n = 0; n < nReplicas; n++) {
+          G4VSolid* solid = params->ComputeSolid (n,&a_pv);
+          G4Material* material = params->ComputeMaterial(n,&a_pv);
+          params->ComputeTransformation(n,&a_pv);
+          solid->ComputeDimensions (params,n,&a_pv);
+          a_pv.SetCopyNo(n);
+
+          if(!do_this(a_pv,solid,material,a_transform,
+                      a_visited_volume,a_depth)) return false;
+        }
+      } else {  
+        // Plain replicated volume.  From geometry_guide.txt...
+        // The replica's positions are calculated by means of a linear formula.
+        // Replication may occur along:
+        // 
+        // o Cartesian axes (kXAxis,kYAxis,kZAxis)
+        // 
+        //   The replications, of specified width have coordinates of
+        //   form (-width*(nReplicas-1)*0.5+n*width,0,0)
+        //     where n=0.. nReplicas-1
+        //   for the case of kXAxis, and are unrotated.
+        // 
+        // o Radial axis (cylindrical polar) (kRho)
+        // 
+        //   The replications are cons/tubs sections, centred on the origin
+        //   and are unrotated.
+        //   They have radii of width*n+offset to width*(n+1)+offset
+        //                      where n=0..nReplicas-1
+        // 
+        // o Phi axis (cylindrical polar) (kPhi)
+        //   The replications are `phi sections' or wedges,
+        //   and of cons/tubs form
+        //   They have phi of offset+n*width to offset+(n+1)*width where
+        //   n=0..nReplicas-1
+        // 
+        EAxis axis;
+        G4int nReplicas;
+        G4double width;
+        G4double offset;
+        G4bool consuming;
+        a_pv.GetReplicationData(axis,nReplicas,width,offset,consuming);
+        for (int n = 0; n < nReplicas; n++) {
+          switch(axis) {
+          default:
+          case kXAxis:{
+            a_pv.SetTranslation(G4ThreeVector
+                                (-width*(nReplicas-1)*0.5+n*width,0,0));
+            a_pv.SetRotation(0);
+            a_pv.SetCopyNo(n);
+
+            if(!do_this(a_pv,
+                        a_pv.GetLogicalVolume()->GetSolid(),
+                        a_pv.GetLogicalVolume()->GetMaterial(),
+                        a_transform,a_visited_volume,a_depth)) return false;
+            }break;
+          case kYAxis:{
+            a_pv.SetTranslation(G4ThreeVector
+                                (0,-width*(nReplicas-1)*0.5+n*width,0));
+            a_pv.SetRotation(0);
+            a_pv.SetCopyNo(n);
+
+            if(!do_this(a_pv,
+                        a_pv.GetLogicalVolume()->GetSolid(),
+                        a_pv.GetLogicalVolume()->GetMaterial(),
+  		        a_transform,a_visited_volume,a_depth)) return false;
+            }break;
+          case kZAxis:{
+            a_pv.SetTranslation(G4ThreeVector
+                                (0,0,-width*(nReplicas-1)*0.5+n*width));
+            a_pv.SetRotation(0);
+            a_pv.SetCopyNo(n);
+
+            if(!do_this(a_pv,
+                        a_pv.GetLogicalVolume()->GetSolid(),
+                        a_pv.GetLogicalVolume()->GetMaterial(),
+                        a_transform,a_visited_volume,a_depth)) return false;
+            }break;
+          case kRho:{
+            m_out << "geom_visitor::visit: WARNING: "
+                  << " built-in replicated volumes replicated"
+                  << " in radius are not yet properly visualizable."
+                  << std::endl;
+            a_pv.SetTranslation(G4ThreeVector(0,0,0));
+            a_pv.SetRotation(0);
+            a_pv.SetCopyNo(n);
+
+            if(!do_this(a_pv,
+                        a_pv.GetLogicalVolume()->GetSolid(),
+                        a_pv.GetLogicalVolume()->GetMaterial(),
+                        a_transform,a_visited_volume,a_depth)) return false;
+            }break;
+          case kPhi:
+           {G4RotationMatrix rotation;
+            rotation.rotateZ(-(offset+n*width));
+            // Minus Sign because for the physical volume we need the
+            // coordinate system rotation.
+            a_pv.SetTranslation(G4ThreeVector(0,0,0));
+            a_pv.SetRotation(&rotation);
+            a_pv.SetCopyNo(n);
+
+            if(!do_this(a_pv,
+                        a_pv.GetLogicalVolume()->GetSolid(),
+                        a_pv.GetLogicalVolume()->GetMaterial(),
+                        a_transform,a_visited_volume,a_depth)) return false;
+           }break;
+          } 
+        }
+      }
+    } else {
+      if(!do_this(a_pv,
+                  a_pv.GetLogicalVolume()->GetSolid(),
+                  a_pv.GetLogicalVolume()->GetMaterial(),
+  		  a_transform,a_visited_volume,a_depth)) return false;
+    }
+    return true;
+  }
+  
+protected:
+  bool do_this(G4VPhysicalVolume& a_pv,
+               G4VSolid* a_solid,G4Material* a_material,
+               const inlib::mat4d& a_transform,
+               ivisited_volume& a_visited_volume,unsigned int a_depth){
+
+    //G4Transform3D* transform = 
+    //  new G4Transform3D(*(a_pv.GetObjectRotation()),a_pv.GetTranslation());
+    //G4Transform3D newTransform = a_transform * (*transform);
+    //delete transform; 
+
+    G4RotationMatrix* rot = a_pv.GetObjectRotation();
+    const G4ThreeVector& v = a_pv.GetTranslation();
+    inlib::mat4d newTransform(
+      rot->xx(),rot->xy(),rot->xz(),v.x(),
+      rot->yx(),rot->yy(),rot->yz(),v.y(),
+      rot->zx(),rot->zy(),rot->zz(),v.z(),
+              0,        0,        0,    1);
+
+    newTransform.left_mul_mtx(a_transform);
+
+    bool do_daughters = true;
+
+    if(a_depth>=m_min_depth) {
+      if(!a_visited_volume.begin_volume
+            (a_pv,a_solid,a_material,newTransform,do_daughters)){
+        a_visited_volume.end_volume(a_pv);
+        return false;
+      }
+    }
+
+    bool retval = true;
+
+    if(do_daughters) {
+      int nDaughters = a_pv.GetLogicalVolume()->GetNoDaughters();
+      a_visited_volume.begin_daughters(a_pv,nDaughters);
+      for (int iDaughter = 0; iDaughter < nDaughters; iDaughter++) {
+        if(!visit(*(a_pv.GetLogicalVolume()->GetDaughter(iDaughter)),
+                  newTransform,a_visited_volume,a_depth+1)) {
+          retval = false;
+          break;
+        }
+      }
+      a_visited_volume.end_daughters(a_pv,nDaughters);
+    }
+  
+    if(a_depth>=m_min_depth) a_visited_volume.end_volume(a_pv);
+
+    return retval;
+  }
+
+public:
+  std::ostream& m_out;
+  unsigned int m_min_depth;
+  unsigned int m_max_depth;
+};
+
+}}
+
+#endif
+
+//exlib_build_use inlib geant4

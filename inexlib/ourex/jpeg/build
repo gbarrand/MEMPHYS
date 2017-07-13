@@ -1,0 +1,17 @@
+#!/bin/sh -f
+
+bush_home=../../../bush
+
+. ${bush_home}/args
+. ${bush_home}/ourex_header
+
+if [ `uname` = "Darwin" -a ${build_clang} = "yes" ] ; then
+  # quiet warnings on ./source/jdphuff.c
+  ccflags="${ccflags} -Wno-shift-negative-value"
+fi
+
+if [ ${build_visual} = "yes" ] ; then
+  libs="${libs} gdi32.lib user32.lib wsock32.lib" # to build the DLL.
+fi
+
+. ${bush_home}/ourex_generic

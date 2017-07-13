@@ -1,0 +1,55 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_ftp_client
+#define inlib_ftp_client
+
+#include <string>
+
+namespace inlib {
+namespace ftp {
+
+class client {
+public:
+  client():m_active(true){}
+  client(const std::string& a_host,const std::string& a_user,const std::string& a_pass,const std::string& a_dir,bool a_active)
+  :m_host(a_host)
+  ,m_user(a_user)
+  ,m_pass(a_pass)
+  ,m_dir(a_dir)
+  ,m_active(a_active)
+  {}
+  virtual ~client(){}
+public:
+  client(const client& a_from)
+  :m_host(a_from.m_host)
+  ,m_user(a_from.m_user)
+  ,m_pass(a_from.m_pass)
+  ,m_dir(a_from.m_dir)
+  ,m_active(a_from.m_active)
+  {}
+  client& operator=(const client& a_from){
+    m_host = a_from.m_host;
+    m_user = a_from.m_user;
+    m_pass = a_from.m_pass;
+    m_dir = a_from.m_dir;
+    m_active = a_from.m_active;
+    return *this;
+  }
+public:
+  const std::string& host() const {return m_host;}
+  const std::string& user() const {return m_user;}
+  const std::string& pass() const {return m_pass;}
+  const std::string& dir() const {return m_dir;}
+  bool active() const {return m_active;}
+protected:
+  std::string m_host;
+  std::string m_user;
+  std::string m_pass;
+  std::string m_dir;
+  bool m_active;
+};
+
+}}
+
+#endif

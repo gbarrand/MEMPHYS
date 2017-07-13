@@ -1,0 +1,83 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_pos_data
+#define inlib_sg_pos_data
+
+#ifdef INLIB_MEM
+#include "../mem"
+#include "../S_STRING"
+#endif
+
+namespace inlib {
+namespace sg {
+
+/*
+template <class T>
+class ref_data {
+public:
+  ref_data(T& a_data):m_data(a_data){}
+  virtual ~ref_data(){}
+public:
+  ref_data(const ref_data& a_from):m_data(a_from.m_data){}
+  ref_data& operator=(const ref_data&){return *this;}
+public:
+  T& m_data;
+};
+*/
+
+class pos_data {
+#ifdef INLIB_MEM
+  INLIB_SCLASS(inlib::sg::pos_data)
+#endif
+public:
+  pos_data(bool a_popup,int a_ex,int a_ey)
+  :m_popup(a_popup)
+  ,m_ex(a_ex)
+  ,m_ey(a_ey)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~pos_data(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  pos_data(const pos_data& a_from)
+  :m_popup(a_from.m_popup)
+  ,m_ex(a_from.m_ex)
+  ,m_ey(a_from.m_ey)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  pos_data& operator=(const pos_data& a_from){
+    m_popup = a_from.m_popup;
+    m_ex = a_from.m_ex;
+    m_ey = a_from.m_ey;
+    return *this;
+  }
+public:
+  bool m_popup;
+  int m_ex;
+  int m_ey;
+};
+
+}}
+
+#include "../S_STRING"
+
+namespace inlib {
+namespace sg {
+
+INLIB_GLOBAL_STRING(popup)
+INLIB_GLOBAL_STRING(ex)
+INLIB_GLOBAL_STRING(ey)
+
+}}
+
+#endif

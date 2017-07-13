@@ -1,0 +1,142 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_app_X11_main_xgra
+#define exlib_app_X11_main_xgra
+
+#include <inlib/sg/viewer>
+#include <inlib/dirmanip>
+#include <inlib/net/base_socket>
+
+#include "../../png"
+#include "../../jpeg"
+
+#include "../../X11/pv_holder"
+
+#include <X11/cursorfont.h>
+
+namespace app_X11 {
+
+//IMPORTANT : pv_holder must come first.
+
+template <class APP_MAIN>
+class main : protected exlib::X11::pv_holder, public APP_MAIN {
+  typedef exlib::X11::pv_holder parent_pv_holder;
+  typedef APP_MAIN parent;
+public:
+  virtual void render() {
+    parent::check_gui_cursor();
+    if(!parent::m_ww||!parent::m_wh) return;
+
+    parent_pv_holder::m_mgr_gra.begin_render(0,0,parent::m_ww,parent::m_wh,
+                                parent::m_clear_color.r(),
+                                parent::m_clear_color.g(),
+                                parent::m_clear_color.b(),
+                                parent::m_clear_color.a());
+
+    exlib::X11::xgra_action action(parent_pv_holder::m_mgr_gra,parent::m_out,parent::m_ww,parent::m_wh);
+    action.state().m_use_gsto = parent::m_use_gsto;
+
+    parent::m_sg.render(action);
+    if(!action.end()) {
+      parent::m_out << "app_X11::main::render() :"
+                    << " bad exlib::X11::render::end() failed."
+                    << std::endl;
+    }
+
+    //parent::after_render();
+
+    parent_pv_holder::m_mgr_gra.end_render();
+  }
+public: //exlib::sg::viewer
+  virtual bool set_cursor_shape(inlib::sg::cursor_shape a_shape) {
+    if(!parent::set_cursor_shape(a_shape)) return false;
+    if(a_shape==inlib::sg::cursor_default) {
+      ::XUndefineCursor(m_display,m_window);
+      ::XSync(m_display,False);
+      return true;
+    } else if(a_shape==inlib::sg::cursor_target) {
+      Cursor cursor = ::XCreateFontCursor(m_display,XC_X_cursor);
+      if(!cursor) return false;
+      ::XDefineCursor(m_display,m_window,cursor);
+      ::XSync(m_display,False);
+      return true;
+    } else {
+      return false;
+    }
+  }
+public:
+  virtual void win_render() {
+    m_to_render = true; //do not do render() here to avoid a too much flashing window.
+  }
+public:
+  main(std::ostream& a_out
+       ,const std::string& a_app_name
+       ,const std::string& a_data_dir
+       ,const std::string& a_res_dir
+       ,const std::string& a_out_dir
+       ,const std::string& a_tmp_dir
+       ,bool a_verbose
+       ,Display* a_display
+       ,Window a_window)
+  :parent_pv_holder(a_out,a_display,a_window)
+  ,parent(a_out,
+          parent_pv_holder::gra_mgr(),parent_pv_holder::ttf(),parent_pv_holder::selection(),
+          a_data_dir,a_res_dir,a_out_dir,a_tmp_dir,a_verbose,0)
+  ,m_display(a_display)
+  ,m_window(a_window)
+  ,m_to_render(false)
+  ,m_win_x(0),m_win_y(0)
+  ,m_app_name(a_app_name)
+  {
+    //parent::m_params.m_image_buttons = false;
+    parent::m_params.m_gsto_mode = inlib::sg::s_gsto_memory();
+    parent::set_use_gsto(true);
+    parent::push_home(); //NOTE : it can't call a potential push_home() done on an inheriting class.
+  }
+  virtual ~main(){}
+protected:  
+  main(const main& a_from)
+  :parent_pv_holder(a_from)
+  ,parent(a_from)
+  {}
+  main& operator=(const main& a_from){
+    parent::operator=(a_from);
+    return *this;
+  }
+public:
+//  Display* display() const {return m_display;}
+  Window window() const {return m_window;}
+  void do_paint() {
+    if(m_to_render) {
+      if(!m_mgr_gra.create_pixmap(parent::m_ww,parent::m_wh)) {}
+      //::printf("debug : do_paint : render()\n");
+      render();
+      m_mgr_gra.pixmap2win();
+      m_to_render = false;
+    }
+  }
+  void set_window(Window a_window) {
+    m_mgr_gra.delete_gstos();
+    m_mgr_gra.set_window(a_window);
+    m_window = a_window;
+  }
+  void set_position(int a_x,int a_y) {m_win_x = a_x;m_win_y = a_y;}
+  void position(int& a_x,int& a_y) const {a_x = m_win_x;a_y = m_win_y;}
+  //void set_app_name(const std::string& a_name) {m_app_name = a_name;}
+  const std::string& app_name() const {return m_app_name;}
+protected:
+  Display* m_display;
+  Window m_window;
+  bool m_to_render;
+  int m_win_x;
+  int m_win_y;
+  std::string m_app_name;
+};
+
+}
+
+//exlib_build_use inlib inlib_glutess freetype png jpeg zlib expat
+//exlib_build_use X11
+
+#endif

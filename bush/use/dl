@@ -1,0 +1,16 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_dl}" = "yes" ] ; then
+
+  if [ ${build_visual} = "yes" ] ; then
+    echo dummy > /dev/null
+  else
+
+    lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=dl
+    . ${bush_home}/find_lib
+
+  fi
+
+fi

@@ -1,0 +1,65 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_text_button
+#define inlib_sg_text_button
+
+#include "text"
+#include "base_button"
+
+namespace inlib {
+namespace sg {
+
+class text_button : public text, public base_button  {
+  typedef base_button parent_bb;
+  INLIB_NODE_NO_CAST(text_button,inlib::sg::text_button,text)
+public:
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<text_button>(this,a_class)) return p;
+    if(void* p = parent_bb::cast(a_class)) return p;
+    return parent::cast(a_class);
+  }
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::text_button)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(arm_color)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&arm_color);
+  }
+public:
+  text_button(const base_freetype& a_ttf)
+  :parent(a_ttf)
+  ,parent_bb(back_area::color)
+  {
+    add_fields();
+  }
+  virtual ~text_button(){}
+public:
+  text_button(const text_button& a_from)
+  :parent(a_from)
+  ,parent_bb(a_from)
+  {
+    add_fields();
+  }
+  text_button& operator=(const text_button& a_from){
+    parent::operator=(a_from);
+    parent_bb::operator=(a_from);
+    return *this;
+  }
+public:
+  void set_label(const std::string& a_label) {
+    strings.clear();
+    strings.add(a_label);
+  }
+};
+
+}}
+
+#endif

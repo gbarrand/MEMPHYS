@@ -1,0 +1,310 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_scroll_infos
+#define inlib_sg_scroll_infos
+
+#include "rgba"
+#include "infos_box"
+#include "arrow_button"
+
+namespace inlib {
+namespace sg {
+
+class scroll_infos : public infos_box {
+  INLIB_NODE(scroll_infos,inlib::sg::scroll_infos,infos_box)
+public:
+  mf_string ltext;
+  mf_string rtext;
+  sf<unsigned int> visible_items;
+  sf<float> scroll_width;
+
+  sf_vec<colorf,float> arm_color;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::scroll_infos)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(ltext)
+      INLIB_ADD_FIELD_DESC(rtext)
+      INLIB_ADD_FIELD_DESC(visible_items)
+      INLIB_ADD_FIELD_DESC(scroll_width)
+      INLIB_ADD_FIELD_DESC(arm_color)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&ltext);
+    add_field(&rtext);
+    add_field(&visible_items);
+    add_field(&scroll_width);
+    add_field(&arm_color);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(parent::touched()) {
+      update_sg();
+      parent::reset_touched();
+    }
+    parent::render(a_action);
+    m_sep.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(parent::touched()) {
+      update_sg();
+      parent::reset_touched();
+    }
+    parent::pick(a_action);
+    if(a_action.done()) return;
+    m_sep.pick(a_action);
+    if(a_action.done()) return;
+  }
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;
+    if(parent::touched()) {
+      update_sg();
+      parent::reset_touched();
+    }
+    parent::search(a_action);
+    if(a_action.done()) return;
+    m_sep.search(a_action);
+    if(a_action.done()) return;
+  }
+  virtual void bbox(bbox_action& a_action) {
+    if(parent::touched()) {
+      update_sg();
+      parent::reset_touched();
+    }
+    parent::bbox(a_action);
+    m_sep.bbox(a_action);
+  }
+public:
+  scroll_infos(const base_freetype& a_ttf)
+  :parent(a_ttf)
+  ,ltext()
+  ,rtext()
+  ,visible_items(5)
+  ,scroll_width(0.2f)
+  ,arm_color(colorf_grey())
+  ,m_first_item(0)
+  {
+    add_fields();
+  }
+  virtual ~scroll_infos(){}
+public:
+  scroll_infos(const scroll_infos& a_from)
+  :parent(a_from)
+  ,ltext(a_from.ltext)
+  ,rtext(a_from.rtext)
+  ,visible_items(a_from.visible_items)
+  ,scroll_width(a_from.scroll_width)
+  ,arm_color(a_from.arm_color)
+
+  ,m_first_item(a_from.m_first_item)
+  {
+    add_fields();
+  }
+  scroll_infos& operator=(const scroll_infos& a_from){
+    parent::operator=(a_from);
+    ltext = a_from.ltext;
+    rtext = a_from.rtext;
+    visible_items = a_from.visible_items;
+    scroll_width = a_from.scroll_width;
+    arm_color = a_from.arm_color;
+
+    m_first_item = a_from.m_first_item;
+    return *this;
+  }
+
+protected:
+  class arrow_cbk : public bcbk {
+    typedef bcbk parent;
+  public:
+    virtual return_action action() {
+      unsigned int nvis = m_scroll_infos.visible_items;
+      if(m_type==arrow_up) {
+        if((int(m_scroll_infos.m_first_item)-int(nvis))>=0) {
+          m_scroll_infos.m_first_item -= nvis;
+        } else {
+          m_scroll_infos.m_first_item = 0;
+        }
+        m_scroll_infos.touch();
+      } else if(m_type==arrow_down) {
+        size_t num = m_scroll_infos.ltext.size();
+        if((m_scroll_infos.m_first_item+nvis)<num) {
+          m_scroll_infos.m_first_item += nvis;
+          m_scroll_infos.touch();
+        }
+      }
+      return return_to_render;
+    }
+    virtual bcbk* copy() const {return new arrow_cbk(*this);}
+  public:
+    arrow_cbk(scroll_infos& a_scroll_infos,arrow_type a_type)
+    :parent()
+    ,m_scroll_infos(a_scroll_infos)
+    ,m_type(a_type)
+    {}
+    virtual ~arrow_cbk(){}
+  public:
+    arrow_cbk(const arrow_cbk& a_from)
+    :parent(a_from)
+    ,m_scroll_infos(a_from.m_scroll_infos)
+    ,m_type(a_from.m_type)
+    {}
+    arrow_cbk& operator=(const arrow_cbk& a_from){
+      parent::operator=(a_from);
+      m_type = a_from.m_type;
+      return *this;
+    }
+  protected:
+    scroll_infos& m_scroll_infos;
+    arrow_type m_type;
+  };
+
+//public:
+  void update_sg() {
+
+    m_sep.clear();
+    parent::lstrings.values().clear();
+    parent::rstrings.values().clear();
+
+    if(parent::width.value()<=0) return;
+    if(parent::height.value()<=0) return;
+    if(!visible_items.value()) return;
+
+    const std::vector<std::string>& litms = ltext.values();
+    if(!litms.size()) return;
+    const std::vector<std::string>& ritms = rtext.values();
+    if(ritms.size()!=litms.size()) return;
+
+    // scroll_infos is centered around (0,0) and in the xy plan.
+
+    unsigned int beg = m_first_item;
+    //012345 : 6 items
+    //  2 
+    unsigned int remain = uint32(litms.size())-m_first_item;
+
+    unsigned int nvis = mn<unsigned int>(visible_items.value(),remain);
+
+   {for(unsigned int index=0;index<visible_items.value();index++) {
+      if(index<nvis) {
+        parent::lstrings.add(litms[beg+index]);
+        parent::rstrings.add(ritms[beg+index]);
+      } else {
+        parent::lstrings.add(" ");
+        parent::rstrings.add(" ");
+      }
+    }}    
+
+    float warrow = scroll_width;
+    float xtrans = parent::width*0.5f+warrow*0.5f+warrow*0.2f;
+
+    if(litms.size()>visible_items.value()) {
+      float harrow = parent::height*0.5f;
+
+      // add up/down arrows on the right.
+      // up button :
+     {separator* sep = new separator;
+      m_sep.add(sep);
+
+      matrix* _m = new matrix;
+      _m->set_translate(xtrans,harrow*0.5f,0);
+      sep->add(_m);
+
+      arrow_button* b = new arrow_button;
+      b->width = warrow;
+      b->height = harrow;
+      b->orientation = arrow_up;
+      b->add_callback(new arrow_cbk(*this,arrow_up));
+      b->color = parent::color;
+      b->back_area::color = parent::back_area::color;
+      b->back_area::border_color = parent::back_area::border_color;
+      b->arm_color = arm_color;
+
+      sep->add(b);}
+
+      // down button :
+     {separator* sep = new separator;
+      m_sep.add(sep);
+
+      matrix* _m = new matrix;
+      _m->set_translate(xtrans,-harrow*0.5f,0);
+      sep->add(_m);
+
+      arrow_button* b = new arrow_button;
+      b->width = warrow;
+      b->height = harrow;
+      b->orientation = arrow_down;
+      b->add_callback(new arrow_cbk(*this,arrow_down));
+      b->color = parent::color;
+      b->back_area::color = parent::back_area::color;
+      b->back_area::border_color = parent::back_area::border_color;
+      b->arm_color = arm_color;
+
+      sep->add(b);}
+
+    } else { //draw arrows placeholder.
+
+      float xb = -warrow*0.5f;
+      float xe =  warrow*0.5f;
+      float yb = -parent::height*0.5f;
+      float ye =  parent::height*0.5f;
+      float zz = 1;
+
+     {separator* sep = new separator;
+      m_sep.add(sep);
+
+      matrix* _m = new matrix;
+      _m->set_translate(xtrans,0,0);
+      sep->add(_m);
+
+      rgba* mat = new rgba();
+      mat->color = parent::back_area::color;
+      sep->add(mat);
+
+      vertices* vtxs = new vertices;
+      vtxs->mode = gl::triangle_strip();
+      sep->add(vtxs);
+      vtxs->add(xb,yb,zz);
+      vtxs->add(xe,yb,zz);
+      vtxs->add(xe,ye,zz);
+      vtxs->add(xb,ye,zz);
+      vtxs->add(xb,yb,zz);}
+
+     {separator* sep = new separator;
+      m_sep.add(sep);
+
+      matrix* _m = new matrix;
+      _m->set_translate(xtrans,0,0);
+      sep->add(_m);
+
+      rgba* mat = new rgba();
+      mat->color = parent::back_area::border_color;
+      sep->add(mat);
+
+      vertices* vtxs = new vertices;
+      vtxs->mode = gl::line_strip();
+      sep->add(vtxs);
+      vtxs->add(xb,yb,zz);
+      vtxs->add(xe,yb,zz);
+      vtxs->add(xe,ye,zz);
+      vtxs->add(xb,ye,zz);
+      vtxs->add(xb,yb,zz);}
+
+    }
+
+    parent::update_sg();  
+  }
+protected:
+  separator m_sep;
+  unsigned int m_first_item;
+};
+
+}}
+
+#endif
+

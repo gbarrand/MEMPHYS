@@ -1,0 +1,24 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# must be sourced from the mgr directory of an app.
+
+
+if [ -d ../icons ] ; then
+  mkdir -p ../iOS
+
+  cp ../icons/icon_57.png ../iOS/Icon.png
+  cp ../icons/icon_72.png ../iOS/Icon-72.png
+  cp ../icons/icon_76.png ../iOS/Icon-76.png
+  cp ../icons/icon_114.png ../iOS/Icon-114.png
+  cp ../icons/icon_120.png ../iOS/Icon-120.png
+  cp ../icons/icon_144.png ../iOS/Icon-144.png
+  cp ../icons/icon_152.png ../iOS/Icon-152.png
+  cp ../icons/icon_320_480.png   ../iOS/Default.png
+  cp ../icons/icon_640_960.png   ../iOS/Default~iphone.png 
+  cp ../icons/icon_640_1136.png  ../iOS/Default-568h@2x.png 
+
+else
+  echo "bush/ios_app_res : warning : no ../icons found."
+fi
+

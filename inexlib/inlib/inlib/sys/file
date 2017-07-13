@@ -1,0 +1,83 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sys_file
+#define inlib_sys_file
+
+#include "../snpf"
+
+#include <string>
+#include <cstdlib>
+#include <sstream>
+
+#include <sys/stat.h>
+
+#ifdef _MSC_VER
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
+
+namespace inlib {
+
+inline bool tmpdir(std::string& a_dir){
+#ifdef _WIN32
+  char* env = ::getenv("TEMP");
+  if(!env) {a_dir.clear();return false;}
+  a_dir = env;
+#else
+  a_dir = "/tmp";
+#endif
+  return true;
+}
+
+inline bool tmpname(const std::string& a_dir,const std::string& a_prefix,const std::string& a_suffix,std::string& a_name){
+  std::string head;
+  if(a_dir==".") {
+  } else if(a_dir.size()) {
+    head = a_dir;
+#ifdef _WIN32
+    head += "\\";
+#else
+    head += "/";
+#endif
+  } else {
+#ifdef _WIN32
+    char* env = ::getenv("TEMP");
+    if(!env) {a_name.clear();return false;}
+    head  = std::string(env);
+    head += "\\";
+#else
+    head += "/tmp/";
+#endif
+  }
+  head += a_prefix;
+  char spid[128];
+  snpf(spid,sizeof(spid),"%d",::getpid());
+  head += spid;
+  head += "_";
+  
+  //needed to be large in case of wall/animation.
+  // 1M = 11 hours of movie at 25 image/sec.
+  for(unsigned int count=0;count<1000000;count++) {
+    char s[32];
+    snpf(s,sizeof(s),"%06u",count);
+    std::string tmpnm = head;
+    tmpnm += s;
+    //tmpnm += strm.str();
+    tmpnm += a_suffix;
+    struct stat finfo;
+    if(::stat(tmpnm.c_str(),&finfo) < 0) {
+      // No directory or file found :
+      a_name = tmpnm; // Good file name.
+      return true; 
+    }
+  }
+  // No good name found :
+  a_name.clear();
+  return false;
+}
+
+}
+
+#endif

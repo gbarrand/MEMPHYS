@@ -1,0 +1,245 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_wall_data_client
+#define inlib_wall_data_client
+
+#include "../net/inet_socket"
+#include "protocol"
+#include "../args"
+#include "strings"
+#include "../num2s"
+
+namespace inlib {
+namespace wall {
+
+class data_client {
+public:
+  data_client(std::ostream& a_out,bool a_verbose,bool a_warn) //warn if received an unknown prot.
+  :m_out(a_out)
+  ,m_socket(a_out,a_verbose)
+  ,m_warn(a_warn)
+  {}
+  virtual ~data_client(){}
+protected:
+  data_client(const data_client& a_from)
+  :m_out(a_from.m_out)
+  ,m_socket(a_from.m_out,false)
+  ,m_warn(a_from.m_warn)
+  {}
+  data_client& operator=(const data_client&){return *this;}
+public:
+  net::inet_socket& socket() {return m_socket;}
+  std::ostream& out() const {return m_out;}
+  bool initialize(const std::string& a_host,unsigned int a_port) {
+    if(!m_socket.connect(a_host,a_port,net::num_try(),1)) return false;
+    if(m_socket.verbose()) {
+      m_out << "inlib::data_client::initialize :"
+            << " connected."
+            << std::endl;
+    }
+    return true;
+  }
+
+  bool steer() {
+    while(true){
+      std::string prot;
+      if(!m_socket.fetch_string(prot)) {
+        m_out << "inlib::data_client::steer :"
+              << " fetch failed"
+              << std::endl;       
+        m_socket.disconnect();
+        return false;
+      }
+  
+      if(m_socket.verbose()) {
+        m_out << "inlib::data_client::steer :"
+              << " received prot " << sout(prot)
+              << std::endl;       
+      }
+  
+      bool handled;
+      if(!dispatch(prot,handled)) {
+        m_out << "inlib::data_client::steer :"
+              << " distpatch failed"
+              << std::endl;       
+        m_socket.disconnect();
+        return false;
+      }
+  
+    }
+  
+    m_socket.disconnect();
+  
+    return true;
+  }
+
+  bool poll() {
+    while(true){
+      bool have_input;
+      if(!m_socket.is_there_input(have_input)) {
+        m_out << "inlib::data_client::poll :"
+              << " is_there_input failed"
+              << std::endl;       
+        m_socket.disconnect();
+        return false;
+      }
+      if(!have_input) return true;
+
+      std::string prot;
+      if(!m_socket.fetch_string(prot)) {
+        m_out << "inlib::data_client::poll :"
+              << " fetch failed"
+              << std::endl;       
+        m_socket.disconnect();
+        return false;
+      }
+  
+      if(m_socket.verbose()) {
+        m_out << "inlib::data_client::poll :"
+              << " received prot " << prot
+              << std::endl;       
+      }  
+
+      bool handled;
+      if(!dispatch(prot,handled)) {
+        m_out << "inlib::data_client::poll :"
+              << " distpatch failed"
+              << std::endl;       
+        m_socket.disconnect();
+        return false;
+      }
+      //could have received a wall::protocol::s_disconnect()
+      if(!m_socket.is_connected()) return true;
+  
+    }  
+  }
+
+  bool send_buffer_doc(uint64 a_uc_length,uint64 a_cp_length,const char* a_cp_buffer,const args& a_opts) {
+
+    std::vector<std::string> vopts;
+    a_opts.to_vector(vopts);
+    std::string sopts;
+    if(!nums2s<std::string>(vopts,sopts,arg_sep())) return false;
+
+    // The receiver pending code is in wall/wall/master_dcs.
+
+    if(!m_socket.send_string(protocol::s_zdoc())) {
+      m_out << "inlib::data_client::send_doc :"
+            << " send_string() failed."
+            << std::endl;
+      return false;
+    }
+
+    if(!m_socket.send_string(sopts)) {
+      m_out << "inlib::data_client::send_doc :"
+            << " send_string() failed."
+            << std::endl;
+      return false;
+    }
+
+    if(!m_socket.send<uint64>(a_uc_length)) { //uncompressed.
+      m_out << "inlib::data_client::send_doc :"
+            << " send lengtj failed."
+            << std::endl;
+      return false;
+    }
+
+    if(!m_socket.send<uint64>(a_cp_length)) { //compressed.
+      m_out << "inlib::data_client::send_doc :"
+            << " send lengtj failed."
+            << std::endl;
+      return false;
+    }
+
+    if(!m_socket.send_buffer(a_cp_buffer,a_cp_length)) { //compressed buffer.
+      m_out << "inlib::data_client::send_doc :"
+            << " send_buffer() failed."
+            << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+public:
+  bool get_wall_params(std::string& a_params) {
+    // get wall params (cols,rows,...) :
+    const std::string& sp = protocol::s_get_wall_params();
+    if(!m_socket.send_string(sp)) {
+      m_out << "inlib::data_client::get_wall_params :"
+            << " send_string " << sout(sp) << " failed."
+            << std::endl;
+      a_params.clear();
+      return false;
+    }
+    std::string prot;
+    if(!m_socket.fetch_string(prot)) {
+      m_out << "inlib::data_client::get_wall_params :"
+            << " fetch_string failed."
+            << std::endl;
+      a_params.clear();
+      return false;
+    }
+    a_params = prot.substr(sp.size()+1,prot.size()-(sp.size()+1));
+    return true;
+  }
+protected:
+  virtual bool dispatch(const std::string& a_prot,bool& a_handled) {
+    if(a_prot==protocol::s_disconnect()) {
+      m_socket.disconnect();
+      a_handled = true;
+
+    } else if(a_prot==protocol::s_start()) {
+  
+      a_handled = true;
+
+    } else {
+      if(m_warn) {
+        m_out << "inlib::data_client::dispatch :"
+              << " unknown prot " << sout(a_prot) << "."
+              << std::endl;
+      }
+      a_handled = false;
+    }
+
+    return true;
+  }
+protected:
+  std::ostream& m_out;
+  net::inet_socket m_socket;
+  bool m_warn;
+};
+
+}}
+
+//inlib_build_use socket
+
+#endif
+
+
+/* example to override :
+  class data_client : public inlib::wall::data_client {
+  public:
+    data_client(std::ostream& a_out,bool a_verbose = false)
+    : inlib::wall::data_client(a_out,a_verbose){}
+    virtual ~data_client(){}
+  protected:
+    data_client(const data_client& a_from)
+    : inlib::wall::data_client(a_from){}
+    data_client& operator=(const data_client&){return *this;}
+  protected:
+    virtual bool dispatch(const std::string& a_prot,bool& a_handled) {
+      if(!inlib::wall::data_client::dispatch(a_prot,a_handled)) return false;
+      if(a_handled) return true;
+  
+      //if(a_prot==inlib_net_protocol_cbk) {
+      //} else {
+        m_out << "data_client::dispatch :"
+              << " unknown prot " << sout(a_prot) << "."
+              << std::endl;
+        a_handled = false;
+      //}
+      return true;
+    }
+  };
+*/

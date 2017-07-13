@@ -1,0 +1,121 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_ui
+#define inlib_sg_ui
+
+#include "bcbk"
+#include "../forit"
+#include "../vmanip"
+//#include "../sys/atime"
+
+#include <vector>
+
+namespace inlib {
+namespace sg {
+
+class ui {
+public:
+  virtual void win_render() = 0;
+  //virtual bool get_time_now(atime&) const = 0;
+
+  virtual bool stop_works() {return false;}
+public:
+  ui():m_to_exit(false){}
+  virtual ~ui(){clear();}
+protected:
+  ui(const ui& a_from):m_to_exit(a_from.m_to_exit){
+    copy_cbks(a_from);
+  }
+  ui& operator=(const ui& a_from){
+    if(&a_from==this) return *this;
+    m_to_exit = a_from.m_to_exit;
+    copy_cbks(a_from);
+    return *this;
+  }
+public:
+  bool to_exit() const {return m_to_exit;}
+  void set_to_exit() {m_to_exit = true;}
+public:
+  void add_work(bcbk* a_work) {
+    m_cbks.push_back(a_work); //we take ownership of a_work.
+  }
+
+  bool has_valid_work(const std::string& a_class) const {
+    inlib_vforcit(bcbk*,m_cbks,it) {
+      if((*it)->cast(a_class) && (*it)->is_valid()) return true;
+    }
+    return false;
+  }
+
+  bool do_works() {
+    bool win_rendered = false;
+
+   {//WARNING : the below _cbk->action() may do m_cbks.push_back().
+    //          We avoid an iterator here :
+    size_t num = m_cbks.size();
+    for(size_t index=0;index<num;index++) {
+      bcbk* _cbk = m_cbks[index]; 
+      if(_cbk->is_valid()) {
+        bool to_render = (_cbk->action()==return_to_render?true:false);
+        if(to_render) {
+          win_render();
+          win_rendered = true;
+        }
+        if(_cbk->is_single_shoot()) _cbk->invalidate();
+      }
+    }}
+
+    //remove not valid cbks :
+   {std::vector<bcbk*>::iterator it;
+    for(it=m_cbks.begin();it!=m_cbks.end();) {
+      bcbk* _cbk = *it;
+      if(!_cbk->is_valid()) {
+        it = m_cbks.erase(it);        
+        delete _cbk;
+      } else {
+        ++it;
+      }
+    }}
+
+    return win_rendered;
+  }
+
+  size_t num_cbks() const {return m_cbks.size();}
+
+  // the below is used in inlib::cbk::timer::invalidate_timer_works()
+  const std::vector<bcbk*>& cbks() const {return m_cbks;}
+  std::vector<bcbk*>& cbks() {return m_cbks;}
+
+  void add_work_cbks(const std::vector<bcbk*>& a_cbks,bool a_single_shoot) {
+    inlib_vforcit(bcbk*,a_cbks,it) {
+      bcbk* _cbk = (*it)->copy();
+      _cbk->set_single_shoot(a_single_shoot);
+      add_work(_cbk);
+    }
+  }
+
+  void invalidate_works(const std::string& a_class) {
+    inlib_vforcit(bcbk*,m_cbks,it) {
+      bcbk* _cbk = *it;
+      if(_cbk->cast(a_class)) _cbk->invalidate();
+    }
+  }
+
+protected:
+  void clear() {
+    safe_clear<bcbk>(m_cbks);
+  }
+  void copy_cbks(const ui& a_from) {
+    if(&a_from==this) return;
+    clear();
+    inlib_vforcit(bcbk*,a_from.m_cbks,it) m_cbks.push_back((*it)->copy());
+  }
+protected:
+  bool m_to_exit;
+  std::vector<bcbk*> m_cbks;
+};
+
+}}
+
+#endif

@@ -1,0 +1,52 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_file_chooser
+#define inlib_sg_file_chooser
+
+#include "base_fch"
+
+#include "../dirmanip"
+
+namespace inlib {
+namespace sg {
+
+class file_chooser : public base_fch {
+  INLIB_NODE(file_chooser,inlib::sg::file_chooser,base_fch)
+public:
+  virtual bool get_dirs(std::ostream& /*a_out*/,
+                        const std::string& a_path,
+                        std::vector<std::string>& a_dirs){
+    return dir::dirs(a_path,a_dirs,true);
+  }
+  virtual bool get_files(std::ostream& a_out,
+                         const std::string& a_path,
+                         const std::string& a_ext,
+                         std::vector<std::string>& a_paths){
+    std::vector<std::string> _dirs;
+    _dirs.push_back(a_path);
+    std::vector<std::string> _exts;
+    _exts.push_back(a_ext);
+    return inlib::get_files(a_out,_dirs,_exts,a_paths);
+  }
+public:
+  file_chooser(const base_freetype& a_ttf)
+  :parent(a_ttf)
+  {}
+  virtual ~file_chooser(){}
+public:
+  file_chooser(const file_chooser& a_from)
+  :ilist(a_from)
+  ,parent(a_from)
+  {}
+  file_chooser& operator=(const file_chooser& a_from){
+    parent::operator=(a_from);
+    return *this;
+  }
+};
+
+}}
+
+//inlib_build_use kernel
+
+#endif

@@ -1,0 +1,24 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_inlib}" = "yes" ] ; then
+  if [ "${inlib_home}" = "" ] ; then
+    inlib_home=${bush_home}/../inexlib/inlib
+  fi
+
+  ccflags="${ccflags} -I${inlib_home}"
+  cppflags="${cppflags} -I${inlib_home}"
+fi
+
+if [ "${build_use_our_stl}" = "yes" ] ; then
+  if [ "${inlib_home}" = "" ] ; then
+    inlib_home=${bush_home}/../inexlib/inlib
+  fi
+
+  cppflags="${cppflags} -DINLIB_STL"
+  cppflags="${cppflags} -I${inlib_home}/stl"
+  if [ ${build_gnu} = "yes" ] ; then
+    cppflags="${cppflags} -nostdinc++ -DINLIB_STL"
+    cppflags="${cppflags} -I${inlib_home}/stl"
+  fi
+fi

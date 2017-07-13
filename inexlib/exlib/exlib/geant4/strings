@@ -1,0 +1,50 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_strings
+#define exlib_geant4_strings
+
+#include <inlib/S_STRING>
+#include <string>
+
+namespace exlib {
+namespace geant4 {
+
+INLIB_GLOBAL_STRING_VALUE(e_plus,e+)
+INLIB_GLOBAL_STRING_VALUE(e_minus,e-)
+
+INLIB_GLOBAL_STRING_VALUE(mu_plus,mu+)
+INLIB_GLOBAL_STRING_VALUE(mu_minus,mu-)
+
+INLIB_GLOBAL_STRING_VALUE(kaon_plus,kaon+)
+INLIB_GLOBAL_STRING_VALUE(kaon_minus,kaon-)
+INLIB_GLOBAL_STRING(kaon0)
+
+INLIB_GLOBAL_STRING_VALUE(pi_plus,pi+)
+INLIB_GLOBAL_STRING_VALUE(pi_minus,pi-)
+INLIB_GLOBAL_STRING(pi0)
+
+INLIB_GLOBAL_STRING(proton)
+INLIB_GLOBAL_STRING(neutron)
+INLIB_GLOBAL_STRING(gamma)
+INLIB_GLOBAL_STRING(opticalphoton)
+INLIB_GLOBAL_STRING(nu)
+
+INLIB_GLOBAL_STRING(nu_mu)
+INLIB_GLOBAL_STRING(nu_e)
+INLIB_GLOBAL_STRING(nu_tau)
+
+INLIB_GLOBAL_STRING(random)
+INLIB_GLOBAL_STRING(pythia8)
+
+INLIB_GLOBAL_STRING(primary)
+INLIB_GLOBAL_STRING(trajectory)
+INLIB_GLOBAL_STRING(primary_vertex)
+
+}}
+
+//exlib_build_use inlib
+
+#endif
+
+

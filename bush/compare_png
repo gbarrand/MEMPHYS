@@ -1,0 +1,16 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ $# != 1 ] ; then
+  echo "bush/compare_png : give name of a png file."
+  exit
+fi
+
+from="$1"
+to="ref_$1"
+
+compare ${from} ${to} -compose src tmp.png
+
+if [ `uname` = Darwin ] ; then open ./tmp.png; fi

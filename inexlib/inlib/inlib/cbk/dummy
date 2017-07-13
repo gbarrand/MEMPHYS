@@ -1,0 +1,27 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_cbk_dummy
+#define inlib_cbk_dummy
+
+#include "../sg/bcbk"
+
+namespace inlib {
+namespace cbk {
+
+class dummy : public sg::bcbk {
+  typedef sg::bcbk parent;
+public:
+  virtual sg::return_action action() {return sg::return_none;}
+  virtual sg::bcbk* copy() const {return new dummy(*this);}
+public:
+  dummy():parent(){}
+  virtual ~dummy(){}
+protected:
+  dummy(const dummy& a_from):parent(a_from){}
+  dummy& operator=(const dummy& a_from){parent::operator=(a_from);return *this;}
+};
+
+}}
+
+#endif

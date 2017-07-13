@@ -1,0 +1,9 @@
+exec_menu_item geom
+push_home
+beam_on_one
+#camera_zoom_0_2
+# zoom in :
+#camera_zoom 0.5
+# zoom out :
+#camera_zoom 1.2
+do_paint

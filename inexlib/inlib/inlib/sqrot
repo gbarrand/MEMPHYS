@@ -1,0 +1,33 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sqrot
+#define inlib_sqrot
+
+#include "qrot"
+#include "words"
+#include "sto"
+
+namespace inlib {
+
+template <class VEC3,class VEC4>
+inline bool sqrot(const std::string& a_s,qrot<VEC3,VEC4>& a_rot,
+                  typename VEC3::elem_t(*a_sin)(typename VEC3::elem_t),
+                  typename VEC3::elem_t(*a_cos)(typename VEC3::elem_t)) {
+  typedef typename VEC3::elem_t T;
+  std::vector<std::string> ws;
+  words(a_s," ",false,ws);
+  if(ws.size()!=4) return false;
+  T x,y,z,a;
+  if(!to<T>(ws[0],x)) return false;
+  if(!to<T>(ws[1],y)) return false;
+  if(!to<T>(ws[2],z)) return false;
+  if(!to<T>(ws[3],a)) return false;
+  a_rot.set_value(VEC3(x,y,z),a,a_sin,a_cos);
+  return true;
+}
+
+}
+
+#endif
+

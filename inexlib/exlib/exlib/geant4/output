@@ -1,0 +1,66 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_output
+#define exlib_geant4_output
+
+#include <G4coutDestination.hh>
+#include <G4strstreambuf.hh>
+#include <G4UImanager.hh>
+
+namespace exlib {
+namespace geant4 {
+
+class output : public G4coutDestination {
+  typedef G4coutDestination parent;
+public: //G4coutDestination
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031
+  virtual G4int ReceiveG4cout(const G4String& a_s) {if(m_G4cout_on) m__out << a_s;return 0;}
+  virtual G4int ReceiveG4cerr(const G4String& a_s) {if(m_G4cout_on) m__out << a_s;return 0;}
+#else  
+  virtual G4int ReceiveG4cout(G4String a_s) {if(m_G4cout_on) m__out << a_s;return 0;}
+  virtual G4int ReceiveG4cerr(G4String a_s) {if(m_G4cout_on) m__out << a_s;return 0;}
+#endif  
+public:
+  output(std::ostream& a_out)
+  :parent()
+  ,m__out(a_out)
+  ,m_G4cout_on(true)
+  {
+    // Enforce the creation of the G4UImanager singleton here
+    // since it does a G4c[out,err]buf.SetDestination(null) that will
+    // redirect outputs to std::c[out,err].
+    G4UImanager::GetUIpointer(); 
+    // Then we can enforce our redirection of G4c[out,err] :
+    G4coutbuf.SetDestination(this);
+    G4cerrbuf.SetDestination(this);
+  }
+  virtual ~output() { 
+    G4coutbuf.SetDestination(0);
+    G4cerrbuf.SetDestination(0);
+  }
+protected:
+  output(const output& a_from)
+  :parent(a_from)
+  ,m__out(a_from.m__out)
+  ,m_G4cout_on(a_from.m_G4cout_on)
+  {}
+  output& operator=(const output& a_from){
+    parent::operator=(a_from);
+    m_G4cout_on = a_from.m_G4cout_on;
+    return *this;
+  }
+public:
+  void enable_geant4_output() {m_G4cout_on = true;}
+  void disable_geant4_output() {m_G4cout_on = false;}
+protected:
+  std::ostream& m__out; //m_out may clash with various m_out around.
+  bool m_G4cout_on;
+};
+
+}}
+
+//exlib_build_use geant4
+
+#endif
+

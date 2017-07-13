@@ -1,0 +1,10 @@
+#ifndef bush_version
+#define bush_version
+
+#define BUSH_MAJOR_VERSION 1
+#define BUSH_MINOR_VERSION 0
+#define BUSH_PATCH_VERSION 0
+#define BUSH_VERSION       "1.0.0"
+#define BUSH_VERSION_VRP   "v1r0p0"
+
+#endif

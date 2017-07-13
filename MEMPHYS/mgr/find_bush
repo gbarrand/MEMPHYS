@@ -1,0 +1,14 @@
+
+bush_home=
+if [ -d ../../bush ] ; then
+  bush_home="../../bush"
+else
+  if [ -d ../../../softinex/bush ] ; then
+    bush_home="../../../softinex/bush"  # prefixing with `pwd`/  induces LINK.exe on Windows (path too long for ourex libs).
+  fi
+fi
+
+if [ ! -d ${bush_home} ] ; then
+  echo "directory ${bush_home} not found."
+  exit
+fi

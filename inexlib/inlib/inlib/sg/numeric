@@ -1,0 +1,795 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_numeric
+#define inlib_sg_numeric
+
+// A numeric keypad emulation.
+
+#include "node"
+#include "noderef"
+#include "slider"
+#include "text_button"
+
+#include "../schar"
+#include "../num2s"
+
+namespace inlib {
+namespace sg {
+
+class numeric : public node {
+  INLIB_NODE(numeric,inlib::sg::numeric,node)
+public:
+  sf<float> width;
+  sf<float> height;
+  sf_vec<colorf,float> back_color;
+  sf_vec<colorf,float> front_color;
+  sf_vec<colorf,float> border_color;
+  sf_vec<colorf,float> arm_color;
+  sf_string value;
+  sf_enum<sg::number_type> number_type; //int,uint,real.
+  sf<float> text_wmargin_factor;
+  sf<float> text_hmargin_factor;
+  sf<bool> show_slider;
+  sf<double> slider_min;
+  sf<double> slider_max;
+  sf<bool> show_cancel;
+  sf<float> corner_radius;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::numeric)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(width)
+      INLIB_ADD_FIELD_DESC(height)
+      INLIB_ADD_FIELD_DESC(back_color)
+      INLIB_ADD_FIELD_DESC(front_color)
+      INLIB_ADD_FIELD_DESC(border_color)
+      INLIB_ADD_FIELD_DESC(arm_color)
+      INLIB_ADD_FIELD_DESC(value)
+      INLIB_ADD_FIELD_DESC(number_type)
+      INLIB_ADD_FIELD_DESC(text_wmargin_factor)
+      INLIB_ADD_FIELD_DESC(text_hmargin_factor)
+      INLIB_ADD_FIELD_DESC(show_slider)
+      INLIB_ADD_FIELD_DESC(slider_min)
+      INLIB_ADD_FIELD_DESC(slider_max)
+      INLIB_ADD_FIELD_DESC(show_cancel)
+      INLIB_ADD_FIELD_DESC(corner_radius)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&width);
+    add_field(&height);
+    add_field(&back_color);
+    add_field(&front_color);
+    add_field(&border_color);
+    add_field(&arm_color);
+    add_field(&value);
+    add_field(&number_type);
+    add_field(&text_wmargin_factor);
+    add_field(&text_hmargin_factor);
+    add_field(&show_slider);
+    add_field(&slider_min);
+    add_field(&slider_max);
+    add_field(&show_cancel);
+    add_field(&corner_radius);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg(show_slider.touched()||show_cancel.touched()?true:false);
+      reset_touched();
+    }
+    m_sep.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg(show_slider.touched()||show_cancel.touched()?true:false);
+      reset_touched();
+    }
+    m_sep.pick(a_action);
+    if(a_action.done()) return;
+  }
+  virtual void search(search_action& a_action) {
+    parent::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      update_sg(show_slider.touched()||show_cancel.touched()?true:false);
+      reset_touched();
+    }
+    if(a_action.do_path()) a_action.path_push(this);
+    m_sep.search(a_action);
+    if(a_action.done()) return;
+    if(a_action.do_path()) a_action.path_pop();
+  }
+public:
+  numeric(const base_freetype& a_ttf)
+  :parent()
+
+  ,width(1)
+  ,height(1)
+  ,back_color(colorf_white())
+  ,front_color(colorf_black())
+  ,border_color(colorf_black())
+  ,arm_color(colorf_grey())
+  ,value("")
+  ,number_type(number_real)
+  ,text_wmargin_factor(0.9f)
+  ,text_hmargin_factor(0.9f)
+  ,show_slider(false)
+  ,slider_min(0)
+  ,slider_max(1)
+  ,show_cancel(false)
+  ,corner_radius(0)
+
+  ,m_cbks()
+  ,m_cancel_cbks()
+
+  ,m_result(a_ttf)
+  ,m_clear(a_ttf)
+  ,m_pow(a_ttf)
+  ,m_enter(a_ttf)
+  ,m_cancel(a_ttf)
+  ,m_7(a_ttf)
+  ,m_8(a_ttf)
+  ,m_9(a_ttf)
+  ,m_4(a_ttf)
+  ,m_5(a_ttf)
+  ,m_6(a_ttf)
+  ,m_1(a_ttf)
+  ,m_2(a_ttf)
+  ,m_3(a_ttf)
+  ,m_0(a_ttf)
+  ,m_dot(a_ttf)
+  ,m_sign(a_ttf)
+  {
+    add_fields();
+    create_sg();
+  }
+  virtual ~numeric(){}
+public:
+  numeric(const numeric& a_from)
+  :parent(a_from)
+
+  ,width(a_from.width)
+  ,height(a_from.height)
+  ,back_color(a_from.back_color)
+  ,front_color(a_from.front_color)
+  ,border_color(a_from.border_color)
+  ,arm_color(a_from.arm_color)
+  ,value(a_from.value)
+  ,number_type(a_from.number_type)
+  ,text_wmargin_factor(a_from.text_wmargin_factor)
+  ,text_hmargin_factor(a_from.text_hmargin_factor)
+  ,show_slider(a_from.show_slider)
+  ,slider_min(a_from.slider_min)
+  ,slider_max(a_from.slider_max)
+  ,show_cancel(a_from.show_cancel)
+  ,corner_radius(a_from.corner_radius)
+
+  ,m_cbks(a_from.m_cbks)
+  ,m_cancel_cbks(a_from.m_cancel_cbks)
+
+  ,m_result(a_from.m_result)
+  ,m_clear(a_from.m_clear)
+  ,m_pow(a_from.m_pow)
+  ,m_enter(a_from.m_enter)
+  ,m_cancel(a_from.m_cancel)
+  ,m_7(a_from.m_7)
+  ,m_8(a_from.m_8)
+  ,m_9(a_from.m_9)
+  ,m_4(a_from.m_4)
+  ,m_5(a_from.m_5)
+  ,m_6(a_from.m_6)
+  ,m_1(a_from.m_1)
+  ,m_2(a_from.m_2)
+  ,m_3(a_from.m_3)
+  ,m_0(a_from.m_0)
+  ,m_dot(a_from.m_dot)
+  ,m_sign(a_from.m_sign)
+  {
+    add_fields();
+    create_sg();
+  }
+  numeric& operator=(const numeric& a_from){
+    parent::operator=(a_from);
+
+    width = a_from.width;
+    height = a_from.height;
+    back_color = a_from.back_color;
+    front_color = a_from.front_color;
+    border_color = a_from.border_color;
+    arm_color = a_from.arm_color;
+    value = a_from.value;
+    number_type = a_from.number_type;
+    text_wmargin_factor = a_from.text_wmargin_factor;
+    text_hmargin_factor = a_from.text_hmargin_factor;
+    show_slider = a_from.show_slider;
+    slider_min = a_from.slider_min;
+    slider_max = a_from.slider_max;
+    show_cancel = a_from.show_cancel;
+    corner_radius = a_from.corner_radius;
+
+    m_cbks = a_from.m_cbks;
+    m_cancel_cbks = a_from.m_cancel_cbks;
+
+    return *this;
+  }
+public:
+  const separator& container() const {return m_sep;} //must be consistent with pick().
+  void clear() {value.value("");} //for gui_viewer popup templates.
+public:
+  void add_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cbks.callbacks().push_back(a_cbk);
+    touch();
+  }
+  void clear_cbks(){
+    m_cbks.clear();
+    touch();
+  }
+public:
+  void add_cancel_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cancel_cbks.add(a_cbk);
+    touch();
+  }
+  void clear_cancel_cbks(){
+    m_cancel_cbks.clear();
+    touch();
+  }
+protected:
+  INLIB_CLASS_STRING_VALUE(dot,.)
+  INLIB_CLASS_STRING_VALUE(sign,+/-)
+  INLIB_CLASS_STRING_VALUE(pow,e)
+  INLIB_CLASS_STRING_VALUE(double_dot,:)
+
+  INLIB_CLASS_STRING(C)
+  INLIB_CLASS_STRING(Ok)
+  INLIB_CLASS_STRING(Cancel)
+
+  class button_cbk : public bcbk {
+    typedef bcbk parent;
+  public:
+    virtual return_action action() {
+      std::string s = m_numeric.value.value(); 
+      if(m_numeric.number_type==number_real) {
+        if(m_action==s_C()) {
+          s.clear();
+        } else if(m_action==numeric::s_dot()) {
+          if(s.empty()) {
+            s = "0.";
+          } else if(s.find('e')!=std::string::npos) {
+            //can't have . within e expression.
+          } else if(s.find('.')==std::string::npos) {
+            s += m_action;
+          }
+        } else if(m_action==numeric::s_sign()) {
+          std::string::size_type pos = s.find('e');
+          if(pos!=std::string::npos) {
+            if(pos==s.size()-1) {
+              s += "-";
+            } else {
+              if(s[pos+1]=='-') { //remove -
+                //2e-34 : sz 5
+                //01234
+                std::string ns = s.substr(0,pos+1);
+                ns += s.substr(pos+2,s.size()-(pos+2));
+                s = ns;
+              } else { //add minus
+                //2e346 : sz 5
+                //01234
+                std::string ns = s.substr(0,pos+1);
+                ns += "-";
+                ns += s.substr(pos+1,s.size()-(pos+1));
+                s = ns;
+              }
+            }
+          } else if(s.size()) {
+            if(s[0]=='-') {
+              s = s.substr(1,s.size()-1);
+            } else {
+              s = std::string("-")+s;
+            }
+          }
+        } else if(m_action==numeric::s_pow()) {
+          if(s.find('e')==std::string::npos) {
+            s += m_action;
+          }
+        } else {
+          s += m_action;
+        }
+
+      } else if(m_numeric.number_type==number_uint) {
+        if(m_action==s_C()) {
+          s.clear();
+        } else if(m_action==numeric::s_dot()) {
+          //do nothing.
+        } else if(m_action==numeric::s_sign()) {
+          //do nothing.
+        } else if(m_action==numeric::s_pow()) {
+          if(s.find('e')==std::string::npos) {
+            s += m_action;
+          }
+        } else {
+          s += m_action;
+        }
+
+      } else if(m_numeric.number_type==number_int) {
+        if(m_action==s_C()) {
+          s.clear();
+        } else if(m_action==numeric::s_dot()) {
+          //do nothing.
+        } else if(m_action==numeric::s_sign()) {
+          std::string::size_type pos = s.find('e');
+          if(pos!=std::string::npos) {
+            //do nothing.
+          } else if(s.size()) {
+            if(s[0]=='-') {
+              s = s.substr(1,s.size()-1);
+            } else {
+              s = std::string("-")+s;
+            }
+          }
+        } else if(m_action==numeric::s_pow()) {
+          if(s.find('e')==std::string::npos) {
+            s += m_action;
+          }
+        } else {
+          s += m_action;
+        }
+
+      } else if(m_numeric.number_type==number_ip) {
+        //four uints separated by three dots.
+        if(m_action==s_C()) {
+          s.clear();
+        } else if(m_action==numeric::s_dot()) {
+          if(s.empty()) {
+            //do nothing.
+          } else {
+            if(numchar(s,'.')>=3) {
+            } else if(s[s.size()-1]!='.') {
+              s += m_action;
+            }
+          }
+        } else if(m_action==numeric::s_sign()) {
+          //do nothing.
+        } else if(m_action==numeric::s_pow()) {
+          //do nothing.
+        } else {
+          s += m_action;
+        }
+
+      } else if(m_numeric.number_type==number_radec) {
+        //h:m:s or d:ma:sa
+        if(m_action==s_C()) {
+          s.clear();
+        } else if(m_action==numeric::s_double_dot()) {
+          if(s.empty()) {
+            //do nothing.
+          } else {
+            const char& last = s[s.size()-1];
+            if((last==':')||(last=='.')||(numchar(s,':')>=2)||(numchar(s,'.')>=1)) {
+              //do nothing.
+            } else {
+              s += m_action;
+            }
+          }
+        } else if(m_action==numeric::s_dot()) {
+          if(s.empty()) {
+            //do nothing.
+          } else {
+            const char& last = s[s.size()-1];
+            if((last==':')||(last=='.')) {
+              //do nothing.
+            } else {
+              s += m_action;
+            }
+          }
+        } else if(m_action==numeric::s_sign()) {
+          //do nothing.
+        } else if(m_action==numeric::s_pow()) { //should not happen.
+          //do nothing.
+        } else {
+          s += m_action;
+        }
+
+      }
+      m_numeric.value = s;
+      return return_to_render;
+    }
+    virtual bcbk* copy() const {return new button_cbk(*this);}
+  public:
+    button_cbk(numeric& a_numeric,const std::string& a_action)
+    :parent()
+    ,m_numeric(a_numeric)
+    ,m_action(a_action)
+    {}
+    virtual ~button_cbk(){}
+  public:
+    button_cbk(const button_cbk& a_from)
+    :parent(a_from)
+    ,m_numeric(a_from.m_numeric)
+    ,m_action(a_from.m_action)
+    {}
+    button_cbk& operator=(const button_cbk& a_from){
+      parent::operator=(a_from);
+      m_action = a_from.m_action;
+      return *this;
+    }
+  protected:
+    numeric& m_numeric;
+    std::string m_action;
+  };
+
+  void update_sg(bool a_create_sg) {
+    if(a_create_sg) create_sg();
+
+    if(width.value()<=0) return;
+    if(height.value()<=0) return;
+
+    // [resul]
+    // 7  8  9 
+    // 4  5  6
+    // 1  2  3
+    // 0  . sg
+    // C  e Ok
+    // (slider)
+    // (cancel)
+
+    update_button(m_mtx_7,m_7,"7",0,0);
+    update_button(m_mtx_8,m_8,"8",0,1);
+    update_button(m_mtx_9,m_9,"9",0,2);
+
+    update_button(m_mtx_4,m_4,"4",1,0);
+    update_button(m_mtx_5,m_5,"5",1,1);
+    update_button(m_mtx_6,m_6,"6",1,2);
+
+    update_button(m_mtx_1,m_1,"1",2,0);
+    update_button(m_mtx_2,m_2,"2",2,1);
+    update_button(m_mtx_3,m_3,"3",2,2);
+
+    update_button(m_mtx_0,m_0,"0",3,0);
+    update_button(m_mtx_dot,m_dot,s_dot(),3,1);
+    update_button(m_mtx_sign,m_sign,s_sign(),3,2);
+
+    update_result();
+    update_clear();
+    update_pow();
+    update_enter();
+
+    if(show_slider.value()) update_slider();
+    if(show_cancel.value()) update_cancel();
+
+  }
+  void create_sg() {
+    m_sep.clear();
+
+    m_sep.add(create_elem(m_mtx_7,m_7));
+    m_sep.add(create_elem(m_mtx_8,m_8));
+    m_sep.add(create_elem(m_mtx_9,m_9));
+
+    m_sep.add(create_elem(m_mtx_4,m_4));
+    m_sep.add(create_elem(m_mtx_5,m_5));
+    m_sep.add(create_elem(m_mtx_6,m_6));
+
+    m_sep.add(create_elem(m_mtx_1,m_1));
+    m_sep.add(create_elem(m_mtx_2,m_2));
+    m_sep.add(create_elem(m_mtx_3,m_3));
+
+    m_sep.add(create_elem(m_mtx_0,m_0));
+    m_sep.add(create_elem(m_mtx_dot,m_dot));
+    m_sep.add(create_elem(m_mtx_sign,m_sign));
+
+   {separator* sep = new separator;
+    sep->add(new noderef(m_mtx_result));
+    sep->add(new noderef(m_result));
+    m_sep.add(sep);}
+
+    m_sep.add(create_elem(m_mtx_clear,m_clear));
+    m_sep.add(create_elem(m_mtx_pow,m_pow));
+    m_sep.add(create_elem(m_mtx_enter,m_enter));
+
+    if(show_slider.value()) {
+      separator* sep = new separator;
+      sep->add(new noderef(m_mtx_slider));
+      sep->add(new noderef(m_slider));
+      m_sep.add(sep);
+    }
+
+    if(show_cancel.value()) {
+      m_sep.add(create_elem(m_mtx_cancel,m_cancel));
+    }
+
+  }
+protected:
+  float hitem() const {
+    return height/(1+5
+                   +(show_cancel.value()?1:0)
+                   +(show_slider.value()?1:0)
+                   );
+  }
+
+  separator* create_elem(matrix& a_mtx,text_button& a_b) {
+    separator* sep = new separator;
+    sep->add(new noderef(a_mtx));
+    sep->add(new noderef(a_b));
+    return sep;
+  }
+
+  void update_button(matrix& a_mtx,text_button& a_b,const std::string& a_label,unsigned int a_row,unsigned int a_col) {
+    float wbutton = width/3;
+
+    float xx = -width*0.5f+wbutton*0.5f+a_col*wbutton;
+    float yy = height*0.5f-hitem()*1.5f-a_row*hitem();
+    a_mtx.set_translate(xx,yy,0);
+
+    a_b.width = wbutton;
+    a_b.height = hitem();
+    a_b.color = front_color;
+    a_b.font = gui_font();
+    a_b.back_area::color = back_color;
+    a_b.back_area::border_color = border_color;
+    a_b.arm_color = arm_color;
+    a_b.wmargin_factor = text_wmargin_factor;
+    a_b.hmargin_factor = text_hmargin_factor;
+    a_b.confine = true;
+    a_b.hjust = center;
+
+    a_b.set_label(a_label);
+
+    a_b.clear_cbks();
+    a_b.add_callback(new button_cbk(*this,a_label));
+  }
+
+  void update_clear() {
+    float wtext = width/3;
+    float htext = hitem();
+
+    float xx = -width*0.5f+wtext*0.5f;
+    unsigned int row = 4;
+    float yy = height*0.5f-hitem()*1.5f-row*hitem();
+
+    m_mtx_clear.set_translate(xx,yy,0);
+
+    m_clear.width = wtext;
+    m_clear.height = htext;
+
+    m_clear.back_area::color = back_color;
+    m_clear.back_area::border_color = border_color;
+    m_clear.corner_radius = corner_radius;
+    m_clear.corner_mask = back_area::corner_bottom_left();
+
+    m_clear.color = front_color;
+    m_clear.font = gui_font();
+    m_clear.wmargin_factor = text_wmargin_factor;
+    m_clear.hmargin_factor = text_hmargin_factor;
+    m_clear.arm_color = arm_color;
+
+    m_clear.confine = true;
+    m_clear.hjust = center;
+
+    m_clear.set_label(s_C());
+
+    m_clear.clear_cbks();
+    m_clear.add_callback(new button_cbk(*this,s_C()));
+  }
+
+  void update_pow() {
+    float wtext = width/3;
+    float htext = hitem();
+
+    float xx = 0;
+    unsigned int row = 4;
+    float yy = height*0.5f-hitem()*1.5f-row*hitem();
+
+    m_mtx_pow.set_translate(xx,yy,0);
+
+    m_pow.width = wtext;
+    m_pow.height = htext;
+    m_pow.back_area::color = back_color;
+    m_pow.back_area::border_color = border_color;
+    m_pow.color = front_color;
+    m_pow.font = gui_font();
+    m_pow.wmargin_factor = text_wmargin_factor;
+    m_pow.hmargin_factor = text_hmargin_factor;
+    m_pow.arm_color = arm_color;
+
+    m_pow.confine = true;
+    m_pow.hjust = center;
+
+    m_pow.clear_cbks();
+
+    if(number_type.value()==number_radec) {
+      m_pow.set_label(s_double_dot());
+      m_pow.add_callback(new button_cbk(*this,s_double_dot()));
+    } else {
+      m_pow.set_label(s_pow());
+      m_pow.add_callback(new button_cbk(*this,s_pow()));
+    }
+  }
+
+  void update_enter() {
+    float wtext = width/3;
+    float htext = hitem();
+
+    float xx = width*0.5f-wtext*0.5f;
+    unsigned int row = 4;
+    float yy = height*0.5f-hitem()*1.5f-row*hitem();
+
+    m_mtx_enter.set_translate(xx,yy,0);
+
+    m_enter.width = wtext;
+    m_enter.height = htext;
+
+    m_enter.back_area::color = back_color;
+    m_enter.back_area::border_color = border_color;
+    m_enter.corner_radius = corner_radius;
+    m_enter.corner_mask = back_area::corner_bottom_right();
+
+    m_enter.color = front_color;
+    m_enter.font = gui_font();
+    m_enter.wmargin_factor = text_wmargin_factor;
+    m_enter.hmargin_factor = text_hmargin_factor;
+    m_enter.arm_color = arm_color;
+
+    m_enter.confine = true;
+    m_enter.hjust = center;
+
+    m_enter.set_label(s_Ok());
+
+    m_enter.copy_cbks(m_cbks);
+  }
+
+  void update_cancel() {
+    float wtext = width;
+    float htext = hitem();
+
+    float xx = width*0.5f-wtext*0.5f;
+    float yy = -height*0.5f+htext*0.5f;
+    m_mtx_cancel.set_translate(xx,yy,0);
+
+    m_cancel.width = wtext;
+    m_cancel.height = htext;
+    m_cancel.back_area::color = back_color;
+    m_cancel.back_area::border_color = border_color;
+    m_cancel.color = front_color;
+    m_cancel.font = gui_font();
+    m_cancel.wmargin_factor = text_wmargin_factor;
+    m_cancel.hmargin_factor = text_hmargin_factor;
+    m_cancel.arm_color = arm_color;
+
+    m_cancel.confine = true;
+    m_cancel.hjust = center;
+
+    m_cancel.set_label(s_Cancel());
+
+    m_cancel.copy_cbks(m_cancel_cbks);
+  }
+
+  void update_result() {
+    float wtext = width;
+    float htext = hitem();
+
+    float xx = 0;
+    float yy = height*0.5f-htext*0.5f;
+    m_mtx_result.set_translate(xx,yy,0);
+
+    m_result.width = wtext;
+    m_result.height = htext;
+
+    //FIXME : handle the three below from res.
+    m_result.back_area::color = colorf_white();
+    m_result.back_area::border_color = colorf_black();
+    m_result.corner_radius = corner_radius;
+    m_result.corner_mask = back_area::corner_top_left()|back_area::corner_top_right();
+
+    m_result.color = colorf_black();
+
+    m_result.font = gui_font();
+    m_result.wmargin_factor = text_wmargin_factor;
+    m_result.hmargin_factor = text_hmargin_factor;
+
+    m_result.strings.clear();
+    m_result.strings.add(value.value()); //important.
+
+    m_result.confine = true;
+  }
+
+  void update_slider() {
+    float wtext = width;
+    float htext = hitem();
+
+    float xx = 0;
+
+    float yy = -height*0.5f+htext*0.5f;
+    if(show_cancel.value()) yy += htext;
+
+    m_mtx_slider.set_translate(xx,yy,0);
+
+    m_slider.width = wtext;
+    m_slider.height = htext;
+
+    m_slider.clear_cbks();
+
+  //m_slider.add_begin_callback(new slider_cbk(*this));
+    m_slider.add_drag_callback(new slider_cbk(*this));
+  //m_slider.add_end_callback(new slider_cbk(*this));
+
+    //m_slider.value = 0;
+  }
+
+  class slider_cbk : public bcbk {
+    typedef bcbk parent;
+  public:
+    virtual return_action action() {
+      double dv = m_numeric.slider_max-m_numeric.slider_min;
+      double v = m_numeric.slider_min+dv*m_numeric.m_slider.value;
+     {std::string stmp;
+      if(!num2s(v,stmp)){}
+      m_numeric.value = stmp;}
+      return return_to_render;
+    }
+    virtual bcbk* copy() const {return new slider_cbk(*this);}
+  public:
+    slider_cbk(numeric& a_numeric):parent(),m_numeric(a_numeric) {}
+    virtual ~slider_cbk(){}
+  public:
+    slider_cbk(const slider_cbk& a_from):parent(a_from),m_numeric(a_from.m_numeric) {}
+    slider_cbk& operator=(const slider_cbk& a_from){parent::operator=(a_from);return *this;}
+  protected:
+    numeric& m_numeric;
+  };
+
+protected:
+  sg::cbks m_cbks;
+  sg::cbks m_cancel_cbks;
+  separator m_sep;
+
+  matrix m_mtx_slider;
+  slider m_slider;
+  //optimize : avoid too much freetype load font :
+  matrix m_mtx_result;
+  text m_result;
+  matrix m_mtx_clear;
+  text_button m_clear;
+  matrix m_mtx_pow;
+  text_button m_pow;
+  matrix m_mtx_enter;
+  text_button m_enter;
+  matrix m_mtx_cancel;
+  text_button m_cancel;
+
+  matrix m_mtx_7;
+  text_button m_7;
+  matrix m_mtx_8;
+  text_button m_8;
+  matrix m_mtx_9;
+  text_button m_9;
+
+  matrix m_mtx_4;
+  text_button m_4;
+  matrix m_mtx_5;
+  text_button m_5;
+  matrix m_mtx_6;
+  text_button m_6;
+
+  matrix m_mtx_1;
+  text_button m_1;
+  matrix m_mtx_2;
+  text_button m_2;
+  matrix m_mtx_3;
+  text_button m_3;
+
+  matrix m_mtx_0;
+  text_button m_0;
+  matrix m_mtx_dot;
+  text_button m_dot;
+  matrix m_mtx_sign;
+  text_button m_sign;
+};
+
+}}
+
+#endif

@@ -1,0 +1,10 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_socket}" = "yes" ] ; then
+
+  if [ ${build_visual} = "yes" ] ; then
+    libs="${libs} wsock32.lib"
+  fi
+
+fi

@@ -1,0 +1,121 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_unzip
+#define exlib_unzip
+
+// extract files from a .zip file. Subdirectories are created.
+
+#include "zip"
+
+#include <inlib/dirmanip>
+
+namespace exlib {
+
+class unzip : public base_zip {
+public:
+  unzip(std::ostream& a_out):base_zip(a_out){}
+  virtual ~unzip(){}
+public:
+  unzip(const unzip& a_from):base_zip(a_from){}
+  unzip& operator=(const unzip&){return *this;}
+public:
+  virtual bool visit_entry(const std::string& a_entry,
+                           unsigned int a_size,
+                           const char* a_buffer) {
+    if(!a_size) return true; //directory
+
+    std::string dir = inlib::dir_name(a_entry);
+    std::string name = inlib::base_name(a_entry);
+
+    std::string pwd;
+    if(!inlib::dir::pwd(pwd)) {
+      m_out << "exlib::unzip::visit_entry :" 
+            << " can't get pwd."
+            << std::endl;  
+    } else {
+      if(!inlib::mkdirs(m_out,dir,true)){
+        m_out << "exlib::unzip::visit_entry :" 
+              << " mkdirs " << inlib::sout(dir) << " failed."
+              << std::endl;  
+      } else {
+        if(!inlib::file::write_bytes(name,a_buffer,a_size)) {
+          m_out << "exlib::unzip::visit_entry :" 
+                << " write entry \"" << a_entry << "\""
+                << " (size " << a_size << ")."
+                << " failed."
+                << std::endl;  
+        }
+      }
+      if(!inlib::dir::cd(pwd)){}
+    }
+
+    return true;
+  }
+};
+
+inline  bool unzip_from(std::ostream& a_out,
+                        const std::string& a_from,
+                        const std::string& a_path,
+                        const std::string& a_expected_dir = ""){
+ {bool is_dir;
+  inlib::dir::is_a(a_from,is_dir);
+  if(!is_dir) {
+    a_out << "exlib::unzip_from :"
+          << " directory " << inlib::sout(a_from) << " does not exists."
+          << std::endl;
+    return false;
+  }}
+
+  std::string pwd;
+  if(!inlib::dir::pwd(pwd)) {
+    a_out << "exlib::unzip_from :"
+          << " can't get pwd."
+          << std::endl;
+    return false;
+  }
+
+  if(!inlib::dir::cd(a_from)){
+    a_out << "exlib::unzip_from :"
+          << " can't cd to " << inlib::sout(a_from)
+          << std::endl;
+    return false;
+  }
+
+  bool retval = true;
+
+  exlib::unzip uzp(a_out);
+  if(!uzp.load_file(a_path)) {
+    a_out << "exlib::unzip_from :"
+          << " problem unzipping file " << inlib::sout(a_path)
+          << std::endl;      
+    retval = false;
+  } else {
+    if(a_expected_dir.size()) {
+      bool is_dir;
+      inlib::dir::is_a(a_expected_dir,is_dir);
+      if(!is_dir) {
+        a_out << "exlib::unzip_from :"
+              << " unzipping of " << a_path
+              << " did not create the directory " << a_expected_dir << "." 
+              << std::endl;      
+        retval = false;
+      }
+    }
+  }
+
+  if(!inlib::dir::cd(pwd)){
+    a_out << "exlib::unzip_res_file :"
+          << " can't cd back to " << inlib::sout(pwd)
+          << std::endl;
+    retval = false;
+  }
+  return retval;
+}
+
+}
+
+#endif
+
+//exlib_build_use inlib zlib zip kernel
+

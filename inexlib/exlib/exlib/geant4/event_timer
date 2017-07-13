@@ -1,0 +1,120 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_event_timer
+#define exlib_geant4_event_timer
+
+#include "run_manager" //Have G4 first to quiet VisualC++.
+
+#include <inlib/event_timer>
+#include <inlib/sg/view_evd>
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+
+namespace exlib {
+namespace geant4 {
+
+class event_timer : public inlib::event_timer {
+  INLIB_HEADER(event_timer,exlib::geant4::event_timer,inlib::event_timer)
+public:
+  virtual void start() {
+    inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(m_gv);
+    if(!_evd) return;
+    m_event_count = 0;
+    m_event_start = _evd->event_index();
+    m_run_manager.start_run(m_wanted_nevent);
+    base_timer::start();
+  }
+  virtual void stop() {
+    if(active()) m_run_manager.end_run();
+    base_timer::stop();
+  }
+
+  virtual void action() {
+
+    //m_gv.out() << "debug : exlib::geant4::event_timer::action." << std::endl;
+
+    if(m_event_count>=m_wanted_nevent) {
+      stop();
+      return;
+    }
+
+    m_run_manager.do_one_event();
+
+    inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(m_gv);
+    if(_evd) {
+      std::string stmp;
+      if(!inlib::num2s(_evd->event_index(),stmp)){}
+      m_gv.show_console("event index "+stmp);
+      _evd->event_index()++;
+    }
+
+    m_event_count++;
+  }
+public:
+  event_timer(inlib::sg::gui_viewer& a_gv,
+              run_manager& a_run_manager,
+              unsigned int a_wanted_nevent,
+              unsigned int a_interval)
+  :parent(a_interval)
+  ,m_gv(a_gv)
+  ,m_run_manager(a_run_manager)
+
+  ,m_wanted_nevent(a_wanted_nevent)
+
+  ,m_event_start(0)
+  ,m_event_count(0)
+  {
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~event_timer(){
+#ifdef INLIB_MEM
+    inlib::mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  event_timer(const event_timer& a_from)
+  :parent(a_from)
+  ,m_gv(a_from.m_gv)
+  ,m_run_manager(a_from.m_run_manager)
+
+  ,m_wanted_nevent(a_from.m_wanted_nevent)
+
+  ,m_event_start(0)
+  ,m_event_count(0)
+  {
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  event_timer& operator=(const event_timer& a_from){
+    parent::operator=(a_from);
+
+    if(&a_from==this) return *this;
+
+    m_wanted_nevent = a_from.m_wanted_nevent;
+
+    m_event_start = 0;
+    m_event_count = 0;
+
+    return *this;
+  }
+protected:
+  inlib::sg::gui_viewer& m_gv;
+  run_manager& m_run_manager;
+  unsigned int m_wanted_nevent;
+
+  unsigned int m_event_start;
+  unsigned int m_event_count;
+};
+
+}}
+
+//exlib_build_use geant4 inlib inlib_glutess freetype kernel
+
+#endif
+

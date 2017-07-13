@@ -1,0 +1,382 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_func
+#define inlib_func
+
+// some common functions.
+
+#include "mathd"
+
+#include <cmath>
+#include <cstddef>
+#include <vector>
+
+namespace inlib {
+namespace func {
+
+class gaussian {
+public:
+  gaussian(double a_scale = 1,double a_mean = 0,double a_sigma = 1){
+    set(a_scale,a_mean,a_sigma);
+  }
+  virtual ~gaussian(){}
+public:
+  gaussian(const gaussian& a_from)
+  :m_scale(a_from.m_scale)
+  ,m_mean(a_from.m_mean)
+  ,m_sigma(a_from.m_sigma)
+  {}
+  gaussian& operator=(const gaussian& a_from){
+    m_scale = a_from.m_scale;
+    m_mean = a_from.m_mean;
+    m_sigma = a_from.m_sigma;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {
+    double _value = (a_x - m_mean)/m_sigma;
+    return m_scale * ::exp(-0.5 * _value * _value);
+  }
+public:
+  void set(double a_scale,double a_mean,double a_sigma){
+    m_scale = a_scale;
+    m_mean = a_mean;
+    m_sigma = a_sigma;
+    if(m_sigma<=0) m_sigma = 1;
+  }
+  void scale(double a_scale){m_scale = a_scale;}
+  void mean(double a_mean){m_mean = a_mean;}
+  void sigma(double a_sigma){
+    m_sigma = a_sigma;
+    if(m_sigma<=0) m_sigma = 1;
+  }
+  double scale() const {return m_scale;}
+  double mean() const {return m_mean;}
+  double sigma() const {return m_sigma;} 
+private:
+  double m_scale,m_mean,m_sigma;
+};
+
+//Breit-Wigner
+class bw {
+public:
+  bw(double a_height = 1,double a_center = 0,double a_width = 1){
+    set(a_height,a_center,a_width);
+  }
+  virtual ~bw(){}
+public:
+  bw(const bw& a_from)
+  :m_height(a_from.m_height)
+  ,m_center(a_from.m_center)
+  ,m_width(a_from.m_width)
+  {}
+  bw& operator=(const bw& a_from){
+    m_height = a_from.m_height;
+    m_center = a_from.m_center;
+    m_width = a_from.m_width;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {
+    double _value = 2.*(a_x - m_center)/m_width;
+    return m_height/(1. + _value * _value);
+  }
+public:
+  void set(double a_height,double a_center,double a_width){
+    m_height = a_height;
+    m_center = a_center;
+    m_width = a_width;
+    if(m_width<=0) m_width = 1;
+  }
+  void height(double a_height){m_height = a_height;}
+  void center(double a_center){m_center = a_center;}
+  void width(double a_width){
+    m_width = a_width;
+    if(m_width<=0) m_width = 1;
+  }
+  double height() const {return m_height;}
+  double center() const {return m_center;}
+  double width() const {return m_width;}
+private:
+  double m_height,m_center,m_width;
+};
+
+class expo {
+public:
+  expo(double a_a = 0,double a_b = 1){
+    // exp(a_a + a_b * a_x)  //Same as in PAW fitting definition.
+    set(a_a,a_b);
+  }
+  virtual ~expo(){}
+public:
+  expo(const expo& a_from)
+  :m_a(a_from.m_a)
+  ,m_b(a_from.m_b)
+  {}
+  expo& operator=(const expo& a_from){
+    m_a = a_from.m_a;
+    m_b = a_from.m_b;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {return ::exp(m_a + m_b * a_x);}
+public:
+  void set(double a_a,double a_b){
+    m_a = a_a;
+    m_b = a_b;
+  }
+  void a(double a_a){m_a = a_a;}
+  void b(double a_b){m_b = a_b;}
+  double a() const {return m_a;}
+  double b() const {return m_b;}
+private:
+  double m_a,m_b;
+};
+
+class expa {
+public:
+  expa(double a_a = 1,double a_b = 1){
+    // a_a*exp(a_b * a_x)
+    set(a_a,a_b);
+  }
+  virtual ~expa(){}
+public:
+  expa(const expa& a_from)
+  :m_a(a_from.m_a)
+  ,m_b(a_from.m_b)
+  {}
+  expa& operator=(const expa& a_from){
+    m_a = a_from.m_a;
+    m_b = a_from.m_b;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {return m_a*::exp(m_b * a_x);}
+public:
+  void set(double a_a,double a_b){
+    m_a = a_a;
+    m_b = a_b;
+  }
+  void a(double a_a){m_a = a_a;}
+  void b(double a_b){m_b = a_b;}
+  double a() const {return m_a;}
+  double b() const {return m_b;}
+private:
+  double m_a,m_b;
+};
+
+class polynomial {
+public:
+  polynomial(){}
+  polynomial(const std::vector<double>& a_params){
+    // P[0] + P[1] x + P[2] x**2 + ...
+    set(a_params);
+  }
+  virtual ~polynomial(){}
+public:
+  polynomial(const polynomial& a_from)
+  :m_params(a_from.m_params)
+  {}
+  polynomial& operator=(const polynomial& a_from){
+    m_params = a_from.m_params;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {
+    double _value = 0;
+    double xxx = 1;
+    size_t pn = m_params.size();
+    for(size_t i=0;i<pn;i++) {
+      _value += m_params[i] * xxx;
+      xxx = xxx * a_x;
+    }
+    return _value;
+  }
+public:
+  void set(const std::vector<double>& a_params){m_params = a_params;}
+  void set(const double a_params[]){
+    //WARNING : no check done on a_params size.
+    size_t pn = m_params.size();
+    for(size_t i=0;i<pn;i++) m_params[i] = a_params[i];
+  }
+  const std::vector<double>& parameters() const {return m_params;}
+  void set_parameter(size_t a_index,double a_value){
+    if(a_index>=m_params.size()) return;
+    m_params[a_index] = a_value;
+  }
+private:
+  std::vector<double> m_params;
+};
+
+class cauchy {
+public:
+  cauchy(double a_height = 1,double a_center = 0,double a_width = 1){
+    set(a_height,a_center,a_width);
+  }
+  virtual ~cauchy(){}
+public:
+  cauchy(const cauchy& a_from)
+  :m_height(a_from.m_height)
+  ,m_center(a_from.m_center)
+  ,m_width(a_from.m_width)
+  {}
+  cauchy& operator=(const cauchy& a_from){
+    m_height = a_from.m_height;
+    m_center = a_from.m_center;
+    m_width = a_from.m_width;
+    return *this;
+  }
+public:  
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {
+    // From Wikipedia.
+    double b = m_width/2.;
+    double _value = (a_x - m_center)/b;
+    return m_height/((_value * _value + 1)*b*pi());
+  }
+public:  
+  void set(double a_height,double a_center,double a_width){
+    m_height = a_height;
+    m_center = a_center;
+    m_width = a_width;
+    if(m_width<=0) m_width = 1;
+  }
+  void height(double a_height){m_height = a_height;}
+  void center(double a_center){m_center = a_center;}
+  void width(double a_width){
+    m_width = a_width;
+    if(m_width<=0) m_width = 1;
+  }
+  double height() const {return m_height;}
+  double center() const {return m_center;}
+  double width() const {return m_width;}
+private:
+  double m_height,m_center,m_width;
+};
+
+// wrapper to C function (for exa ::cos, etc...):
+class cfunc {
+public:
+  typedef double(*func)(double);
+public:
+  cfunc(func a_func):m_func(a_func){}
+  virtual ~cfunc(){}
+public:
+  cfunc(const cfunc& a_from):m_func(a_from.m_func){}
+  cfunc& operator=(const cfunc& a_from){
+    m_func = a_from.m_func;
+    return *this;
+  }
+public:
+  bool in_domain(double) const {return true;}
+  double value(double a_x) const {return m_func(a_x);}
+private:
+  func m_func;
+};
+
+
+class in_ellipse {
+public:
+  in_ellipse():m_a(1),m_b(1){}
+  virtual ~in_ellipse(){}
+public:
+  in_ellipse(const in_ellipse& a_from):m_a(a_from.m_a),m_b(a_from.m_b){}
+  in_ellipse& operator=(const in_ellipse& a_from){
+    m_a = a_from.m_a;
+    m_b = a_from.m_b;
+    return *this;
+  }
+public:
+  bool in_domain(double,double) const {return true;}
+  double value(double a_x,double a_y) const {
+    if(m_a>=m_b) {
+      double f = ::sqrt(m_a*m_a-m_b*m_b);
+      double x1  = a_x-f;
+      double x2  = a_x+f;
+      double y2 = a_y*a_y;
+      double d = ::sqrt(x1*x1+y2) + ::sqrt(x2*x2+y2);
+      return (d>(2*m_a)?false:true); //border is outside.
+    } else {
+      double f = ::sqrt(m_b*m_b-m_a*m_a);
+      double y1  = a_y-f;
+      double y2  = a_y+f;
+      double x2 = a_x*a_x;
+      double d = ::sqrt(x2+y1*y1) + ::sqrt(x2+y2*y2);
+      return (d>(2*m_b)?false:true); //border is outside.
+    }
+  }
+public:
+  bool set_from_a_b(double a_a,double a_b) {
+    if(a_a<=0) return false;
+    if(a_b<=0) return false;
+    m_a = a_a;
+    m_b = a_b;
+    return true;
+  }
+  double a() const {return m_a;}
+  double b() const {return m_b;}
+private:
+  double m_a;
+  double m_b;
+};
+
+}}
+
+#include "geom2"
+
+namespace inlib {
+namespace func {
+
+class in_polygon {
+public:
+  typedef std::pair<double,double> point;
+public:
+  in_polygon(){}
+  in_polygon(const std::vector<point>& a_points){set(a_points);}
+  virtual ~in_polygon(){}
+public:
+  in_polygon(const in_polygon& a_from)
+  :m_points(a_from.m_points)
+  {}
+  in_polygon& operator=(const in_polygon& a_from){
+    m_points = a_from.m_points;
+    return *this;
+  }
+public:
+  bool in_domain(const point&) const {return true;}
+  double value(const point& a_point) const {
+    if(!m_points.size()) return 0;
+    return (inside(a_point,m_points)?1:0);
+  }
+public:
+  bool set(const std::vector<point>& a_points){
+    m_points = a_points;
+    if(!m_points.size()) return false;
+    //check closure :
+    if((m_points.size()>=2) && (m_points[m_points.size()-1]!=m_points[0]) ) {
+      m_points.push_back(m_points[0]);
+    }
+    return true;
+  }
+
+  bool set(size_t a_index,const point& a_point){
+    if(a_index>=m_points.size()) return false;
+    m_points[a_index] = a_point;
+    return true;
+  }
+
+  const std::vector<point>& points() const {return m_points;}
+private:
+  std::vector<point> m_points;
+};
+
+}}
+
+#endif
+

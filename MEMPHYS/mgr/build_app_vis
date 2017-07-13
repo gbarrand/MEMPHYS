@@ -1,0 +1,99 @@
+#!/bin/sh -f
+
+. ./find_bush
+
+. ./args
+
+if [ `uname` = Darwin ] ; then
+  if [ ${build_geant4_10x} = "yes" ] ; then
+    # to rm ld warning when linking geant4 10.03.p01.  
+    build_macosx_target=10.11
+  fi
+fi
+
+#//////////////////////////////////////
+#/// specific args : //////////////////
+#//////////////////////////////////////
+build_use_lib_core=no
+items="${build_args}"
+build_args=
+for item in ${items} ; do
+  if [ ${item} = "-core" ] ; then
+    build_use_lib_core=yes
+  else
+    build_args="${build_args} ${item}"
+  fi
+done
+#//////////////////////////////////////
+#//////////////////////////////////////
+#//////////////////////////////////////
+
+. ${bush_home}/app_header_use
+
+#app_exe=MEMPHYS_vis #no, it complicates app packing for distribution. (exe must have same name than overall app name).
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+if [ ${build_visual} = "yes" ] ; then
+cat <<END > ./main.cpp
+#include <windows.h>
+#undef pascal
+#undef max
+#undef ABSOLUTE
+#undef RELATIVE
+END
+  where=Windows
+  if [ ${build_offscreen} = "yes" ] ; then where=offscreen; fi
+  if [ ${build_webgl} = "yes" ] ; then where=WebGL; fi
+  if [ ${build_tntnet} = "yes" ] ; then where=tntnet; fi
+  cat ${exlib_home}/exlib/app/${where}/app_main_cpp >> ./main.cpp
+  /bin/rm -f tmp_0;sed -e "s:EXLIB_APP:${app}:g" ./main.cpp > tmp_0;/bin/mv tmp_0 ./main.cpp
+  app_src=./main.cpp
+fi
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
+
+use_geant4=yes
+use_zip=yes
+use_csz=yes
+
+. ./use_geant4
+
+. ${bush_home}/use/csz
+. ${bush_home}/use/zip
+. ${bush_home}/app_trailer_use
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+use_lib_core=no
+if [ ${build_use_lib_core} = yes ] ; then
+  if [ -f "${build_path}/libMEMPHYSCore.a" ] ; then use_lib_core=yes;fi
+fi
+  
+if [ ${use_lib_core} = yes ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    libs="${build_path}/libMEMPHYSCore.a ${libs}"
+  else
+    libs="-L${build_path} -lMEMPHYSCore ${libs}"
+  fi
+  
+else
+  sim_src="../source"
+  /bin/rm -f ./tmp_0
+  find ${sim_src} -name '*.cpp' -print > ./tmp_0
+  grep -v 'PhysicsList_' ./tmp_0 > ./tmp_1
+  for file in $(cat ./tmp_1) ; do cppfiles="${cppfiles} ${file}";done
+  /bin/rm -f ./tmp_0 ./tmp_1
+fi
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+. ${bush_home}/app_trailer

@@ -1,0 +1,158 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_map
+#define inlib_sg_map
+
+#include <map>
+
+#include "node"
+
+#include "pick_action"
+#include "bbox_action"
+#include "event_action"
+
+namespace inlib {
+namespace sg {
+
+template <class T, class CMP = std::less<T> >
+class map : public node {
+  INLIB_NODE_T(T,map,inlib::sg::map,node)
+public:
+  virtual void render(render_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->render(a_action);
+    }    
+  }
+  virtual void pick(pick_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->pick(a_action);
+      if(a_action.done()) break;
+    }    
+  }
+  virtual void bbox(bbox_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->bbox(a_action);
+    }
+  }
+  virtual void event(event_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->event(a_action);
+      if(a_action.done()) break;
+    }
+  }
+  virtual void search(search_action& a_action) {
+    if(a_action.do_path()) a_action.path_push(this);
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->search(a_action);
+      if(a_action.done()) return; //we don't have to pop_node()
+    }
+    if(a_action.do_path()) a_action.path_pop();
+  }
+  virtual void get_matrix(get_matrix_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->get_matrix(a_action);
+      if(a_action.done()) return;
+    }
+  }
+  virtual bool write(write_action& a_action) {
+    if(!a_action.beg_node(*this)) return false;
+    if(!write_fields(a_action)) return false;
+    if(!write_children(a_action)) return false;
+    if(!a_action.end_node(*this)) return false;
+    return true;
+  }
+  virtual void is_visible(visible_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      (*it).second->is_visible(a_action);
+    }
+  }
+public:
+  map():parent(){}
+  virtual ~map(){clear();}
+public:
+  map(const map& a_from)
+  :parent(a_from)
+  {
+    typedef typename std::map<T,node*,CMP>::const_iterator it_t;
+    it_t it;
+    for(it=a_from.m_children.begin();it!=a_from.m_children.end();++it) {
+      m_children[(*it).first] = (*it).second->copy();
+    }    
+  }
+  map& operator=(const map& a_from){
+    parent::operator=(a_from);
+    if(&a_from==this) return *this;
+    clear();
+    typedef typename std::map<T,node*,CMP>::const_iterator it_t;
+    it_t it;
+    for(it=a_from.m_children.begin();it!=a_from.m_children.end();++it) {
+      m_children[(*it).first] = (*it).second->copy();
+    }    
+    return *this;
+  }
+public:
+  void add(const T& a_index,node* a_node) {
+    //WARNING :  take ownership of a_node.
+    m_children[a_index] = a_node;
+  }
+  void clear(){
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    for(it_t it = m_children.begin();it!=m_children.end();++it)
+      delete (*it).second;
+    m_children.clear();
+  }
+
+  unsigned int size() const {return m_children.size();}
+  bool empty() const {return m_children.size()?false:true;}
+
+  bool find(const T& a_index,node*& a_node) const {
+    typedef typename std::map<T,node*,CMP>::const_iterator it_t;
+    it_t it = m_children.find(a_index);
+    if(it==m_children.end()) return false;      
+    a_node = (*it).second;
+    return true;
+  }
+
+/*
+  const node* operator[](const T& a_index) const {
+    //WARNING : no check is done on a_index.
+    return m_children[a_index];    
+  }
+  node* operator[](const T& a_index) {
+    //WARNING : no check is done on a_index.
+    return m_children[a_index];    
+  }
+*/
+  const std::map<T,node*,CMP>& children() const {return m_children;}
+  std::map<T,node*,CMP>& children() {return m_children;}
+protected:
+  bool write_children(write_action& a_action) {
+    typedef typename std::map<T,node*,CMP>::iterator it_t;
+    it_t it;
+    for(it=m_children.begin();it!=m_children.end();++it) {
+      if(!(*it).second->write(a_action)) return false;
+    }
+    return true;
+  }
+protected:
+  std::map<T,node*,CMP> m_children;
+};
+
+}}
+
+#endif

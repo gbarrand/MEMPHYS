@@ -1,0 +1,113 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_polyhedron
+#define exlib_geant4_polyhedron
+
+#include <G4Polyhedron.hh>
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+
+namespace exlib {
+namespace geant4 {
+
+// To have access to G4Polyhedron::pF and Facet::edge !
+
+class G4_Polyhedron : public HepPolyhedron {
+#ifdef INLIB_MEM
+  static const std::string& s_class() {
+    static const std::string s_v("exlib::geant4::G4_Polyhedron");
+    return s_v;
+  }
+#endif
+public:
+  G4_Polyhedron(const G4Polyhedron& aFrom):HepPolyhedron(aFrom){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~G4_Polyhedron() {
+#ifdef INLIB_MEM
+    inlib::mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  G4_Polyhedron(const G4_Polyhedron& aFrom):HepPolyhedron(aFrom){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  G4_Polyhedron& operator=(const G4_Polyhedron& aFrom) {
+    HepPolyhedron::operator=(aFrom);
+    return *this;
+  }
+public:
+  HepGeom::Point3D<double>* GetPV() const {return pV;}
+  G4Facet& getFacet(int aIndex) const {return pF[aIndex];}
+  //G4Facet::edge is private !
+  //G4Facet* GetPF() const {return pF;}
+  //void GetEdge(int a_face,int i,int& v,int& f) const {
+  //  G4Facet& face = pF[a_face];
+  //  v = face.edge[i].v;
+  //  f = face.edge[i].f;
+  //}
+};
+
+}}
+
+#include <inlib/hep/polyhedron>
+
+namespace exlib {
+namespace geant4 {
+
+class polyhedron : public inlib::hep::polyhedron {
+public:
+  polyhedron(const G4Polyhedron& aFrom){
+    G4_Polyhedron g4Pol(aFrom);
+    if (g4Pol.GetNoVertices() > 0 && g4Pol.GetNoFacets() > 0) {
+      nvert = g4Pol.GetNoVertices();
+      nface = g4Pol.GetNoFacets();
+      pV = new inlib::hep::HVPoint3D[nvert + 1];
+      pF = new inlib::hep::SbFacet[nface + 1];
+     {for (int i=1; i<=nvert; i++) {
+        HepGeom::Point3D<double> p = g4Pol.GetVertex(i);
+        pV[i].set_value((float)p.x(),(float)p.y(),(float)p.z());
+      }}
+
+      struct _G4Edge { G4int v,f; };
+      _G4Edge edge[4];
+
+     {for (int i=1; i<=nface; i++) {
+        // WARNING : Below is dangerous.
+        G4Facet& _facet = g4Pol.getFacet(i);
+        ::memcpy(edge,&_facet,sizeof(edge));
+        pF[i].set(edge[0].v,edge[0].f,edge[1].v,edge[1].f,
+                  edge[2].v,edge[2].f,edge[3].v,edge[3].f);
+      }}
+    }else{
+      nvert = 0; nface = 0; pV = 0; pF = 0;
+    }
+  }
+  virtual ~polyhedron() {}
+public:
+  polyhedron(const polyhedron& aFrom)
+  :inlib::hep::polyhedron(aFrom)
+  {}
+  polyhedron& operator=(const polyhedron& aFrom) {
+    inlib::hep::polyhedron::operator=(aFrom);
+    return *this;
+  }
+public:
+  polyhedron& operator=(const inlib::hep::polyhedron& aFrom) {
+    inlib::hep::polyhedron::operator=(aFrom);
+    return *this;
+  }
+};
+
+}}
+
+//exlib_build_use geant4 inlib
+
+#endif

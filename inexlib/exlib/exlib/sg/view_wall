@@ -1,0 +1,102 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_sg_view_wall
+#define exlib_sg_view_wall
+
+#include <inlib/sep>
+#include <inlib/wall/send_sg>
+
+#include "../xml/xml_wall"
+#include "../zlib"
+
+namespace exlib {
+namespace sg {
+
+class view_wall {
+public:
+  INLIB_SCLASS(exlib::sg::view_wall)
+public:
+  view_wall(std::ostream& a_out,const std::string& a_app_name,const std::string& a_data_dir)
+  :m_data_client(a_out,false,true)
+  {
+    //m_compress_func = compress_buffer;
+
+  //set_wall_action_prots();
+
+    ////////////////////////////////////////////
+    /// <app>.wall /////////////////////////////
+    ////////////////////////////////////////////
+    //look for a <app>.wall in the data dir :
+   {std::string path = a_data_dir;
+    path += inlib::sep();
+    path += a_app_name;
+    path += ".wall";
+    if(inlib::file::exists(path)) xml::load_wall_file(a_out,m_walls,path);}
+
+    //look for a walls file in the data dir :
+   {std::string path = a_data_dir;
+    path += inlib::sep();
+    path += "walls";
+    if(inlib::file::exists(path)) xml::load_wall_file(a_out,m_walls,path);}
+
+  }
+  virtual ~view_wall() {
+    disconnect_from_wall();
+  }
+protected:
+  view_wall(const view_wall& a_from)
+  :m_data_client(a_from.m_data_client.out(),false,true)
+  ,m_walls(a_from.m_walls)
+  {}
+  view_wall& operator=(const view_wall& a_from){
+    m_walls = a_from.m_walls;
+    return *this;
+  }
+
+public:
+  bool is_connected() {return m_data_client.socket().is_connected();}
+  bool poll() {return m_data_client.poll();}
+
+  bool send_sg(inlib::sg::node& a_sg,const inlib::args& a_opts) {
+    return inlib::wall::send_sg(m_data_client,a_sg,compress_buffer,a_opts);
+  }
+
+  bool send_string(const std::string& a_s) {
+    return m_data_client.socket().send_string(a_s);
+  }
+
+  inlib::wall::data_client& data_client() {return m_data_client;}
+  const inlib::wall::data_client& data_client() const {return m_data_client;}
+
+  void disconnect_from_wall() {
+    if(m_data_client.socket().is_connected()) {
+      if(!m_data_client.socket().send_string(inlib::wall::protocol::s_disconnect())) {}
+    }
+    m_data_client.socket().disconnect();
+  }
+
+  const inlib::xml::walls& walls() const { return m_walls;}
+  inlib::xml::walls& walls() { return m_walls;}
+protected:
+//public:
+  inlib::wall::data_client m_data_client;
+  inlib::xml::walls m_walls;
+};
+
+}}
+
+#include <inlib/sg/viewer>
+
+namespace exlib {
+namespace sg {
+
+inline view_wall* cast_view_wall(inlib::sg::viewer& a_viewer) {
+  return inlib::safe_cast<inlib::sg::viewer,view_wall>(a_viewer);
+}
+
+}}
+
+//exlib_build_use inlib inlib_glutess freetype expat zlib png jpeg kernel
+
+#endif

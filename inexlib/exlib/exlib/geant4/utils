@@ -1,0 +1,361 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_utils
+#define exlib_geant4_utils
+
+#include <G4EventManager.hh>
+#include <G4TrackingManager.hh>
+#include <G4TransportationManager.hh>
+
+#include <G4LogicalVolumeStore.hh>
+#include <G4PhysicalVolumeStore.hh>
+#include <G4SolidStore.hh>
+#include <G4PVParameterised.hh>
+#include <G4SDManager.hh>
+
+#include <G4RunManager.hh>
+
+#include <G4VisAttributes.hh>
+
+#include <inlib/sg/alert>
+#include <inlib/rroot/geo_colors>
+#include <inlib/sg/style_colormap>
+#include <inlib/rcmp>
+#include <inlib/sout>
+#include <inlib/forit>
+
+namespace exlib {
+namespace geant4 {
+
+inline bool set_store_trajectory(inlib::sg::alert& a_gv) {
+  G4EventManager* emgr = G4EventManager::GetEventManager();
+  if(!emgr) {
+    a_gv.warn("no event manager");
+    return false;
+  }
+  G4TrackingManager* tmgr = emgr->GetTrackingManager();
+  if(!tmgr) {
+    a_gv.warn("no tracking manager");
+    return false;
+  }
+  //1 G4Trajectory
+  //2 G4SmoothTrajectory
+  //3 G4RichTrajectory
+  tmgr->SetStoreTrajectory(1);
+  return true;
+}
+
+inline void clean_geom_stores() {
+  //G4GeometryManager::GetInstance()->OpenGeometry();
+
+  G4SolidStore::GetInstance()->Clean();
+
+ {G4LogicalVolumeStore* lvs = G4LogicalVolumeStore::GetInstance();
+  if(lvs) {
+    inlib_vforit(G4LogicalVolume*,*lvs,it){
+      G4VisAttributes* atb = const_cast<G4VisAttributes*>((*it)->GetVisAttributes());
+      (*it)->SetVisAttributes(0);
+      delete atb;
+    }
+  }}
+
+  G4LogicalVolumeStore::GetInstance()->Clean();
+
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>820
+ {G4PhysicalVolumeStore* pvs = G4PhysicalVolumeStore::GetInstance();
+  if(pvs) {
+    inlib_vforit(G4VPhysicalVolume*,*pvs,it){
+      G4PVParameterised* p = dynamic_cast<G4PVParameterised*>(*it);
+      if(p) {
+        delete p->GetParameterisation();
+      }
+    }
+  }}
+#endif	
+
+  G4PhysicalVolumeStore::GetInstance()->Clean();
+}
+
+inline G4VPhysicalVolume* get_top_physical_volume(inlib::sg::alert& a_gv) {
+  G4PhysicalVolumeStore* pvs = G4PhysicalVolumeStore::GetInstance();
+  if(!pvs) {a_gv.warn("no PV store");return 0;}
+
+  G4TransportationManager* tsp = G4TransportationManager::GetTransportationManager();
+  if(!tsp) {a_gv.warn("no Transport mgr");return 0;}
+
+  G4Navigator* nav = tsp->GetNavigatorForTracking();
+  if(!nav) {a_gv.warn("no navigator");return 0;}
+
+  G4VPhysicalVolume* top = nav->GetWorldVolume(); 
+  if(!top) {a_gv.warn("no top PV");return 0;}
+
+  return top;
+}
+
+inline G4VUserPrimaryGeneratorAction* get_primary_generator(G4RunManager& a_run_manager,inlib::sg::alert& a_gv) {
+
+  G4VUserPrimaryGeneratorAction* pga = const_cast<G4VUserPrimaryGeneratorAction*>(a_run_manager.GetUserPrimaryGeneratorAction());
+  if(!pga) {a_gv.warn("no primary generator");return 0;}
+
+  return pga;
+}    
+
+inline void set_default_colors(inlib::sg::alert& a_gv) {
+  G4PhysicalVolumeStore* pvs = G4PhysicalVolumeStore::GetInstance();
+  if(!pvs) {a_gv.warn("no PV store");return;}
+
+  // Set default volume colors according to A of material
+  // The color index are the one of style_ROOT_colormap.
+
+  std::vector<unsigned int> cols;
+  inlib::rroot::geo_colors(cols);
+
+  inlib::sg::style_ROOT_colormap rcmap;
+
+  inlib::colorf grey18 = inlib::colorf_default(); //=grey17. It is not ROOT/grey18=(.9,.9,.9)
+  //if(!rcmap.get_color(18,grey18)){}
+        
+ {inlib_vforit(G4VPhysicalVolume*,*pvs,it) {
+    G4VPhysicalVolume* pv = *it;
+    //a_out << obj->GetName() << std::endl;
+
+    G4LogicalVolume* lv = pv->GetLogicalVolume();
+
+    G4VisAttributes* vatbs = const_cast<G4VisAttributes*>(lv->GetVisAttributes());
+    if(!vatbs) {
+      vatbs = new G4VisAttributes(G4Colour(1,0,0));
+      lv->SetVisAttributes(vatbs);
+    }
+
+    G4Material* mat = lv->GetMaterial();
+    if(!mat || (mat->GetNumberOfElements()>1) ){
+      //a_out << "inlib::rroot::geo_manager::set_default_colors :"
+      //      << " geo_volume " << vol->name()
+      //      << " without geo_medium."
+      //      << std::endl;        
+
+      vatbs->SetColor(grey18[0],grey18[1],grey18[2]);
+
+    } else {
+      unsigned int iA = (unsigned int)mat->GetA();
+      if(iA>=cols.size()) {
+        //::printf("debug : %s  : mat %lu %s\n",
+        //   pv->GetName().c_str(),mat,mat->GetName().c_str());
+        //::printf("debug : %d : %g\n",cols.size(),mat->GetA());
+
+        vatbs->SetColor(grey18[0],grey18[1],grey18[2]);
+      } else {
+        inlib::colorf col;
+        if(!rcmap.get_color(cols[iA],col)){}      
+        vatbs->SetColor(col[0],col[1],col[2]);
+      }
+
+    }
+  }}
+
+}
+
+inline void vds(const G4VPhysicalVolume& a_pv,
+                unsigned int a_depth,
+                std::vector< std::pair<std::string,unsigned int> >& a_vds){
+  //must not clear a_vds since this function is recursive.
+
+ {const std::string& name = a_pv.GetName();
+  bool found = false; 
+  typedef std::pair<std::string,unsigned int> name_id;
+  inlib_vforcit(name_id,a_vds,it) {
+    if(inlib::rcmp((*it).first,name)) {found=true;break;}
+  }
+  if(!found) {
+    a_vds.push_back(std::pair<std::string,unsigned int>(name,a_depth));
+  }}
+
+ {int nDaughters = a_pv.GetLogicalVolume()->GetNoDaughters();
+  for (int iDaughter = 0; iDaughter < nDaughters; iDaughter++) {
+    vds(*(a_pv.GetLogicalVolume()->GetDaughter(iDaughter)),a_depth+1,a_vds);
+  }}
+}
+
+inline TrajectoryVector* trajectory_vector(G4RunManager& a_run_manager) { 
+  //used by the viewer::visualize_trajectories() method.
+  const G4Event* event = a_run_manager.GetCurrentEvent();
+  if(!event) return 0;
+  G4TrajectoryContainer* tcont = event->GetTrajectoryContainer();
+  if(!tcont) return 0;    
+  return tcont->GetVector();
+}
+
+inline void dump_primary_particles(std::ostream& a_out,const G4Event& a_event){
+  G4int nprimv = a_event.GetNumberOfPrimaryVertex();
+  for(int iprimv=0;iprimv<nprimv;iprimv++) {
+    G4PrimaryVertex* primv = a_event.GetPrimaryVertex(iprimv);
+    if(primv) {
+      G4int npart = primv->GetNumberOfParticle();
+      for(int ipart=0;ipart<npart;ipart++) {
+        G4PrimaryParticle* pp = primv->GetPrimary(ipart);
+        if(pp) {
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER<=820
+          G4ParticleDefinition* pdef = pp->GetG4code();
+#else
+          const G4ParticleDefinition* pdef = pp->GetParticleDefinition();
+#endif
+          if(pdef) {
+            a_out << "primary particle : " << pdef->GetParticleName() << std::endl;
+          } else {
+            a_out << "primary particle not defined in G4" << std::endl;
+          }
+        }
+      }
+    }
+  }
+}
+
+inline bool pv_name(const G4VPhysicalVolume& a_pv,std::string& a_name) {
+  a_name = a_pv.GetName();
+  return true;
+}
+
+inline void no_vds(const G4VPhysicalVolume&, //for templating.
+                   std::vector< std::pair<std::string,unsigned int> >& a_vds){
+  a_vds.clear();
+  G4PhysicalVolumeStore* pvs = G4PhysicalVolumeStore::GetInstance();
+  if(pvs) {
+    inlib_vforit(G4VPhysicalVolume*,*pvs,it) {
+      a_vds.push_back(std::pair<std::string,unsigned int>((*it)->GetName(),-1));
+    }
+  }
+}
+
+}}
+
+#include <G4SDManager.hh>
+#include <G4Colour.hh>
+#include <G4AttDef.hh>
+#include <G4AttValue.hh>
+#include <G4Transform3D.hh>
+#include <G4DigiManager.hh>
+
+#include <inlib/pointer>
+#include <inlib/scolor>
+
+namespace exlib {
+namespace geant4 {
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// hit : //////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline G4VHitsCollection* get_hits_collection(std::ostream& a_out,G4RunManager& a_run_manager,const std::string& a_name) {
+  const G4Event* event = a_run_manager.GetCurrentEvent();
+  if(!event) {a_out << "exlib::geant4::get_hits_collection : no event." << std::endl;return 0;}
+
+  G4SDManager* sdManager = G4SDManager::GetSDMpointer();
+  if(!sdManager) {a_out << "exlib::geant4::get_hits_collection : no G4SDManager." << std::endl;return 0;}
+  
+  G4HCofThisEvent* hce  = event->GetHCofThisEvent();
+  if(!hce) {a_out << "exlib::geant4::get_hits_collection : no G4HCofThisEvent." << std::endl;return 0;}
+
+  int nc = hce->GetNumberOfCollections();
+  
+  G4int cid = sdManager->GetCollectionID(a_name);
+  if((cid<0)||(cid>=nc)) {
+    a_out << "exlib::geant4::get_hits_collection : collection id not found for " << inlib::sout(a_name) << std::endl;
+    return 0;
+  }
+  
+  G4VHitsCollection* hc = hce->GetHC(cid);
+  if(!hc) {
+    a_out << "exlib::geant4::get_hits_collection : no G4VHitsCollection for " << inlib::sout(a_name) << std::endl;
+    return 0;
+  }
+  
+  return hc;
+}
+
+template <class ITEM> //G4VHit, G4VDigi
+inline G4LogicalVolume* get_logical_volume(const ITEM& a_hit) {
+  std::vector<G4AttValue>* vec = a_hit.CreateAttValues();
+  if(!vec) return 0;
+  inlib_vforcit(G4AttValue,*vec,it) {
+    const G4AttValue& val = *it;
+    if(val.GetName()=="LV") {
+      void* p;
+      if(!inlib::to_pointer(val.GetValue().c_str(),p)) return 0;
+      return (G4LogicalVolume*)p; //Beurk
+    }
+  }
+  return 0;
+}
+
+template <class ITEM> //G4VHit, G4VDigi
+inline G4Transform3D* get_transform3D(const ITEM& a_hit) {
+  std::vector<G4AttValue>* vec = a_hit.CreateAttValues();
+  if(!vec) return 0;
+  inlib_vforcit(G4AttValue,*vec,it) {
+    const G4AttValue& val = *it;
+    if(val.GetName()=="TSF") {
+      void* p;
+      if(!inlib::to_pointer(val.GetValue().c_str(),p)) return 0;
+      return (G4Transform3D*)p; //Beurk
+    }
+  }
+  return 0;
+}
+
+template <class ITEM> //G4VHit, G4VDigi
+inline bool get_color(const ITEM& a_hit,G4Colour& a_color) {  
+  std::vector<G4AttValue>* vec = a_hit.CreateAttValues();
+  if(vec) {
+    inlib_vforcit(G4AttValue,*vec,it) {
+      const G4AttValue& val = *it;
+      if(val.GetName()=="Color") {
+        double cr,cg,cb,ca;
+        if(!inlib::to_rgba(val.GetValue(),cr,cg,cb,ca)) break;
+        a_color = G4Colour(cr,cg,cb,ca);
+        return true;
+      }
+    }
+  }
+  const inlib::colorf& def = inlib::colorf_default();
+  a_color = G4Colour(def.r(),def.g(),def.b(),def.a());
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// digi : /////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline G4VDigiCollection* get_digis_collection(std::ostream& a_out,G4RunManager& a_run_manager,const std::string& a_name) {
+  const G4Event* event = a_run_manager.GetCurrentEvent();
+  if(!event) {a_out << "exlib::geant4::get_digis_collection : no event." << std::endl;return 0;}
+
+  G4DigiManager* dManager = G4DigiManager::GetDMpointer();
+  if(!dManager) {a_out << "exlib::geant4::get_digis_collection : no G4SDManager." << std::endl;return 0;}
+  
+  G4DCofThisEvent* dce  = event->GetDCofThisEvent();
+  if(!dce) {a_out << "exlib::geant4::get_digis_collection : no G4HCofThisEvent." << std::endl;return 0;}
+
+  int nc = dce->GetNumberOfCollections();
+  
+  G4int cid = dManager->GetDigiCollectionID(a_name);
+  if((cid<0)||(cid>=nc)) {
+    a_out << "exlib::geant4::get_digis_collection : collection id not found for " << inlib::sout(a_name) << std::endl;
+    return 0;
+  }
+  
+  G4VDigiCollection* dc = dce->GetDC(cid);
+  if(!dc) {
+    a_out << "exlib::geant4::get_digis_collection : no G4VDigisCollection for " << inlib::sout(a_name) << std::endl;
+    return 0;
+  }
+  
+  return dc;
+}
+
+  
+}}
+
+//exlib_build_use geant4 inlib
+
+#endif

@@ -1,0 +1,45 @@
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ To run MEMPHYS_sim on Lund iridium :
+
+    UNIX> cd <install_path>/MEMPHYS/<version>
+    UNIX> <if needed edit run_g410x_setup[.sh,.csh] to point to geant4 10.x data file directories>
+   Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
+  ( csh> source gcc_493.csh # on Lund iridium )
+    UNIX> cd exa_run
+    UNIX> ./sim_slurm       # to run on your local machine.
+    UNIX> sbatch sim_slurm  # to spawn a batch on the iridium cluster.
+
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ To analyse a MEMPHYS root file produced by a MEMPHYS_sim program :
+ 
+    UNIX> ../bin/MEMPHYS_read_plot_offscreen                  # on the default MEMPHYS.root file.
+    UNIX> ../bin/MEMPHYS_read_plot                            # on the default MEMPHYS.root file.
+    UNIX> ../bin/MEMPHYS_read_plot MEMPHYS_<job>_<task>.root  # on a MEMPHYS root file produced by a slurm task.
+
+ Note that the MEMPHYS_read_plot_offscreen program produces read_plot_offscreen[.png,.ps,_zb.ps] files without the need to tie to any interactive GUI and graphics system.
+
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////
+ To analyse a MEMPHYS root file with CERN-ROOT :
+    UNIX> <if needed edit ../cern_root_setup[.sh,.csh] to setup CERN-ROOT environment>
+      sh> . ../cern_root_setup.sh
+  or if under a csh shell :
+     csh> source ../cern_root_setup.csh
+   
+ from the root prompt :
+    UNIX> root analysis.C                                  # on the default MEMPHYS.root file.
+    UNIX> root -file=MEMPHYS_<job>_<task>.root analysis.C  # on a MEMPHYS root file produced by a slurm task.
+
+ with MEMPHYS analysis programs done with CERN-ROOT plotting :
+    UNIX> ../bin/MEMPHYS_read_plot_ROOT                            # on the default MEMPHYS.root file.
+    UNIX> ../bin/MEMPHYS_read_plot_ROOT MEMPHYS_<job>_<task>.root  # on a MEMPHYS root file produced by a slurm task.
+
+ with MEMPHYS analysis program all done with CERN-ROOT (reading of data and plotting) :   
+    UNIX> ../bin/MEMPHYS_all_ROOT                                  # on the default MEMPHYS.root file.
+    UNIX> ../bin/MEMPHYS_all_ROOT -file=MEMPHYS_<job>_<task>.root  # on a MEMPHYS root file produced by a slurm task.
+

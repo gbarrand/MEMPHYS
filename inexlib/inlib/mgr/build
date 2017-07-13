@@ -1,0 +1,202 @@
+#!/bin/sh -f
+
+bush_home=`dirname $0`/../../../bush
+
+#////////////////////////////////////
+#/// args : /////////////////////////
+#////////////////////////////////////
+what=
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -*) build_args="${build_args} $1";;
+     *) if [ $# = 1 ] ; then what=$1; else echo "unknown option : $1"; fi;;
+  esac
+  shift
+done
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+if [ "${what}" = "" ] ; then
+  ./${bush_home}/find_rm ../inlib '*.gch.*'
+  ./${bush_home}/find_rm ../inlib '*.cxx'
+  find ../inlib -name "*" -type f -exec grep exlib.license {} \;
+  
+  find ../inlib -name '*' -type f -exec ./build ${build_args} {} \;
+  #exit
+
+  dirs=
+  dirs="${dirs} ../apps"
+  dirs="${dirs} ../tests"
+  for dir in ${dirs} ; do
+    find ${dir} -maxdepth 1 -name '*.cpp' -type f -exec ./build ${build_args} {} \;
+  done
+
+
+  # NOTE : for exas, we use the local build script.
+  find ../examples/cpp -maxdepth 1 -name '*.cpp' -type f -exec ./build_exa ${build_args} {} \;
+
+  exit
+fi
+
+if [ -d "${what}" ] ; then
+  find ${what} -name '*' -type f -exec ./build ${build_args} {} \;
+  exit
+fi
+
+base_name=`basename ${what}`
+
+if [ "${what}" = "${base_name}" ] ; then
+  # only the name entered, find exact places :
+  found="`find .. -name "${base_name}" -print`"
+  if [ "${found}" = "" ] ; then
+    echo "not found."
+  else
+    find .. -name "${base_name}" -type f -exec ./build ${build_args} {} \;
+  fi
+  exit
+fi
+
+if [ "`echo ${what} | grep examples`" != "" ] ; then
+  ./build_exa ${build_args} ${what}
+  exit
+fi
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+#echo $1
+dir=`dirname ${what}`
+name=`basename ${what}`
+group=`basename ${dir}`
+
+suffix=`echo ${base_name} | sed 's:.*\.::'`
+if [ "${suffix}" = "${base_name}" ] ; then suffix=none;fi
+
+name=`echo ${name} | sed -e "s:\.${suffix}::g"`
+
+#echo "dir : ${dir}"
+#echo "group : ${group}"
+#echo "name : ${name}"
+#exit
+
+#////////////////////////////////////
+#/// to skip : //////////////////////
+#////////////////////////////////////
+if [ "`echo ${what} | grep '\.help'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.icc'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.ic'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.js'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.txt'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.out'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.ps'`" != "" ] ; then exit; fi
+if [ "`echo ${what} | grep '\.style'`" != "" ] ; then exit; fi
+if [ ${group} = "CVS" ] ; then exit;fi
+if [ ${name} = "README" ] ; then exit;fi
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+. ${bush_home}/header
+
+#//////////////////////////////////////////////////////////
+#/// look for an //inlib_build_use in the ${what} file ////
+#//////////////////////////////////////////////////////////
+auto_use_pack=inlib
+auto_use_file="${what}"
+. ${bush_home}/auto_use
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+is_app=no
+is_plugin=no
+
+if [ ${group} = "apps" ] ;  then is_app=yes; fi
+if [ ${group} = "tests" ] ; then is_app=yes; fi
+
+if [ ${is_app} = "yes" ] ; then
+
+  if [ ${name} = "plugin" ] ; then
+    is_plugin=yes
+    is_app=no
+    plugin=${name}
+    cppfiles="${cppfiles} ${what}"
+  fi
+
+  if [ ${name} = "dlmain" ] ; then
+    cppfiles="${cppfiles} ../tests/dlb.cpp"
+  fi
+  if [ ${name} = "dlb" ] ; then exit;fi
+
+  if [ ${name} = "utest" ] ; then
+    /bin/rm -f tmp_0
+    find ../tests/test -name '*.cpp' -print > tmp_0
+    for file in $(cat tmp_0) ; do cppfiles="${cppfiles} ${file}";done
+    /bin/rm -f tmp_0
+    cfiles="${cfiles} ../tests/test/csz_inflate.c"
+    if [ ${build_visual} = "yes" ] ; then
+      cppflags="${cppflags} -bigobj"
+    fi
+  fi
+
+  if [ ${name} = "unet" ] ; then
+    cppfiles="${cppfiles} ../tests/test/ftp.cpp"
+    cppfiles="${cppfiles} ../tests/test/http.cpp"
+  fi
+
+#  if [ ${name} = "algebra" ] ; then
+#    if [ `uname` = "Darwin" ] ; then
+#     libs="${libs} -framework Accelerate"
+#   fi
+# fi
+
+fi
+
+#////////////////////////////////////
+#/// uses : //////////////////////////
+#////////////////////////////////////
+
+use_inlib=yes
+
+. ${bush_home}/use/inlib
+. ${bush_home}/use/socket
+. ${bush_home}/use/thread
+. ${bush_home}/use/dl
+
+# ////////////////////////////////////
+# ////////////////////////////////////
+# ////////////////////////////////////
+
+/bin/mkdir -p ${build_path}
+
+if [ ${is_app} = "yes" ] ; then
+
+  app_src=${what}
+  app_exe=${name}
+  app_name=${name}
+
+  . ${bush_home}/application
+
+elif [ ${is_plugin} = "yes" ] ; then
+
+  . ${bush_home}/compile
+  . ${bush_home}/plugin
+
+else
+
+  if [ ${suffix} = c ] ; then
+    cfiles="${cfiles} ${what}"
+  else
+    cppfiles="${cppfiles} ${what}"
+  fi
+
+  . ${bush_home}/compile
+
+fi
+
+/bin/rm -f ${objs}
+

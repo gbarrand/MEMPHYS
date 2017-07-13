@@ -1,0 +1,29 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_fit_func
+#define inlib_fit_func
+
+#include <vector>
+#include <string>
+
+namespace inlib {
+
+class fit_func {
+public:
+  typedef std::vector<double> point;
+public:
+  virtual double value(const point& pt) const = 0; 
+  virtual bool set(const double params[])  = 0;
+public:
+  static const std::string& s_class() {
+    static const std::string s_v("inlib::fit_func");
+    return s_v;
+  }
+public:
+  virtual ~fit_func(){}
+};
+
+}
+
+#endif

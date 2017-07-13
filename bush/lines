@@ -1,0 +1,53 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+verbose=no
+max_depth=
+directory_path='.'
+
+while test $# -ge 1 ; do
+  case $1 in
+    -v) verbose=yes;;
+    -one) max_depth=1;;
+    -*) echo "bush/lines : unknown minus option $1";exit;;
+     *) if [ $# = 1 ] ; then
+          directory_path=$1
+        else
+          echo "bush/lines : unknown option : $1"
+          exit
+        fi;;
+  esac
+  shift
+done
+
+if [ ! -d "${directory_path}" ] ; then
+  echo "bush/lines : directory path ${directory_path} not found."
+  exit
+fi
+
+bush_home=`dirname $0`
+
+if [ "${max_depth}" = "" ] ; then
+  find ${directory_path} -name '*' -type f -print > tmp_0
+else    
+  find ${directory_path} -maxdepth ${max_depth} -name '*' -type f -print > tmp_0
+fi
+
+cc -o c_count ${bush_home}/c/c_count.c
+
+# exclude some files :
+grep -v 'lexer.l' ./tmp_0 > tmp_1;/bin/mv ./tmp_1 tmp_0
+
+/bin/rm -f ./tmp_2
+for file in $(cat tmp_0) ; do
+  if [ ${verbose} = yes ] ; then echo ${file};fi
+  ./c_count ${file} | grep ${file} >> ./tmp_2
+done
+
+if [ -f ./tmp_2 ] ; then
+  awk 'BEGIN{x=0;}{x+=$0;}END{print x}' ./tmp_2
+fi
+
+/bin/rm -f ./tmp_0 ./tmp_2 c_count

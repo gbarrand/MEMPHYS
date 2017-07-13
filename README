@@ -1,0 +1,28 @@
+
+ To build 
+   UNIX> cd MEMPHYS/mgr
+   UNIX> <in ./use_geant4 edit geant4_home to point to your geant4 10.x installation>
+   UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+  Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
+  ( csh> source gcc_493.csh # on Lund iridium )
+   UNIX> ./build
+  (UNIX> ./build -v  # to see built files.)
+  (UNIX> ./build -x  # for a full trace.)
+
+ If having CERN-ROOT :
+   UNIX> <in cern_root_setup[.sh,.csh] edit root_home to point to your CERN-ROOT installation>
+     sh> . ./cern_root_setup.sh
+   or from a csh flavoured shell :
+    csh> source ./cern_root_setup.csh
+   UNIX> ./build -root
+
+ At end of build a zip file with the simulation ready for distribution should be under :
+   bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
+
+ and the visualization should be in :
+   bin_<config>/distrib_vis/MEMPHYS-<version>-<platform>.zip
+
+  For some platform, the visualization may be in a specific bin_<config> which is not the one
+ of the simulation. Fr example on Mac, the simulation, that needs no graphics, is in bin_clang_c++11
+ and the visualization, being done with Cocoa, is in bin_sdk_mac_c++11.
+

@@ -1,0 +1,30 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ $# -eq 1 ] ; then
+  app="$1"
+else
+  app="`pwd`"
+  app="`dirname ${app}`"
+  app="`basename ${app}`"
+fi
+
+APP="`echo ${app} | tr '[:lower:]' '[:upper:]'`"
+
+if [ -f ../${app}/version ] ; then
+  maj_vers="`grep ${APP}_MAJOR_VERSION ../${app}/version | awk '{print $3}'`"
+  min_vers="`grep ${APP}_MINOR_VERSION ../${app}/version | awk '{print $3}'`"
+  patch_vers="`grep ${APP}_PATCH_VERSION ../${app}/version | awk '{print $3}'`"
+fi
+
+if [ -f ./version ] ; then
+  maj_vers="`grep ${APP}_MAJOR_VERSION ./version | awk '{print $3}'`"
+  min_vers="`grep ${APP}_MINOR_VERSION ./version | awk '{print $3}'`"
+  patch_vers="`grep ${APP}_PATCH_VERSION ./version | awk '{print $3}'`"
+fi
+
+version="${maj_vers}.${min_vers}.${patch_vers}"
+
+echo ${version}

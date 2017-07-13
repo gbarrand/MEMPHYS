@@ -1,0 +1,47 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_event_dispatcher
+#define inlib_sg_event_dispatcher
+
+#include "node"
+#include "cbks"
+#include "event_action"
+#include "ecbk"
+
+namespace inlib {
+namespace sg {
+
+class event_dispatcher : public node {
+  INLIB_NODE(event_dispatcher,inlib::sg::event_dispatcher,node)
+public:
+  virtual void event(event_action& a_action) {
+    ecbk::exec_event_cbks(m_cbks.callbacks(),a_action.get_event(),&a_action,this);
+  }
+public:
+  event_dispatcher():parent(),m_cbks(){}
+  virtual ~event_dispatcher(){}
+public:
+  event_dispatcher(const event_dispatcher& a_from):parent(a_from),m_cbks(a_from.m_cbks){}
+  event_dispatcher& operator=(const event_dispatcher& a_from){
+    parent::operator=(a_from);
+    m_cbks = a_from.m_cbks;
+    return *this;
+  }
+public:
+  const sg::cbks& cbks() const {return m_cbks;}
+  //sg::cbks& cbks() {return m_cbks;}
+  void add_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cbks.add(a_cbk);
+  }
+  void copy_cbks(const sg::cbks& a_from,bool a_clear = true) {
+    m_cbks.copy(a_from,a_clear);
+  }
+  void clear_cbks(){m_cbks.clear();}
+protected:
+  sg::cbks m_cbks;
+};
+
+}}
+
+#endif

@@ -1,0 +1,7 @@
+#!/bin/sh -f
+
+dir="$1"
+
+cd ../inlib/${dir}
+_find -path=. 'inlib::' | grep -v 'a_out' | grep -v m_out | grep -v m_ref_out | grep -v '.out()' | grep -v s_v | grep -v INLIB
+

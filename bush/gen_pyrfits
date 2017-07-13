@@ -1,0 +1,101 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`
+
+${bush_home}/check_app _cfitsio_split '_cfitsio_split program not found.'
+build_status=$?;if [ ${build_status} != 0 ] ; then exit ${build_status};fi
+
+${bush_home}/check_app _cfitsio_pyrfits_merge '_cfitsio_pyrfits_merge program not found.'
+build_status=$?;if [ ${build_status} != 0 ] ; then exit ${build_status};fi
+
+${bush_home}/check_app _Stripe_82_pyrfits_merge '_Stripe_82_pyrfits_merge program not found.'
+build_status=$?;if [ ${build_status} != 0 ] ; then exit ${build_status};fi
+
+where="${HOME}/Documents/TouchSky"
+if [ ! -d ${where} ] ; then
+  echo "directory ${where} not found."
+  exit
+fi
+
+#///////////////////////////////////////////////
+#// Stripe_82 : ////////////////////////////////
+#///////////////////////////////////////////////
+name=Stripe_82
+
+#fits_file="${where}/fitss/${name}.fits"
+#if [ ! -f ${fits_file} ] ; then
+#  echo "file ${fits_file} not found."
+#  exit
+#fi
+#_cfitsio_split -factor=32 ${fits_file}
+
+pyrfits_dir="${name}_pyrfits"
+
+scales="2 4 8 16 32 64"
+for scale in ${scales} ; do
+  _Stripe_82_pyrfits_merge -scale=${scale} -name=${pyrfits_dir}
+done
+
+exit
+
+#///////////////////////////////////////////////
+#// CFHTLS_1 : /////////////////////////////////
+#///////////////////////////////////////////////
+name=CFHTLS_1
+
+fits_file="${where}/fitss/${name}.fits"
+if [ ! -f ${fits_file} ] ; then
+  echo "file ${fits_file} not found."
+  exit
+fi
+_cfitsio_split -factor=32 ${fits_file}
+
+pyrfits_dir="${name}_pyrfits"
+
+scales="2 4 8 16"
+for scale in ${scales} ; do
+  _cfitsio_pyrfits_merge -scale=${scale} -name=${pyrfits_dir}
+done
+
+exit
+
+#///////////////////////////////////////////////
+#// M51_large : ////////////////////////////////
+#///////////////////////////////////////////////
+name=M51_large
+
+fits_file="${where}/fitss/${name}.fits"
+if [ ! -f ${fits_file} ] ; then
+  echo "file ${fits_file} not found."
+  exit
+fi
+_cfitsio_split -factor=4 ${fits_file}
+
+pyrfits_dir="${name}_pyrfits"
+
+scales="2 4"
+for scale in ${scales} ; do
+  _cfitsio_pyrfits_merge -scale=${scale} -name=${pyrfits_dir}
+done
+
+#///////////////////////////////////////////////
+#// sky_20 : ///////////////////////////////////
+#///////////////////////////////////////////////
+name=sky_20
+
+fits_file="${where}/fitss/${name}.fits"
+if [ ! -f ${fits_file} ] ; then
+  echo "file ${fits_file} not found."
+  exit
+fi
+_cfitsio_split -factor=32 ${fits_file}
+
+pyrfits_dir="${name}_pyrfits"
+
+scales="2 4 8 16"
+for scale in ${scales} ; do
+  _cfitsio_pyrfits_merge -scale=${scale} -name=${pyrfits_dir}
+done

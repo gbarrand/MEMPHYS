@@ -1,0 +1,251 @@
+
+#include <inlib/rroot/tree_manip>
+
+#define FIND_LEAF(a__tree,a__type,a__name) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf<a__type>* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
+#define FIND_LEAF_NAME(a__tree,a__type,a__name,a__sname) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf<a__type>* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,a__sname,br_##a__name,leaf_##a__name)) return false;
+
+#define FIND_LEAF_OBJECT(a__tree,a__name) \
+  inlib::rroot::branch* br_##a__name;\
+  inlib::rroot::leaf_object* leaf_##a__name;\
+  if(!inlib::rroot::find_leaf(a__tree,#a__name,br_##a__name,leaf_##a__name)) return false;
+
+#define READ_LEAF(a__tree,a__index,a__type,a__name) \
+  a__type a__name;\
+  if(!inlib::rroot::read_leaf((a__tree).file(),*br_##a__name,*leaf_##a__name,a__index,a__name)) return false;
+
+template <class H1D>
+inline bool process_hits(inlib::rroot::tree& a_tree,H1D& aHisto) {
+
+  FIND_LEAF(a_tree,int,tubeId)
+  FIND_LEAF(a_tree,int,totalPE)
+  
+  inlib::rroot::branch_element* be_pe = inlib::rroot::find_branch_element(a_tree,"pe");
+  if(!be_pe) return false;
+  
+  inlib::uint64 nentries = a_tree.entries();
+  for(inlib::uint64 index=0;index<nentries;index++) {
+    READ_LEAF(a_tree,index,int,tubeId)
+    READ_LEAF(a_tree,index,int,totalPE)
+    inlib::rroot::stl_vector<float>* pe = inlib::rroot::read_std_vec<float>(a_tree.file(),*be_pe,index);
+    if(!pe) return false;
+    inlib_vforcit(float,*pe,it) aHisto.Fill(*it);
+  }
+  
+  return true;
+}
+
+template <class H2D>
+inline bool process_digits(inlib::rroot::tree& a_tree,H2D& aHisto) {
+  FIND_LEAF(a_tree,double,pe)
+  FIND_LEAF(a_tree,double,time)
+
+  inlib::uint64 nentries = a_tree.entries();
+  for(inlib::uint64 index=0;index<nentries;index++) {
+    READ_LEAF(a_tree,index,double,pe)
+    READ_LEAF(a_tree,index,double,time)
+    aHisto.Fill(time,pe);
+  }
+  
+  return true;
+}
+
+inline bool process_tracks(inlib::rroot::tree& a_tree,bool a_verbose) {
+  //if(nPart!=tracks->rows()) {
+  //  std::cout << "read: nPart / tracks mismatch " 
+  //              << nPart << " " << tracks->rows() << std::endl;
+  //  return false;
+  //}
+
+  FIND_LEAF(a_tree,int,pId)
+  FIND_LEAF(a_tree,int,parent)
+  FIND_LEAF(a_tree,float,timeStart)
+  FIND_LEAF(a_tree,double,mass)
+  FIND_LEAF(a_tree,double,pTot)
+  FIND_LEAF(a_tree,double,ETot)
+  FIND_LEAF(a_tree,int,startVol)
+  FIND_LEAF(a_tree,int,stopVol)
+
+  inlib::rroot::branch_element* be_direction = inlib::rroot::find_branch_element(a_tree,"direction");
+  if(!be_direction) return false;
+  inlib::rroot::branch_element* be_momentum = inlib::rroot::find_branch_element(a_tree,"momentum");
+  if(!be_momentum) return false;
+  inlib::rroot::branch_element* be_startPos = inlib::rroot::find_branch_element(a_tree,"startPos");
+  if(!be_startPos) return false;
+  inlib::rroot::branch_element* be_stopPos = inlib::rroot::find_branch_element(a_tree,"stopPos");
+  if(!be_stopPos) return false;
+  
+  inlib::uint64 nentries = a_tree.entries();
+  for(inlib::uint64 index=0;index<nentries;index++) {
+    READ_LEAF(a_tree,index,int,pId)
+    READ_LEAF(a_tree,index,int,parent)
+    READ_LEAF(a_tree,index,float,timeStart)
+    READ_LEAF(a_tree,index,double,mass)
+    READ_LEAF(a_tree,index,double,pTot)
+    READ_LEAF(a_tree,index,double,ETot)
+    READ_LEAF(a_tree,index,int,startVol)
+    READ_LEAF(a_tree,index,int,stopVol)
+
+    inlib::rroot::stl_vector<double>* direction = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_direction,index);
+    if(!direction) return false;
+    inlib::rroot::stl_vector<double>* momentum = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_momentum,index);
+    if(!momentum) return false;
+    inlib::rroot::stl_vector<double>* startPos = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_startPos,index);
+    if(!startPos) return false;
+    inlib::rroot::stl_vector<double>* stopPos = inlib::rroot::read_std_vec<double>(a_tree.file(),*be_stopPos,index);
+    if(!stopPos) return false;
+    
+    double dx = (*direction)[0];
+    double dy = (*direction)[1];
+    double dz = (*direction)[2];
+
+    double px = (*momentum)[0];
+    double py = (*momentum)[1];
+    double pz = (*momentum)[2];
+
+    double start_x = (*startPos)[0];
+    double start_y = (*startPos)[1];
+    double start_z = (*startPos)[2];
+    
+    double stop_x = (*stopPos)[0];
+    double stop_y = (*stopPos)[1];
+    double stop_z = (*stopPos)[2];
+
+    if(a_verbose)
+    a_tree.out() << "----> Tk{"<<index<<"}: " 
+              << " pId " << pId
+              << " parent " << parent
+              << " creation time " << timeStart 
+              << " Volumes " << startVol << " " << stopVol << "\n"
+              << " Start Pos (" << start_x 
+              << "," << start_y << "," << start_z << ")\n"
+              << " Stop Pos (" << stop_x 
+              << "," << stop_y << "," << stop_z << ")\n"
+              << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
+              << " m " << mass
+              << " ETot " << ETot
+              << " pTot " << pTot
+              << " px,py,pz " << px << " " << py << " " << pz << "\n"
+              << std::endl;
+  }
+  
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+#include <inlib/rroot/file>
+#include <inlib/rroot/fac>
+#include <inlib/file>
+
+#include <exlib/zlib>
+
+template <class H1D,class H2D>
+inline bool read_data(std::ostream& a_out,
+                      const std::string& a_file,H1D& aHisto1D,H2D& aHisto2D,
+		      bool a_verbose = false) {
+
+ {bool is;
+  inlib::file::is_root(a_file,is);
+  if(!is) {
+    a_out << "file is not a root file." << std::endl;
+    return false;
+  }}
+
+  /////////////////////////////////////////////
+  //// open the data file : ///////////////////
+  /////////////////////////////////////////////
+  bool verbose = false;
+  //verbose = true;
+  inlib::rroot::file rfile(a_out,a_file,verbose);
+  rfile.add_unziper('Z',exlib::decompress_buffer);
+
+  std::string stree("Event");
+  inlib::rroot::fac fac(a_out);
+  inlib::rroot::tree* tree = inlib::rroot::find_tree(rfile,fac,stree);      
+  if(!tree) {
+    a_out << "tree " << stree << " not found." << std::endl;
+    return false;
+  }
+
+  inlib::uint64 nentries = tree->entries();
+  if(!nentries) {
+    a_out << "tree " << stree << " empty." << std::endl;
+    return true;
+  }
+
+  if(a_verbose) a_out << "traitements de " << nentries << " entrees" << std::endl;
+
+  std::vector<inlib::rroot::base_leaf*> leaves;
+  tree->find_leaves(leaves);
+
+  if(a_verbose)
+ {inlib_vforcit(inlib::rroot::base_leaf*,leaves,it) {
+    a_out << "leaf : " << (*it)->name() << " " << (*it)->title()  << " " << (*it)->s_cls() << std::endl;
+  }}
+
+  FIND_LEAF(*tree,int,eventId)
+  FIND_LEAF(*tree,int,nPart)
+  FIND_LEAF(*tree,int,nHits)
+  FIND_LEAF(*tree,int,nDigits)
+  FIND_LEAF(*tree,double,sumPE)
+
+  FIND_LEAF_OBJECT(*tree,hit)
+  inlib::rroot::tree hit_tree(rfile,fac);
+  leaf_hit->set_object(&hit_tree);
+  
+  FIND_LEAF_OBJECT(*tree,digit)
+  inlib::rroot::tree digit_tree(rfile,fac);
+  leaf_digit->set_object(&digit_tree);
+  
+  FIND_LEAF_OBJECT(*tree,track)
+  inlib::rroot::tree track_tree(rfile,fac);
+  leaf_track->set_object(&track_tree);
+  
+  inlib::rroot::branch_element* be_vtxPos = inlib::rroot::find_branch_element(*tree,"vtxPos");
+  if(!be_vtxPos) return false;
+  
+  for(inlib::uint64 ievent=0;ievent<nentries;ievent++){
+    READ_LEAF(*tree,ievent,int,eventId)
+    READ_LEAF(*tree,ievent,int,nPart)
+    READ_LEAF(*tree,ievent,int,nHits)
+    READ_LEAF(*tree,ievent,int,nDigits)
+    READ_LEAF(*tree,ievent,double,sumPE)
+
+    if(!inlib::rroot::read_leaf_object(rfile,*br_hit,*leaf_hit,ievent)) return false;
+    if(!inlib::rroot::read_leaf_object(rfile,*br_digit,*leaf_digit,ievent)) return false;
+    if(!inlib::rroot::read_leaf_object(rfile,*br_track,*leaf_track,ievent)) return false;
+
+    inlib::rroot::stl_vector<double>* vtx = inlib::rroot::read_std_vec<double>(rfile,*be_vtxPos,ievent);
+    if(!vtx) return false;
+    
+    if(a_verbose)
+    a_out << ">>>>>>>>>>>>> Event{" << ievent << "}: "
+    	      << " evt Id " << eventId 
+    	      << " #tracks: " << nPart
+    	      << " #hits: " << nHits
+              << " #digits: " << nDigits
+              << " sumPE " << sumPE
+	      << std::endl
+	      << "vtxPos x: " << (*vtx)[0] << ", y: " << (*vtx)[1] << ", z:" << (*vtx)[2]
+    	      << std::endl;
+	      
+    if(!process_hits(hit_tree,aHisto1D)) break;
+    if(!process_digits(digit_tree,aHisto2D)) break;    
+    if(!process_tracks(track_tree,a_verbose)) break;
+  }
+
+#undef READ_LEAF
+#undef FIND_LEAF
+
+  delete tree;
+
+  return true;
+}

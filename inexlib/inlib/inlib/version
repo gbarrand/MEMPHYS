@@ -1,0 +1,17 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_version
+#define inlib_version
+
+#define INLIB_MAJOR_VERSION 1
+#define INLIB_MINOR_VERSION 8
+#define INLIB_PATCH_VERSION 0
+#define INLIB_VERSION "1.8.0"
+#define INLIB_VERSION_VRP "v1r8p0"
+
+namespace inlib {
+inline unsigned int version() {return 10800;}
+}
+
+#endif

@@ -1,0 +1,61 @@
+#!/bin/sh -f
+
+. ./find_bush
+
+build_offscreen=no
+build_root=no
+build_verbose=no
+
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -offscreen) build_offscreen=yes;;
+    -root)      build_root=yes;;
+    -v)         build_verbose=yes;build_args="${build_args} $1";;
+    
+     *) build_args="${build_args} $1";;
+  esac
+  shift
+done
+
+./build_lib_MEMPHYSCore         ${build_args}
+./build_app_sim                 ${build_args}
+./build_app_read_plot_offscreen ${build_args}
+
+if [ ${build_offscreen} = no ] ; then
+  # programs with some interactivity :     
+  ./build_app_read_plot ${build_args}
+  ./build_app_vis       ${build_args} -distrib_distrib_vis -core         
+fi
+
+#/////////////////////////////////////////////////////
+#/// CERN-ROOT related : /////////////////////////////
+#/////////////////////////////////////////////////////
+if [ ${build_offscreen} = no ] ; then
+  # programs with some interactivity done with CERN-ROOT :
+
+  # look if CERN-ROOT 'source setup' had been done and the root-config program is around :
+  ${bush_home}/check_app root-config
+  if [ $? = 0 ] ; then build_root=yes; fi
+
+  if [ ${build_root} = yes ] ; then
+    ./build_app_read_plot_ROOT ${build_args}
+    ./build_app_all_ROOT       ${build_args}
+    ./build_app_geom_ROOT      ${build_args}
+  fi
+fi
+
+if [ ${build_verbose} = yes -a ${build_root} = no ] ; then
+  echo "CERN-ROOT related programs not built. If wanted them you have first to 'source setup' CERN-ROOT,"
+  echo 'for example by customizing (if needed) and using the cern_root_setup.[csh,sh] found in the mgr directory.'
+fi      
+  
+
+#/////////////////////////////////////////////////////
+#/// distrib : ///////////////////////////////////////
+#/////////////////////////////////////////////////////
+if [ ${build_offscreen} = yes ] ; then build_args="${build_args} -offscreen";fi
+if [ ${build_root} = yes ] ; then build_args="${build_args} -root";fi
+
+./build_distrib ${build_args}
+

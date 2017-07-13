@@ -1,0 +1,1122 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_entries
+#define inlib_sg_entries
+
+// A panel of entries with an ok button.
+
+#include "base_list"
+#include "_switch"
+
+#include "entry"
+#include "numeric"
+#include "keyboard"
+#include "colors"
+#include "edvalop"
+#include "file_chooser"
+
+#include "../entries_color"
+#include "../valop2s"
+#include "../b2s"
+
+namespace inlib {
+namespace sg {
+
+class entries : public base_list {
+  INLIB_CLASS_STRING(User)
+public:
+  INLIB_NODE(entries,inlib::sg::entries,base_list)
+public:
+  enum entry_type {
+    entry_uint,
+    entry_int,
+    entry_real,
+    entry_range,
+    entry_ip,
+    entry_radec,
+    entry_string,
+    entry_bool,
+    entry_color,
+    entry_math,
+    entry_file,
+    entry_opts,
+    entry_combo,
+    entry_combo_string,
+    entry_not_editable,
+    entry_uint64,
+    entry_int64
+  };
+public:
+  sf<float> text_wmargin_factor;
+  sf<float> text_hmargin_factor;
+  mf_string labels;
+  mf_enum<entry_type> types;
+  mf_std_vec<std::string> opts;
+  mf_string values; //output
+
+  sf<float> numeric_width;
+  sf<float> numeric_height;
+  sf<float> keyboard_width;
+  sf<float> keyboard_height;
+  sf<float> colors_width;
+  sf<float> colors_height;
+  sf<float> edvalop_width;
+  sf<float> edvalop_height;
+  sf<float> file_chooser_width;
+  sf<float> file_chooser_height;
+  sf<float> list_width;
+  sf<float> list_height;
+  sf<float> list_scroll_width;
+  sf<unsigned int> list_visible_items;
+  sf<float> entry_label_result_factor;
+  sf_vec<colorf,float> labels_back_color;
+  sf_vec<colorf,float> shown_label_color;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::entries)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(text_wmargin_factor)
+      INLIB_ADD_FIELD_DESC(text_hmargin_factor)
+      INLIB_ADD_FIELD_DESC(labels)
+      INLIB_ADD_FIELD_DESC(types)
+      INLIB_ADD_FIELD_DESC(opts)
+      INLIB_ADD_FIELD_DESC(values)
+      INLIB_ADD_FIELD_DESC(numeric_width)
+      INLIB_ADD_FIELD_DESC(numeric_height)
+      INLIB_ADD_FIELD_DESC(keyboard_width)
+      INLIB_ADD_FIELD_DESC(keyboard_height)
+      INLIB_ADD_FIELD_DESC(colors_width)
+      INLIB_ADD_FIELD_DESC(colors_height)
+      INLIB_ADD_FIELD_DESC(edvalop_width)
+      INLIB_ADD_FIELD_DESC(edvalop_height)
+      INLIB_ADD_FIELD_DESC(file_chooser_width)
+      INLIB_ADD_FIELD_DESC(file_chooser_height)
+      INLIB_ADD_FIELD_DESC(list_width)
+      INLIB_ADD_FIELD_DESC(list_height)
+      INLIB_ADD_FIELD_DESC(list_scroll_width)
+      INLIB_ADD_FIELD_DESC(list_visible_items)
+      INLIB_ADD_FIELD_DESC(entry_label_result_factor)
+      INLIB_ADD_FIELD_DESC(labels_back_color)
+      INLIB_ADD_FIELD_DESC(shown_label_color)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&text_wmargin_factor);
+    add_field(&text_hmargin_factor);
+    add_field(&labels);
+    add_field(&types);
+    add_field(&opts);
+    add_field(&values);
+    add_field(&numeric_width);
+    add_field(&numeric_height);
+    add_field(&keyboard_width);
+    add_field(&keyboard_height);
+    add_field(&colors_width);
+    add_field(&colors_height);
+    add_field(&edvalop_width);
+    add_field(&edvalop_height);
+    add_field(&file_chooser_width);
+    add_field(&file_chooser_height);
+    add_field(&list_width);
+    add_field(&list_height);
+    add_field(&list_scroll_width);
+    add_field(&list_visible_items);
+    add_field(&entry_label_result_factor);
+    add_field(&labels_back_color);
+    add_field(&shown_label_color);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_switch.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_switch.pick(a_action);
+    if(a_action.done()) return;
+  }
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    if(a_action.do_path()) a_action.path_push(this);
+    m_switch.search(a_action);
+    if(a_action.done()) return;
+    if(a_action.do_path()) a_action.path_pop();
+  }
+public:
+  entries(const base_freetype& a_ttf)
+  :parent()
+
+  ,text_wmargin_factor(0.9f)
+  ,text_hmargin_factor(0.9f)
+  ,labels()
+  ,types()
+  ,opts()
+  ,values()
+  ,numeric_width(1)
+  ,numeric_height(1)
+  ,keyboard_width(1)
+  ,keyboard_height(1)
+  ,colors_width(1)
+  ,colors_height(1)
+  ,edvalop_width(1)
+  ,edvalop_height(1)
+  ,file_chooser_width(1)
+  ,file_chooser_height(1)
+  ,list_width(1)
+  ,list_height(1)
+  ,list_scroll_width(0.2f)
+  ,list_visible_items(5)
+  ,entry_label_result_factor(0.6f)
+  ,labels_back_color(colorf_white())
+  ,shown_label_color(colorf_white())
+
+  ,m_ttf(a_ttf)
+
+  ,m_cbks()
+
+  ,m_numeric(a_ttf)
+  ,m_keyboard(a_ttf)
+  ,m_colors(a_ttf)
+  ,m_edvalop(a_ttf)
+  ,m_file_chooser(a_ttf)
+
+  ,m_active_index(-1)
+  {
+    add_fields();
+    m_switch.which = WHICH_PANEL();
+    cancel_label = "Ok";
+  }
+  virtual ~entries(){}
+public:
+  entries(const entries& a_from)
+  :parent(a_from)
+
+  ,text_wmargin_factor(a_from.text_wmargin_factor)
+  ,text_hmargin_factor(a_from.text_hmargin_factor)
+  ,labels(a_from.labels)
+  ,types(a_from.types)
+  ,opts(a_from.opts)
+  ,values(a_from.values)
+  ,numeric_width(a_from.numeric_width)
+  ,numeric_height(a_from.numeric_height)
+  ,keyboard_width(a_from.keyboard_width)
+  ,keyboard_height(a_from.keyboard_height)
+  ,colors_width(a_from.colors_width)
+  ,colors_height(a_from.colors_height) 
+  ,edvalop_width(a_from.edvalop_width)
+  ,edvalop_height(a_from.edvalop_height)
+  ,file_chooser_width(a_from.file_chooser_width)
+  ,file_chooser_height(a_from.file_chooser_height)
+  ,list_width(a_from.list_width)
+  ,list_height(a_from.list_height)
+  ,list_scroll_width(a_from.list_scroll_width)
+  ,list_visible_items(a_from.list_visible_items)
+  ,entry_label_result_factor(a_from.entry_label_result_factor)
+  ,labels_back_color(a_from.labels_back_color)
+  ,shown_label_color(a_from.shown_label_color)
+
+  ,m_ttf(a_from.m_ttf)
+
+  ,m_cbks(a_from.m_cbks)
+
+  ,m_numeric(m_ttf)
+  ,m_keyboard(m_ttf)
+  ,m_colors(m_ttf)
+  ,m_edvalop(m_ttf)
+  ,m_file_chooser(m_ttf)
+
+  ,m_active_index(a_from.m_active_index)
+  ,m_valops(a_from.m_valops)
+  {
+    add_fields();
+    m_switch.which = a_from.m_switch.which;
+  }
+  entries& operator=(const entries& a_from){
+    parent::operator=(a_from);
+
+    text_wmargin_factor = a_from.text_wmargin_factor;
+    text_hmargin_factor = a_from.text_hmargin_factor;
+    labels = a_from.labels;
+    types = a_from.types;
+    opts = a_from.opts;
+    values = a_from.values;
+    numeric_width = a_from.numeric_width;
+    numeric_height = a_from.numeric_height;
+    keyboard_width = a_from.keyboard_width;
+    keyboard_height = a_from.keyboard_height;
+    colors_width = a_from.colors_width;
+    colors_height = a_from.colors_height;
+    edvalop_width = a_from.edvalop_width;
+    edvalop_height = a_from.edvalop_height;
+    file_chooser_width = a_from.file_chooser_width;
+    file_chooser_height = a_from.file_chooser_height;
+    list_width = a_from.list_width;
+    list_height = a_from.list_height;
+    list_scroll_width = a_from.list_scroll_width;
+    list_visible_items = a_from.list_visible_items;
+    entry_label_result_factor = a_from.entry_label_result_factor;
+    labels_back_color = a_from.labels_back_color;
+    shown_label_color = a_from.shown_label_color;
+
+    m_cbks = a_from.m_cbks;
+
+    m_switch.which = a_from.m_switch.which;
+    m_active_index = a_from.m_active_index;
+
+    m_valops = a_from.m_valops;
+
+    return *this;
+  }
+public:
+  const _switch& container() const {return m_switch;} //must be consistent with pick().
+  const sg::cbks& cbks() const {return m_cbks;} //for offscreen apps.
+  void add_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cbks.add(a_cbk);
+    touch();
+  }
+  void clear_cbks(){
+    m_cbks.clear();
+    touch();
+  }
+public:
+  void clear() {
+    labels.clear();
+    types.clear();
+    values.clear();
+    opts.clear();
+    m_valops.clear();
+    parent::clear();
+  }
+
+  void add_generic(const std::string& a_label,
+                   entry_type a_type,
+                   const std::string& a_default,
+                   const std::vector<std::string>& a_opts =
+                   std::vector<std::string>()) {
+    labels.add(a_label);
+    types.add(a_type);
+    values.add(a_default);
+    opts.add(a_opts);
+    m_valops.push_back(valop::def());
+  }
+  void add_float(const std::string& a_label,float a_default){
+    labels.add(a_label);
+    types.add(entry_real);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_double(const std::string& a_label,double a_default){
+    labels.add(a_label);
+    types.add(entry_real);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_radec(const std::string& a_label,const std::string& a_default){
+    labels.add(a_label);
+    types.add(entry_radec);
+    values.add(a_default);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_range(const std::string& a_label,double a_default,double a_min,double a_max){
+    labels.add(a_label);
+    types.add(entry_range);
+    std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);
+    std::vector<std::string> v;
+    if(!num2s(a_min,stmp)){}
+    v.push_back(stmp);
+    if(!num2s(a_max,stmp)){}
+    v.push_back(stmp);
+    opts.add(v);
+    m_valops.push_back(valop::def());
+  }
+  void add_uint(const std::string& a_label,unsigned int a_default){
+    labels.add(a_label);
+    types.add(entry_uint);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_int(const std::string& a_label,int a_default){
+    labels.add(a_label);
+    types.add(entry_int);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_uint64(const std::string& a_label,uint64 a_default){
+    labels.add(a_label);
+    types.add(entry_uint64);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_int64(const std::string& a_label,int64 a_default){
+    labels.add(a_label);
+    types.add(entry_int64);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_bool(const std::string& a_label,bool a_default){
+    labels.add(a_label);
+    types.add(entry_bool);
+   {std::string stmp;
+    b2s(a_default,stmp);
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_string(const std::string& a_label,const std::string& a_default){
+    labels.add(a_label);
+    types.add(entry_string);
+    values.add(a_default);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_opts(const std::string& a_label,
+                const std::string& a_default,
+                const std::vector<std::string>& a_opts){
+    labels.add(a_label);
+    types.add(entry_opts);
+    values.add(a_default);
+    opts.add(a_opts);
+    m_valops.push_back(valop::def());
+  }
+  void add_combo(const std::string& a_label,
+                 const std::string& a_default,
+                 const std::vector<std::string>& a_opts){
+    labels.add(a_label);
+    types.add(entry_combo);
+    values.add(a_default);
+    opts.add(a_opts);
+    m_valops.push_back(valop::def());
+  }
+  void add_combo_string(const std::string& a_label,
+                        const std::string& a_default,
+                        const std::vector<std::string>& a_opts){
+    labels.add(a_label);
+    types.add(entry_combo_string);
+    values.add(a_default);
+    opts.add(a_opts);
+    m_valops.push_back(valop::def());
+  }
+  void add_color(const std::string& a_label,const colorf& a_default){
+    labels.add(a_label);
+    types.add(entry_color);
+    std::string stmp;
+    if(!nums2s<colorf>(a_default,stmp," ")) {}
+    values.add(stmp);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_color(const std::string& a_label,const std::string& a_default){
+    labels.add(a_label);
+    types.add(entry_color);
+    values.add(a_default);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_math(const std::string& a_label,const valop& a_default){
+    labels.add(a_label);
+    types.add(entry_math);
+   {valop2s v;
+    if(!v.visit(const_cast<valop&>(a_default))) {}
+    values.add(v.m_s);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(a_default);
+  }
+  void add_file(const std::string& a_label,const std::string& a_default){
+    labels.add(a_label);
+    types.add(entry_file);
+    values.add(a_default);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  void add_not_editable(const std::string& a_label,
+                        const std::string& a_default){
+    labels.add(a_label);
+    types.add(entry_not_editable);
+    values.add(a_default);
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+  template <class T>
+  void add_not_editable(const std::string& a_label,const T& a_default){
+    labels.add(a_label);
+    types.add(entry_not_editable);
+   {std::string stmp;
+    if(!num2s(a_default,stmp)){}
+    values.add(stmp);}
+    opts.add(std::vector<std::string>());
+    m_valops.push_back(valop::def());
+  }
+
+  template <class T>
+  bool get_color(unsigned int a_index,T& a_r,T& a_g,T& a_b,T& a_a) {
+    return entries_color(values.values()[a_index],a_r,a_g,a_b,a_a);
+  }
+
+  const valop& get_valop(unsigned int a_index) const {
+    return m_valops[a_index];
+  }
+  valop& get_valop(unsigned int a_index) {return m_valops[a_index];}
+public:
+  sg::edvalop& edvalop() {return m_edvalop;}
+  sg::file_chooser& file_chooser() {return m_file_chooser;}
+protected:
+  typedef std::vector<std::string> opts_t;
+
+  template <class WIDGET>
+  static return_action action_hide_widget(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                const bcbk&,WIDGET& a_widget,const opts_t&) {
+    entry* entry = a_this.find_entry(a_index);
+    if(!entry) {
+      a_out << "inlib::sg::entries::action_hide_widget :"
+            << " hide_numeric : entry not found for index "
+            << a_index << "."
+            << std::endl;
+    } else {
+      entry->value = a_widget.value.value();
+      a_this.values.set_value(a_index,entry->value.value());
+    }
+    a_this.m_switch.which = WHICH_PANEL();
+    a_this.m_active_index = (-1);
+    return return_to_render;
+  }
+
+  static return_action action_hide_edvalop(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                 const bcbk&,sg::edvalop& a_widget,const opts_t&) {
+    const valop& res = a_widget.result();
+    a_this.m_valops[a_index] = res;
+    entry* entry = a_this.find_entry(a_index);
+    if(!entry) {
+      a_out << "inlib::sg::entries::action_hide_edvalop :"
+            << " hide_edvalop : entry not found for index "
+            << a_index << "."
+            << std::endl;
+    } else {
+      valop2s v;
+      entry->value = v.visit(res)?v.m_s:"?";
+      a_this.values.set_value(a_index,entry->value.value());
+    }
+    a_this.m_switch.which = WHICH_PANEL();
+    a_this.m_active_index = (-1);
+    return return_to_render;
+  }
+
+  static return_action action_hide_opts(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                              const bcbk&,list&,const opts_t& a_opts) {
+    entry* entry = a_this.find_entry(a_index);
+    if(!entry) {
+      a_out << "inlib::sg::entries::action_hide_opts :"
+            << " entry not found for index "
+            << a_index << "."
+            << std::endl;
+    } else {
+      entry->value = a_opts.size()?a_opts[0]:"";
+      a_this.values.set_value(a_index,entry->value.value());
+    }
+    a_this.m_switch.which = WHICH_PANEL();
+    a_this.m_active_index = (-1);
+    return return_to_render;
+  }
+
+  static return_action action_hide_combo(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                               const bcbk& a_cbk,list& a_list,const opts_t& a_opts) {
+    if(a_opts.size()&&(a_opts[0]==s_User())) {
+      std::vector<std::string> opts;
+      return action_show_numeric(a_this,a_out,a_index,a_cbk,a_this.m_numeric,opts);
+    } else {
+      return action_hide_opts(a_this,a_out,a_index,a_cbk,a_list,a_opts);
+    }
+  }
+
+  static return_action action_hide_combo_string(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                      const bcbk& a_cbk,list& a_list,const opts_t& a_opts) {
+    if(a_opts.size()&&(a_opts[0]==s_User())) {
+      std::vector<std::string> opts;
+      return action_show_keyboard(a_this,a_out,a_index,a_cbk,a_this.m_keyboard,opts);
+    } else {
+      return action_hide_opts(a_this,a_out,a_index,a_cbk,a_list,a_opts);
+    }
+  }
+
+  static return_action action_show_numeric(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                           const bcbk&,numeric& a_widget,const opts_t&) {
+    a_this.label_back_color = a_this.shown_label_color;
+    entry_type type;
+    if(!a_this.types.get_value(a_index,type)) type = entry_real;
+    if(type==entry_real) {
+      a_widget.number_type = sg::number_real;
+    } else if(type==entry_range) {
+      a_widget.number_type = sg::number_real;
+      a_widget.show_slider = true;
+      const std::vector<std::string>& sv = a_this.opts[a_index];
+      if(sv.size()==2) {
+       {double v;
+        if(to<double>(sv[0],v)) a_widget.slider_min = v;}
+       {double v;
+        if(to<double>(sv[1],v)) a_widget.slider_max = v;}
+      }
+    } else if(type==entry_uint) {
+      a_widget.number_type = sg::number_uint;
+    } else if(type==entry_int) {
+      a_widget.number_type = sg::number_int;
+    } else if(type==entry_uint64) {
+      a_widget.number_type = sg::number_uint;
+    } else if(type==entry_int64) {
+      a_widget.number_type = sg::number_int;
+    } else if(type==entry_ip) {
+      a_widget.number_type = sg::number_ip;
+    } else if(type==entry_radec) {
+      a_widget.number_type = sg::number_radec;
+    } else if(type==entry_combo) {
+      a_widget.number_type = sg::number_real;
+    } else { //just in case :
+      a_widget.number_type = sg::number_real;
+    }
+    //as long as we can edit the result area it makes no sense
+    //to set a default value in numeric.
+    //a_widget->value = a_this.values[a_index];
+
+    a_widget.value = "";
+    a_widget.clear_cbks();
+    a_widget.add_callback(new __cbk<numeric>(a_this,a_out,a_index,a_widget,action_hide_widget<numeric>));
+    a_this.m_switch.which = WHICH_NUMERIC();
+    a_this.m_active_index = a_index;
+    return return_to_render;
+  }
+
+  static return_action action_show_keyboard(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                  const bcbk&,keyboard& a_widget,const opts_t&) {
+    a_this.label_back_color = a_this.shown_label_color;
+    //as long as we can edit the result area it makes no sense
+    //to set a default value in keyboard.
+    //a_widget.value = a_this.values[a_index];
+    a_widget.value = "";
+    a_widget.clear_cbks();
+    a_widget.add_callback(new __cbk<keyboard>(a_this,a_out,a_index,a_widget,action_hide_widget<keyboard>));
+    a_this.m_switch.which = WHICH_KEYBOARD();
+    a_this.m_active_index = a_index;
+    return return_to_render;
+  }
+
+  static return_action action_show_colors(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                const bcbk&,colors& a_widget,const opts_t&) {
+    a_this.label_back_color = a_this.shown_label_color;
+    a_widget.value = "";
+    a_widget.clear_cbks();
+    a_widget.add_callback(new __cbk<colors>(a_this,a_out,a_index,a_widget,action_hide_widget<colors>));
+    a_this.m_switch.which = WHICH_COLORS();
+    a_this.m_active_index = a_index;
+    return return_to_render;
+  }
+
+  static return_action action_show_edvalop(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                 const bcbk&,sg::edvalop& a_widget,const opts_t&) {
+    a_this.label_back_color = a_this.shown_label_color;
+    a_widget.set_result(valop::def());
+    a_widget.clear_cbks();
+    a_widget.add_callback(new __cbk<sg::edvalop>(a_this,a_out,a_index,a_widget,action_hide_edvalop));
+    a_this.m_switch.which = WHICH_EDVALOP();
+    a_this.m_active_index = a_index;
+    return return_to_render;
+  }
+
+  static return_action action_show_file_chooser(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                      const bcbk&,sg::file_chooser& a_widget,const opts_t&) {
+    a_this.label_back_color = a_this.shown_label_color;
+
+    a_widget.value = ""; //default ?
+    a_widget.clear_cbks();
+    a_widget.add_callback(new __cbk<sg::file_chooser>(a_this,a_out,a_index,a_widget,action_hide_widget<sg::file_chooser>));
+    a_widget.initialize(a_out);
+
+    a_this.m_switch.which = WHICH_FILE_CHOOSER();
+    a_this.m_active_index = a_index;
+    return return_to_render;
+  }
+
+  typedef return_action (*hide_func)(entries&,std::ostream&,unsigned int,const bcbk&,list&,const opts_t&);
+  static return_action _action_show_opts(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                               const bcbk&,entry&,const opts_t& a_opts,hide_func a_func) {
+    a_this.label_back_color = a_this.shown_label_color;
+    a_this.m_switch.which = WHICH_OPTS();
+    a_this.m_active_index = a_index;
+
+    separator* sep = (separator*)(a_this.m_switch[entries::WHICH_OPTS()]);
+    sep->clear();
+    if(a_opts.empty()) return return_to_render;
+
+    float wlist = a_this.list_width;
+    float hlist = a_this.list_height;
+
+    sg::list* list = new sg::list(a_this.m_ttf);
+    list->width = wlist;
+    list->height = hlist;
+    list->scroll_width = a_this.list_scroll_width;
+    list->text_common_height = true;
+    list->visible_items = a_this.list_visible_items;
+
+    //a_gv.set_colors(*list);
+    list->back_color = a_this.back_color;
+    list->border_color = a_this.border_color;
+    list->front_color = a_this.front_color;
+    //list->dir_color = m_gui_dir_color;
+    list->arm_color = a_this.arm_color;
+    list->text_hmargin_factor = 0.5f; //Apple
+
+    for(unsigned int index=0;index<a_opts.size();index++) {
+      std::vector<std::string> _opts;
+      _opts.push_back(a_opts[index]);
+      list->add(a_opts[index],new __cbk<sg::list>(a_this,a_out,a_index,*list,a_func,_opts));
+    }
+
+    sep->add(list);
+    return return_to_render;
+  }
+
+  static return_action action_show_opts(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                              const bcbk& a_cbk,entry& a_entry,const opts_t& a_opts) {
+    return _action_show_opts(a_this,a_out,a_index,a_cbk,a_entry,a_opts,action_hide_opts);
+  }
+
+  static return_action action_show_combo(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                              const bcbk& a_cbk,entry& a_entry,const opts_t& a_opts) {
+    return _action_show_opts(a_this,a_out,a_index,a_cbk,a_entry,a_opts,action_hide_combo);
+  }
+
+  static return_action action_show_combo_string(entries& a_this,std::ostream& a_out,unsigned int a_index,
+                                                      const bcbk& a_cbk,entry& a_entry,const opts_t& a_opts) {
+    return _action_show_opts(a_this,a_out,a_index,a_cbk,a_entry,a_opts,action_hide_combo_string);
+  }
+
+  template <class WIDGET>
+  class __cbk : public bcbk {
+    INLIB_T_CBK(WIDGET,__cbk,inlib::sg::entries::__cbk,bcbk)
+  public:
+    typedef return_action (*cbk_func)(entries&,std::ostream&,unsigned int,const bcbk&,WIDGET&,const opts_t&);
+  public:
+    virtual return_action action() {return m_func(m_this,m_out,m_index,*this,m_widget,m_opts);}
+  public:
+    __cbk(entries& a_this,std::ostream& a_out,unsigned int a_index,
+          WIDGET& a_widget,cbk_func a_func,const opts_t& a_opts = opts_t())
+    :parent()
+    ,m_this(a_this)
+    ,m_out(a_out)
+    ,m_index(a_index)
+    ,m_widget(a_widget)
+    ,m_func(a_func)
+    ,m_opts(a_opts)
+    {}
+    virtual ~__cbk(){}
+  public:
+    __cbk(const __cbk& a_from)
+    :parent(a_from)
+    ,m_this(a_from.m_this)
+    ,m_out(a_from.m_out)
+    ,m_index(a_from.m_index)
+    ,m_widget(a_from.m_widget)
+    ,m_func(a_from.m_func)
+    ,m_opts(a_from.m_opts)
+    {}
+    __cbk& operator=(const __cbk& a_from){
+      parent::operator=(a_from);
+      m_index = a_from.m_index;
+      m_func = a_from.m_func;
+      m_opts = a_from.m_opts;
+      return *this;
+    }
+  protected:
+    entries& m_this;
+  public:
+    std::ostream& m_out;
+    unsigned int m_index;
+  protected:
+    WIDGET& m_widget;
+    cbk_func m_func;
+    opts_t m_opts;
+  };
+
+  INLIB_CLASS_STRING(true)
+  INLIB_CLASS_STRING(false)
+
+  static int WHICH_PANEL()        {return 0;}
+  static int WHICH_NUMERIC()      {return 1;}
+  static int WHICH_KEYBOARD()     {return 2;}
+  static int WHICH_COLORS()       {return 3;}
+  static int WHICH_EDVALOP()      {return 4;}
+  static int WHICH_FILE_CHOOSER() {return 5;}
+  static int WHICH_OPTS()         {return 6;}
+
+public: //for ArcheryTune.
+  virtual unsigned int number_of_items() const {return (unsigned int)labels.size();}
+protected: //base_list
+  virtual node* create_item(std::ostream& a_out,unsigned int a_index) {
+    entry* entry = create_entry(a_out,a_index);
+    m_entries[a_index] = entry;
+
+    //NOTE : some entry results are too long (for exa a file name).
+    entry->update_sg();
+    m_texts.add(new noderef(entry->label_widget()));
+
+    entry_type type = types[a_index];
+    if(type==entry_uint) {
+      m_texts.add(new noderef(entry->result_widget()));
+    } else if(type==entry_int) {
+      m_texts.add(new noderef(entry->result_widget()));
+    } else if(type==entry_uint64) {
+      m_texts.add(new noderef(entry->result_widget()));
+    } else if(type==entry_int64) {
+      m_texts.add(new noderef(entry->result_widget()));
+    } else if(type==entry_real) {
+    } else if(type==entry_range) {
+    } else if(type==entry_ip) {
+    } else if(type==entry_radec) {
+    } else if(type==entry_string) {
+    } else if(type==entry_color) {
+    } else if(type==entry_math) {
+    } else if(type==entry_file) {
+    } else if(type==entry_bool) {
+      m_texts.add(new noderef(entry->result_widget()));
+    } else if(type==entry_opts) {
+    } else if(type==entry_combo) {
+    } else if(type==entry_combo_string) {
+    } else { //not_editable
+    }
+
+    return entry;
+  }
+  virtual node* create_cancel() const {return create_ok();}
+  virtual void enforce_common_text_height(std::ostream& a_out) {
+    sg::enforce_common_text_height(a_out,m_texts);
+  }
+  virtual bool show_cancel() const {return true;} //in fact ok button.
+
+  virtual node* create_label() const {
+    float wtext = witem();
+    float htext = hitem();
+
+    sg::text* head_label = new sg::text(m_ttf);
+    head_label->width = wtext;
+    head_label->height = htext;
+    head_label->back_area::color = label_back_color;
+    head_label->confine = label_confine;
+    head_label->back_area::border_color = border_color;
+    head_label->color = front_color;
+    head_label->font = gui_font();
+    head_label->wmargin_factor = text_wmargin_factor;
+    head_label->hmargin_factor = text_hmargin_factor;
+
+    head_label->strings.clear();
+    head_label->strings.add(label.value());
+
+    head_label->corner_radius = corner_radius;
+
+    return head_label;
+  }
+protected:
+  void update_sg(std::ostream& a_out) {
+    m_entries.clear();
+    parent::update_sg(a_out);
+
+    //update_sg may come from an iPad rotation. We have to restore state.
+    int old_switch_which = m_switch.which;
+    std::string old_numeric_value = m_numeric.value.value();
+    std::string old_keyboard_value = m_keyboard.value.value();
+    std::string old_colors_value = m_colors.value.value();
+
+    m_switch.clear();
+
+    if(width.value()<=0) return;
+    if(height.value()<=0) return;
+    if(types.size()!=labels.size()) return;
+    if(labels.empty()) {values.clear();return;}
+
+    //values.values().clear(); //no
+    values.values().resize(labels.size());
+
+    m_numeric.back_color = back_color;
+    m_numeric.front_color = front_color;
+    m_numeric.border_color = border_color;
+    m_numeric.arm_color = arm_color;
+    m_numeric.width = numeric_width;
+    m_numeric.height = numeric_height;
+    m_numeric.text_wmargin_factor = text_wmargin_factor;
+    m_numeric.text_hmargin_factor = text_hmargin_factor;
+    m_numeric.value = "";
+    m_numeric.clear_cbks();
+    m_numeric.corner_radius = corner_radius;
+
+    m_keyboard.back_color = back_color;
+    m_keyboard.front_color = front_color;
+    m_keyboard.border_color = border_color;
+    m_keyboard.arm_color = arm_color;
+    m_keyboard.width = keyboard_width;
+    m_keyboard.height = keyboard_height;
+    m_keyboard.text_wmargin_factor = text_wmargin_factor;
+    m_keyboard.text_hmargin_factor = text_hmargin_factor;
+    m_keyboard.value = "";
+    m_keyboard.clear_cbks();
+
+    m_colors.back_color = back_color;
+    m_colors.front_color = front_color;
+    m_colors.border_color = border_color;
+    m_colors.arm_color = arm_color;
+    m_colors.width = colors_width;
+    m_colors.height = colors_height;
+    m_colors.text_wmargin_factor = text_wmargin_factor;
+    m_colors.text_hmargin_factor = text_hmargin_factor;
+    m_colors.value = "";
+    m_colors.clear_cbks();
+
+    m_edvalop.back_color = back_color;
+    m_edvalop.front_color = front_color;
+    m_edvalop.border_color = border_color;
+    m_edvalop.arm_color = arm_color;
+    m_edvalop.width = edvalop_width;
+    m_edvalop.height = edvalop_height;
+    m_edvalop.text_wmargin_factor = text_wmargin_factor;
+    m_edvalop.text_hmargin_factor = text_hmargin_factor;
+    m_edvalop.numeric_width = numeric_width;
+    m_edvalop.numeric_height = numeric_height;
+    m_edvalop.list_width = list_width;
+    m_edvalop.list_height = list_height;
+    m_edvalop.list_scroll_width = list_scroll_width;
+    m_edvalop.list_visible_items = list_visible_items;
+    //m_edvalop.vars.set_values();
+    m_edvalop.set_result(valop::def());
+    m_edvalop.clear_cbks();
+
+    m_file_chooser.back_color = back_color;
+    m_file_chooser.front_color = front_color;
+    m_file_chooser.border_color = border_color;
+    m_file_chooser.arm_color = arm_color;
+    m_file_chooser.width = file_chooser_width;
+    m_file_chooser.height = file_chooser_height;
+    m_file_chooser.text_wmargin_factor = text_wmargin_factor;
+    m_file_chooser.text_hmargin_factor = text_hmargin_factor;
+    m_file_chooser.value = "";
+    m_file_chooser.clear_cbks();
+
+    m_switch.add(new noderef(m_sep));          //WHICH_PANEL
+    m_switch.add(new noderef(m_numeric));      //WHICH_NUMERIC
+    m_switch.add(new noderef(m_keyboard));     //WHICH_KEYBOARD
+    m_switch.add(new noderef(m_colors));       //WHICH_COLORS
+    m_switch.add(new noderef(m_edvalop));      //WHICH_EDVALOP
+    m_switch.add(new noderef(m_file_chooser)); //WHICH_FILE_CHOOSER
+    m_switch.add(new separator());             //WHICH_OPTS
+
+    m_switch.which = old_switch_which;
+    if(m_switch.which==WHICH_NUMERIC()) { //numeric is shown.
+      entry_type type;
+      if(!types.get_value(m_active_index,type)) {
+        type = entry_real;
+      }        
+      if(type==entry_real) {
+        m_numeric.number_type = number_real;
+      } else if(type==entry_range) {
+        m_numeric.number_type = number_real;
+        m_numeric.show_slider = true;
+        const std::vector<std::string>& sv = opts[m_active_index];
+        if(sv.size()==2) {
+         {double v;
+          if(to<double>(sv[0],v)) m_numeric.slider_min = v;}
+         {double v;
+          if(to<double>(sv[1],v)) m_numeric.slider_max = v;}
+        }
+      } else if(type==entry_uint) {
+        m_numeric.number_type = number_uint;
+      } else if(type==entry_int) {
+        m_numeric.number_type = number_int;
+      } else if(type==entry_uint64) {
+        m_numeric.number_type = number_uint;
+      } else if(type==entry_int64) {
+        m_numeric.number_type = number_int;
+      } else if(type==entry_ip) {
+        m_numeric.number_type = number_ip;
+      } else if(type==entry_radec) {
+        m_numeric.number_type = number_radec;
+      }
+      m_numeric.value = old_numeric_value;
+      m_numeric.clear_cbks();
+      m_numeric.add_callback(new __cbk<numeric>(*this,a_out,m_active_index,m_numeric,action_hide_widget<numeric>));
+
+    } else if(m_switch.which==WHICH_KEYBOARD()) { //keyboard is shown.
+      m_keyboard.value = old_keyboard_value;
+      m_keyboard.clear_cbks();
+      m_keyboard.add_callback(new __cbk<keyboard>(*this,a_out,m_active_index,m_keyboard,action_hide_widget<keyboard>));
+
+    } else if(m_switch.which==WHICH_COLORS()) { //colors is shown.
+      m_colors.value = old_colors_value;
+      m_colors.clear_cbks();
+      m_colors.add_callback(new __cbk<colors>(*this,a_out,m_active_index,m_colors,action_hide_widget<colors>));
+
+    }
+
+
+  }
+
+  entry* create_entry(std::ostream& a_out,unsigned int a_index) {
+
+    float wentry = witem();
+    float hentry = hitem();
+
+    sg::entry* entry = new sg::entry(m_ttf);
+    //entry->font = gui_font();
+    entry->front_color = front_color;
+    entry->back_color = back_color;
+    entry->border_color = border_color;
+    entry->arm_color = arm_color;
+    entry->text_wmargin_factor = text_wmargin_factor;
+    entry->text_hmargin_factor = text_hmargin_factor;
+    entry->label_result_factor = entry_label_result_factor;
+    entry->label_back_color = labels_back_color;
+
+    entry->width = wentry;
+    entry->height = hentry;
+
+    entry->label = labels[a_index];
+    entry->value = values[a_index];
+
+    entry->corner_radius = corner_radius;
+
+    entry_type type = types[a_index];
+
+    if( (type==entry_uint)   ||
+        (type==entry_int)    ||
+        (type==entry_uint64) ||
+        (type==entry_int64)  ||
+        (type==entry_real)   ||
+        (type==entry_range)  ||
+        (type==entry_ip)     ||
+        (type==entry_radec)  ){
+      entry->add_callback(new __cbk<numeric>(*this,a_out,a_index,m_numeric,action_show_numeric));
+
+    } else if(type==entry_string) {
+      entry->add_callback(new __cbk<keyboard>(*this,a_out,a_index,m_keyboard,action_show_keyboard));
+
+    } else if(type==entry_color) {
+      entry->add_callback(new __cbk<colors>(*this,a_out,a_index,m_colors,action_show_colors));
+
+    } else if(type==entry_math) {
+      entry->add_callback(new __cbk<sg::edvalop>(*this,a_out,a_index,m_edvalop,action_show_edvalop));
+
+    } else if(type==entry_file) {
+      entry->add_callback(new __cbk<sg::file_chooser>(*this,a_out,a_index,m_file_chooser,action_show_file_chooser));
+
+    } else if(type==entry_bool) {
+      std::vector<std::string> _opts;
+      _opts.push_back(s_true());
+      _opts.push_back(s_false());
+      entry->add_callback(new __cbk<sg::entry>(*this,a_out,a_index,*entry,action_show_opts,_opts));
+
+    } else if(type==entry_opts) {
+      std::vector<std::string> _opts;
+      if(a_index<opts.size()) _opts = opts.values()[a_index];
+      entry->add_callback(new __cbk<sg::entry>(*this,a_out,a_index,*entry,action_show_opts,_opts));
+
+    } else if(type==entry_combo) {
+      std::vector<std::string> _opts;
+      if(a_index<opts.size()) _opts = opts.values()[a_index];
+      _opts.insert(_opts.begin(),s_User());
+      entry->add_callback(new __cbk<sg::entry>(*this,a_out,a_index,*entry,action_show_combo,_opts));
+
+    } else if(type==entry_combo_string) {
+      std::vector<std::string> _opts;
+      if(a_index<opts.size()) _opts = opts.values()[a_index];
+      _opts.insert(_opts.begin(),s_User());
+      entry->add_callback(new __cbk<sg::entry>(*this,a_out,a_index,*entry,action_show_combo_string,_opts));
+
+    } else { //not_editable
+    }
+
+    return entry;
+  }
+
+  node* create_ok() const {
+    float wtext = witem();
+    float htext = hitem();
+
+    text_button* b = new text_button(m_ttf);
+    b->width = wtext;
+    b->height = htext;
+    b->back_area::color = back_color;
+    b->back_area::border_color = border_color;
+    b->color = front_color;
+    b->font = gui_font();
+    b->set_label(cancel_label.value());
+    b->arm_color = arm_color;
+    b->wmargin_factor = text_wmargin_factor;
+    b->hmargin_factor = text_hmargin_factor;
+    	
+    b->hjust = center;
+
+    b->corner_radius = corner_radius;
+
+    b->copy_cbks(m_cbks);
+
+    return b;
+  }
+
+protected:
+  entry* find_entry(unsigned int a_index) const {
+    std::map<unsigned int,entry*>::const_iterator it = m_entries.find(a_index);
+    if(it==m_entries.end()) return 0;
+    return (*it).second;
+  }
+protected:
+  const base_freetype& m_ttf;
+
+  sg::cbks m_cbks;
+  _switch m_switch;
+
+  numeric m_numeric;
+  keyboard m_keyboard;
+  colors m_colors;
+  sg::edvalop m_edvalop;
+  sg::file_chooser m_file_chooser;
+
+  int m_active_index;
+  std::vector<valop> m_valops;
+  std::map<unsigned int,entry*> m_entries;
+};
+
+}}
+
+//inlib_build_use kernel
+
+#endif

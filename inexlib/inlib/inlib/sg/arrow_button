@@ -1,0 +1,198 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_arrow_button
+#define inlib_sg_arrow_button
+
+#include "nodekit"
+#include "back_area"
+#include "base_button"
+
+namespace inlib {
+namespace sg {
+
+class arrow_button : public back_area, public base_button {
+public:
+  INLIB_NODE_NO_CAST(arrow_button,inlib::sg::arrow_button,back_area)
+public:
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<arrow_button>(this,a_class)) return p;
+    if(void* p = back_area::cast(a_class)) return p;
+    return base_button::cast(a_class);
+  }
+public:
+  sf_enum<arrow_type> orientation;
+  sf<float> wmargin_factor;
+  sf<float> hmargin_factor;
+
+  sf_vec<colorf,float> color;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::arrow_button)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(arm_color)
+      INLIB_ADD_FIELD_DESC(orientation)
+      INLIB_ADD_FIELD_DESC(wmargin_factor)
+      INLIB_ADD_FIELD_DESC(hmargin_factor)
+      INLIB_ADD_FIELD_DESC(color)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&arm_color); //base_button is not an sg::node.
+
+    add_field(&orientation);
+    add_field(&wmargin_factor);
+    add_field(&hmargin_factor);
+
+    add_field(&color);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+
+    m_back_sep.render(a_action);
+    m_arrow_sep.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+
+    nodekit_pick(a_action,m_back_sep,this);
+
+    //OPTIMIZATION : pick on background only.
+    //m_arrow_sep.pick(a_action);
+    //if(a_action.done()) {
+    //  a_action.set_node(this);
+    //  return;
+    //}
+  }
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;   
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    if(a_action.do_path()) a_action.path_push(this);
+    m_back_sep.search(a_action);
+    if(a_action.done()) return;
+    m_arrow_sep.search(a_action);
+    if(a_action.done()) return;
+    if(a_action.do_path()) a_action.path_pop();
+  }
+  virtual void bbox(bbox_action& a_action) {
+    if(touched()) {
+      update_sg();
+      reset_touched();
+    }
+    m_back_sep.bbox(a_action);
+    m_arrow_sep.bbox(a_action);
+  }
+public:
+  arrow_button()
+  :parent()
+  ,base_button(back_area::color)
+  ,orientation(arrow_up)
+  ,wmargin_factor(0.8f)
+  ,hmargin_factor(0.8f)
+  ,color(colorf_black())
+  {
+    add_fields();
+  }
+  virtual ~arrow_button(){}
+public:
+  arrow_button(const arrow_button& a_from)
+  :parent(a_from)
+  ,base_button(a_from)
+  ,orientation(a_from.orientation)
+  ,wmargin_factor(a_from.wmargin_factor)
+  ,hmargin_factor(a_from.hmargin_factor)
+  ,color(a_from.color)
+  {
+    add_fields();
+  }
+  arrow_button& operator=(const arrow_button& a_from){
+    parent::operator=(a_from);
+    base_button::operator=(a_from);
+
+    orientation = a_from.orientation;
+    wmargin_factor = a_from.wmargin_factor;
+    hmargin_factor = a_from.hmargin_factor;
+
+    color = a_from.color;
+
+    return *this;
+  }
+public:
+  const separator& container() const {return m_back_sep;} //must be consistent with pick().
+protected:
+  void update_sg() {
+    parent::update_sg();
+
+    m_arrow_sep.clear();
+
+    if(width<=0) return;
+    if(height<=0) return;
+
+    sg::rgba* mat = new sg::rgba();
+    mat->color = color;
+    m_arrow_sep.add(mat);
+
+    normal* nm = new normal;
+    //nm->vec; //default is z. ok.
+    m_arrow_sep.add(nm);
+
+    vertices* vtxs = new vertices;
+    vtxs->mode = gl::line_strip();
+    m_arrow_sep.add(vtxs);
+
+    //sf<float> zfront ?
+    float zz = 0.01f;
+
+    vtxs->mode = gl::triangle_fan();
+
+    float x_margin = (width-width*wmargin_factor)/2;
+    float y_margin = (height-height*hmargin_factor)/2;
+    float xb = -width*0.5f  + x_margin;
+    float xe =  width*0.5f  - x_margin;
+    float yb = -height*0.5f + y_margin;
+    float ye =  height*0.5f - y_margin;
+
+    if(orientation==arrow_up) {
+      vtxs->add(xb,yb,zz);
+      vtxs->add(xe,yb,zz);
+      vtxs->add((xb+xe)*0.5f,ye,zz);
+
+    } else if(orientation==arrow_down) {
+      vtxs->add(xb,ye,zz);
+      vtxs->add((xb+xe)*0.5f,yb,zz);
+      vtxs->add(xe,ye,zz);
+
+    } else if(orientation==arrow_left) {
+      vtxs->add(xe,yb,zz);
+      vtxs->add(xe,ye,zz);
+      vtxs->add(xb,(yb+ye)*0.5f,zz);
+
+    } else if(orientation==arrow_right) {
+      vtxs->add(xb,yb,zz);
+      vtxs->add(xe,(yb+ye)*0.5f,zz);
+      vtxs->add(xb,ye,zz);
+    } 
+
+  }
+protected:
+  separator m_arrow_sep;
+};
+
+}}
+
+#endif

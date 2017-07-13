@@ -1,0 +1,17 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`
+
+app="`${bush_home}/app_name`"
+
+find ../${app} -name '*' -type f -not -xattr -print > ./tmp_0
+grep -v '.icc' ./tmp_0 | grep -v '.ic' | grep -v '.help' > ./tmp_1
+
+for item in $(cat tmp_1) ; do  
+  ./build -v -compile_only ${item}
+done
+
+/bin/rm -f ./tmp_0 ./tmp_1

@@ -1,0 +1,658 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_view_plots
+#define inlib_sg_view_plots
+
+#include "view_evd"
+
+#include "h2plot_cp"
+#include "cloud2plot_cp"
+#include "event_dispatcher"
+#include "plots"
+
+namespace inlib {
+namespace sg {
+
+class plots_cbk : public ecbk {
+  INLIB_CBK(plots_cbk,inlib::sg::plots_cbk,ecbk)
+public:
+  virtual return_action action() {
+    if(const size_event* sz_evt = safe_cast<event,size_event>(*m_event)){
+      m_plots.adjust_size(sz_evt->width(),sz_evt->height());
+      m_event_action->set_done(true);
+    }
+    return return_none;
+  }
+public:
+  plots_cbk(plots& a_plots):parent(0),m_plots(a_plots){}
+  virtual ~plots_cbk(){}
+protected:
+  plots_cbk(const plots_cbk& a_from):parent(a_from),m_plots(a_from.m_plots){}
+  plots_cbk& operator=(const plots_cbk& a_from){
+    parent::operator=(a_from);
+    return *this;
+  }
+protected:
+  plots& m_plots;
+};
+
+inline plots* create_evd_sg_plots(gui_viewer& a_gv){
+  view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return 0;
+
+  if(!_evd->is_evd()) {
+    _evd->create_sg_evd();
+    a_gv.set_plane_viewer(true);
+  }
+
+  separator& _static_sg = _evd->static_sg();
+  //_static_sg.clear();
+
+  separator* sep = new separator;
+  _static_sg.add(sep);
+
+  //float cam_height = a_gv.wanted_size();
+  float cam_height = 2;
+ 
+  matrix* _matrix = new matrix;
+  _matrix->set_scale(cam_height,cam_height,cam_height);
+  sep->add(_matrix);    
+
+  plots* _plots = new plots(a_gv.ttf());
+  _plots->width = 1;
+  _plots->height = 1;
+  _plots->cols = 1;
+  _plots->rows = 1;
+  _plots->view_border = false;
+  _plots->border_visible = true;
+  _plots->border_width = 0.05f; //outside width,height square.
+  _plots->border_height = 0.05f;
+  sep->add(_plots);
+
+  _plots->adjust_size(a_gv.width(),a_gv.height());
+
+  event_dispatcher* dpt = new event_dispatcher;
+  dpt->add_callback(new plots_cbk(*_plots));
+  sep->add(dpt);
+
+ {base_camera* cam = a_gv.create_2D_camera(cam_height);
+  if(cam) _evd->replace_camera(cam);}
+   
+  return _plots;
+}
+
+inline plots* get_sg_plots(gui_viewer& a_gv) {
+  plots* _plots = search_selectable<plots>(a_gv.out(),a_gv.scene()); //we do not adjust size.
+  if(_plots) return _plots;
+  return create_evd_sg_plots(a_gv);
+}
+
+inline void style_from_res(const gui_viewer& a_gv,const std::string& a_path,axis& a_axis) {
+ {typedef xml::styles::style_t style_t;
+  const style_t* style = a_gv.styles().find_style(a_path);
+  if(style){
+    a_axis.set_from_style(a_gv.out(),*style);
+  } else {
+    if(a_gv.verbose()) {
+      a_gv.out() << "inlib::sg::view_plots::style_from_res(axis) :"
+                 << " style " << sout(a_path) << " not found."
+                 << std::endl;
+    }
+  }}
+
+  a_gv.styles().res_sg_style<line_style>(a_path+".line_style",a_axis.line_style());
+  a_gv.styles().res_sg_style<line_style>(a_path+".ticks_style",a_axis.ticks_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".labels_style",a_axis.labels_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".mag_style",a_axis.mag_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".title_style",a_axis.title_style());
+}
+
+inline void style_from_res(const gui_viewer& a_gv,const std::string& a_path,plotter& a_plotter) {
+  //sg::fields of plotter :
+ {typedef xml::styles::style_t style_t;
+  const style_t* _style = a_gv.styles().find_style(a_path);
+  if(_style){
+    a_plotter.set_from_style(a_gv.out(),*_style);
+  } else {
+    a_gv.out() << "inlib::sg::view_plots::style_from_res :"
+               << " style " << sout(a_path) << " not found."
+               << std::endl;
+  }}
+
+  //sg::fields of various xml::styles :
+  a_gv.styles().res_sg_style<style>(a_path+".bins_style.0",a_plotter.bins_style(0));
+  a_gv.styles().res_sg_style<style>(a_path+".errors_style.0",a_plotter.errors_style(0));
+  a_gv.styles().res_sg_style<style>(a_path+".func_style.0",a_plotter.func_style(0));
+  a_gv.styles().res_sg_style<style>(a_path+".points_style.0",a_plotter.points_style(0));
+
+  a_gv.styles().res_sg_style<style>(a_path+".background_style",a_plotter.background_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".title_style",a_plotter.title_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".infos_style",a_plotter.infos_style());
+  a_gv.styles().res_sg_style<text_style>(a_path+".title_box_style",a_plotter.title_box_style());
+  a_gv.styles().res_sg_style<style>(a_path+".inner_frame_style",a_plotter.inner_frame_style());
+  a_gv.styles().res_sg_style<style>(a_path+".grid_style",a_plotter.grid_style());
+
+  style_from_res(a_gv,a_path+".x_axis",a_plotter.x_axis());
+  style_from_res(a_gv,a_path+".y_axis",a_plotter.y_axis());
+  style_from_res(a_gv,a_path+".z_axis",a_plotter.z_axis());
+  style_from_res(a_gv,a_path+".colormap_axis",a_plotter.colormap_axis());
+
+}
+
+inline void plot(gui_viewer& a_gv,const histo::h1d& a_histo,bool a_cp = true) {
+  plots* _plots = get_sg_plots(a_gv);if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  if(a_cp) {
+    plotter.add_plottable(new h1d2plot_cp(a_histo));
+  } else {
+    plotter.add_plottable(new h1d2plot(a_histo));
+  }
+  style_from_res(a_gv,guiv::s_default(),plotter);       
+}
+
+inline void plot(gui_viewer& a_gv,const histo::h2d& a_histo,bool a_cp = true) {
+  plots* _plots = get_sg_plots(a_gv);if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  if(a_cp) {
+    plotter.add_plottable(new h2d2plot_cp(a_histo));
+  } else {
+    plotter.add_plottable(new h2d2plot(a_histo));
+  }
+  style_from_res(a_gv,guiv::s_default(),plotter);       
+}
+
+inline void plot(gui_viewer& a_gv,const histo::p1d& a_histo) {
+  plots* _plots = get_sg_plots(a_gv);if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  plottable* ptb = new p1d2plot_cp(a_histo);
+  plotter.add_plottable(ptb);
+  style_from_res(a_gv,guiv::s_default(),plotter);       
+}
+
+inline void plot(gui_viewer& a_gv,const histo::c2d& a_histo) {
+  plots* _plots = get_sg_plots(a_gv);if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  plottable* ptb = new c2d2plot_cp(a_histo);
+  plotter.add_plottable(ptb);
+  style_from_res(a_gv,guiv::s_default(),plotter);       
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// actions : ///////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+class plots_data : public pos_data {
+  typedef pos_data parent;
+public:
+  plots_data(plots& a_plots,bool a_popup,int a_ex,int a_ey)
+  :parent(a_popup,a_ex,a_ey)
+  ,m_plots(a_plots)
+  ,m_index(0)
+  {}
+  virtual ~plots_data(){}
+public:
+  plots_data(const plots_data& a_from)
+  :parent(a_from)
+  ,m_plots(a_from.m_plots)
+  ,m_index(a_from.m_index)
+  {}
+  plots_data& operator=(const plots_data& a_from){
+    parent::operator=(a_from);
+    m_index = a_from.m_index;
+    return *this;
+  }
+public:
+  plots& m_plots;
+  int m_index;
+};
+
+inline return_action action_set_current(gui_viewer& a_gv,const plots_data& a_data) {
+  a_data.m_plots.set_current_plotter(a_data.m_index);
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_current(gui_viewer& a_gv,const plots_data& a_data) {
+  list* _list = new list(a_gv.ttf());
+  a_gv.set_colors(*_list);
+
+  std::string stmp;
+  unsigned int num = a_data.m_plots.rows * a_data.m_plots.cols;
+  for(unsigned int index=0;index<num;index++) {
+    if(!num2s(index,stmp)) {}
+    plots_data data(a_data);
+    data.m_index = index;
+    add_item(a_gv,*_list,stmp,action_set_current,data);
+  }
+
+  a_gv.show_widget(a_data,_list);
+
+  return return_to_render;
+}
+
+inline return_action action_current_to_one(gui_viewer& a_gv,const plots_data& a_data) {
+  a_data.m_plots.current_to_one();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_toggle_border(gui_viewer& a_gv,const plots_data& a_data) {
+  a_data.m_plots.border_visible = a_data.m_plots.border_visible?false:true;
+  if(a_data.m_plots.border_visible.value()) {
+    if(a_data.m_plots.border_width.value()<=0) a_data.m_plots.border_width = 0.05f;
+    if(a_data.m_plots.border_height.value()<=0) a_data.m_plots.border_height = 0.05f;
+  }
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_toggle_view_border(gui_viewer& a_gv,const plots_data& a_data) {
+  a_data.m_plots.view_border = a_data.m_plots.view_border?false:true;
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_clear_bins(gui_viewer& a_gv,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+  plotter.remove_plottables<bins1D>();
+  plotter.remove_plottables<bins2D>();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_clear_points(gui_viewer& a_gv,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+  plotter.remove_plottables<points2D>();
+  plotter.remove_plottables<points3D>();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_clear_functions(gui_viewer& a_gv,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+  plotter.remove_plottables<func1D>();
+  plotter.remove_plottables<func2D>();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_clear(gui_viewer& a_gv,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+  plotter.clear();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_clear_plots(gui_viewer& a_gv,const plots_data& a_data) {
+  a_data.m_plots.clear();
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_adjust_size(gui_viewer& a_gv,const plots_data& a_data) {
+  view_evd* _evd = cast_view_evd(a_gv);
+  if(_evd) {
+    a_data.m_plots.adjust_size(a_gv.width(),a_gv.height());
+    base_camera* cam = a_gv.create_2D_camera(a_data.m_plots.height.value());
+    if(cam) _evd->replace_camera(cam);
+  }
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_ok_regions(gui_viewer& a_gv,entries& a_widget,const plots_data& a_data) {
+  unsigned int index_cols = 0;
+  unsigned int index_rows = 1;
+  unsigned int index_clear = 2;
+  std::vector<std::string>& vals = a_widget.values.values();
+
+  unsigned int cols;
+  if(!to(vals[index_cols],cols)) {
+    a_gv.pop_warn(a_data,"not an uint");
+    return return_to_render;     
+  }
+  if(!cols) {
+    a_gv.pop_warn(a_data,"number of cols must be >=1");
+    return return_to_render;     
+  }
+
+  unsigned int rows;
+  if(!to(vals[index_rows],rows)) {
+    a_gv.pop_warn(a_data,"not an uint");
+    return return_to_render;     
+  }
+  if(!rows) {
+    a_gv.pop_warn(a_data,"number of rows must be >=1");
+    return return_to_render;     
+  }
+
+  bool clear;
+  if(!to(vals[index_clear],clear)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+
+  a_data.m_plots.set_regions(cols,rows,clear?false:true);
+
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_regions(gui_viewer& a_gv,const plots_data& a_data) {
+  entries* node = new entries(a_gv.ttf());
+  a_gv.set_colors(*node);
+
+  node->add_uint("cols",1);
+  node->add_uint("rows",1);
+  node->add_bool("clear",false);
+
+  add_callback(a_gv,*node,action_ok_regions,a_data);
+  
+  a_gv.show_widget(a_data,node);
+  return return_to_render;
+}
+
+inline return_action action_regions_main(gui_viewer& a_gv,const pos_data& a_data) {
+  plots* _plots = search_selectable<plots>(a_gv.out(),a_gv.scene());
+
+  if(!_plots) {
+    a_gv.pop_warn(a_data,"no plots given");
+    return return_to_render;
+  }
+
+  sg::list* list = new sg::list(a_gv.ttf());
+  a_gv.set_colors(*list);
+
+  plots_data data(*_plots,a_data.m_popup,a_data.m_ex,a_data.m_ey);
+
+  add_item(a_gv,*list,"toggle border",action_toggle_border,data);
+  add_item(a_gv,*list,"adjust size",action_adjust_size,data);
+  add_item(a_gv,*list,"set regions",action_regions,data);
+  add_item(a_gv,*list,"set current plotter",action_current,data);
+  add_item(a_gv,*list,"plotter to one",action_current_to_one,data);
+  add_item(a_gv,*list,"plotter border",action_toggle_view_border,data);
+  add_item(a_gv,*list,"clear bins",action_clear_bins,data);
+  add_item(a_gv,*list,"clear points",action_clear_points,data);
+  add_item(a_gv,*list,"clear functions",action_clear_functions,data);
+  add_item(a_gv,*list,"plotter clear",action_clear,data);
+  add_item(a_gv,*list,"clear all plotters",action_clear_plots,data);
+
+  a_gv.show_widget(a_data,list);
+
+  return return_to_render;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// resedit actions : ///////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+inline void get_styles(const gui_viewer& a_gv,std::vector<std::string>& a_opts){
+  a_opts.clear();
+  a_opts.push_back(s_none());
+  std::vector<std::string> plotter_styles;
+  a_gv.styles().find_plotter_styles(plotter_styles);
+  std::vector<std::string>::const_iterator it;
+  for(it=plotter_styles.begin();it!=plotter_styles.end();++it) a_opts.push_back(*it);
+}
+
+inline void add_plotter_entries(plotter& a_plotter,entries& a_entries){
+
+    //2
+    a_entries.add_bool("grid.visible",a_plotter.grid_style().visible);
+  
+    //3
+    a_entries.add_bool("title.visible",a_plotter.title_style().visible);
+  
+    //4
+    a_entries.add_bool("title_box.visible",a_plotter.title_box_style().visible);
+  
+    //5
+    a_entries.add_bool("infos.visible",a_plotter.infos_style().visible);
+  
+    //6
+    a_entries.add_bool("background.visible",a_plotter.background_style().visible);
+  
+    //7
+    a_entries.add_color("background.back_color",a_plotter.background_style().back_color.value());
+
+    /////////////////////////////////////////////////
+    /// bins[0] /////////////////////////////////////
+    /////////////////////////////////////////////////
+    //8
+   {std::vector<std::string> opts = a_plotter.bins_modelings(0);
+    a_entries.add_opts("bins[0].modeling",opts.size()?opts[0]:"",opts);}
+
+    //8
+    a_entries.add_color("bins[0].color",
+                        a_plotter.bins_style(0).color.value());
+
+    //10
+   {std::vector<std::string> opts;
+    sg::style_parser::spainting_policies(opts);
+    //opts.push_back(s_none());
+    const char* s = sg::style_parser::spainting_policy(a_plotter.bins_style(0).painting);
+    if(s) a_entries.add_opts("bins[0].painting",s,opts);
+    else  a_entries.add_opts("bins[0].painting",s_none(),opts);}
+
+    /////////////////////////////////////////////////
+    /// func[0] /////////////////////////////////////
+    /////////////////////////////////////////////////
+    //11
+    a_entries.add_color("func[0].color",a_plotter.func_style(0).color.value());
+
+    //12
+    a_entries.add_float("func[0].line_width",a_plotter.func_style(0).line_width.value());
+    //a_entries.add_enum
+    //  ("func[0].line_pattern",a_plotter.func_style(0).line_pattern.value());
+
+    //13
+   {std::vector<std::string> opts;
+    sg::style_parser::spainting_policies(opts);
+    //opts.push_back(s_none());
+    const char* s = sg::style_parser::spainting_policy(a_plotter.func_style(0).painting);
+    if(s) a_entries.add_opts("func[0].painting",s,opts);
+    else  a_entries.add_opts("func[0].painting",s_none(),opts);}
+
+}
+
+inline return_action action_set_style(gui_viewer& a_gv,entries& a_widget,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+
+  unsigned int index_reset_style            = 0;
+  unsigned int index_style                  = 1;
+
+  unsigned int index_grid_visible           = 2;
+  unsigned int index_title_visible          = 3;
+  unsigned int index_title_box_visible      = 4;
+  unsigned int index_infos_visible          = 5;
+  unsigned int index_background_visible     = 6;
+  unsigned int index_background_back_color  = 7;
+
+  unsigned int index_bins_0_modeling   = 8;
+  unsigned int index_bins_0_color      = 9;
+  unsigned int index_bins_0_painting   = 10;
+
+  unsigned int index_func_0_color      = 11;
+  unsigned int index_func_0_line_width = 12;
+  unsigned int index_func_0_painting   = 13;
+
+  std::vector<std::string>& vals = a_widget.values.values();
+
+  /////////////////////////////////////////////////
+  /// general /////////////////////////////////////
+  /////////////////////////////////////////////////
+  bool reset_style = true;
+  if(!to(vals[index_reset_style],reset_style)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+
+ {const std::string& s = vals[index_style];
+  if(s!=s_none()) {
+    //bool set_exam = false;
+    if(reset_style) plotter.reset_style(); //it should be optional.
+    style_from_res(a_gv,s,plotter);
+    plotter.touch();
+
+    // update menu :
+   {entries* node = new entries(a_gv.ttf());
+    a_gv.set_colors(*node);
+    node->add_bool("overall->reset",reset_style);
+   {std::vector<std::string> opts;
+    get_styles(a_gv,opts);
+    node->add_opts("overall style",s,opts);}
+    add_plotter_entries(plotter,*node);
+    add_callback(a_gv,*node,action_set_style,a_data);
+    a_gv.show_widget(a_data,node);}
+
+    return return_to_render; //change style override the rest.    
+  }}
+
+ {bool v;
+  if(!to(vals[index_grid_visible],v)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+  plotter.grid_style().visible = v;
+  plotter.touch();}
+
+ {bool v;
+  if(!to(vals[index_title_visible],v)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+  plotter.title_style().visible = v;
+  plotter.touch();}
+
+ {bool v;
+  if(!to(vals[index_title_box_visible],v)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+  plotter.title_box_style().visible = v;
+  plotter.touch();}
+
+ {bool v;
+  if(!to(vals[index_infos_visible],v)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+  plotter.infos_style().visible = v;
+  plotter.touch();}
+
+ {bool v;
+  if(!to(vals[index_background_visible],v)) {
+    a_gv.pop_warn(a_data,"not a bool");
+    return return_to_render;     
+  }
+  plotter.background_style().visible = v;
+  plotter.touch();}
+
+ {float r,g,b,a;
+  if(!a_widget.get_color(index_background_back_color,r,g,b,a)) {
+    a_gv.pop_warn(a_data,"get color failed");
+    return return_to_render;     
+  }
+  plotter.background_style().back_color.value().set_value(r,g,b,a); 
+  plotter.touch();}
+
+  /////////////////////////////////////////////////
+  /// bins[0] /////////////////////////////////////
+  /////////////////////////////////////////////////
+ {float r,g,b,a;
+  if(!a_widget.get_color(index_bins_0_color,r,g,b,a)) {
+    a_gv.pop_warn(a_data,"get color failed");
+    return return_to_render;     
+  }
+  plotter.bins_style(0).color.value().set_value(r,g,b,a); 
+  plotter.touch();}
+
+  plotter.bins_style(0).modeling = vals[index_bins_0_modeling];
+  plotter.touch();
+
+ {const std::string& s = vals[index_bins_0_painting];
+  if(s!=s_none()) {
+    style_parser::spainting_policy(s,plotter.bins_style(0).painting.value());
+  }
+  plotter.touch();}
+
+  /////////////////////////////////////////////////
+  /// func[0] /////////////////////////////////////
+  /////////////////////////////////////////////////
+ {float r,g,b,a;
+  if(!a_widget.get_color(index_func_0_color,r,g,b,a)) {
+    a_gv.pop_warn(a_data,"get color failed");
+    return return_to_render;     
+  }
+  plotter.func_style(0).color.value().set_value(r,g,b,a); 
+  plotter.touch();}
+
+ {float v;
+  if(!to(vals[index_func_0_line_width],v)) {
+    a_gv.pop_warn(a_data,"not a number");
+    return return_to_render;     
+  }
+  plotter.func_style(0).line_width = v;
+  plotter.touch();}
+
+ {const std::string& s = vals[index_func_0_painting];
+  if(s!=s_none()) {
+    style_parser::spainting_policy(s,plotter.func_style(0).painting.value());
+  }
+  plotter.touch();}
+
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+
+  if(!a_data.m_popup) a_gv.hide_main_menu();
+
+  return return_to_render;
+}
+
+inline return_action action_resedit(gui_viewer& a_gv,const plots_data& a_data) {
+  plotter& plotter = a_data.m_plots.current_plotter();
+
+  entries* node = new entries(a_gv.ttf());
+  a_gv.set_colors(*node);
+   
+  node->add_bool("overall->reset",true);
+ {std::vector<std::string> opts;
+  get_styles(a_gv,opts);
+  node->add_opts("overall style",s_none(),opts);}
+
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+
+  add_plotter_entries(plotter,*node);
+
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  add_callback(a_gv,*node,action_set_style,a_data);
+  
+  a_gv.show_widget(a_data,node);
+  return return_to_render;
+}
+
+inline return_action action_edit_plot(gui_viewer& a_gv,const pos_data& a_data) {
+  plots* _plots = search_selectable<plots>(a_gv.out(),a_gv.scene());
+  if(!_plots) {
+    a_gv.pop_warn(a_data,"no plots given");
+    return return_to_render;
+  }
+  plots_data data(*_plots,a_data.m_popup,a_data.m_ex,a_data.m_ey);
+  return action_resedit(a_gv,data);
+}
+
+}}
+
+//inlib_build_use kernel
+
+#endif

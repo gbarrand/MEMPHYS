@@ -1,0 +1,88 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_simple_button
+#define inlib_sg_simple_button
+
+// a button without label or icon.
+
+#include "back_area"
+#include "base_button"
+#include "nodekit"
+
+namespace inlib {
+namespace sg {
+
+class simple_button : public back_area, public base_button  {
+  INLIB_NODE_NO_CAST(simple_button,inlib::sg::simple_button,back_area)
+public:
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<simple_button>(this,a_class)) return p;
+    if(void* p = base_button::cast(a_class)) return p;
+    return parent::cast(a_class);
+  }
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::simple_button)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(arm_color)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&arm_color); //base_button is not an sg::node.
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      back_area::update_sg();
+      reset_touched();
+    }
+    m_back_sep.render(a_action);
+  }
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      back_area::update_sg();
+      reset_touched();
+    }
+    m_back_sep.search(a_action);
+    if(a_action.done()) return;
+  }
+
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      back_area::update_sg();
+      reset_touched();
+    }
+    nodekit_pick(a_action,m_back_sep,this);
+  }
+public:
+  simple_button()
+  :parent()
+  ,base_button(back_area::color)
+  {
+    add_fields();
+  }
+  virtual ~simple_button(){}
+public:
+  simple_button(const simple_button& a_from)
+  :parent(a_from)
+  ,base_button(a_from)
+  {
+    add_fields();
+  }
+  simple_button& operator=(const simple_button& a_from){
+    parent::operator=(a_from);
+    base_button::operator=(a_from);
+    return *this;
+  }
+};
+
+}}
+
+#endif

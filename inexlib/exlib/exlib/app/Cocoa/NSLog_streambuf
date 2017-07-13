@@ -1,0 +1,65 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_app_Cocoa_NSLog_streambuf
+#define exlib_app_Cocoa_NSLog_streambuf
+
+#include <sstream>
+
+#include <cstring> //memcpy
+#include <cstdio> //EOF
+
+class NSLog_streambuf : public std::streambuf {
+public:
+  NSLog_streambuf()
+  :m_buffer(0)
+  ,m_size(4095)
+  ,m_count(0)
+  {
+    m_buffer = new char[m_size+1];
+  }
+
+  virtual ~NSLog_streambuf(){delete [] m_buffer;}
+private:
+  NSLog_streambuf(const NSLog_streambuf&)
+  :std::basic_streambuf<char, std::char_traits<char> >()
+  {}
+  NSLog_streambuf& operator=(const NSLog_streambuf&){return *this;}
+public:
+  int overflow(int aChar) {
+    int result = 0;
+    if(m_count>=m_size) {
+      m_buffer[m_count] = '\0';
+      m_count = 0;
+      result = receiveString();
+    }
+    m_buffer[m_count] = aChar;
+    m_count++;
+    if(aChar=='\n') {
+      m_buffer[m_count] = '\0';
+      m_count = 0;
+      result = receiveString();
+    }
+    return result;
+  }
+
+  int sync() {
+    m_buffer[m_count] = '\0';
+    m_count = 0;
+    return receiveString ();
+  }
+
+private:
+  int receiveString() {
+    NSLog(@"%s",m_buffer);
+    return 0;
+  }
+
+private:
+  char* m_buffer;
+  unsigned int m_size;
+  unsigned int m_count;
+};
+
+#endif
+

@@ -1,0 +1,1036 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_X11_xgra_action
+#define exlib_X11_xgra_action
+
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+
+#include <inlib/sg/render_manager>
+#include <inlib/sg/render_action>
+#include <inlib/sg/primitive_visitor>
+#include <inlib/colorfs>
+#include <inlib/forit>
+#include <inlib/typedefs>
+
+#include "colors"
+
+namespace exlib {
+namespace X11 {
+
+class xgra_manager : public virtual inlib::sg::render_manager {
+public:
+  virtual bool begin_render(int,int,unsigned int a_ww,unsigned int a_wh,float a_r,float a_g,float a_b,float,bool = true) {
+    if(!set_foreground(a_r,a_g,a_b)) {}
+    ::XFillRectangle(m_display,drawable(),m_gc,0,0,a_ww,a_wh);
+    return true;
+  }
+  virtual void end_render() {}
+
+  virtual unsigned int create_texture(const inlib::img_byte& a_img) {
+    //return 0; //NO_TEXTURE
+
+    inlib::img_byte _img;
+    if(a_img.bpp()==1) { //exa eiffel-tower.png
+      inlib::img_byte img3;
+      if(!a_img.bw2x(3,img3)) {
+        m_out << "exlib::X11::xgra_manager::create_texture :"
+              << " a_imgr.bw2x() failed."
+              << std::endl;
+        return 0;
+      }
+      img3.yswap(_img);
+    } else if(a_img.bpp()==3) {
+      a_img.yswap(_img);
+    } else if(a_img.bpp()==4) { //exa windusrf.png.
+      inlib::img_byte img3;
+      if(!a_img.rgba2rgb(img3)) {
+        m_out << "exlib::X11::xgra_manager::create_texture :"
+              << " a_imgr.rgba2rbg() failed."
+              << std::endl;
+        return 0;
+      }
+      img3.yswap(_img);
+    } else {
+      //should not happen.
+      m_out << "exlib::X11::xgra_manager::create_texture :"
+            << " image with bpp " << a_img.bpp() << " not (yet) supported."
+            << std::endl;
+      return 0;
+    }
+    if(_img.is_empty()) return 0;
+
+    unsigned int ww = _img.width();
+    unsigned int wh = _img.height();
+
+    XImage* image = ::XCreateImage(m_display,
+				   ::XDefaultVisualOfScreen(::XDefaultScreenOfDisplay(m_display)),
+                                   ::XDefaultDepthOfScreen(::XDefaultScreenOfDisplay(m_display)),
+                                   ZPixmap,0,NULL,ww,wh,8,0);
+
+    if(!image) return 0;
+    image->data = new char[image->height*image->bytes_per_line];
+    if(!image->data) {
+      ::XFree((char*)image);
+      return 0;
+    }
+
+   {const inlib::byte* pos = _img.buffer();
+    unsigned int row,col;
+    Pixel pixel;
+    float r,g,b;
+    for(row=0;row<wh;row++) {
+    for(col=0;col<ww;col++) {
+      r = float(*pos)/255.0F;pos++;
+      g = float(*pos)/255.0F;pos++;
+      b = float(*pos)/255.0F;pos++;
+      if(!get_pixel(m_display,m_pixels,m_colors,r,g,b,pixel)) {}
+      XPutPixel(image,col,row,pixel);
+    }}}
+    m_gen_id++;
+    m_gstos[m_gen_id] = image;
+    return m_gen_id;
+  }
+  virtual unsigned int create_gsto_from_data(size_t,const float*) {return 0;}
+
+  virtual bool is_gsto_id_valid(unsigned int a_id) const {
+    std::map<unsigned int,gsto_t*>::const_iterator it = m_gstos.find(a_id);
+    if(it==m_gstos.end()) return false;
+    return true;
+  }
+  virtual void delete_gsto(unsigned int) {}
+
+  virtual inlib::sg::gsto_mode get_gsto_mode() const {return inlib::sg::gsto_memory;}
+  virtual void set_gsto_mode(inlib::sg::gsto_mode a_v) {
+    if(a_v==m_gsto_mode) return;
+    if(a_v!=inlib::sg::gsto_memory) return;
+    m_gsto_mode = a_v;
+  }
+  virtual void available_gsto_modes(std::vector<std::string>& a_v) {
+    a_v.clear();
+    a_v.push_back(inlib::sg::s_gsto_memory());
+  }
+  virtual void available_not_memory_gsto_mode(std::string& a_s) const {a_s.clear();}
+  virtual size_t used_texture_memory() const {return 0;}
+  virtual size_t gstos_size() const {return 0;}
+public:
+  xgra_manager(std::ostream& a_out,Display* a_display,Window a_window)
+  :m_out(a_out),m_display(a_display),m_window(a_window),m_pixmap(0),m_gc(0),m_gen_id(0)
+  ,m_gsto_mode(inlib::sg::gsto_memory)
+  {
+    //XGCValues vgc;
+    //vgc.line_style = LineSolid;
+    //vgc.line_width = 0;
+    //m_gc = ::XCreateGC(m_display,XDefaultRootWindow(m_display),GCLineStyle|GCLineWidth,&vgc);
+    m_gc = ::XCreateGC(m_display,XDefaultRootWindow(m_display),0,0);
+  }
+  virtual ~xgra_manager(){
+   {inlib_vforit(Pixel,m_pixels,it) {
+      ::XFreeColors(m_display,XDefaultColormapOfScreen(XDefaultScreenOfDisplay(m_display)),&(*it),1,0);
+    }
+    m_pixels.clear();}
+    m_colors.clear();
+    delete_gstos();
+    if(m_gc) {
+      ::XFreeGC(m_display,m_gc);
+      m_gc = 0;
+    }
+    if(m_pixmap) {
+      ::XFreePixmap(m_display,m_pixmap);
+      m_pixmap = 0;
+    }
+  }
+private:
+  xgra_manager(const xgra_manager& a_from)
+  :render_manager(a_from)
+  ,m_out(a_from.m_out)
+  ,m_gsto_mode(a_from.m_gsto_mode)
+  {}
+  xgra_manager& operator=(const xgra_manager& a_from){
+    m_gsto_mode = a_from.m_gsto_mode;
+    return *this;
+  }
+public:
+  std::ostream& out() const {return m_out;}
+  Display* display() const {return m_display;}
+  //Window window() const {return m_window;}
+  Drawable drawable() const {return m_pixmap?m_pixmap:m_window;}
+  GC gc() const {return m_gc;}
+
+  void set_window(Window a_window) {m_window = a_window;}
+
+  bool set_foreground(float a_r,float a_g,float a_b) {
+    return ::exlib::X11::set_foreground(m_display,m_gc,m_pixels,m_colors,a_r,a_g,a_b);
+  }
+
+  bool find_image(unsigned int a_id,XImage*& a_image) const {
+    std::map<unsigned int,gsto_t*>::const_iterator it = m_gstos.find(a_id);
+    if(it==m_gstos.end()) {a_image=0;return false;}
+    a_image = (*it).second;
+    return true;
+  }
+
+  void delete_gstos() {
+    inlib_mforit(unsigned int,XImage*,m_gstos,it) {
+      XImage* image = (*it).second;
+      delete [] image->data;
+      ::XFree((char*)image);
+    }
+    m_gstos.clear();
+  }
+public:
+  bool create_pixmap(unsigned int a_w,unsigned int a_h) {
+    bool double_buffer = false;
+    double_buffer = true;
+    if(double_buffer) {
+      if(m_pixmap) ::XFreePixmap(m_display,m_pixmap);
+      m_pixmap = XCreatePixmap(m_display,XDefaultRootWindow(m_display),a_w,a_h,
+                               XDefaultDepthOfScreen(XDefaultScreenOfDisplay(m_display)));
+      if(!m_pixmap) return false;
+
+      //if(m_gc) ::XFreeGC(m_display,m_gc);
+      //m_gc = ::XCreateGC(m_display,m_pixmap,0,0);
+/*
+     {Window root;
+      int cx,cy;
+      unsigned int  width,height,border,depth;
+      if(XGetGeometry(m_display,m_pixmap,&root,&cx,&cy,&width,&height,&border,&depth)==0) {
+        m_out << "exlib::X11::manager::create_pixmap :"
+              << " pixmap allocation failed." << std::endl;
+        m_pixmap = 0L;
+        return false;
+      }}
+*/
+    } else {
+      //if(m_gc) ::XFreeGC(m_display,m_gc);
+      //m_gc = ::XCreateGC(m_display,m_window,0,0);
+    }    
+    return true;
+  }
+  void pixmap2win() {
+    if(m_pixmap) {
+      XWindowAttributes watbs;
+      ::XGetWindowAttributes(m_display,m_window,&watbs);
+      ::XCopyArea(m_display,m_pixmap,m_window,m_gc,0,0,watbs.width,watbs.height,0,0);
+    }
+  }
+protected:
+  std::ostream& m_out;
+  Display* m_display;
+  Window m_window;
+  Pixmap m_pixmap;
+  GC m_gc;
+  std::vector<Pixel> m_pixels;
+  unsigned int m_gen_id;
+  typedef XImage gsto_t;
+  std::map<unsigned int,gsto_t*> m_gstos;
+  std::map<inlib::colorf,Pixel,inlib::cmp_colorf> m_colors;
+  inlib::sg::gsto_mode m_gsto_mode;
+};
+
+class xgra_action : public inlib::sg::render_action {
+  typedef inlib::sg::render_action parent;
+
+  static unsigned int _GL2PS_POINT()    {return 2;}
+  static unsigned int _GL2PS_LINE()     {return 3;}
+  static unsigned int _GL2PS_TRIANGLE() {return 5;}
+public:
+  virtual void draw_vertex_array(inlib::gl::mode_t a_mode,size_t a_floatn,const float* a_xyzs){
+//    } else if(a_mode==gl::triangles()) {
+
+    if(a_mode==inlib::gl::points()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xyzs);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = *pos;pos++;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XDrawPoints(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::lines()) { //segments
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      size_t sgn = ptn/2;
+      if(!sgn) return;
+      XSegment* sgs = new XSegment[sgn];
+      float* pos = const_cast<float*>(a_xyzs);
+      float bx,by,bz,ex,ey,ez,w;
+      for(size_t iseg=0;iseg<sgn;iseg++) {
+        bx = *pos;pos++;by = *pos;pos++;bz = *pos;pos++;
+        project_point(bx,by,bz,w);
+        m_vp_mtx.mul_3f(bx,by,bz);
+        ex = *pos;pos++;ey = *pos;pos++;ez = *pos;pos++;
+        project_point(ex,ey,ez,w);
+        m_vp_mtx.mul_3f(ex,ey,ez);
+        sgs[iseg].x1 = short(bx);
+        sgs[iseg].y1 = short(float(m_wh)-by-1.0F);
+        sgs[iseg].x2 = short(ex);
+        sgs[iseg].y2 = short(float(m_wh)-ey-1.0F);
+      }
+      ::XDrawSegments(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),sgs,sgn);
+      delete [] sgs;
+
+    } else if(a_mode==inlib::gl::line_strip()) { //polyline
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xyzs);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = *pos;pos++;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XDrawLines(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::line_loop()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn+1];
+      float* pos = const_cast<float*>(a_xyzs);
+      float x,y,z,w;
+      size_t ipt;
+      for(ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = *pos;pos++;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      pos = const_cast<float*>(a_xyzs);
+      x = *pos;pos++;y = *pos;pos++;z = *pos;pos++;
+      project_point(x,y,z,w);
+      m_vp_mtx.mul_3f(x,y,z);
+      pts[ipt].x = short(x);
+      pts[ipt].y = short(float(m_wh)-y-1.0F);
+      ::XDrawLines(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::triangle_fan()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xyzs);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = *pos;pos++;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XFillPolygon(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,Nonconvex,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::triangle_strip()) { //send a fan!
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/3;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float x,y,z,w;
+
+      size_t ipt;
+     {for(size_t index=1;index<ptn;index+=2) {
+        float* pos = const_cast<float*>(a_xyzs)+3*index;
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        ipt = (index-1)/2;
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }}
+
+     {for(size_t index=0;index<ptn;index+=2) {
+        float* pos = const_cast<float*>(a_xyzs)+3*index;
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        ipt = ptn-1-index/2;
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }}
+
+      ::XFillPolygon(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,Nonconvex,CoordModeOrigin);
+      delete [] pts;
+
+    } else {
+      m_pv.add_primitive(a_mode,a_floatn,a_xyzs);
+    }
+  }
+
+  virtual void draw_vertex_array_xy(inlib::gl::mode_t a_mode,size_t a_floatn,const float* a_xys){
+    if(a_mode==inlib::gl::points()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xys);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XDrawPoints(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::lines()) { //segments
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      size_t sgn = ptn/2;
+      if(!sgn) return;
+      XSegment* sgs = new XSegment[sgn];
+      float* pos = const_cast<float*>(a_xys);
+      float bx,by,bz,ex,ey,ez,w;
+      for(size_t iseg=0;iseg<sgn;iseg++) {
+        bx = *pos;pos++;by = *pos;pos++;bz = 0;
+        project_point(bx,by,bz,w);
+        m_vp_mtx.mul_3f(bx,by,bz);
+        ex = *pos;pos++;ey = *pos;pos++;ez = 0;
+        project_point(ex,ey,ez,w);
+        m_vp_mtx.mul_3f(ex,ey,ez);
+        sgs[iseg].x1 = short(bx);
+        sgs[iseg].y1 = short(float(m_wh)-by-1.0F);
+        sgs[iseg].x2 = short(ex);
+        sgs[iseg].y2 = short(float(m_wh)-ey-1.0F);
+      }
+      ::XDrawSegments(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),sgs,sgn);
+      delete [] sgs;
+
+    } else if(a_mode==inlib::gl::line_strip()) { //polyline
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xys);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XDrawLines(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::line_loop()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn+1];
+      float* pos = const_cast<float*>(a_xys);
+      float x,y,z,w;
+      size_t ipt;
+      for(ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      pos = const_cast<float*>(a_xys);
+      x = *pos;pos++;y = *pos;pos++;z = 0;
+      project_point(x,y,z,w);
+      m_vp_mtx.mul_3f(x,y,z);
+      pts[ipt].x = short(x);
+      pts[ipt].y = short(float(m_wh)-y-1.0F);
+      ::XDrawLines(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::triangle_fan()) {
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float* pos = const_cast<float*>(a_xys);
+      float x,y,z,w;
+      for(size_t ipt=0;ipt<ptn;ipt++) {
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }
+      ::XFillPolygon(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,Nonconvex,CoordModeOrigin);
+      delete [] pts;
+
+    } else if(a_mode==inlib::gl::triangle_strip()) { //send a fan!
+      float r = m_color[0];
+      float g = m_color[1];
+      float b = m_color[2];
+    //float a = m_color[3];
+      if(!m_mgr.set_foreground(r,g,b)) {}
+      size_t ptn = a_floatn/2;
+      if(!ptn) return;
+      XPoint* pts = new XPoint[ptn];
+      float x,y,z,w;
+
+      size_t ipt;
+     {for(size_t index=1;index<ptn;index+=2) {
+        float* pos = const_cast<float*>(a_xys)+2*index;
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        ipt = (index-1)/2;
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }}
+
+     {for(size_t index=0;index<ptn;index+=2) {
+        float* pos = const_cast<float*>(a_xys)+2*index;
+        x = *pos;pos++;y = *pos;pos++;z = 0;
+        project_point(x,y,z,w);
+        m_vp_mtx.mul_3f(x,y,z);
+        ipt = ptn-1-index/2;
+        pts[ipt].x = short(x);
+        pts[ipt].y = short(float(m_wh)-y-1.0F);
+      }}
+
+      ::XFillPolygon(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),pts,ptn,Nonconvex,CoordModeOrigin);
+      delete [] pts;
+
+    } else {
+      m_pv.add_primitive_xy(a_mode,a_floatn,a_xys);
+    }
+  }
+
+  virtual void draw_vertex_color_array(inlib::gl::mode_t a_mode,
+                                       size_t a_floatn,
+                                       const float* a_xyzs,
+                                       const float* a_rgbas){
+    m_pv.add_primitive(a_mode,a_floatn,a_xyzs,a_rgbas);
+  }
+
+  virtual void draw_vertex_normal_array(inlib::gl::mode_t a_mode,
+                                        size_t a_floatn,
+                                        const float* a_xyzs,
+                                        const float* /*a_nms*/){
+    m_pv.add_primitive(a_mode,a_floatn,a_xyzs);
+  }
+
+  virtual void draw_vertex_color_normal_array(inlib::gl::mode_t a_mode,
+                                              size_t a_floatn,
+                                              const float* a_xyzs,
+                                              const float* a_rgbas,
+                                              const float* /*a_nms*/){
+    // We expect a_nms of size : 3*(a_floatn/3)
+    // (then one normal per 3D point).
+    m_pv.add_primitive(a_mode,a_floatn,a_xyzs,a_rgbas);
+  }
+
+  virtual void clear_color(float a_r,float a_g,float a_b,float /*a_a*/){
+    //a_a ?
+    m_back[0] = a_r;
+    m_back[1] = a_g;
+    m_back[2] = a_b;
+  }
+  virtual void color4f(float a_r,float a_g,float a_b,float a_a){
+    m_color.set_value(a_r,a_g,a_b,a_a);
+  }
+  virtual void line_width(float a_v){m_line_width = a_v;}
+  virtual void point_size(float a_v) {m_point_size = a_v;}
+  virtual void set_polygon_offset(bool a_v) {m_POLYGON_OFFSET_FILL = a_v;}
+  virtual void normal(float a_x,float a_y,float a_z) {
+    m_normal.set_value(a_x,a_y,a_z);
+  }
+
+  virtual void set_winding(inlib::sg::winding_type a_v) {
+    m_ccw = (a_v==inlib::sg::winding_ccw?true:false);
+  }
+
+  virtual void set_depth_test(bool a_on) {m_DEPTH_TEST = a_on;}
+
+  virtual void set_cull_face(bool a_on) {m_CULL_FACE = a_on;}
+  virtual void set_point_smooth(bool a_on) {m_POINT_SMOOTH = a_on;}
+  virtual void set_line_smooth(bool a_on) {m_LINE_SMOOTH = a_on;}
+
+  virtual void load_proj_matrix(const inlib::mat4f& a_mtx) {m_proj = a_mtx;}
+  virtual void load_model_matrix(const inlib::mat4f& a_mtx) {m_model = a_mtx;}
+
+  virtual unsigned int max_lights() {return 1000;}
+
+  virtual void enable_light(unsigned int,
+                            float a_dx,float a_dy,float a_dz,
+                            float a_r,float a_g,float a_b,float a_a){
+    m_light_color.set_value(a_r,a_g,a_b,a_a);
+    m_light_direction.set_value(a_dx,a_dy,a_dz);
+    m_light_on = true;
+  }
+
+  virtual void set_lighting(bool a_on) {m_light_on = a_on;}
+
+  virtual void restore_state(unsigned int /*a_ret_num_light*/) {
+    m_proj = m_state.m_proj;
+    m_model = m_state.m_model;
+
+    m_color = m_state.m_color;
+    m_ccw = (m_state.m_winding==inlib::sg::winding_ccw?true:false);
+    m_POLYGON_OFFSET_FILL = m_state.m_GL_POLYGON_OFFSET_FILL;
+    m_CULL_FACE = m_state.m_GL_CULL_FACE;
+    m_POINT_SMOOTH = m_state.m_GL_POINT_SMOOTH;
+    m_LINE_SMOOTH = m_state.m_GL_LINE_SMOOTH;
+    m_point_size = m_state.m_point_size;
+    m_line_width = m_state.m_line_width;
+    m_light_on = m_state.m_GL_LIGHTING;
+    m_DEPTH_TEST = m_state.m_GL_DEPTH_TEST;
+  }
+
+  /////////////////////////////////////////////////////////////////
+  /// texture /////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  virtual void draw_vertex_array_texture(inlib::gl::mode_t,
+                                         size_t a_floatn,
+                                         const float* a_xyzs,
+                                         gstoid a_id,
+                                         const float*) {
+    //return; //NO_TEXTURE
+
+    size_t num = a_floatn/3;
+    if(!num) return;
+
+    if(num!=4) {
+      m_out << "exlib::X11::render::draw_vertex_array_texture :"
+            << " primitive has not four points."
+            << std::endl;
+      return;
+    }
+
+    ///////////////////////
+    /// get texture : /////
+    ///////////////////////
+    XImage* image;
+    if(!m_mgr.find_image(a_id,image)) {
+      m_out << "exlib::X11::render::draw_vertex_array_texture :"
+            << " can't find texture."
+            << std::endl;
+      return;
+    }
+
+    size_t ipt;
+    float w;
+
+    ipt = 3;
+    float ulx = a_xyzs[ipt*3+0];
+    float uly = a_xyzs[ipt*3+1];
+    float ulz = a_xyzs[ipt*3+2];
+    project_point(ulx,uly,ulz,w);
+    m_vp_mtx.mul_3f(ulx,uly,ulz);
+
+    ipt = 1;
+    float drx = a_xyzs[ipt*3+0];
+    float dry = a_xyzs[ipt*3+1];
+    float drz = a_xyzs[ipt*3+2];
+    project_point(drx,dry,drz,w);
+    m_vp_mtx.mul_3f(drx,dry,drz);
+
+    unsigned int tw = (unsigned int)::fabs(drx-ulx);
+    unsigned int th = (unsigned int)::fabs(dry-uly);
+
+    int x = int(ulx);
+    int y = int(float(m_wh)-uly-1.0F);
+
+    unsigned int _ww = image->width;
+    unsigned int _wh = image->height;
+    if((_ww<=tw)&&(_wh<=th)) {
+      ::XPutImage(m_mgr.display(),m_mgr.drawable(),m_mgr.gc(),image,0,0,x,y,_ww,_wh);
+    } else {
+      m_out << "exlib::X11::render::draw_vertex_array_texture :"
+            << " XPutImage not done because of size mismatch."
+            << std::endl;
+    }
+
+  }
+
+  virtual void draw_vertex_normal_array_texture(inlib::gl::mode_t a_mode,
+                                         size_t a_xyzn,
+                                         const float* a_xyzs,
+                                         const float* /*a_nms*/,
+                                         gstoid a_id,
+                                         const float* a_tcs) {
+    draw_vertex_array_texture(a_mode,a_xyzn,a_xyzs,a_id,a_tcs);
+  }
+
+  /////////////////////////////////////////////////////////////////
+  /// VBO /////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  virtual void begin_gsto(gstoid) {}
+  typedef inlib::sg::bufpos bufpos;
+  virtual void draw_gsto_v(inlib::gl::mode_t,size_t,bufpos){}
+  virtual void draw_gsto_vc(inlib::gl::mode_t,size_t,bufpos,bufpos) {}
+  virtual void draw_gsto_vn(inlib::gl::mode_t,size_t,bufpos,bufpos) {}
+  virtual void draw_gsto_vcn(inlib::gl::mode_t,size_t,bufpos,bufpos,bufpos) {}
+  virtual void end_gsto() {}
+  /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  virtual inlib::sg::render_manager& render_manager() {return m_mgr;}
+public:
+  xgra_action(xgra_manager& a_mgr,
+             std::ostream& a_out,
+             unsigned int a_ww,unsigned int a_wh)
+  :parent(a_out,a_ww,a_wh)
+  ,m_mgr(a_mgr)
+  ,m_pv(*this)
+  ,m_light_color(inlib::colorf_white())
+  ,m_light_direction(inlib::vec3f(0,0,-1))
+
+  ,m_ccw(true)
+  ,m_POLYGON_OFFSET_FILL(false)
+  ,m_CULL_FACE(true)
+  ,m_POINT_SMOOTH(false)
+  ,m_LINE_SMOOTH(false)
+  ,m_point_size(1)
+  ,m_line_width(1)
+  ,m_light_on(false)
+  ,m_DEPTH_TEST(true)
+  {
+    m_back[0] = 1;
+    m_back[1] = 1;
+    m_back[2] = 1;
+
+    m_vp_mtx.set_identity();
+    m_vp_mtx.mul_translate(float(m_ww)/2,float(m_wh)/2,0);
+    m_vp_mtx.mul_scale(float(m_ww)/2,float(m_wh)/2,1);
+
+    //m_zb.change_size(a_ww,a_wh);
+//    m_zb.clear_color_buffer(0);
+//    m_zb.clear_depth_buffer();  
+  }
+  virtual ~xgra_action(){}
+protected:
+  xgra_action(const xgra_action& a_from)
+  :parent(a_from)
+  ,m_mgr(a_from.m_mgr)
+
+  ,m_vp_mtx(a_from.m_vp_mtx)
+  ,m_pv(a_from.m_pv)
+  ,m_light_color(a_from.m_light_color)
+  ,m_light_direction(a_from.m_light_direction)
+  ,m_normal(a_from.m_normal)
+
+  ,m_proj(a_from.m_proj)
+  ,m_model(a_from.m_model)
+  ,m_color(a_from.m_color)
+  ,m_ccw(a_from.m_ccw)
+  ,m_POLYGON_OFFSET_FILL(a_from.m_POLYGON_OFFSET_FILL)
+  ,m_CULL_FACE(a_from.m_CULL_FACE)
+  ,m_POINT_SMOOTH(a_from.m_POINT_SMOOTH)
+  ,m_LINE_SMOOTH(a_from.m_LINE_SMOOTH)
+  ,m_point_size(a_from.m_point_size)
+  ,m_line_width(a_from.m_line_width)
+  ,m_light_on(a_from.m_light_on)
+  ,m_DEPTH_TEST(a_from.m_DEPTH_TEST)
+  {
+    m_back[0] = a_from.m_back[0];
+    m_back[1] = a_from.m_back[1];
+    m_back[2] = a_from.m_back[2];
+  }
+  xgra_action& operator=(const xgra_action& a_from){
+    parent::operator=(a_from);
+    if(&a_from==this) return *this;
+
+    m_back[0] = a_from.m_back[0];
+    m_back[1] = a_from.m_back[1];
+    m_back[2] = a_from.m_back[2];
+
+    m_vp_mtx = a_from.m_vp_mtx;
+    m_pv = a_from.m_pv;
+    m_light_color = a_from.m_light_color;
+    m_light_direction = a_from.m_light_direction;
+    m_normal = a_from.m_normal;
+
+    m_proj = a_from.m_proj;
+    m_model = a_from.m_model;
+    m_color = a_from.m_color;
+    m_ccw = a_from.m_ccw;
+    m_POLYGON_OFFSET_FILL = a_from.m_POLYGON_OFFSET_FILL;
+    m_CULL_FACE = a_from.m_CULL_FACE;
+    m_POINT_SMOOTH = a_from.m_POINT_SMOOTH;
+    m_LINE_SMOOTH = a_from.m_LINE_SMOOTH;
+    m_point_size = a_from.m_point_size;
+    m_line_width = a_from.m_line_width;
+    m_light_on = a_from.m_light_on;
+    m_DEPTH_TEST = a_from.m_DEPTH_TEST;
+    return *this;
+  }
+public:
+protected:
+  bool project_point(float& a_x,float& a_y,float& a_z,float& a_w) {
+    a_w = 1;
+    m_model.mul_4f(a_x,a_y,a_z,a_w);
+    m_proj.mul_4f(a_x,a_y,a_z,a_w);
+    if(a_w==0) return false;
+    a_x /= a_w;
+    a_y /= a_w;
+    a_z /= a_w;
+    return true;
+  }
+
+/*
+  static void set_vtx(GL2PSvertex* a_vs,unsigned int a_index,
+                      float a_x,float a_y,float a_z,
+                      float a_r,float a_g,float a_b,float a_a){
+    a_vs[a_index].xyz[0] = a_x;
+    a_vs[a_index].xyz[1] = a_y;
+    a_vs[a_index].xyz[2] = a_z;
+    a_vs[a_index].rgba[0] = a_r;
+    a_vs[a_index].rgba[1] = a_g;
+    a_vs[a_index].rgba[2] = a_b;
+    a_vs[a_index].rgba[3] = a_a;
+  }
+*/
+
+  class primvis : public inlib::sg::primitive_visitor {
+  protected:
+    virtual bool project(float& a_x,float& a_y,float& a_z,float& a_w) {
+      return m_this.project_point(a_x,a_y,a_z,a_w);
+    }
+    virtual bool add_point(float a_x,float a_y,float a_z,float) {
+      //::printf("debug : add_point\n");
+
+      float r = m_this.m_color[0];
+      float g = m_this.m_color[1];
+      float b = m_this.m_color[2];
+      //float a = m_this.m_color[3];
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_x,a_y,a_z);
+
+      int x = int(a_x);
+      int y = int(float(m_this.m_wh)-a_y-1.0F);
+      ::XDrawPoint(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),x,y);
+
+      return true;
+    }
+  
+    virtual bool add_point(float a_x,float a_y,float a_z,float,
+                           float a_r,float a_g,float a_b,float /*a_a*/) {
+      //::printf("debug : add_point2\n");
+
+      float r = a_r;
+      float g = a_g;
+      float b = a_b;
+      //float a = m_this.m_color[3];
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_x,a_y,a_z);
+
+      int x = int(a_x);
+      int y = int(float(m_this.m_wh)-a_y-1.0F);
+      ::XDrawPoint(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),x,y);
+
+      return true;
+    }
+  
+    virtual bool add_line(float a_bx,float a_by,float a_bz,float,
+                          float a_ex,float a_ey,float a_ez,float) {
+      //::printf("debug : add_line\n");
+
+      float r = m_this.m_color[0];
+      float g = m_this.m_color[1];
+      float b = m_this.m_color[2];
+    //float a = m_this.m_color[3];
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_bx,a_by,a_bz);
+      m_this.m_vp_mtx.mul_3f(a_ex,a_ey,a_ez);
+
+      int x1 = int(a_bx);
+      int y1 = int(float(m_this.m_wh)-a_by-1.0F);
+      int x2 = int(a_ex);
+      int y2 = int(float(m_this.m_wh)-a_ey-1.0F);
+      ::XDrawLine(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),x1,y1,x2,y2);
+
+      return true;
+    }
+  
+    virtual bool add_line(float a_bx,float a_by,float a_bz,float, float a_br,float a_bg,float a_bb,float /*a_ba*/,
+                          float a_ex,float a_ey,float a_ez,float, float,float,float,float){
+      //::printf("debug : add_line2\n");
+
+      float r = a_br;
+      float g = a_bg;
+      float b = a_bb;
+    //float a = a_ba;
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_bx,a_by,a_bz);
+      m_this.m_vp_mtx.mul_3f(a_ex,a_ey,a_ez);
+
+      int x1 = int(a_bx);
+      int y1 = int(float(m_this.m_wh)-a_by-1.0F);
+      int x2 = int(a_ex);
+      int y2 = int(float(m_this.m_wh)-a_ey-1.0F);
+      ::XDrawLine(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),x1,y1,x2,y2);
+
+      return true;
+    }
+  
+    virtual bool add_triangle(float a_p1x,float a_p1y,float a_p1z,float,
+                              float a_p2x,float a_p2y,float a_p2z,float,
+                              float a_p3x,float a_p3y,float a_p3z,float){
+      //::printf("debug : add_triangle\n");
+      float r = m_this.m_color[0];
+      float g = m_this.m_color[1];
+      float b = m_this.m_color[2];
+      //float a = m_this.m_color[3];
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_p1x,a_p1y,a_p1z);
+      m_this.m_vp_mtx.mul_3f(a_p2x,a_p2y,a_p2z);
+      m_this.m_vp_mtx.mul_3f(a_p3x,a_p3y,a_p3z);
+
+      XPoint points[3];
+      points[0].x  = short(a_p1x);
+      points[0].y  = short(float(m_this.m_wh)-a_p1y-1.0F);
+      points[1].x  = short(a_p2x);
+      points[1].y  = short(float(m_this.m_wh)-a_p2y-1.0F);
+      points[2].x  = short(a_p3x);
+      points[2].y  = short(float(m_this.m_wh)-a_p3y-1.0F);
+
+      ::XFillPolygon(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),points,3,Convex,CoordModeOrigin);
+
+      return true;
+    }
+
+    virtual bool add_triangle(float a_p1x,float a_p1y,float a_p1z,float,  float a_r1,float a_g1,float a_b1,float /*a_a1*/,
+                              float a_p2x,float a_p2y,float a_p2z,float,  float,float,float,float,
+                              float a_p3x,float a_p3y,float a_p3z,float,  float,float,float,float){
+      //::printf("debug : add_triangle2\n");
+
+      float r = a_r1;
+      float g = a_g1;
+      float b = a_b1;
+
+      if(!m_this.m_mgr.set_foreground(r,g,b)) {}
+
+      m_this.m_vp_mtx.mul_3f(a_p1x,a_p1y,a_p1z);
+      m_this.m_vp_mtx.mul_3f(a_p2x,a_p2y,a_p2z);
+      m_this.m_vp_mtx.mul_3f(a_p3x,a_p3y,a_p3z);
+
+      XPoint points[3];
+      points[0].x  = short(a_p1x);
+      points[0].y  = short(float(m_this.m_wh)-a_p1y-1.0F);
+      points[1].x  = short(a_p2x);
+      points[1].y  = short(float(m_this.m_wh)-a_p2y-1.0F);
+      points[2].x  = short(a_p3x);
+      points[2].y  = short(float(m_this.m_wh)-a_p3y-1.0F);
+
+      ::XFillPolygon(m_this.m_mgr.display(),m_this.m_mgr.drawable(),m_this.m_mgr.gc(),points,3,Convex,CoordModeOrigin);
+
+      return true;
+    }
+
+  public:
+    primvis(xgra_action& a_this):m_this(a_this){}
+    virtual ~primvis(){}
+  public:
+    primvis(const primvis& a_from)
+    :inlib::sg::primitive_visitor(a_from)
+    ,m_this(a_from.m_this)
+    {}
+    primvis& operator=(const primvis& a_from){
+      inlib::sg::primitive_visitor::operator=(a_from);
+      return *this;
+    }
+  protected:
+    xgra_action& m_this;
+  };
+
+protected:
+  xgra_manager& m_mgr;
+  float m_back[3];
+  inlib::mat4f m_vp_mtx;
+  primvis m_pv;
+
+  inlib::colorf m_light_color;
+  inlib::vec3f m_light_direction;
+  inlib::vec3f m_normal;
+
+  // to be restored in restore_state() :
+  inlib::mat4f m_proj;
+  inlib::mat4f m_model;
+  inlib::colorf m_color;  
+  bool m_ccw;
+  bool m_POLYGON_OFFSET_FILL;	
+  bool m_CULL_FACE;
+  bool m_POINT_SMOOTH;
+  bool m_LINE_SMOOTH;
+  float m_point_size;  
+  float m_line_width;
+  bool m_light_on;
+  bool m_DEPTH_TEST;
+};
+
+}}
+
+//exlib_build_use inlib X11
+
+#endif

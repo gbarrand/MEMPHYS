@@ -1,0 +1,31 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_wout
+#define inlib_sg_wout
+
+#include "alert"
+
+#include <ostream>
+
+namespace inlib {
+namespace sg {
+
+class wout : public virtual alert {
+public:
+  virtual void warn(const std::string& a_msg,bool = true) {
+    m_out << a_msg << std::endl;
+  }
+public:
+  wout(std::ostream& a_out):alert(),m_out(a_out){}
+  virtual ~wout(){}
+public:
+  wout(const wout& a_from):alert(a_from),m_out(a_from.m_out){}
+  wout& operator=(const wout&){return *this;}
+protected:
+  std::ostream& m_out;
+};
+
+}}
+
+#endif

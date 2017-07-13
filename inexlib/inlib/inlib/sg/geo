@@ -1,0 +1,449 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_geo
+#define inlib_sg_geo
+
+#include "separator"
+#include "matrix"
+#include "map"
+#include "noderef"
+#include "nodekit"
+#include "style_colormap"
+#include "rgba"
+#include "geo_atb"
+#include "sf_string"
+#include "sf_enum"
+
+#include "../smatch"
+#include "../schar"
+#include "../sys/atime"
+#include "../vec3d"
+#include "../hep/polyhedron"
+
+#include "../rroot/geo_colors"
+
+namespace inlib {
+namespace sg {
+
+template <class VOLUME,class MATRIX>
+class geo : public node {
+  typedef node parent;
+public:
+  //INLIB_SCLASS(inlib::sg::geo)
+  static const std::string& s_class() {
+    static const std::string s_v("inlib::sg::geo");
+    return s_v;
+  }
+public:
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<geo>(this,a_class)) return p;
+    return node::cast(a_class);
+  }
+public:
+
+  virtual void update_sg(std::ostream&) = 0;
+  virtual const std::string& volume_name(const VOLUME&) const = 0;
+
+  virtual bool volume_material_color(std::ostream&,const VOLUME& a_vol,colorf& a_color) = 0;
+
+  virtual bool add_shape(std::ostream& a_out,
+                         const VOLUME& a_vol,
+                         const MATRIX& a_matrix,
+                         separator& a_sep,
+                         bool a_solid) = 0;
+
+  virtual bool vis_children(std::ostream& a_out,
+                            const VOLUME& a_vol,
+                            const MATRIX& a_matrix,
+                            unsigned int a_depth) = 0;
+
+public:
+  sf_string volume;
+  sf<int> volume_depth; //optional.
+
+  sf<unsigned int> min_depth;
+  sf<unsigned int> max_depth;
+  sf<unsigned int> solid_depth;
+
+  sf_enum<atb_type> atb;
+
+  //if atb single :
+  sf_vec<colorf,float> color;
+
+  // to control traversal :
+  sf<unsigned int> max_time;
+  sf<unsigned int> max_shapes;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::geo)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(volume)
+      INLIB_ADD_FIELD_DESC(volume_depth)
+
+      INLIB_ADD_FIELD_DESC(min_depth)
+      INLIB_ADD_FIELD_DESC(max_depth)
+      INLIB_ADD_FIELD_DESC(solid_depth)
+
+      INLIB_ADD_FIELD_DESC(atb)
+      INLIB_ADD_FIELD_DESC(color)
+      INLIB_ADD_FIELD_DESC(max_time)
+      INLIB_ADD_FIELD_DESC(max_shapes)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&volume);
+    add_field(&volume_depth);
+
+    add_field(&min_depth);
+    add_field(&max_depth);
+    add_field(&solid_depth);
+
+    add_field(&atb);
+    add_field(&color);
+    add_field(&max_time);
+    add_field(&max_shapes);
+  }
+public: //node
+  //virtual node* copy() const {return new geo(*this);}
+  virtual const std::string& s_cls() const {return s_class();}
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_group.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    nodekit_pick(a_action,m_group,this);
+  }
+  virtual void search(search_action& a_action) {
+    node::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_group.search(a_action);
+  }
+
+  virtual bool write(write_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    //if(!write_fields(a_action)) return false;
+    return m_group.write(a_action);
+  }
+  virtual void bbox(bbox_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_group.bbox(a_action);
+  }
+public:
+  geo()
+  :parent()
+  ,volume("")
+  ,volume_depth(-1)
+  ,min_depth(0)
+  ,max_depth(1)
+  ,solid_depth(1)
+  ,atb(atb_single)
+  ,color(colorf_default())
+  ,max_time(0) //seconds
+  ,max_shapes(0)
+
+  //,m_cmap()
+  ,m_time_begin(0,0)
+  ,m_shape_count(0)
+  {
+    add_fields();
+  }
+  virtual ~geo(){
+    clear();
+  }
+public:
+  geo(const geo& a_from)
+  :parent(a_from)
+  ,volume(a_from.volume)
+  ,volume_depth(a_from.volume_depth)
+  ,min_depth(a_from.min_depth)
+  ,max_depth(a_from.max_depth)
+  ,solid_depth(a_from.solid_depth)
+  ,atb(a_from.atb)
+  ,color(a_from.color)
+  ,max_time(a_from.max_time)
+  ,max_shapes(a_from.max_shapes)
+
+  ,m_cmap(a_from.m_cmap)
+  ,m_time_begin(0,0)
+  ,m_shape_count(0)
+  {
+    add_fields();
+  }
+  geo& operator=(const geo& a_from){
+    parent::operator=(a_from);
+
+    volume = a_from.volume;
+    volume_depth = a_from.volume_depth;
+
+    min_depth = a_from.min_depth;
+    max_depth = a_from.max_depth;
+    solid_depth = a_from.solid_depth;
+
+    atb = a_from.atb;
+    color = a_from.color;
+
+    max_time = a_from.max_time;
+    max_shapes = a_from.max_shapes;
+
+    return *this;
+  }
+public:
+  const group& children() const {return m_group;}
+
+  unsigned int shape_count() const {return m_shape_count;}
+
+  void set_cmap(const style_colormap& a_cmap) {m_cmap = a_cmap;}
+
+  //can be used after update_sg() :
+  bool stopped_by_max_time() const {return m_stopped_by_max_time;}
+  bool stopped_by_max_shapes() const {return m_stopped_by_max_shapes;}
+  bool volume_not_found() const {return m_not_found;}
+
+protected:
+  void begin_update_sg(std::ostream& a_out) {
+    clear();
+
+    if(volume.value().empty()) {
+      a_out << "inlib::sg::geo :"
+            << " no volume name given."
+            << std::endl;
+      return; //have to give something.
+    }
+
+    //a_out << "inlib::sg::geo::update_sg :"
+    //      << " max time " << max_time.value()
+    //      << " ..."
+    //      << std::endl;
+
+    m_stopped_by_max_time = false;
+    m_stopped_by_max_shapes = false;
+    m_not_found = true;
+
+    if(atb.value()==atb_by_material) {         
+      m_group.add(new noderef(m_sg_map));
+    }
+
+    m_shape_count = 0;
+
+    //a_out << "cmap size : " << m_cmap.size() << std::endl;
+
+    m_mtxs.resize(20); //to avoid allocating mat4f in traversal.
+
+    m_started_depth = -1;
+
+    m_time_begin = atime::now();
+  }
+
+    //unsigned int depth = 0;
+    //mat4f& matrix = m_mtxs[depth];
+    //matrix.set_identity();
+
+    //if(!m_tess) m_tess = new exlib::sg::tessellate(a_out); //for xtru
+    //vis_volume(a_out/*,m_vol*/,matrix,depth);
+    //m_tess->clear();
+
+  void end_update_sg(std::ostream& /*a_out*/) {
+
+    //a_out << "build sg time : "
+    //            << atime::elapsed(m_time_begin)
+    //            << std::endl;
+    //a_out << "nodes : " << m_group.size() << std::endl;
+
+    //a_out << "inlib::sg::geo::update_sg :"
+    //      << " end."
+    //      << std::endl;
+  }
+
+  void clear(){
+   {std::map<colorf,node*,cmp_colorf>& chs = m_sg_map.children();
+    std::map<colorf,node*,cmp_colorf>::iterator it;
+    for(it=chs.begin();it!=chs.end();++it) {
+      node* _node = (*it).second;
+      separator* sep = safe_cast<node,separator>(*_node);
+      if(sep) sep->raw_clear();
+    }} 
+   {size_t num = m_group.size();
+    for(size_t index=0;index<num;index++){
+      node* _node = m_group[index];
+      separator* sep = safe_cast<node,separator>(*_node);
+      if(sep) sep->raw_clear();
+    }}
+    m_group.raw_clear();
+    m_sg_map.clear();
+  }
+
+protected:
+  bool _vis_volume(std::ostream& a_out,
+                   const VOLUME& a_vol,
+                   const MATRIX& a_matrix,
+                   unsigned int a_depth){
+
+    if(max_time.value() &&
+       (atime::elapsed(m_time_begin).seconds()>=max_time.value()) ){
+      m_stopped_by_max_time = true;
+      return false; //stop traversal.
+    }
+
+    if(max_shapes.value() && (m_shape_count>=max_shapes.value())){
+      m_stopped_by_max_shapes = true;
+      return false; //stop traversal.
+    }
+
+    //a_out << "debug : vis_volume : vol name " << a_vol.GetName()
+    //      << std::endl;
+    
+    if(m_started_depth==(-1)) { //volume not yet found.
+
+      //::printf("debug : search \"%s\" \"%s\" %d\n",
+      //    a_vol.GetName().c_str(),volume.value().c_str(),
+      //    volume_depth.value());
+
+      if(volume_depth.value()!=(-1)){ //OPTIMIZATION.
+        if(int(a_depth)>volume_depth.value()) {
+          return true; //stop_descent but continue traversal.
+        }
+      }
+
+      if(rcmp(volume_name(a_vol),volume.value())) {
+        m_started_depth = a_depth;
+        m_not_found = false;
+      }
+
+    }
+
+/*zzzzz
+    get_pvs gs;
+    geom_visitor gv(a_out);
+    gv.visit(a_vol,a_matrix,gs,0);
+*/
+
+    if(m_started_depth!=(-1)) { //top volume found.
+
+      unsigned int ddepth = a_depth-m_started_depth;
+      if(ddepth>=max_depth.value()) {
+        if(int(a_depth)==m_started_depth) m_started_depth = -1;
+        return true;
+      }
+
+      if(ddepth>=min_depth.value()) { //add shape
+
+        bool is_solid = (ddepth>=solid_depth.value()?true:false);
+
+        separator* sep = 0;
+
+        if(atb.value()==atb_by_material) {         
+
+          colorf c;
+	  if(!volume_material_color(a_out,a_vol,c)){}
+  
+         {node* _node = 0;
+          if(m_sg_map.find(c,_node)) {
+            sep = safe_cast<node,separator>(*_node);
+          } else {
+            sep = new separator();
+            m_sg_map.add(c,sep);
+          }}
+          if(!sep) {
+            a_out << "inlib::geant4::geo :"
+                  << " node not a sep."
+                  << std::endl;
+            return false;
+          }
+  
+          if(sep->empty()) {
+            rgba* col = new rgba;
+            col->color = c;
+            sep->add(col);
+          }
+  
+        } else if(atb.value()==atb_by_depth) {
+  
+          if(ddepth>=m_group.size()) {
+            //sz = 4
+            // ddepth = 6 : 0123456, have to add : 3 = 6-4+1
+            size_t num = ddepth-m_group.size()+1;
+            for(size_t index=0;index<num;index++){
+              m_group.add(new separator());
+            }
+          }
+  
+          sep = (separator*)m_group[ddepth];
+  
+          if(sep->empty()) {
+            colorf c;
+            if(!m_cmap.get_color(ddepth-min_depth.value(),c)) {
+              a_out << "color index " << ddepth
+                    << " not found in colormap."
+                    << std::endl;
+            }
+            rgba* col = new rgba;
+            col->color = c;
+            sep->add(col);
+          }
+  
+        } else { //atb_single
+          sep = &m_group;
+          if(sep->empty()) {
+            rgba* col = new rgba;
+            col->color = color.value();
+            sep->add(col);
+          }  
+  
+        }
+    
+        if(!add_shape(a_out,a_vol,a_matrix,*sep,is_solid)) {}
+
+      } // endif add_shape
+
+    } // endif m_started_depth
+
+    if(!vis_children(a_out,a_vol,a_matrix,a_depth)) return false;
+
+    if(int(a_depth)==m_started_depth) m_started_depth = -1;
+
+    return true;
+  }
+
+protected:
+  style_colormap m_cmap; //use if coloring by_depth
+
+  separator m_group;
+  int m_started_depth;
+
+  sg::map<colorf,cmp_colorf> m_sg_map;
+  atime m_time_begin;
+  unsigned int m_shape_count;
+  bool m_stopped_by_max_time;
+  bool m_stopped_by_max_shapes;
+  bool m_not_found;
+
+  //optimization
+  std::vector<mat4f> m_mtxs;
+};
+
+}}
+
+#endif

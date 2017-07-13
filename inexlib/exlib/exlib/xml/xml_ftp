@@ -1,0 +1,31 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_xml_ftp
+#define exlib_xml_ftp
+
+#include <inlib/ftp/ftps>
+
+#include "loader"
+
+namespace exlib {
+namespace xml {
+
+inline bool load_ftp_file(std::ostream& a_out,const std::string& a_file,inlib::ftp::ftps& a_ftp) {
+  inlib::xml::default_factory factory;
+  loader ml(factory,a_out,false);
+  std::vector<std::string> tags;
+  tags.push_back("ftps");
+  tags.push_back("ftp");
+  ml.set_tags(tags);
+  if(!ml.load_file(a_file,false)) return false;
+  inlib::xml::tree* top = ml.top_item();
+  if(!top) return true; //File could be empty.
+  return a_ftp.scan_tree(*top);
+}
+
+}}
+
+#endif
+
+//exlib_build_use inlib expat

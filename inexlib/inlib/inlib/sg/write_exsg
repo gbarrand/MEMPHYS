@@ -1,0 +1,77 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_write_exsg
+#define inlib_sg_write_exsg
+
+#include "write_action"
+
+#include "node"
+
+#include "../io/xwbuf"
+#include "../file"
+
+namespace inlib {
+namespace sg {
+
+class write_exsg : public write_action {
+public:
+  virtual io::iwbuf& buffer() {return m_buffer;}
+  virtual bool beg_node(const node& a_node) {
+    std::string s;
+    s  += "<";
+    s  += a_node.s_cls();
+    s  += ">\n";
+    return m_buffer.write_verbatim(s.c_str());
+  }
+  virtual bool end_node(const node& a_node) {
+    std::string s;
+    s  += "\n</";
+    s  += a_node.s_cls();
+    s  += ">\n";
+    return m_buffer.write_verbatim(s.c_str());
+  }
+  virtual unsigned int protocol() const {return 1;}
+public:
+  write_exsg(std::ostream& a_out)
+  :write_action(a_out),m_buffer(a_out)
+  {}
+  virtual ~write_exsg(){}
+protected:
+  write_exsg(const write_exsg& a_from)
+  :write_action(a_from)
+  ,m_buffer(a_from.m_out)
+  {}
+  write_exsg& operator=(const write_exsg& a_from){
+    write_action::operator=(a_from);
+    return *this;
+  }
+public:
+  bool open_buffer() {
+    m_buffer.reset_pos();
+
+    //NOTE : if changing the header, change inlib::file::is_exsg().
+   {std::string s;
+    s  += "<exsg>\n";
+    if(!m_buffer.write_verbatim(s.c_str())) return false;}
+
+    return true;
+  }
+
+  bool close_buffer() {
+   {std::string s;
+    s  += "</exsg>\n";
+    if(!m_buffer.write_verbatim(s.c_str())) return false;}
+    return true;
+  }
+
+  bool write_file(const std::string& a_file) const {
+    return file::write_bytes(a_file,m_buffer.buf(),m_buffer.length());
+  }
+protected:
+  io::xwbuf m_buffer;
+};
+
+}}
+
+#endif

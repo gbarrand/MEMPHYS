@@ -1,0 +1,187 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_net_addresses
+#define inlib_net_addresses
+
+// the below works for Cocoa and iPhone.
+
+#ifdef _WIN32
+//FIXME : Windows : do the port.
+#else
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <cstring> //strrchr,strncmp
+#include <errno.h>
+#include <unistd.h> //::close
+#endif
+
+#include <string>
+#include <vector>
+#include <ostream>
+
+namespace inlib {
+namespace net {
+
+inline bool ip_addresses(std::ostream& a_out,
+  std::vector<std::string>& a_if_names,
+  std::vector<std::string>& a_ip_names,
+  std::vector<unsigned long>& a_ip_addrs) {
+
+  a_if_names.clear();
+  a_ip_names.clear();
+  a_ip_addrs.clear();
+
+#ifdef _WIN32
+  a_out << "inlib::net::ip_addresses :"
+        << " not yet ported on this platform."
+        << std::endl;
+  return false;
+#else
+  int sockfd = ::socket(AF_INET, SOCK_DGRAM, 0);
+  if (sockfd < 0) {
+    a_out << "inlib::net::ip_addresses :"
+          << " socket() : error : " << (int)errno
+          << " : " << std::string(strerror(errno)) << "."
+          << std::endl;
+    return false;
+  }
+	
+  const int BUFFERSIZE = 4000;
+  char buffer[BUFFERSIZE];
+  struct ifconf ifc;
+  ifc.ifc_len = BUFFERSIZE;
+  ifc.ifc_buf = buffer;
+	
+  if (::ioctl(sockfd, SIOCGIFCONF, &ifc) < 0) {
+    a_out << "inlib::net::ip_addresses :"
+          << " ioctl() : error : " << (int)errno
+          << " : " << std::string(strerror(errno)) << "."
+          << std::endl;
+    return false;
+  }
+	
+  char lastname[IFNAMSIZ];
+  lastname[0] = 0;
+	
+  char* ptr;
+  for (ptr = buffer; ptr < buffer + ifc.ifc_len; )  {
+    struct ifreq* ifr = (struct ifreq*)ptr;
+
+#if defined(__APPLE__)
+    int len = sizeof(struct sockaddr)  >  ifr->ifr_addr.sa_len?
+              sizeof(struct sockaddr)  :  ifr->ifr_addr.sa_len;
+#else
+    int len = sizeof(struct sockaddr);
+#endif
+    ptr += sizeof(ifr->ifr_name) + len;	// for next one in buffer
+	
+    if (ifr->ifr_addr.sa_family != AF_INET) {
+      continue;	// ignore if not desired address family
+    }
+	
+    char* cptr;
+    if ((cptr = (char *)::strchr(ifr->ifr_name, ':')) != NULL) {
+      *cptr = 0; // replace colon will null
+    }
+	
+    if (::strncmp(lastname, ifr->ifr_name, IFNAMSIZ) == 0) {
+      continue;	/* already processed this interface */
+    }
+	
+    ::memcpy(lastname, ifr->ifr_name, IFNAMSIZ);
+	
+    struct ifreq ifrcopy = *ifr;
+    ::ioctl(sockfd, SIOCGIFFLAGS, &ifrcopy);
+    int flags = ifrcopy.ifr_flags;
+    if ((flags & IFF_UP) == 0) {
+      continue;	// ignore if interface not up
+    }
+	
+    a_if_names.push_back(ifr->ifr_name);
+	
+    struct sockaddr_in*  sin = (struct sockaddr_in*)&ifr->ifr_addr;
+
+    a_ip_names.push_back(inet_ntoa(sin->sin_addr));
+    a_ip_addrs.push_back(sin->sin_addr.s_addr);
+
+  }
+	
+  ::close(sockfd);
+
+/*
+ {std::vector<std::string>::iterator it1 = a_if_names.begin();
+  std::vector<std::string>::iterator it2 = a_ip_names.begin();
+  std::vector<unsigned long>::iterator it3 = a_ip_addrs.begin();
+  for(;it1!=a_if_names.end();++it1,++it2,++it3) {
+    a_out << "--------------------" << std::endl;
+    a_out << "if name " << *it1 << std::endl;
+    a_out << "ip name " << *it2 << std::endl;
+    a_out << "ip addr " << (unsigned int)*it3 << std::endl;
+  }}
+*/
+
+  return true;
+#endif
+}
+
+inline bool if_address(std::ostream& a_out,
+                       const std::string& a_if,
+                       std::string& a_sa){
+  std::vector<std::string> if_names;
+  std::vector<std::string> ip_names;
+  std::vector<unsigned long> ip_addrs;
+  if(!inlib::net::ip_addresses(a_out,if_names,ip_names,ip_addrs)) {
+    a_sa.clear();
+    return false;
+  }
+
+  // get interface address. for exa for a_if = "en0".
+  std::vector<std::string>::iterator it1 = if_names.begin();
+  std::vector<std::string>::iterator it2 = ip_names.begin();
+  std::vector<unsigned long>::iterator it3 = ip_addrs.begin();
+  for(;it1!=if_names.end();++it1,++it2,++it3) {
+    if((*it1)==a_if) { 
+      a_sa = *it2;
+      return true;
+    }
+  }
+
+  a_out << "inlib::net::if_address :"
+        << " interface \"" << a_if << "\""
+        << " not found."
+        << std::endl;
+
+  a_sa.clear();
+  return false; //not found.
+}
+
+inline bool dump_ip_addresses(std::ostream& a_out){
+  std::vector<std::string> if_names;
+  std::vector<std::string> ip_names;
+  std::vector<unsigned long> ip_addrs;
+  if(!inlib::net::ip_addresses(a_out,if_names,ip_names,ip_addrs)) {
+    return false;
+  }
+
+  // get interface address. for exa for a_if = "en0".
+  std::vector<std::string>::iterator it1 = if_names.begin();
+  std::vector<std::string>::iterator it2 = ip_names.begin();
+  std::vector<unsigned long>::iterator it3 = ip_addrs.begin();
+  for(;it1!=if_names.end();++it1,++it2,++it3) {
+    a_out << "--------------------" << std::endl;
+    a_out << "if name " << *it1 << std::endl;
+    a_out << "ip name " << *it2 << std::endl;
+    a_out << "ip addr " << (unsigned int)*it3 << std::endl;
+  }
+
+  return true;
+}
+
+}}
+
+//inlib_build_use socket
+
+#endif

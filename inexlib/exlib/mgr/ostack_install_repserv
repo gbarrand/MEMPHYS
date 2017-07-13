@@ -1,0 +1,55 @@
+#!/bin/sh 
+
+save_dir=`pwd`
+
+mkdir -p Documents/repserv
+cd Documents/repserv
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/repserv_data.git
+git pull lx2 master
+cd ${save_dir}
+
+mkdir -p private/hosts
+cd private/hosts
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/hosts.git
+git pull lx2 master
+cd ${save_dir}
+/bin/rm -f .cshrc
+ln -s ~/private/hosts/bin/csh/dot_cshrc .cshrc
+
+mkdir -p private/dev/softinex/bush
+cd private/dev/softinex/bush
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/bush.git
+git pull lx2 master
+cd ${save_dir}
+
+mkdir -p private/dev/softinex/inexlib/inlib
+cd private/dev/softinex/inexlib/inlib
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/inlib.git
+git pull lx2 master
+cd ${save_dir}
+
+mkdir -p private/dev/softinex/inexlib/exlib
+cd private/dev/softinex/inexlib/exlib
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/exlib.git
+git pull lx2 master
+cd ${save_dir}
+
+mkdir -p private/dev/softinex/inexlib/ourex
+cd private/dev/softinex/inexlib/ourex
+git init
+git remote add lx2 barrand@lx3.lal.in2p3.fr:/exp/si/barrand/git_repos/ourex.git
+git pull lx2 master
+cd ${save_dir}
+
+cd private/dev/softinex/inexlib/exlib/mgr
+./build ../apps/repserv.cpp
+nohup ./bin_gnu/repserv -host=134.158.75.40 -port=23541 &
+cd ${save_dir}
+
+# see on my Mac ~/Documents/TouchSky/upload to upload data files.
+

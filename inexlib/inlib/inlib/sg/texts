@@ -1,0 +1,46 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_texts
+#define inlib_sg_texts
+
+#include "text"
+
+namespace inlib {
+namespace sg {
+
+inline void enforce_common_text_height(std::ostream& a_out,group& a_group){
+  typedef std::vector<void*> ptrs_t;
+
+  search_action action(a_out);
+  action.set_class(sg::text::s_class());
+  a_group.search(action);
+  const ptrs_t& objs = action.objs();
+  ptrs_t::const_iterator it;
+
+  float mnh = FLT_MAX;
+  for(it=objs.begin();it!=objs.end();++it) {
+    sg::text* item = (sg::text*)*it;      
+
+//::printf("debug : xxx \"%s\"\n",item->strings.values()[0].c_str());
+
+    item->confine = true; //so that text is not truncated at right.
+    item->text::update_sg();
+    if(!item->is_empty() && (item->text_height()>0)) {
+      mnh = mn(mnh,item->text_height());
+    }
+  }    
+
+  //enforce mnh to all text items :
+  if(mnh!=FLT_MAX){
+    for(it=objs.begin();it!=objs.end();++it) {
+      sg::text* item = (sg::text*)*it;      
+      item->enforce_front_height = true;
+      item->front_height = mnh;
+    }
+  }
+}
+
+}}
+
+#endif

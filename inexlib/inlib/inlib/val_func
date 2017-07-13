@@ -1,0 +1,256 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_val_func
+#define inlib_val_func
+
+// valop function.
+
+#include "ival_func"
+#include "scast"
+
+#ifdef INLIB_MEM
+#include "mem"
+#endif
+
+namespace inlib {
+
+class val_func : public virtual ival_func {
+public:
+  static const std::string& s_class() {
+    static const std::string s_v("inlib::val_func");
+    return s_v;
+  }
+public: //ival_func
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<val_func>(this,a_class)) {return p;}
+    else return 0;
+  }
+  virtual size_t number_of_arguments() const { return m_num_args;}
+  virtual const std::string& name() const { return m_name;}
+public:
+  val_func(const std::string& aName,size_t aNumber)
+  :m_name(aName),m_num_args(aNumber){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~val_func(){ 
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+protected:
+  val_func(const val_func& a_from) 
+  :ival_func(),m_name(a_from.m_name),m_num_args(a_from.m_num_args){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  val_func& operator=(const val_func& a_from) {
+    m_name = a_from.m_name;
+    m_num_args = a_from.m_num_args;
+    return *this;
+  }
+protected:
+  typedef double(*Func0)(double);
+  typedef bool(*InDomain)(double);
+  typedef double(*Func1)(double,double);
+
+  bool eval0(const value& a_x,value& a_return,std::string& aError,Func0 aFunc) {
+
+    if(a_x.type()==value::ARRAY_DOUBLE) {
+  
+     {std::vector<unsigned int> is;
+      const std::vector<double>& stdv = a_x.get_array_double(is);
+      a_return.set(is,stdv);}
+  
+      // In the below, we need a non const method.
+      std::vector<double>& stdv = a_return.array_double();
+      size_t number = stdv.size();
+      for(size_t index=0;index<number;index++) stdv[index] = aFunc(stdv[index]);
+      return true;
+    } else {
+      double x;
+      if(!TO_D(a_x,x,a_return,aError)) return false;
+
+      a_return.set(aFunc(x));
+      return true;
+    }
+  }
+  bool eval0(const value& a_x,value& a_return,std::string& aError,Func0 aFunc,InDomain aDomain) {
+
+    if(a_x.type()==value::ARRAY_DOUBLE) {
+  
+     {std::vector<unsigned int> is;
+      const std::vector<double>& stdv = a_x.get_array_double(is);
+      a_return.set(is,stdv);}
+  
+      // In the below, we need a non const method.
+      std::vector<double>& stdv = a_return.array_double();
+      size_t number = stdv.size();
+      for(size_t index=0;index<number;index++) { 
+        double x = stdv[index];
+        if(!aDomain(x)) {
+          aError = std::string("inlib::val_func::eval0 : ")
+                 + " " + m_name + " : variable value ";
+          if(!numas<double>(x,aError)){}
+          aError += " out of domain.";
+          a_return.set_none();
+          return false;
+        }
+        stdv[index] = aFunc(x);
+      }
+      return true;
+    } else {
+      double x;
+      if(!TO_D(a_x,x,a_return,aError)) return false;
+  
+      if(!aDomain(x)) {
+        aError = std::string("inlib::val_func::eval0(2) : ")
+               + " " + m_name + " : variable value ";
+        if(!numas<double>(x,aError)){}
+        aError += " out of domain.";
+        a_return.set_none();
+        return false;
+      }
+  
+      a_return.set(aFunc(x));
+      return true;
+    }
+  }
+
+  bool eval1(const value& a_x,value& a_return,std::string& aError,const value& a_1,Func1 aFunc) {
+
+    double d_1;
+    if(!TO_D(a_1,d_1,a_return,aError)) return false;
+  
+    if(a_x.type()==value::ARRAY_DOUBLE) {
+  
+     {std::vector<unsigned int> is;
+      const std::vector<double>& stdv = a_x.get_array_double(is);
+      a_return.set(is,stdv);}
+  
+      // In the below, we need a non const method.
+      std::vector<double>& stdv = a_return.array_double();
+      size_t number = stdv.size();
+      for(size_t index=0;index<number;index++) { 
+        stdv[index] = aFunc(stdv[index],d_1);
+      }
+      return true;
+    } else {
+      double x;
+      if(!TO_D(a_x,x,a_return,aError)) return false;
+      a_return.set(aFunc(x,d_1));
+      return true;
+    }
+  }
+
+protected:  
+  static bool TO_D(const value& a_vx,double& a_x,value& a_return,std::string& aError) {
+    if(!a_vx.to_double(a_x)) {
+      aError = "inlib::val_func::TO_D : can't convert value to double.";
+      a_return.set_none();
+      return false;
+    }
+    return true;
+  }
+protected:
+  std::string m_name;
+  size_t m_num_args;
+};
+
+class val_func_cfunc : public val_func {
+public:
+  typedef double(*cfunc)(double);
+  typedef bool(*domain_func)(double);
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    return val_func::eval0(a_args[0],a_return,aError,m_cfunc,m_domain);
+  }
+  virtual ival_func* copy() const { return new val_func_cfunc(*this);}
+public:
+  val_func_cfunc(const std::string& aName,cfunc aFunction,domain_func aDomain)
+  :val_func(aName,1)
+  ,m_cfunc(aFunction),m_domain(aDomain)
+  {}
+  virtual ~val_func_cfunc(){}
+public:
+  val_func_cfunc(const val_func_cfunc& a_from)
+  :ival_func(a_from),val_func(a_from)
+  ,m_cfunc(a_from.m_cfunc),m_domain(a_from.m_domain)
+  {}
+  val_func_cfunc& operator=(const val_func_cfunc& a_from){ 
+    val_func::operator=(a_from);
+    return *this;
+  }
+protected:
+  cfunc m_cfunc;
+  domain_func m_domain;
+};
+
+class val_funcs {
+  static const std::string& s_class() {
+    static const std::string s_v("inlib::val_funcs");
+    return s_v;
+  }
+public:
+  val_funcs();
+  virtual ~val_funcs(){
+    clear();
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  val_funcs(const val_funcs& a_from) {
+    for(std::vector<ival_func*>::const_iterator it = a_from.m_funcs.begin();it!=a_from.m_funcs.end();++it) {
+      m_funcs.push_back((*it)->copy());
+    }  
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  val_funcs& operator=(const val_funcs& a_from) {
+    if(&a_from==this) return *this;
+    clear();
+    for(std::vector<ival_func*>::const_iterator it = a_from.m_funcs.begin();it!=a_from.m_funcs.end();++it) {
+      m_funcs.push_back((*it)->copy());
+    }  
+    return *this;
+  }
+public:
+  void clear(){ 
+    std::vector<ival_func*>::iterator it;
+    while(!m_funcs.empty()) {
+      it = m_funcs.end();
+      it--;
+      ival_func* func = *it;
+      m_funcs.erase(it);
+      delete func;
+    }
+  }
+  void add(ival_func* aFunc) {m_funcs.push_back(aFunc);}
+  void add_front(ival_func* aFunc) {m_funcs.insert(m_funcs.begin(),aFunc);}
+  ival_func* find(const std::string& a_name) const {  
+    for(std::vector<ival_func*>::const_iterator it = m_funcs.begin();
+        it!=m_funcs.end();++it) {
+      if((*it)->name()==a_name) return (*it);
+    }  
+    return 0;
+  }
+
+  std::vector<ival_func*>& funcs() {return m_funcs;}
+  const std::vector<ival_func*>& funcs() const {return m_funcs;}
+protected:
+  std::vector<ival_func*> m_funcs;
+};
+
+}
+
+#include "val_func.icc"
+
+#endif
+
+

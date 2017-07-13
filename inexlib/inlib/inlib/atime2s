@@ -1,0 +1,29 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_atime2s
+#define inlib_atime2s
+
+#include "sys/atime"
+#include "num2s"
+
+namespace inlib {
+
+class atime2s : public std::string {
+  typedef std::string parent;
+public:
+  atime2s(const atime& a_value) {
+    if(!numas(a_value.seconds(),*this)) {} //throw
+    parent::operator+=(" secs ");
+    if(!numas(a_value.micro_seconds(),*this)) {} //throw
+    parent::operator+=(" micro_secs");
+  }
+public:
+  atime2s(const atime2s& a_from):parent(a_from){}
+  atime2s& operator=(const atime2s& a_from){parent::operator=(a_from);return *this;}
+};
+
+}
+
+#endif
+

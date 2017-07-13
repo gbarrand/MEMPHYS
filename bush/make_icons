@@ -1,0 +1,137 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# NOTE : it must be executed from the mgr dir of an app.
+
+bush_home=`dirname $0`
+
+version="`${bush_home}/app_vers`"
+app="`${bush_home}/app_name`"
+
+save_dir=`pwd`
+
+offscreen_exe=./bin_offscreen/distrib/${app}/${version}/bin/${app}
+if [ ! -x ${offscreen_exe} ] ; then
+  echo "${offscreen_exe} not found."
+  exit
+fi
+if [ ! -f ./offscreen_icon ] ; then
+  echo "./offscreen_icon not found."
+  exit
+fi
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+items='16 32 36 48 57 64 72 76 114 120 128 144 152 256 512 1024'
+
+for item in ${items} ; do
+  ${offscreen_exe} -orders=offscreen_icon -ww=${item} -wh=${item}
+  /bin/mv icon.png icon_${item}.png
+done
+
+# not square icons :
+${offscreen_exe} -orders=offscreen_icon -ww=320 -wh=480
+/bin/mv icon.png icon_320_480.png
+
+${offscreen_exe} -orders=offscreen_icon -ww=640 -wh=960
+/bin/mv icon.png icon_640_960.png
+
+${offscreen_exe} -orders=offscreen_icon -ww=640 -wh=1136
+/bin/mv icon.png icon_640_1136.png
+
+${offscreen_exe} -orders=offscreen_icon -ww=1024 -wh=500
+/bin/mv icon.png icon_1024_500.png
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+if [ ! -f ./offscreen_GUI ] ; then
+  echo "./offscreen_GUI not found."
+else
+  ${offscreen_exe} -orders=offscreen_GUI -ww=1440 -wh=900
+  /bin/mv icon.png GUI_1440_900.png
+fi
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+if [ ! -f ./offscreen_front ] ; then
+  echo "./offscreen_front not found."
+else
+  ${offscreen_exe} -orders=offscreen_front -ww=1136 -wh=640
+  /bin/mv icon.png front_1136_640.png
+
+  ${offscreen_exe} -orders=offscreen_front -ww=1334 -wh=750
+  /bin/mv icon.png front_1334_750.png
+
+  ${offscreen_exe} -orders=offscreen_front -ww=2208 -wh=1242
+  /bin/mv icon.png front_2208_1242.png
+
+  ${offscreen_exe} -orders=offscreen_front -ww=2732 -wh=2048
+  /bin/mv icon.png front_2732_2048.png
+fi
+
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+if [ ! -f ./offscreen_side ] ; then
+  echo "./offscreen_side not found."
+else
+  ${offscreen_exe} -orders=offscreen_side -ww=1136 -wh=640
+  /bin/mv icon.png side_1136_640.png
+
+  ${offscreen_exe} -orders=offscreen_side -ww=1334 -wh=750
+  /bin/mv icon.png side_1334_750.png
+
+  ${offscreen_exe} -orders=offscreen_side -ww=2208 -wh=1242
+  /bin/mv icon.png side_2208_1242.png
+
+  ${offscreen_exe} -orders=offscreen_side -ww=2732 -wh=2048
+  /bin/mv icon.png side_2732_2048.png
+
+  ${offscreen_exe} -orders=offscreen_side -ww=1440 -wh=900
+  /bin/mv icon.png side_1440_900.png
+fi
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+if [ ! -f ./offscreen_3D ] ; then
+  echo "./offscreen_3D not found."
+else
+  ${offscreen_exe} -orders=offscreen_3D -ww=1136 -wh=640
+  /bin/mv icon.png 3D_1136_640.png
+
+  ${offscreen_exe} -orders=offscreen_3D -ww=1334 -wh=750
+  /bin/mv icon.png 3D_1334_750.png
+
+  ${offscreen_exe} -orders=offscreen_3D -ww=2208 -wh=1242
+  /bin/mv icon.png 3D_2208_1242.png
+
+  ${offscreen_exe} -orders=offscreen_3D -ww=2732 -wh=2048
+  /bin/mv icon.png 3D_2732_2048.png
+
+  ${offscreen_exe} -orders=offscreen_3D -ww=1440 -wh=900
+  /bin/mv icon.png 3D_1440_900.png
+fi
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+#////////////////////////////////////////////////////
+# build Cocoa/<app>.iconset :
+iconset_dir=../Cocoa/${app}.iconset
+/bin/mkdir -p ${iconset_dir}
+items='16 32 128 256 512'
+for item in ${items} ; do
+  /bin/cp icon_${item}.png ${iconset_dir}/.
+  double_item="`expr ${item} * 2`"
+  /bin/cp icon_${double_item}.png ${iconset_dir}/icon_${item}@2x.png
+done
+
+# build Cocoa/<app>.icns :
+if [ `uname` = Darwin ] ; then
+  cd ../Cocoa
+  iconutil -c icns ${app}.iconset
+  cd ${save_dir}
+fi

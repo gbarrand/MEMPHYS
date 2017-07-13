@@ -1,0 +1,584 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_view_evd
+#define inlib_sg_view_evd
+
+#include "gui_viewer"
+
+#include "infos"
+#include "head_light"
+#include "doc_anim"
+
+#include "../cbk/move_manip"
+#include "../cbk/viewer_popup"
+
+namespace inlib {
+namespace sg {
+
+class view_evd {
+public:
+  INLIB_SCLASS(inlib::sg::view_evd)
+public:
+  view_evd(gui_viewer& a_gv)
+  :m_gv(a_gv)
+  ,m_event_index(0)
+  ,m_next_event_sleep(0)
+  {
+    m_cmaps[sg::style_default_colormap::s_default()] = sg::style_default_colormap();
+    //m_cmaps.add_colormap("ROOT",sg::style_ROOT_colormap());
+  }
+  virtual ~view_evd(){}
+protected:
+  view_evd(const view_evd& a_from)
+  :m_gv(a_from.m_gv)
+  ,m_event_index(a_from.m_event_index)
+  ,m_next_event_sleep(a_from.m_next_event_sleep)
+  ,m_cmaps(a_from.m_cmaps)
+  {}
+
+  view_evd& operator=(const view_evd& a_from){
+    m_event_index = a_from.m_event_index;
+    m_next_event_sleep = a_from.m_next_event_sleep;
+    m_cmaps = a_from.m_cmaps;
+    return *this;
+  }
+protected:
+  static unsigned int INFOS()                {return 0;}
+  static unsigned int GEOM_DETECTOR_EVENT()  {return 1;}
+  static unsigned int GEOM_SCREEN()          {return 2;}
+
+  static unsigned int GEOM_CAMERA()  {return 0;}
+//static unsigned int GEOM_TORCHE()  {return 1;}
+
+  static unsigned int SCREEN_CAMERA()  {return 0;}
+public:
+  bool replace_camera(base_camera* a_camera){
+    if(m_gv.scene().size()<3) return false;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[INFOS()]));
+    if(!_node) return false;
+    separator* _sep = safe_cast<node,separator>(*(m_gv.scene()[GEOM_DETECTOR_EVENT()]));
+    if(!_sep) return false;
+    if(!_sep->size()) return false;
+    base_camera* old_scene_cam = m_gv.scene_camera();
+    node* chld = (*_sep)[GEOM_CAMERA()];
+    _sep->set(GEOM_CAMERA(),a_camera); //sep takes ownership of a_camera.
+    delete chld;
+    if(!old_scene_cam) {
+      m_gv.set_scene_camera(a_camera);
+    } else if(chld && (chld==static_cast<node*>(old_scene_cam))) {
+      // replace scene camera only if GEOM_CAMERA() was the scene camera :
+      m_gv.set_scene_camera(a_camera);
+    }
+    return true;
+  }
+
+  bool is_evd(/*const std::string& a_kind = ""*/) {
+    if(m_gv.scene().size()<2) return false;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[0]));
+    if(!_node) return false;
+    //std::string kind;
+    //if(!_node->find_keyval(s_kind(),kind)) return false;
+    //if(king!=a_kind) return false;
+    return true;
+  }
+
+/*
+  bool set_scene_title(const std::string& a_title) {
+    if(m_gv.scene().size()<2) return false;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[0]));
+    if(!_node) return false;
+    _node->add_keyval(s_title(),a_title);
+    return true;    
+  }
+  bool show_scene_title() {
+    if(m_gv.scene().size()<2) return false;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[0]));
+    if(!_node) return false;
+    std::string title;
+    if(!_node->find_title(title)) return false;
+    m_gv.show_console(title);
+    return true;
+  }
+*/
+public:
+  void create_sg_evd(float a_radius = 1/*,const std::string& a_kind = ""*/){
+    m_gv.clear_scene();
+
+    cbk::move_manip::add_cbks(m_gv.scene(),m_gv,m_gv.out(),m_gv.scene(),m_gv.verbose());
+
+    m_gv.scene().up_cbks().add(new cbk::viewer_popup(m_gv));
+
+    m_gv.scene().verbose = m_gv.verbose();
+      
+   {infos* _node = new infos; //INFOS()
+//  _node->add_keyval(s_kind(),a_kind);
+    m_gv.scene().add(_node);}
+
+    //////////////////////////////////////////////
+    /// (detector + event) + (screen) branches ///
+    //////////////////////////////////////////////
+    //////////////////////////////////////////////
+    //////////////////////////////////////////////
+   {separator* _sep = new separator;  //GEOM_DETECTOR_EVENT()
+    m_gv.scene().add(_sep);
+
+    //WARNING : if changing things in sep, think to change the upper.
+
+    base_camera* camera = m_gv.create_3D_camera(a_radius);
+    if(!camera) {
+      m_gv.clear_scene();
+      m_gv.map_warn("create_3D_camera failed.");
+      return;
+    }
+    _sep->add(camera); //GEOM_CAMERA()
+
+    m_light.color = colorf_white();
+    m_light.direction = vec3f(1,-1,-10);
+    m_light.on = m_gv.m_params.m_light_on;
+    _sep->add(new noderef(m_light)); //GEOM_TORCHE()
+
+    m_layout.set_identity();
+    _sep->add(new noderef(m_layout));
+    _sep->add(new clrref<separator>(m_event));
+    // put m_detector after m_event in case
+    // there are transparent volumes in the detector sg.
+    _sep->add(new clrref<separator>(m_detector));
+
+    m_gv.set_scene_camera(camera);
+    m_gv.set_scene_light(&m_light);
+    m_gv.set_plane_viewer(false);
+    }
+
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    // case of a wall app to have a sg targeted to be
+    // visualized within the screen handled by the app.
+    // The nodes are put under a special branch parallel
+    // to the one with m_detector and m_event.
+
+   {separator* _sep = new separator; //GEOM_SCREEN()
+    m_gv.scene().add(_sep);
+   {base_camera* cam = m_gv.create_2D_camera(m_gv.gui_camera_height());
+    if(cam) _sep->add(cam);} //SCREEN_CAMERA()
+    _sep->add(new clrref<separator>(m_screen_sg));}
+
+  }
+
+  const separator& detector_sg() const {return m_detector;}
+  separator& detector_sg() {return m_detector;}
+  const separator& static_sg() const {return m_detector;}
+  separator& static_sg() {return m_detector;}
+
+  const separator& event_sg() const {return m_event;}
+  separator& event_sg() {return m_event;}
+  const separator& dynamic_sg() const {return m_event;}
+  separator& dynamic_sg() {return m_event;}
+
+  const matrix& layout() const {return m_layout;}
+  matrix& layout() {return m_layout;}
+
+  void create_doc_anim(file_iterator* a_it, //take ownership.
+                       file_opener& a_opener,
+                       const std::string& a_what,
+                       unsigned int a_msecs,
+                       unsigned int a_nclear,
+                       bool a_same,bool a_one_screen,float a_hcam) {
+
+    atime _now(0,0);
+    if(!m_gv.get_time_now(_now)) {
+      m_gv.out() << "inlib::sg::view_evd::create_doc_anim :"
+                    << " viewer.get_time_now() failed."
+                    << std::endl;
+      m_gv.map_warn("can't get time now");
+      return;     
+    }
+
+    if(!a_it->open(a_what)) {
+      delete a_it;
+      m_gv.out() << "inlib::sg::view_evd::create_doc_anim :"
+                    << " can't open " << a_what << "."
+                    << std::endl;
+      m_gv.map_warn(std::string("can't open ")+a_what);
+      return;     
+    }
+    if(!a_it->entries()) {
+      delete a_it;
+      m_gv.map_warn(std::string("file ")+a_what+" empty.");
+      return;     
+    }
+
+    //args args;
+    //args.add(s_no_hide_menu());
+    //args.add(s_back_color(),a_back_color);
+    //args.add(s_adapt_camera()); //for anim with .fog files.
+  
+    _create_diapo_scene(a_hcam,a_same,a_one_screen);
+
+    // can't be on detector() since openers works on that.
+    separator& sep = event_sg();
+    sep.clear();
+
+    doc_anim* node = new doc_anim(_now,*a_it,a_opener,static_sg(),a_nclear);
+    node->time_interval = a_msecs;
+      
+    sep.add(node);
+  
+    // to delete _it :
+    sep.add(new holder<file_iterator>(a_it));
+
+    m_gv.enable_anim();
+    m_gv.set_meta_zone_had_been_shown();
+    m_gv.hide_main_menu();
+  }
+
+/*
+  void adapt_img(bool a_adapt_camera,
+                 matrix& a_tsf,
+                 const tex_rect& a_tex,
+                 const args& a_args) {
+
+    bool _adapt_camera = a_adapt_camera;
+
+    bool args_tsf = false;
+    float pos_x_wcam;
+    if(a_args.find(sg::s_pos_x_wcam(),pos_x_wcam)) {
+      _adapt_camera = false;
+      args_tsf = true;
+    }
+    float pos_y_hcam;
+    if(a_args.find(sg::s_pos_y_hcam(),pos_y_hcam)) {
+      _adapt_camera = false;
+      args_tsf = true;
+    }
+    int col;
+    if(a_args.find(sg::s_pos_col(),col,-1)) {
+      _adapt_camera = false;
+      args_tsf = true;
+    }
+    int row;
+    if(a_args.find(sg::s_pos_row(),row,-1)) {
+      _adapt_camera = false;
+      args_tsf = true;
+    }
+  
+    if(_adapt_camera) {
+      float cam_height = a_tex.height;
+  
+      replace_camera(m_gv.create_2D_camera(cam_height));
+  
+    } else if(args_tsf) {
+  
+      float img_scale;
+      a_args.find(sg::s_scale(),img_scale,1.0f);
+  
+      if((row>=0)&&(col>=0)) {
+
+        float cam_height = 2;
+        float wcw,wch; //one screen world coordinate without borders.
+        float aspect;  //pixel aspect without external borders.
+        float tx,ty;
+        float scale_to_see_borders = 1;
+  
+        unsigned int cols,rows;
+        m_gv.get_screens(cols,rows);
+        if((cols==4)&&(rows==3)) { //LAL murino.
+          m_gv.get_screen_wcw_wch(cam_height,col,row,wcw,wch,tx,ty,aspect);
+        } else { //ioda or wall local 21.
+          murino_get_screen_wcw_wch(cam_height,col,row,wcw,wch,tx,ty,aspect,scale_to_see_borders);
+        }
+  
+        a_tsf.set_scale(scale_to_see_borders,scale_to_see_borders,1);
+  
+        a_tsf.mul_translate(tx,ty,0);
+  
+        unsigned int aimg_w = a_tex.img.value().width();
+        unsigned int aimg_h = a_tex.img.value().height();
+  
+        float wih = float(m_gv.wanted_size());
+        float wiw = wih*float(aimg_w)/float(aimg_h);
+  
+        float scale = wch/wih;
+        // new width is :
+        float new_w = wiw*scale;
+        if(new_w>=wcw) scale *= wcw/new_w;
+  
+        scale *= img_scale;
+        a_tsf.mul_scale(scale,scale,1); //applied first.          
+  
+      } else {
+  
+        //NOTE : should be done in slides_opener.
+        //NOTE : we assume cam_height = gui_camera_height() !
+  
+        float wcw,wch;
+        m_gv.get_gui_all_wcw_wch(wcw,wch);
+  
+        a_tsf.set_translate(wcw*pos_x_wcam,wch*pos_y_hcam,0);
+  
+        //adapt image height to camera height :
+  
+        float scale = wch/float(m_gv.wanted_size());
+  
+        scale *= img_scale;
+        a_tsf.mul_scale(scale,scale,1); //applied first.
+      }
+    
+    }  
+  }  
+*/
+
+/*
+  void evd_set_display() {
+    if(!evd_is()) evd_create_sg();
+    base_camera* cam = _evd_get_camera();
+    if(cam) set_scene_camera(cam);
+    set_scene_light(&m_light);
+    m_params.m_plane_viewer = false;
+  }
+*/
+
+/*
+  void evd_set_net_sg() {
+    if(!evd_is()) evd_create_sg();
+    set_scene_camera(_evd_net_camera());
+    m_params.m_plane_viewer = true;
+  }
+*/
+
+  unsigned int& event_index() {return m_event_index;}
+  unsigned int event_index() const {return m_event_index;}
+
+  unsigned int& next_event_sleep() {return m_next_event_sleep;}
+  unsigned int next_event_sleep() const {return m_next_event_sleep;}
+
+  sg::cmaps_t& cmaps() {return m_cmaps;}
+
+public:
+  // if wall app :
+  const separator& screen_sg() const {return m_screen_sg;}
+  separator& screen_sg() {return m_screen_sg;}
+
+  void set_col_row_screen_matrix(unsigned int a_col,unsigned int a_row,matrix& a_mtx){
+    float wcw,wch; //one screen world coordinate size without borders.
+    float aspect;  //pixel aspect without external borders.
+    float tx,ty;
+    m_gv.get_screen_wcw_wch(m_gv.gui_camera_height(),a_col,a_row,wcw,wch,tx,ty,aspect);
+    a_mtx.set_translate(tx,ty,0);
+  }
+
+  bool replace_screen_camera(base_camera* a_camera){
+    if(m_gv.scene().size()<3) return false;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[INFOS()]));
+    if(!_node) return false;
+    separator* _sep = safe_cast<node,separator>(*(m_gv.scene()[GEOM_SCREEN()]));
+    if(!_sep) return false;
+    if(!_sep->size()) return false;
+    node* chld = (*_sep)[SCREEN_CAMERA()];
+    _sep->set(SCREEN_CAMERA(),a_camera); //sep takes ownership of a_camera.
+    delete chld;
+    return true;
+  }
+
+protected:
+  static void murino_get_screen_wcw_wch(float a_cam_height,unsigned int a_col,unsigned int a_row,
+                                  float& a_wcw,float& a_wch,
+                                  float& a_tx,float& a_ty,
+                                  float& a_aspect,
+                                  float& a_scale_to_see_borders) {
+
+    unsigned int m_ww = 1920;
+    unsigned int m_wh = 1200;
+
+    unsigned int m_client_m_all_ww = (1920+2*88)*4;
+    unsigned int m_client_m_all_wh = (1200+2*100)*3;
+    unsigned int m_client_m_bw = 88;
+    unsigned int m_client_m_bh = 100;
+    unsigned int m_client_m_cols = 4;
+    unsigned int m_client_m_rows = 3;
+
+    //camera is mapped to "all pixels but inside external borders".
+
+    //in the below rm external borders.
+    unsigned int inside_ww = m_client_m_all_ww-2*m_client_m_bw;
+    unsigned int inside_wh = m_client_m_all_wh-2*m_client_m_bh;
+
+    a_scale_to_see_borders = float(inside_wh)/float(m_client_m_all_wh);
+
+    float aspect = float(inside_ww)/float(inside_wh);
+    float cam_width = a_cam_height*aspect;
+    float wcw = cam_width;
+    float wch = a_cam_height;
+
+    //border in world coordinates :
+    float wbw = float(m_client_m_bw)*wcw/float(inside_ww);
+    float wbh = float(m_client_m_bh)*wch/float(inside_wh);
+
+    float all_wcw = wcw+2*wbw;
+    float all_wch = wch+2*wbh;
+    float one_wbw = all_wcw/float(m_client_m_cols);
+    float one_wbh = all_wch/float(m_client_m_rows);
+
+    unsigned int col = a_col>=m_client_m_cols?m_client_m_cols-1:a_col;
+    unsigned int row = a_row>=m_client_m_rows?m_client_m_rows-1:a_row;
+
+    // get (blx,bly) bottom-left wc corner of local (col,row) screen.
+    // same logic as client.cvt_local_to_all() but done in wc.
+    float left = col * one_wbw;
+    float bottom = row * one_wbh;
+    float blx = 0 + (left + wbw);
+    float bly = 0 + (bottom + wbh);
+    // one screen visible world coordinate part (then without borders).
+    float one_wcw = wcw*float(m_ww)/float(inside_ww);
+    float one_wch = wch*float(m_wh)/float(inside_wh);
+    // center of (col,row) screen in wc :
+    a_tx = -all_wcw*0.5f+blx+one_wcw*0.5f;
+    a_ty = -all_wch*0.5f+bly+one_wch*0.5f;
+
+    a_wch = one_wch;
+    a_wcw = one_wcw;
+    a_aspect = aspect;
+  }
+
+/*
+  base_camera* _get_camera() {
+    if(m_gv.scene().size()<3) return 0;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[INFOS()]));
+    if(!_node) return 0;
+    separator* _sep =
+     safe_cast<node,separator>(*(m_gv.scene()[GEOM_DETECTOR_EVENT()]));
+    if(!_sep) return 0;
+    if(!_sep->size()) return 0;
+    node* chld = (*_sep)[GEOM_CAMERA()];    
+    return safe_cast<node,base_camera>(*chld);
+  }
+
+  base_camera* _screen_camera() {
+    if(m_gv.scene().size()<3) return 0;
+    infos* _node = safe_cast<node,infos>(*(m_gv.scene()[INFOS()]));
+    if(!_node) return 0;
+    separator* _sep = safe_cast<node,separator>(*(m_gv.scene()[GEOM_SCREEN()]));
+    if(!_sep) return 0;
+    if(!_sep->size()) return 0;
+    node* chld = (*_sep)[SCREEN_CAMERA()];    
+    return safe_cast<node,base_camera>(*chld);
+  }
+*/
+
+  void _create_diapo_scene(float a_hcam,bool a_same,bool a_one_screen) {
+    // create a new scene of its own. (Anyway the static_sg is cleared at each diapo).
+    //m_gv.clear_scene();
+    //if(!is_evd()) {
+      create_sg_evd(); //it does a clear scene.
+      //evd_set_display();
+      m_gv.set_plane_viewer(true);
+      if(a_same) {
+        m_gv.m_params.m_cam_tiled = a_one_screen;
+      } else {
+        m_gv.m_params.m_cam_tiled = false; //enforce one cam per screen.
+      }
+      replace_camera(m_gv.create_2D_camera(a_hcam));
+    //}
+  }
+
+protected:
+private:
+  gui_viewer& m_gv;
+  head_light m_light;
+  matrix m_layout;
+  separator m_detector;
+  separator m_event;
+  separator m_screen_sg; //if wall app.
+  unsigned int m_event_index;
+  unsigned int m_next_event_sleep;
+  sg::cmaps_t m_cmaps;
+};
+
+inline view_evd* cast_view_evd(viewer& a_viewer) {
+  return safe_cast<viewer,view_evd>(a_viewer);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// actions : ///////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+inline sg::return_action action_clear_static_sg(sg::gui_viewer& a_gv) {
+  sg::view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return sg::return_none;
+  _evd->static_sg().clear();
+  return sg::return_to_render;
+}
+
+inline sg::return_action action_clear_dynamic_sg(sg::gui_viewer& a_gv) {
+  sg::view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return sg::return_none;
+  _evd->dynamic_sg().clear();
+  return sg::return_to_render;
+}
+
+inline sg::return_action action_clear_static_and_dynamic_sg(sg::gui_viewer& a_gv) {
+  sg::view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return sg::return_none;
+  _evd->static_sg().clear();
+  _evd->dynamic_sg().clear();
+  return sg::return_to_render;
+}
+
+inline sg::return_action action_clear_screen_sg(sg::gui_viewer& a_gv) {
+  sg::view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return sg::return_none;
+  _evd->screen_sg().clear();
+  return sg::return_to_render;
+}
+
+inline return_action action_empty_scene_3D(gui_viewer& a_gv) {
+  view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return return_none;
+  if(!_evd->is_evd()) {
+    _evd->create_sg_evd();
+    _evd->replace_camera(a_gv.create_3D_camera(2));
+  }
+  _evd->detector_sg().clear();
+  _evd->event_sg().clear();
+  _evd->screen_sg().clear();
+
+  a_gv.set_param_viewing(false);
+  //a_gv.show_camera_menu();
+  a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+inline return_action action_empty_scene_2D(gui_viewer& a_gv) {
+  view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return return_none;
+  if(!_evd->is_evd()) {
+    _evd->create_sg_evd();
+    _evd->replace_camera(a_gv.create_2D_camera(2));
+  }
+  a_gv.set_plane_viewer(true);
+
+  _evd->detector_sg().clear();
+  _evd->event_sg().clear();
+  _evd->screen_sg().clear();
+
+  a_gv.set_param_viewing(false);
+  //a_gv.show_camera_menu();
+  a_gv.hide_main_menu();
+  return return_to_render;
+}
+
+/*
+inline return_action action_show_scene_title(gui_viewer& a_gv,const pos_data& a_data) {
+  view_evd* _evd = cast_view_evd(a_gv);
+  if(!_evd) return return_none;
+  if(!_evd->show_scene_title()) a_gv.pop_warn(a_data,"no title found");
+  return return_to_render;
+}
+*/
+
+}}
+
+//inlib_build_use kernel
+
+#endif

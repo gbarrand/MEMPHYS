@@ -1,0 +1,41 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_path_words
+#define inlib_path_words
+
+#include "words"
+#include "srep"
+
+namespace inlib {
+
+inline void path_words(const std::string& a_path,std::vector<std::string>& a_words,
+                       bool& a_absolute,bool& a_win_path,std::string& a_drive){
+
+  //  a_path could be at the Windows syntax : <drive>:\dir1\dir2...
+  // If so, only dir1, dirn are put in a_words.
+
+  std::string path = a_path;
+  std::string::size_type pos = path.find('\\');
+  a_win_path = (pos==std::string::npos?false:true);
+  if(a_win_path) {
+    replace(path,"\\","/");
+    pos = path.find(':');
+    if(pos!=std::string::npos) { //drive 
+      a_drive = path.substr(0,pos);
+      path = path.substr(pos+1,path.size()-(pos+1));
+    } else {
+      a_drive = "";
+    }
+  } else {
+    a_drive = "";
+  }
+
+  a_absolute = (path.size()&&(path[0]=='/')?true:false);
+
+  words(path,"/",false,a_words);
+}
+
+}
+
+#endif

@@ -1,0 +1,948 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file MEMPHYS.license for terms.
+
+#ifndef MEMPHYS_MEMPHYS_main
+#define MEMPHYS_MEMPHYS_main
+
+// main class to build MEMPHYS_vis.
+
+#include <string>
+
+namespace MEMPHYS {
+
+class context {
+public:
+  context(const std::string&) {}
+  virtual ~context() {}
+protected:
+  context(const context&){}
+  context& operator=(const context&){return *this;}
+};
+
+}
+
+#include "version"
+
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+
+#include <exlib/png>
+#include <exlib/jpeg>
+
+#include <exlib/geant4/output>
+#include <exlib/geant4/viewer>
+
+//////////////////////////////////////////////////////
+/// sim //////////////////////////////////////////////
+//////////////////////////////////////////////////////
+#include "Analysis.hh"
+#include "DetectorConstruction.hh"
+#include "PhysicsList.hh"
+#include "PrimaryGeneratorAction.hh"
+#include "RunAction.hh"
+#include "EventAction.hh"
+#include "RunAction.hh"
+#include "StackingAction.hh"
+#include "TrackingAction.hh"
+#include "SteppingAction.hh"
+#include "Trajectory.hh"
+
+//#define USE_ATTDEF
+
+#ifdef USE_ATTDEF
+#else
+#include "WCHit.hh"
+#include "WCDigi.hh"
+#endif
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+#include <G4Version.hh>
+//#include <G4LossTableManager.hh>
+//#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>820
+//#include <G4HadronicProcessStore.hh>
+//#endif
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+
+#include "background_popup"
+
+#include <inlib/named_colors>
+
+// action_icon :
+//#include <inlib/sg/circle>
+#include <inlib/sg/ring>
+#include <inlib/sg/tube>
+#include <inlib/sg/cone_hat>
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+#include <exlib/uzres>
+
+#define CHECK_ENV(a__name) \
+  if(!inlib::is_env(#a__name)) {\
+    a_out << "pre_main : env variable " << #a__name << " not defined." << std::endl;\
+    return;\
+  }
+  
+#define UNFOLD_RES_FILE(a__zip,a__env,a__tmp_prefix,a__dir) \
+  if(!exlib::unfold(a_out,a_data_dir,a_res_dir,a_tmp_dir,m_tmps,a__zip,exlib::geant4::s_##a__env(),a__tmp_prefix,a__dir)) return;
+
+
+namespace MEMPHYS {
+
+INLIB_GLOBAL_STRING(MEMPHYS_)
+
+class pre_main : public exlib::geant4::output {
+  typedef exlib::geant4::output parent;
+public:
+  pre_main(std::ostream& a_out,
+           const std::string& a_data_dir,
+           const std::string& a_res_dir,
+           const std::string& a_tmp_dir)
+  :m_is_valid(false)
+  ,parent(a_out)
+  {
+    ///////////////////////////////////////////////////
+    /// unfold geant4 data files : ////////////////////
+    ///////////////////////////////////////////////////
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1030
+    UNFOLD_RES_FILE("g4ndl_4_5.zip",G4NEUTRONHPDATA,s_MEMPHYS_(),"G4NDL4.5");
+    UNFOLD_RES_FILE("g4emlow_6_50.zip",G4LEDATA,s_MEMPHYS_(),"G4EMLOW6.50");
+    UNFOLD_RES_FILE("photonevaporation_4_3_2.zip",G4LEVELGAMMADATA,s_MEMPHYS_(),"PhotonEvaporation4.3.2");
+    UNFOLD_RES_FILE("g4ensdfstate_2_1.zip",G4ENSDFSTATEDATA,s_MEMPHYS_(),"G4ENSDFSTATE2.1");
+    UNFOLD_RES_FILE("g4saiddata_1_1.zip",G4SAIDXSDATA,s_MEMPHYS_(),"G4SAIDDATA1.1");
+    CHECK_ENV(G4NEUTRONHPDATA)
+    CHECK_ENV(G4LEDATA)
+    CHECK_ENV(G4LEVELGAMMADATA)
+    CHECK_ENV(G4ENSDFSTATEDATA)
+    CHECK_ENV(G4SAIDXSDATA)
+#elif defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=950
+    UNFOLD_RES_FILE("g4ndl_3_12.zip",G4NEUTRONHPDATA,s_MEMPHYS_(),"G4NDL3.12");
+    UNFOLD_RES_FILE("g4emlow_6_50.zip",G4LEDATA,s_MEMPHYS_(),"G4EMLOW6.50");
+    UNFOLD_RES_FILE("photonevaporation_4_3_2.zip",G4LEVELGAMMADATA,s_MEMPHYS_(),"PhotonEvaporation4.3.2");
+    CHECK_ENV(G4NEUTRONHPDATA)
+    CHECK_ENV(G4LEDATA)
+    CHECK_ENV(G4LEVELGAMMADATA)
+#elif defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=820
+    UNFOLD_RES_FILE("g4ndl_3_12.zip",NeutronHPCrossSections,s_MEMPHYS_(),"G4NDL3.12");
+    UNFOLD_RES_FILE("g4emlow_6_50.zip",G4LEDATA(),s_MEMPHYS_(),"G4EMLOW6.50");
+    UNFOLD_RES_FILE("photonevaporation_4_3_2.zip",G4LEVELGAMMADATA,s_MEMPHYS_(),"PhotonEvaporation4.3.2");
+    CHECK_ENV(NeutronHPCrossSections)
+    CHECK_ENV(G4LEDATA)
+    CHECK_ENV(G4LEVELGAMMADATA)
+#endif
+  //CHECK_ENV(G4RADIOACTIVEDATA)
+    // disconnect Geant4 output :
+    parent::disable_geant4_output();
+    m_is_valid = true;
+  }
+  virtual ~pre_main(){}
+protected:
+  pre_main(const pre_main& a_from):parent(a_from),m_is_valid(false){}
+  pre_main& operator=(pre_main&){return*this;}
+protected:
+  bool m_is_valid;
+  std::vector<std::string> m_tmps;
+};
+
+}
+
+#undef CHECK_ENV
+#undef UNFOLD_RES_FILE
+
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+
+namespace MEMPHYS {
+
+class main
+:public pre_main //WARNING : must be before exlib::geant4::run_manager.
+,public exlib::geant4::run_manager
+,public exlib::geant4::viewer
+{
+  typedef pre_main parent_pre_main;
+  typedef exlib::geant4::run_manager parent_run_manager;
+  typedef exlib::geant4::viewer parent_viewer;
+protected:
+  virtual void visualize_event() {
+    dynamic_sg().clear();
+    visualize_beam_and_target();
+    visualize_primary_vertices(0.05*CLHEP::m); //PM size 0.15*CLHEP::m.
+    visualize_trajectories(/*pickable=*/true,/*all=*/false); //all=false : only primaries.
+    visualize_trajectories_end_direction(false); //false = only primaries.
+    visualize_hits_collection("WCPMT");
+    visualize_digis_collection("WCDigitizedCollection");
+  }
+  
+  virtual inlib::sg::node* create_main_menu() {
+
+    inlib::sg::list* list = parent_viewer::create_home_menu();
+    
+   {std::vector<std::string> about;
+    about.push_back("App : MEMPHYS vis");
+    about.push_back("Version : "+std::string(MEMPHYS_VERSION));
+    about.push_back("Simulation : ?");
+    about.push_back("Graphics : Guy Barrand");
+    std::string stmp;
+    if(!inlib::num2s(G4VERSION_NUMBER,stmp)){}
+    about.push_back("on Geant4 : "+stmp);
+    inlib::sg::add_image_item_after(*this,*list,s_utils(),s_about(),"icon.jpg",inlib::sg::action_about,about);}
+
+    inlib::sg::add_image_item_before(*this,*list,s_about(),s_icon(),"white.jpg",action_icon);
+    
+    return list;
+  }
+
+  virtual void create_camenu_items(unsigned int a_nb,float a_wcw,float a_wch,float a_wb,float a_hb) {
+    parent_viewer::create_camenu_items(a_nb,a_wcw,a_wch,a_wb,a_hb);
+
+    create_main_button(m_out,m_res_dir,m_params,       //0,3
+                       m_camenu_sep,a_wcw,a_wch,a_wb,a_hb,0,
+                       0,3,"next","","event.jpg",
+                       new inlib::sg::gv_cbk(*this,action_beam_on_one));
+  }
+
+  //virtual void event_end() {}
+  //virtual void create_histos() {}
+  //virtual void reset_histos() {}
+  
+  virtual bool insh_dispatch(const std::string& a_cmd,const std::vector<std::string>& a_args) {
+    if(a_cmd=="beam_on_one"){
+      action_beam_on_one(*this);
+      return true;
+    }
+    return parent_viewer::insh_dispatch(a_cmd,a_args);
+  }
+public:
+  main(std::ostream& a_out,
+       inlib::sg::render_manager& a_gl_mgr,
+       const inlib::sg::base_freetype& a_ttf,
+       const inlib::sg::selection& a_selection,
+       const std::string& a_data_dir,
+       const std::string& a_res_dir,
+       const std::string& a_out_dir,
+       const std::string& a_tmp_dir,
+       bool /*a_verbose*/,
+       unsigned int a_mem_limit)
+  :parent_pre_main(a_out,a_data_dir,a_res_dir,a_tmp_dir)
+  ,parent_run_manager()
+  ,parent_viewer(parent_run_manager::get_me(),"MEMPHYS",MEMPHYS_VERSION,a_out,a_gl_mgr,a_ttf,a_selection,a_data_dir,a_res_dir)
+  ,m_analysis(0)
+  ,m_primary_generator_action(0)
+  ,m_event_action(0)
+  {
+    if(!m_is_valid) return;
+    m_tmp_dirs = m_tmps;
+
+    m_out_dir = a_out_dir;
+    m_tmp_dir = a_tmp_dir;
+
+   {std::string pwd;
+    if(!inlib::dir::pwd(pwd)) {
+      m_out << "MEMPHYS::main::main : can't get pwd." << std::endl;
+    } else {
+      //m_out << "pwd : " << pwd << std::endl;
+    }
+    m_pwd = pwd;}
+
+    m_image_readers.add_reader(inlib::file::s_format_jpeg(),new exlib::jpeg::reader());
+    m_image_readers.add_reader(inlib::file::s_format_png(),new exlib::png::reader());
+
+    //////////////////////////////////////
+    /// MEMPHYS sim : ////////////////////
+    //////////////////////////////////////
+    parent_run_manager::SetGeometryToBeOptimized(false); //JEC 21/4/06 test to speed up the closing phase
+                                                         //note that G.B suspect memory leak with valgrind
+    
+    //G4LossTableManager::Instance()->SetVerbose(-1);
+//#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>820
+//    G4HadronicProcessStore::Instance()->SetVerbose(-1);
+//#endif
+    m_analysis = new Analysis("",false); //false=do not care of MEMPHYS.root file.
+    DetectorConstruction* detector = new DetectorConstruction(*m_analysis);
+    parent_run_manager::SetUserInitialization(detector); //it takes ownship.
+    parent_run_manager::SetUserInitialization(new PhysicsList);
+
+    G4UImanager* UI = G4UImanager::GetUIpointer();        
+    if(UI) UI->ApplyCommand("/control/execute "+m_res_dir+"/jobOptions.mac");  
+  
+    m_primary_generator_action = new PrimaryGeneratorAction(*detector,m_res_dir);
+    m_primary_generator_action->set_rewind(true);
+
+    parent_run_manager::SetUserAction(m_primary_generator_action);
+
+    RunAction* run_action = new RunAction();
+
+    parent_run_manager::SetUserAction(run_action);
+  
+    // optional user action classes
+    m_event_action = new EventAction(*m_analysis,*run_action,*detector,*m_primary_generator_action); 
+    m_event_action->set_verbose(0);
+    //m_event_action->verboseLevel = 0;
+    parent_run_manager::SetUserAction(m_event_action);
+
+    parent_run_manager::SetUserAction(new TrackingAction);
+    parent_run_manager::SetUserAction(new StackingAction);
+    parent_run_manager::SetUserAction(new SteppingAction);
+
+    parent_run_manager::Initialize();
+    
+    if(UI) UI->ApplyCommand("/control/execute "+m_res_dir+"/init.g4m");  
+    ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////
+
+   {inlib::sg::ortho* camera = new inlib::sg::ortho();
+    camera->height = 70.0*CLHEP::m*1.4f;
+    float z = 70.*CLHEP::m;
+    camera->znear = 0.01f*z;
+    camera->zfar = 100*z;
+    camera->position = inlib::vec3f(0,0,z);
+    camera->focal = z;
+    camera->dx = z*0.003f;
+    camera->da = camera->da.value()/2;
+
+    // position on +x axis, and have +z upward :
+    camera->position = inlib::vec3f(z,0,0);
+    camera->orientation.value().set_value(inlib::vec3f(0,0,-1),inlib::vec3f(-1,0,0));
+    inlib::vec3f up(0,1,0);
+    inlib::vec3f new_up(0,0,1);
+    camera->orientation.value(camera->orientation.value()*inlib::rotf(up,new_up));
+
+    replace_camera(camera);} //it takes ownership of camera.
+
+  //m_params.m_scene_screen_color = inlib::colorf_white();
+    m_params.m_scene_screen_color = inlib::colorf_black();
+
+    set_styles();
+
+  //m_params.m_max_depth = 6; //geom => too much pts!
+  //m_params.m_max_depth = 5; //15420 pts
+  //m_params.m_max_depth = 4; //3576 pts
+    m_params.m_max_depth = 3; //4608 pts
+    
+    m_params.m_reduced_wire_frame = false; //polyhedron/cylinder looks better.
+                                           //(Rock bool ops are enforced to true in DetectorConstruction).
+    
+    //show_plots();
+    //set_plots();
+    
+    m_popup_cbks.add(new background_popup(*this));
+  //m_popup_cbks.add(new inlib::cbk::plots_popup(*this));
+  }
+  virtual ~main() {
+    // exlib::geant4::event_timer::stop() uses m_runManager. As it is called in exlib::geant4::viewer::~viewer, we have
+    // to stop timers before deleting m_runManager.
+    //parent_viewer::stop_event_anim();
+    //delete m_runManager;
+    delete m_analysis;
+    clear_tmp();
+  }
+protected:
+  main(const main& a_from)
+  :parent_pre_main(a_from)
+  ,parent_run_manager()
+  ,parent_viewer(a_from)
+  ,m_analysis(0)
+  ,m_event_action(0)
+  {}
+private:
+  main& operator=(const main&){return *this;}
+
+protected:
+  void set_styles() {
+  
+ //{inlib::xml::styles::style_t sty;
+ // sty.push_back(inlib::xml::styles::style_item_t(s_color(),inlib::s_red()));
+ // m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+s_default(),sty);}
+ 
+    typedef inlib::xml::styles::style_item_t item_t;
+
+    // primary vertices :
+   {m_styles.remove_styles(exlib::geant4::s_primary_vertex());
+    inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(s_color(),inlib::s_cyan()));
+    m_styles.add_style(exlib::geant4::s_primary_vertex(),sty);}
+    
+    // primaries :
+    m_styles.remove_styles(exlib::geant4::s_primary()+inlib::res_sep()+"*");
+    
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(s_color(),inlib::s_yellow()));
+    sty.push_back(item_t(s_show_name(),s_true()));
+    //10*5 pixels in height.
+    sty.push_back(item_t(s_text_scale(),"5"));
+    sty.push_back(item_t(s_at_end(),s_true()));
+    m_styles.add_style(exlib::geant4::s_primary()+inlib::res_sep()+s_default(),sty);}
+  
+    // trajectories :
+    m_styles.remove_styles(exlib::geant4::s_trajectory()+inlib::res_sep()+"*");
+  
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(s_color(),inlib::s_nc_grey()));
+    m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+s_default(),sty);}
+  
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(inlib::s_color(),inlib::s_green()));
+    m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+exlib::geant4::s_e_minus(),sty);}
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(inlib::s_color(),inlib::s_green()));
+    m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+exlib::geant4::s_e_plus(),sty);}
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(inlib::s_color(),inlib::s_blue()));
+    m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+exlib::geant4::s_gamma(),sty);}
+    
+   {inlib::xml::styles::style_t sty;
+    sty.push_back(item_t(inlib::s_color(),inlib::s_magenta()));
+    m_styles.add_style(exlib::geant4::s_trajectory()+inlib::res_sep()+exlib::geant4::s_opticalphoton(),sty);}
+
+    //m_styles.dump();
+    
+/* see background_popup/action_color_code :
+    m_out << "MEMPHYS::main::set_styles() : color code for trajectories :" << std::endl
+          << s_primary()                      << " : " << inlib::s_yellow() << std::endl
+          << s_default()                      << " : " << inlib::s_nc_grey() << std::endl
+          << exlib::geant4::s_opticalphoton() << " : " << inlib::s_magenta() << std::endl
+          << exlib::geant4::s_gamma()         << " : " << inlib::s_blue() << std::endl
+          << exlib::geant4::s_e_plus()        << " : " << inlib::s_green() << std::endl
+          << exlib::geant4::s_e_minus()       << " : " << inlib::s_green() << std::endl
+	  ;
+*/
+  }
+
+  void add_arrow(const inlib::vec3f& a_pos,const inlib::vec3f& a_dir,float a_length,float a_radius,
+                 float a_text_scale, const std::string& a_name,
+                 const inlib::colorf& a_color,inlib::sg::infos* a_infos = 0) {
+    inlib::sg::separator* sep = new inlib::sg::separator;
+
+   {inlib::sg::separator* _sep = new inlib::sg::separator;
+    sep->add(_sep);
+    if(false) {
+      if(a_infos) _sep->add(a_infos);
+      
+      inlib::sg::draw_style* ds = new inlib::sg::draw_style;
+      ds->style = inlib::sg::draw_style::lines;
+      ds->line_width = 1;
+      _sep->add(ds);
+
+      inlib::sg::atb_vertices* vtcs = new inlib::sg::atb_vertices;
+      vtcs->mode = inlib::gl::lines();
+      vtcs->add(a_pos);
+      vtcs->add_color(a_color);
+      vtcs->add(a_pos+a_length*a_dir);
+      vtcs->add_color(a_color);
+
+      _sep->add(vtcs);
+
+    } else {
+      if(a_infos) _sep->add(a_infos);
+
+      inlib::sg::rgba* rgba = new inlib::sg::rgba;
+      rgba->color = a_color;
+      _sep->add(rgba);
+
+      float length_base = a_length*0.8f;
+      float length_head = a_length-length_base;
+   
+      inlib::sg::matrix* mtx = new inlib::sg::matrix;
+      mtx->set_translate(a_pos);
+      mtx->mul_rotate(inlib::vec3f(0,0,1),a_dir); //first
+      mtx->mul_translate(0,0,length_base*0.5f);
+      _sep->add(mtx);
+
+      inlib::sg::tube* cylinder = new inlib::sg::tube;
+      cylinder->height = length_base;
+      cylinder->rmin = 0;
+      cylinder->rmax = a_radius;
+      //cylinder->rmin = a_radius*0.5f;
+      //cylinder->angle = inlib::fhalf_pi();
+      _sep->add(cylinder);
+
+     {inlib::sg::matrix* mtx = new inlib::sg::matrix;
+      mtx->set_translate(0,0,length_base*0.5f+length_head*0.5f);
+      _sep->add(mtx);}
+
+      inlib::sg::cone_hat* cone = new inlib::sg::cone_hat;
+      cone->height = length_head;
+      cone->rmin = 0;
+      cone->rmax = 2*a_radius;
+      //cone->rmin = a_radius;
+      //cone->angle = inlib::fhalf_pi();
+      _sep->add(cone);
+    }}
+    
+    if(a_name.size()) add_marker_text(*sep,a_pos.x(),a_pos.y(),a_pos.z(),a_color,a_text_scale,a_name);
+			  
+    add_in_dynamic_sg(sep);
+  }
+
+  //static inlib::sg::return_action action_vis_hits(inlib::sg::gui_viewer& a_gv) {
+  //  if(!vis_hits(a_gv)) return inlib::sg::return_none;
+  //  return inlib::sg::return_to_render;
+  //}
+  
+  static inlib::sg::return_action action_icon(inlib::sg::gui_viewer& a_gv) {
+    viewer* _viewer = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    view_wall* wc = exlib::sg::cast_view_wall(a_gv);
+
+    if(!_viewer->is_evd()) _viewer->create_sg_evd();
+
+   {inlib::sg::ortho* camera = new inlib::sg::ortho();
+    camera->height = 4;
+    float z = 2;
+    camera->znear = 0.01f*z;
+    camera->zfar = 100*z;
+    camera->position = inlib::vec3f(0,0,z);
+    camera->focal = z;
+    camera->dx = z*0.003f;
+    camera->da = camera->da.value()/2;
+    _viewer->replace_camera(camera);} //it takes ownership of camera.
+
+    inlib::sg::separator& _static_sg = _viewer->static_sg();
+
+    inlib::sg::separator* sep = new inlib::sg::separator;
+    _static_sg.add(sep);
+    
+    inlib::sg::matrix* mtx = new inlib::sg::matrix;
+    sep->add(mtx);    
+
+/*
+   {inlib::sg::draw_style* ds = new inlib::sg::draw_style;
+    ds->style = a_gv.m_params.m_solid?inlib::sg::draw_style::lines:inlib::sg::draw_style::filled;
+    ds->line_width = 1;
+    sep->add(ds);}
+*/
+
+   {inlib::sg::separator* _sep = new inlib::sg::separator;
+    sep->add(_sep);
+    
+    inlib::sg::matrix* mtx = new inlib::sg::matrix;
+    mtx->mul_translate(0,-1,0);
+    mtx->mul_scale(4);
+    _sep->add(mtx);    
+
+    inlib::sg::rgba* mat = new inlib::sg::rgba();
+    mat->color = inlib::colorf_yellow();
+    _sep->add(mat);
+    
+    exlib::sg::text_freetype* text = new exlib::sg::text_freetype;
+    text->font = inlib::sg::font_stixgeneral_otf();
+    std::vector<exlib::sg::text_freetype::unichar> line;
+    if(!cvt2stix(exlib::geant4::s_nu(),line)) {}
+    text->unitext.add(line);
+    text->hjust = inlib::sg::center;
+  //text->vjust = inlib::sg::middle;
+    _sep->add(text);}
+
+   {inlib::sg::rgba* mat = new inlib::sg::rgba();
+    mat->color = inlib::colorf_red();
+    sep->add(mat);
+  
+    inlib::sg::ring* shape = new inlib::sg::ring;
+    shape->rmin = 1.5;
+    shape->rmax = 1.6;
+    sep->add(shape);}
+
+    a_gv.hide_main_menu();
+ 
+    return inlib::sg::return_to_render;
+  }
+
+  void visualize_beam_and_target() {
+    //executed from state::Notify().
+    G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+
+    G4ThreeVector vtx = m_primary_generator_action->GetVtx(); //beam and target point toward vtx.
+
+    float length = 2*CLHEP::m;
+    float radius = 0.01f*CLHEP::m;
+
+    inlib::colorf col = inlib::colorf_cyan();
+    //bool show_name;
+    float text_scale = 5;
+    //bool at_end;
+    //find_particle_style(prim_styles,prim_def_sty,
+    //                    obj->GetParticleName(),
+    //                    col,show_name,text_scale,at_end);
+
+    /////////////////////////////////////////////////////////////////////////
+    /// beam : //////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+   {G4int pdg = m_primary_generator_action->GetBeamPDG();
+    std::string name("?");
+   {G4ParticleDefinition* partDef = particleTable->FindParticle(pdg);
+    if(partDef) name = partDef->GetParticleName();}
+
+    G4ThreeVector dir = m_primary_generator_action->GetBeamDir().unit();
+    double energy = m_primary_generator_action->GetBeamEnergy();
+
+    /////////////////////////////////////
+    //////// picking infos : ////////////
+    /////////////////////////////////////
+    inlib::sg::infos* infos = new inlib::sg::infos;
+    
+   {std::string sobj;
+    inlib::p2s(infos,sobj); //as we have no "beam" object we use the infos node as the key in the dumpers() map.
+    infos->strings.add(sobj);
+    infos->strings.add("no_tag");
+	  
+    std::vector<std::string> vinfos;
+    vinfos.push_back(name);
+
+   {std::string sval("direction : ");
+    inlib::numas(dir.x(),sval);
+    sval += " ";
+    inlib::numas(dir.y(),sval);
+    sval += " ";
+    inlib::numas(dir.z(),sval);
+    vinfos.push_back(sval);}
+    
+   {std::string sval("energy (MeV) : ");
+    inlib::numas(energy,sval);
+    vinfos.push_back(sval);}
+    
+    dumpers()[sobj] = new dumper(*this,vinfos);}
+    /////////////////////////////////////
+    /////////////////////////////////////
+    float begx = float(vtx.x()-length*dir.x());
+    float begy = float(vtx.y()-length*dir.y());
+    float begz = float(vtx.z()-length*dir.z());
+
+    float endx = float(vtx.x());
+    float endy = float(vtx.y());
+    float endz = float(vtx.z());
+
+    add_arrow(inlib::vec3f(begx,begy,begz),inlib::vec3f(float(dir.x()),float(dir.y()),float(dir.z())),
+              length,radius,text_scale,name,col,infos);}
+
+    /////////////////////////////////////////////////////////////////////////
+    /// target : ////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+   {G4int pdg = m_primary_generator_action->GetTargetPDG();
+    if(pdg) {
+    std::string name("?");
+   {G4ParticleDefinition* partDef = particleTable->FindParticle(pdg);
+    if(partDef) name = partDef->GetParticleName();}
+
+    G4ThreeVector dir = m_primary_generator_action->GetTargetDir().unit();
+    double energy = m_primary_generator_action->GetTargetEnergy();
+
+    /////////////////////////////////////
+    //////// picking infos : ////////////
+    /////////////////////////////////////
+    inlib::sg::infos* infos = new inlib::sg::infos;
+    
+   {std::string sobj;
+    inlib::p2s(infos,sobj); //as we have no "target" object we use the infos node as the key in the dumpers() map.
+    infos->strings.add(sobj);
+    infos->strings.add("no_tag");
+	  
+    std::vector<std::string> vinfos;
+    vinfos.push_back(name);
+
+   {std::string sval("direction : ");
+    inlib::numas(dir.x(),sval);
+    sval += " ";
+    inlib::numas(dir.y(),sval);
+    sval += " ";
+    inlib::numas(dir.z(),sval);
+    vinfos.push_back(sval);}
+    
+   {std::string sval("energy (MeV) : ");
+    inlib::numas(energy,sval);
+    vinfos.push_back(sval);}
+    
+    dumpers()[sobj] = new dumper(*this,vinfos);}
+    /////////////////////////////////////
+    /////////////////////////////////////
+    
+    float begx = float(vtx.x()-length*dir.x());
+    float begy = float(vtx.y()-length*dir.y());
+    float begz = float(vtx.z()-length*dir.z());
+
+    float endx = float(vtx.x());
+    float endy = float(vtx.y());
+    float endz = float(vtx.z());
+
+    add_arrow(inlib::vec3f(begx,begy,begz),inlib::vec3f(float(dir.x()),float(dir.y()),float(dir.z())),
+              length,radius,text_scale,name,col,infos);}}
+	      
+  }
+
+  void visualize_trajectories_end_direction(bool a_all=true) { //a_all = false = only primaries.
+    const G4Event* event = GetCurrentEvent();
+    if(!event) return;
+
+    TrajectoryVector* vec = 0;
+   {G4TrajectoryContainer* tcont = event->GetTrajectoryContainer();
+    if(tcont) vec = tcont->GetVector();}
+    if(!vec) {
+      m_warn_no_trajectory_container = true;
+      return;
+    }
+    if(vec->empty()) return;
+
+    inlib::sg::separator* sep = new inlib::sg::separator;
+      
+    //inlib::sg::draw_style* ds = new inlib::sg::draw_style;
+    //ds->style = inlib::sg::draw_style::lines;
+    //ds->line_width = 1;
+    //sep->add(ds);
+
+    inlib::xml::styles::style_t prim_def_sty;
+    map_sty_t prim_styles;
+    bool prim_found_style = get_particles_styles(exlib::geant4::s_primary(),prim_styles,prim_def_sty);
+
+    inlib::xml::styles::style_t traj_def_sty;
+    map_sty_t traj_styles;
+    get_particles_styles(exlib::geant4::s_trajectory(),traj_styles,traj_def_sty);
+
+    float length = 2*CLHEP::m;
+    float radius = 0.01f*CLHEP::m;
+    
+   {inlib::colorf col;
+    bool show_name;
+    float text_scale;
+    bool at_end;
+    std::string name;
+    inlib_vforcit(G4VTrajectory*,*vec,it) {
+      G4VTrajectory* obj = *it;
+      Trajectory* _obj = dynamic_cast<Trajectory*>(obj);
+      if(!_obj) {
+        m_out << "MEMPHYS::visualize_trajectories_end_direction : G4VTrajectory not a MEMPHYS::Trajectory." << std::endl;
+	continue;
+      }
+      //m_out << "MEMPHYS::visualize_trajectories_end_direction : " << obj->GetParticleName() << std::endl;
+
+      if(!a_all && obj->GetParentID()) continue; //a_all=fase, skip not primaries.
+
+      if(!obj->GetParentID() && prim_found_style) {
+        find_particle_style(prim_styles,prim_def_sty,
+                            obj->GetParticleName(),
+                            col,show_name,text_scale,at_end);
+      } else {
+        find_particle_style(traj_styles,traj_def_sty,
+                            obj->GetParticleName(),
+                            col,show_name,text_scale,at_end);
+      }
+
+      int pointn = obj->GetPointEntries();
+      if(pointn<=0) continue;
+
+      const G4ThreeVector& pos = _obj->GetStoppingPoint();
+      const G4ThreeVector& dir = _obj->GetStoppingDirection();
+
+      add_arrow(inlib::vec3f(float(pos.x()),float(pos.y()),float(pos.z())),
+                inlib::vec3f(float(dir.x()),float(dir.y()),float(dir.z())),
+                length,radius,text_scale,name,col);
+
+    }}
+
+    add_in_dynamic_sg(sep);
+
+  }
+
+  bool visualize_hits_collection(const std::string& a_name) {
+
+    G4VHitsCollection* collection = exlib::geant4::get_hits_collection(m_out,m_run_manager,a_name);
+    if(!collection) return false;
+
+    double WCPMTRadius = 0.15*CLHEP::m;  // PMTs (12-inch)
+
+    exlib::geant4::transform _tsf;
+    inlib::colorf color;
+
+    size_t number = collection->GetSize();
+
+    m_out << "exlib::geant4::viewer::visualize_hits : #hits " << number << std::endl;
+
+    for(size_t index=0;index<number;index++) {
+      G4VHit* obj = collection->GetHit(index);
+      if(!obj) continue;
+#ifdef USE_ATTDEF
+      G4LogicalVolume* lv = exlib::geant4::get_logical_volume(*obj); // The hit must have the "LV" and "TSF" AttDef.
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4Transform3D* tsf = exlib::geant4::get_transform3D(*obj);
+      if(!tsf) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4Transform3D." << std::endl;
+        continue;
+      }
+      _tsf = *tsf;
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4Solid." << std::endl;
+        continue;
+      }
+      G4Colour _color;
+      if(exlib::geant4::get_color(*obj,_color)) {
+        color = inlib::colorf(_color.GetRed(),_color.GetGreen(),_color.GetBlue(),_color.GetAlpha());
+      } else {
+        color = inlib::colorf_default();
+      }
+#else //!USE_ATTDEF
+      WCHit* _obj = dynamic_cast<WCHit*>(obj);
+      if(!_obj) {
+        m_out << "exlib::geant4::viewer::visualize_hits : G4VHit is not a WCHit." << std::endl;
+        continue;
+      }    	
+      G4LogicalVolume* lv = _obj->GetLogicalVolume();
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4Solid." << std::endl;
+        continue;
+      }
+      const G4Transform3D& tsf = _obj->GetTransform();
+      _tsf = tsf;
+      const G4Colour& _color = _obj->GetColour();
+      color = inlib::colorf(_color.GetRed(),_color.GetGreen(),_color.GetBlue(),_color.GetAlpha());
+#endif //USE_ATTDEF
+      //G4Material* material = lv->GetMaterial();
+  
+      inlib::sg::separator* sep = new inlib::sg::separator;
+        
+     {inlib::sg::rgba* mat = new inlib::sg::rgba();
+      mat->color = color;
+      sep->add(mat);}
+       
+     {inlib::sg::matrix* mtx = new inlib::sg::matrix;
+      _tsf.set_matrix(mtx->mtx.value());
+      sep->add(mtx);}
+
+      if(false) {
+      //if(true) {
+        inlib::sg::ring* shape = new inlib::sg::ring;
+        shape->rmin = WCPMTRadius*0.5f;
+        shape->rmax = WCPMTRadius;
+        sep->add(shape);
+      } else {
+        inlib::sg::tube* shape = new inlib::sg::tube;
+        shape->height = WCPMTRadius*2;
+        shape->rmin = WCPMTRadius*0.5f;
+        shape->rmax = WCPMTRadius;
+        sep->add(shape);
+      }
+
+      add_in_dynamic_sg(sep);
+    }
+  
+    return true;
+  }
+
+  bool visualize_digis_collection(const std::string& a_name) {
+
+    G4VDigiCollection* collection = exlib::geant4::get_digis_collection(m_out,m_run_manager,a_name);
+    if(!collection) return false;
+
+    double WCPMTRadius = 0.15*CLHEP::m;  // PMTs (12-inch)
+
+    exlib::geant4::transform _tsf;
+    inlib::colorf color;
+
+    size_t number = collection->GetSize();
+
+    m_out << "exlib::geant4::viewer::visualize_digis : #digis " << number << std::endl;
+
+    for(size_t index=0;index<number;index++) {
+      G4VDigi* obj = collection->GetDigi(index);
+      if(!obj) continue;
+#ifdef USE_ATTDEF
+      G4LogicalVolume* lv = exlib::geant4::get_logical_volume(*obj); // The obj must have the "LV" and "TSF" AttDef.
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4Transform3D* tsf = exlib::geant4::get_transform3D(*obj);
+      if(!tsf) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4Transform3D." << std::endl;
+        continue;
+      }
+      _tsf = *tsf;
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4Solid." << std::endl;
+        continue;
+      }
+      //G4Material* material = lv->GetMaterial();
+      G4Colour _color;
+      if(exlib::geant4::get_color(*obj,_color)) {
+        color = inlib::colorf(_color.GetRed(),_color.GetGreen(),_color.GetBlue(),_color.GetAlpha());
+      } else {
+        color = inlib::colorf_default();
+      }
+#else //!USE_ATTDEF
+      WCDigi* _obj = dynamic_cast<WCDigi*>(obj);
+      if(!_obj) {
+        m_out << "exlib::geant4::viewer::visualize_digis : G4VDigi is not a WCDigi." << std::endl;
+        continue;
+      }    	
+      G4LogicalVolume* lv = _obj->GetLogicalVolume();
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4Solid." << std::endl;
+        continue;
+      }
+      const G4Transform3D& tsf = _obj->GetTransform();
+      _tsf = tsf;
+      const G4Colour& _color = _obj->GetColour();
+      color = inlib::colorf(_color.GetRed(),_color.GetGreen(),_color.GetBlue(),_color.GetAlpha());
+#endif //USE_ATTDEF
+  
+      inlib::sg::separator* sep = new inlib::sg::separator;
+        
+     {inlib::sg::rgba* mat = new inlib::sg::rgba();
+      mat->color = color;
+      sep->add(mat);}
+      
+      // Build name (for picking) :
+      //std::string s;
+      //inlib::sprintf(s,128,"WCPMT/0x%lx",(unsigned long)obj);
+  
+     {inlib::sg::matrix* mtx = new inlib::sg::matrix;
+      _tsf.set_matrix(mtx->mtx.value());
+      sep->add(mtx);}
+
+      if(false) {
+      //if(true) {
+        inlib::sg::ring* shape = new inlib::sg::ring;
+        shape->rmin = 0;
+        shape->rmax = WCPMTRadius*0.45f;
+        sep->add(shape);
+      } else {
+        // digi tube inside the hit tube :
+        inlib::sg::tube* shape = new inlib::sg::tube;
+        shape->height = WCPMTRadius*2;
+        shape->rmin = 0;
+        shape->rmax = WCPMTRadius*0.45f;
+        sep->add(shape);
+      }
+  
+      add_in_dynamic_sg(sep);
+    }
+  
+    return true;
+  }
+protected:
+  Analysis* m_analysis;
+  PrimaryGeneratorAction* m_primary_generator_action;
+  EventAction* m_event_action;
+};
+
+}
+
+#endif

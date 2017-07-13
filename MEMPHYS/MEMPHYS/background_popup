@@ -1,0 +1,52 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef MEMPHYS_background_popup
+#define MEMPHYS_background_popup
+
+#include <inlib/sg/background>
+#include <inlib/cbk/dummy>
+
+namespace MEMPHYS {
+
+inline inlib::sg::return_action action_color_code(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+  inlib::sg::list* list = new inlib::sg::list(a_gv.ttf());
+  a_gv.set_colors(*list);
+
+  // mus be in sync with main::set_styles().
+
+  list->label.value("trajectory color code");
+  list->add(exlib::geant4::s_primary()      +" : "+inlib::s_yellow(),new inlib::cbk::dummy);
+  list->add(std::string("default")          +" : "+inlib::s_nc_grey(),new inlib::cbk::dummy);
+  list->add(exlib::geant4::s_opticalphoton()+" : "+inlib::s_magenta(),new inlib::cbk::dummy);
+  list->add(exlib::geant4::s_gamma()        +" : "+inlib::s_blue(),new inlib::cbk::dummy);
+  list->add(exlib::geant4::s_e_plus()       +" : "+inlib::s_green(),new inlib::cbk::dummy);
+  list->add(exlib::geant4::s_e_minus()      +" : "+inlib::s_green(),new inlib::cbk::dummy);
+  
+  a_gv.show_widget(a_data,list);
+  return inlib::sg::return_to_render;
+}
+
+class background_popup : public inlib::cbk::popup {
+  typedef inlib::cbk::popup parent;
+public:
+  virtual void add_items(inlib::sg::ilist& a_list,int a_x,int a_y) const {
+    inlib::sg::add_item(m_gv,a_list,"color code",action_color_code,inlib::sg::pos_data(true,a_x,a_y));
+  //inlib::sg::add_item(m_gv,a_list,"export",exlib::out::action_main,inlib::sg::pos_data(true,a_x,a_y));
+  }
+public:
+  virtual inlib::sg::bcbk* copy() const {return new background_popup(*this);}
+public:
+  background_popup(inlib::sg::gui_viewer& a_gv)
+  :parent(inlib::sg::background::s_class(),0),m_gv(a_gv){}
+  virtual ~background_popup(){}
+protected:
+  background_popup(const background_popup& a_from):parent(a_from),m_gv(a_from.m_gv){}
+  background_popup& operator=(const background_popup& a_from){parent::operator=(a_from);return *this;}
+protected:
+  inlib::sg::gui_viewer& m_gv;
+};
+
+}
+
+#endif

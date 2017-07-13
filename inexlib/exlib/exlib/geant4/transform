@@ -1,0 +1,67 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_transform
+#define exlib_geant4_transform
+
+#include <G4Transform3D.hh>
+
+#include <inlib/mat4d>
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+
+namespace exlib {
+namespace geant4 {
+
+class transform : public G4Transform3D {
+  typedef G4Transform3D parent;
+#ifdef INLIB_MEM
+  static const std::string& s_class() {
+    static const std::string s_v("exlib::geant4::transform");
+    return s_v;
+  }
+#endif
+public:
+  transform():parent() {
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  transform(const G4Transform3D& a_tsf):parent(a_tsf) {
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~transform(){
+#ifdef INLIB_MEM
+    inlib::mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  transform(const transform& a_from):parent(a_from){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  transform& operator=(const transform& a_from) {parent::operator=(a_from);return *this;}
+public:
+  transform& operator=(const G4Transform3D& a_from) {parent::operator=(a_from);return *this;}
+public:
+  float elem(int i,int j) const {return (float)(*this)(i,j);}
+
+  template <class MATRIX>
+  void set_matrix(MATRIX& a_mat) const {
+    a_mat.set_matrix(elem(0,0),elem(0,1),elem(0,2),elem(0,3),
+                     elem(1,0),elem(1,1),elem(1,2),elem(1,3),
+                     elem(2,0),elem(2,1),elem(2,2),elem(2,3),
+                             0,        0,        0,        1);
+  }
+};
+
+}}
+
+//exlib_build_use geant4 inlib
+
+#endif

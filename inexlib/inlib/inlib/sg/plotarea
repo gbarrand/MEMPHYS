@@ -1,0 +1,206 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_plotarea
+#define inlib_sg_plotarea
+
+#include "gui_viewer"
+#include "plots"
+#include "event_dispatcher"
+//#include "holder"
+
+namespace inlib {
+namespace sg {
+
+class plotarea {
+public:
+  INLIB_SCLASS(inlib::sg::plotarea)
+public:
+  plotarea(gui_viewer& a_gv)
+  :m_gv(a_gv)
+  ,m_plot_trans_fac_x(0.28f)
+  ,m_plot_trans_fac_y(-0.28f)
+  ,m_plot_scale_x(0.4f)
+  ,m_plot_scale_y(0.4f)
+  {
+    create_sg();
+  }
+  virtual ~plotarea() {}
+protected:
+  plotarea(const plotarea& a_from)
+  :m_gv(a_from.m_gv)
+  ,m_plot_trans_fac_x(a_from.m_plot_trans_fac_x)
+  ,m_plot_trans_fac_y(a_from.m_plot_trans_fac_y)
+  ,m_plot_scale_x(a_from.m_plot_scale_x)
+  ,m_plot_scale_y(a_from.m_plot_scale_y)
+  {
+    create_sg();
+  }
+  plotarea& operator=(const plotarea& a_from){
+    m_plot_trans_fac_x = a_from.m_plot_trans_fac_x;
+    m_plot_trans_fac_y = a_from.m_plot_trans_fac_y;
+    m_plot_scale_x = a_from.m_plot_scale_x;
+    m_plot_scale_y = a_from.m_plot_scale_y;
+    return *this;
+  }
+public:
+  void add_plots_to_scene() {
+    //m_gv.scene().add(new holder<plots_clearer>(new plots_clearer(m_sep)));
+    m_gv.scene().add(new noderef(m_switch));
+    set_plots_layout_from_window(m_gv.width(),m_gv.height());
+  }
+  
+  void set_layout_factors(float a_tx,float a_ty,float a_sx,float a_sy){
+    m_plot_trans_fac_x = a_tx;
+    m_plot_trans_fac_y = a_ty;
+    m_plot_scale_x = a_sx;
+    m_plot_scale_y = a_sy;
+  }
+
+  plots& get_plots() {
+    plots* _plots = _get_plots(m_sep);
+    if(!_plots) {
+      m_gv.out() << "inlib::plotare::get_plots : no sg::plots! A crash is expected." << std::endl;
+    } //throw
+    return *_plots;
+  }
+
+  void clear_plots() {
+    plots* _plots = _get_plots(m_sep);
+    if(!_plots) return;
+    _plots->clear();
+  }
+
+  void show_hide()  {m_switch.which = m_switch.which.value()==0?1:0;} //SHOWN=0
+  void hide_plots() {m_switch.which = 1;}
+  void show_plots() {m_switch.which = 0;}
+
+  node* create_plots_clearer_holder() { //see exlib/geant4/exas for an example.
+    return new holder<plots_clearer>(new plots_clearer(m_sep));
+  }     
+protected:
+  class cbk_data  {
+  public:
+    cbk_data(plotarea& a_this):m_this(a_this){}
+    virtual ~cbk_data(){}
+  public:
+    cbk_data(const cbk_data& a_from):m_this(a_from.m_this){}
+    cbk_data& operator=(const cbk_data&) {return *this;}
+  public:
+    plotarea& m_this;
+  };
+  
+public:
+  static return_action action_plots_layout(gui_viewer&,const ecbk& a_cbk,event_dispatcher&,const cbk_data& a_data) {
+    if(const size_event* sz_evt = safe_cast<event,size_event>(*a_cbk.m_event)){
+      a_data.m_this.set_plots_layout_from_window(sz_evt->width(),sz_evt->height());
+      a_cbk.m_event_action->set_done(true);
+    }
+    return return_to_render;
+  }
+
+  static inlib::sg::return_action action_hide_plots(inlib::sg::gui_viewer& a_gv) {
+    plotarea* _this = inlib::safe_cast<inlib::sg::viewer,plotarea>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    _this->hide_plots();
+    a_gv.hide_main_menu();
+    return inlib::sg::return_to_render;
+  }
+  static inlib::sg::return_action action_show_plots(inlib::sg::gui_viewer& a_gv) {
+    plotarea* _this = inlib::safe_cast<inlib::sg::viewer,plotarea>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    _this->show_plots();
+    a_gv.hide_main_menu();
+    return inlib::sg::return_to_render;
+  }
+
+protected:
+  static unsigned int MATRIX()  {return 1;}
+  static unsigned int PLOTS()   {return 2;}
+  static matrix* _get_matrix(separator& a_sep) {
+    if(a_sep.size()<=MATRIX()) return 0;
+    return safe_cast<node,matrix>(*(a_sep[MATRIX()]));
+  }
+  static plots* _get_plots(separator& a_sep) {
+    if(a_sep.size()<=PLOTS()) return 0;
+    return safe_cast<node,plots>(*(a_sep[PLOTS()]));
+  }
+  void create_sg(bool a_visible = true){
+    m_switch.clear();
+    m_sep.clear();
+
+    m_switch.add(new noderef(m_sep));
+    m_switch.add(new group);
+    m_switch.which = a_visible?0:1; //SHOWN=0, HIDDEN=1
+
+    float cam_height = 1;
+
+    m_sep.add(m_gv.create_2D_camera(cam_height));    //0
+
+    m_sep.add(new matrix); //avoid noderef(matrix) to be able to popup/move. //1=MATRIX()
+
+    plots* _plots = new plots(m_gv.ttf()); //avoid noderef(plots) to be able to popup/move.
+    _plots->width = 1;
+    _plots->height = 1;
+    _plots->cols = 1;
+    _plots->rows = 1;
+    _plots->view_border = false;
+    _plots->border_visible = true;
+    _plots->border_width = 0.02f; //outside width,height square.
+    _plots->border_height = 0.02f;
+    m_sep.add(_plots); //2=PLOTS()
+
+   {event_dispatcher* dpt = new event_dispatcher;
+    dpt->add_callback(new fundata_cbk<gui_viewer,event_dispatcher,cbk_data,ecbk>(m_gv,*dpt,action_plots_layout,cbk_data(*this)));
+    m_sep.add(dpt);}
+
+    //set_plots_layout_from_window(m_gv.width(),m_gv.height());
+  }
+  
+  void set_plots_layout_from_window(unsigned int a_ww,unsigned int a_wh) {
+    if(!a_ww||!a_wh) return;
+    plots* _plots = _get_plots(m_sep);
+    if(!_plots) return;
+    matrix* _plots_matrix = _get_matrix(m_sep);
+    if(!_plots_matrix) return;
+    _plots->adjust_size(a_ww,a_wh);
+    _plots_matrix->set_translate(_plots->width*m_plot_trans_fac_x,_plots->height*m_plot_trans_fac_y,0);
+    _plots_matrix->mul_scale(m_plot_scale_x,m_plot_scale_y,1);
+  }  
+
+protected:
+  class plots_clearer {
+  public:
+    INLIB_SCLASS(inlib::sg::plotarea::plots_clearer)
+  public:
+    plots_clearer(separator& a_sep):m_sep(a_sep){}
+    virtual ~plots_clearer() {
+      plots* _plots = _get_plots(m_sep);
+      if(_plots) _plots->clear();
+    }
+  protected:
+    plots_clearer(const plots_clearer& a_from):m_sep(a_from.m_sep){}
+    plots_clearer& operator=(const plots_clearer&){return *this;}
+  protected:
+    separator& m_sep;
+  };
+protected:
+  gui_viewer& m_gv;
+
+  float m_plot_trans_fac_x;
+  float m_plot_trans_fac_y;
+  float m_plot_scale_x;
+  float m_plot_scale_y;
+
+  _switch m_switch;
+  separator m_sep;
+};
+
+inline plotarea* cast_plotarea(viewer& a_viewer) {
+  return safe_cast<viewer,plotarea>(a_viewer);
+}
+
+}}
+
+#endif
+

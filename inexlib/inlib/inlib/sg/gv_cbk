@@ -1,0 +1,147 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_gv_cbk
+#define inlib_sg_gv_cbk
+
+#include "ecbk"
+
+namespace inlib {
+namespace sg {
+class gui_viewer;
+}}
+
+namespace inlib {
+namespace sg {
+
+/*
+template <class DATA,class PARENT = bcbk>
+class gv_cbk : public PARENT {
+  INLIB_T_CBK(DATA,gv_cbk,inlib::sg::gv_cbk,PARENT)
+public:
+  typedef return_action (*cbk_func)(sg::gui_viewer&,const PARENT&,const DATA&);
+  typedef return_action (*cbk_gv_func)(sg::gui_viewer&);
+  typedef return_action (*cbk_gv_data_func)(sg::gui_viewer&,const DATA&);
+  typedef return_action (*cbk_gv_cbk_func)(sg::gui_viewer&,const PARENT&);
+public:
+  virtual return_action action() {
+         if(m_func)         return m_func(m_gv,*this,m_data);
+    else if(m_gv_func)      return m_gv_func(m_gv);
+    else if(m_gv_data_func) return m_gv_data_func(m_gv,m_data);
+    else if(m_gv_cbk_func)  return m_gv_cbk_func(m_gv,*this);
+    return return_none;
+  }
+public:
+  gv_cbk(gui_viewer& a_gv,cbk_func a_func,const DATA& a_data)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_func(a_func)
+  ,m_gv_func(0)
+  ,m_gv_data_func(0)
+  ,m_gv_cbk_func(0)
+  ,m_data(a_data)
+  {}
+  gv_cbk(gui_viewer& a_gv,cbk_gv_func a_func,const DATA& a_data)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_func(0)
+  ,m_gv_func(a_func)
+  ,m_gv_data_func(0)
+  ,m_gv_cbk_func(0)
+  ,m_data(a_data)
+  {}
+  gv_cbk(gui_viewer& a_gv,cbk_gv_data_func a_func,const DATA& a_data)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_func(0)
+  ,m_gv_func(0)
+  ,m_gv_data_func(a_func)
+  ,m_gv_cbk_func(0)
+  ,m_data(a_data)
+  {}
+  gv_cbk(gui_viewer& a_gv,cbk_gv_cbk_func a_func,const DATA& a_data)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_func(0)
+  ,m_gv_func(0)
+  ,m_gv_data_func(0)
+  ,m_gv_cbk_func(a_func)
+  ,m_data(a_data)
+  {}
+  virtual ~gv_cbk(){}
+public:
+  gv_cbk(const gv_cbk& a_from)
+  :parent(a_from)
+  ,m_gv(a_from.m_gv)
+  ,m_func(a_from.m_func)
+  ,m_gv_func(a_from.m_gv_func)
+  ,m_gv_data_func(a_from.m_gv_data_func)
+  ,m_gv_cbk_func(a_from.m_gv_cbk_func)
+  ,m_data(a_from.m_data)
+  {}
+  gv_cbk& operator=(const gv_cbk& a_from){
+    parent::operator=(a_from);
+    m_func=a_from.m_func;
+    m_gv_func = a_from.m_gv_func;
+    m_gv_data_func = a_from.m_gv_data_func;
+    m_gv_cbk_func = a_from.m_gv_cbk_func;
+    m_data=a_from.m_data;
+    return *this;
+  }
+protected:
+  gui_viewer& m_gv;
+  cbk_func m_func;
+  cbk_gv_func m_gv_func;
+  cbk_gv_data_func m_gv_data_func;
+  cbk_gv_cbk_func m_gv_cbk_func;
+  DATA m_data;
+};
+*/
+
+class gv_cbk : public ecbk {
+  INLIB_CBK(gv_cbk,inlib::sg::gv_cbk,ecbk)
+public:
+  typedef return_action (*cbk_gv_func)(sg::gui_viewer&);
+  typedef return_action (*cbk_gv_cbk_func)(sg::gui_viewer&,const ecbk&);
+public:
+  virtual return_action action() {
+         if(m_gv_func)      return m_gv_func(m_gv);
+    else if(m_gv_cbk_func)  return m_gv_cbk_func(m_gv,*this);
+    return return_none;
+  }
+public:
+  gv_cbk(gui_viewer& a_gv,cbk_gv_func a_func)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_gv_func(a_func)
+  ,m_gv_cbk_func(0)
+  {}
+  gv_cbk(gui_viewer& a_gv,cbk_gv_cbk_func a_func)
+  :parent()
+  ,m_gv(a_gv)
+  ,m_gv_func(0)
+  ,m_gv_cbk_func(a_func)
+  {}
+  virtual ~gv_cbk(){}
+public:
+  gv_cbk(const gv_cbk& a_from)
+  :parent(a_from)
+  ,m_gv(a_from.m_gv)
+  ,m_gv_func(a_from.m_gv_func)
+  ,m_gv_cbk_func(a_from.m_gv_cbk_func)
+  {}
+  gv_cbk& operator=(const gv_cbk& a_from){
+    parent::operator=(a_from);
+    m_gv_func = a_from.m_gv_func;
+    m_gv_cbk_func = a_from.m_gv_cbk_func;
+    return *this;
+  }
+protected:
+  gui_viewer& m_gv;
+  cbk_gv_func m_gv_func;
+  cbk_gv_cbk_func m_gv_cbk_func;
+};
+
+}}
+
+#endif

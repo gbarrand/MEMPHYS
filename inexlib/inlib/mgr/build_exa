@@ -1,0 +1,21 @@
+#!/bin/sh -f
+
+#////////////////////////////////////
+#/// args : /////////////////////////
+#////////////////////////////////////
+what=
+build_args=
+while test $# -ge 1 ; do
+  case $1 in
+    -*) build_args="${build_args} $1";;
+     *) if [ $# = 1 ] ; then what=$1; else echo "unknown option : $1"; fi;;
+  esac
+  shift
+done
+
+save_dir=`pwd`
+
+cd ../examples/cpp
+./build ${build_args} `basename ${what}`
+
+cd ${save_dir}

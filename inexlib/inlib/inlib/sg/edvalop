@@ -1,0 +1,1274 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_edvalop
+#define inlib_sg_edvalop
+
+// To edit a valop tree.
+
+#include "node"
+#include "ecbk"
+#include "_switch"
+#include "noderef"
+#include "wout"
+#include "text_button"
+#include "numeric"
+#include "list"
+#include "valop2sg"
+
+#include "../val_func"
+
+extern "C" {
+inline double inlib_minus(double a_x) {return -a_x;}
+}
+
+namespace inlib {
+namespace sg {
+
+class edvalop : public node {
+  INLIB_NODE(edvalop,inlib::sg::edvalop,node)
+public:
+  sf<float> width;
+  sf<float> height;
+  sf_vec<colorf,float> back_color;
+  sf_vec<colorf,float> front_color;
+  sf_vec<colorf,float> border_color;
+  sf_vec<colorf,float> arm_color;
+  sf<float> text_wmargin_factor;
+  sf<float> text_hmargin_factor;
+  sf<float> numeric_width;
+  sf<float> numeric_height;
+  sf<float> list_width;
+  sf<float> list_height;
+  sf<float> list_scroll_width;
+  sf<unsigned int> list_visible_items;
+  mf_string vars;
+  sf_string vars_label;
+  enum edit_type {
+    edit_calc,
+    edit_math,
+    edit_ntuple
+  };
+  sf_enum<edit_type> edit_what;
+  sf<bool> show_mode;
+public:
+  virtual const std::vector<field_desc>& node_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::edvalop)
+    static std::vector<field_desc> s_v;
+    if(s_v.empty()) {
+      s_v = parent::node_fields();
+      INLIB_ADD_FIELD_DESC(width)
+      INLIB_ADD_FIELD_DESC(height)
+      INLIB_ADD_FIELD_DESC(back_color)
+      INLIB_ADD_FIELD_DESC(front_color)
+      INLIB_ADD_FIELD_DESC(border_color)
+      INLIB_ADD_FIELD_DESC(arm_color)
+      INLIB_ADD_FIELD_DESC(text_wmargin_factor)
+      INLIB_ADD_FIELD_DESC(text_hmargin_factor)
+      INLIB_ADD_FIELD_DESC(numeric_width)
+      INLIB_ADD_FIELD_DESC(numeric_height)
+      INLIB_ADD_FIELD_DESC(list_width)
+      INLIB_ADD_FIELD_DESC(list_height)
+      INLIB_ADD_FIELD_DESC(list_scroll_width)
+      INLIB_ADD_FIELD_DESC(list_visible_items)
+      INLIB_ADD_FIELD_DESC(vars)
+      INLIB_ADD_FIELD_DESC(vars_label)
+      INLIB_ADD_FIELD_DESC(edit_what)
+      INLIB_ADD_FIELD_DESC(show_mode)
+    }
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&width);
+    add_field(&height);
+    add_field(&back_color);
+    add_field(&front_color);
+    add_field(&border_color);
+    add_field(&arm_color);
+    add_field(&text_wmargin_factor);
+    add_field(&text_hmargin_factor);
+    add_field(&numeric_width);
+    add_field(&numeric_height);
+    add_field(&list_width);
+    add_field(&list_height);
+    add_field(&list_scroll_width);
+    add_field(&list_visible_items);
+    add_field(&vars);
+    add_field(&vars_label);
+    add_field(&edit_what);
+    add_field(&show_mode);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_switch.render(a_action);
+  }
+  virtual void pick(pick_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    //nodekit_pick(a_action,m_switch,this);
+    m_switch.pick(a_action);
+    if(a_action.done()) return;
+  }
+  virtual void search(search_action& a_action) {
+    parent::search(a_action);
+    if(a_action.done()) return;
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    if(a_action.do_path()) a_action.path_push(this);
+    m_switch.search(a_action);
+    if(a_action.done()) return;
+    if(a_action.do_path()) a_action.path_pop();
+  }
+  virtual void event(event_action& a_action) {
+    if(touched()) {
+      update_sg(a_action.out());
+      reset_touched();
+    }
+    m_switch.event(a_action);
+    if(a_action.done()) return;
+  }
+public:
+  edvalop(const base_freetype& a_ttf)
+  :parent()
+
+  ,width(1)
+  ,height(1)
+  ,back_color(colorf_white())
+  ,front_color(colorf_black())
+  ,border_color(colorf_black())
+  ,arm_color(colorf_grey())
+  ,text_wmargin_factor(0.9f)
+  ,text_hmargin_factor(0.9f)
+  ,numeric_width(1)
+  ,numeric_height(1)
+  ,list_width(1)
+  ,list_height(1)
+  ,list_scroll_width(0.2f)
+  ,list_visible_items(5)
+  ,vars()
+  ,vars_label("xyz...")
+  ,edit_what(edit_calc)
+  ,show_mode(true)
+
+  ,m_ttf(a_ttf)
+
+  ,m_cbks()
+
+  ,m_numeric(a_ttf)
+  ,m_list(a_ttf)
+
+  ,m_valop(0)
+
+  ,m_fminus("-",::inlib_minus,in_domain_all)
+  ,m_on(on_all)
+
+  ,m_cols(0)
+  ,m_rows(0)
+  ,m_curop(0)
+  {
+    add_fields();
+    m_switch.which = WHICH_PANEL();
+
+/*
+    m_valop = new valop(valop::ADD,
+                new valop(valop::REAL,3.0),
+                new valop(valop::REAL,4.0));
+*/
+    m_valop = new valop(valop::def());
+    m_curop = m_valop;
+
+    ////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////
+    m_funcs.clear();
+
+    typedef val_func_cfunc cfunc_t;
+
+    m_funcs.add(new cfunc_t("",::inlib_identity,in_domain_all));
+
+    m_funcs.add(new cfunc_t(s_sqrt(),::sqrt,in_domain_all));
+
+    m_funcs.add(new cfunc_t("exp",::exp,in_domain_all));
+    m_funcs.add(new cfunc_t("log",::log,in_domain_log));
+    m_funcs.add(new cfunc_t("log10",::log10,in_domain_log));
+
+    m_funcs.add(new cfunc_t(s_cos(),::cos,in_domain_all));
+    m_funcs.add(new cfunc_t("sin",::sin,in_domain_all));
+    m_funcs.add(new cfunc_t("tan",::tan,in_domain_tan));
+
+    m_funcs.add(new cfunc_t("acos",::acos,in_domain_acos));
+    m_funcs.add(new cfunc_t("asin",::asin,in_domain_acos));
+    m_funcs.add(new cfunc_t("atan",::atan,in_domain_all));
+  
+    m_funcs.add(new cfunc_t("cosh",::cosh,in_domain_all));
+    m_funcs.add(new cfunc_t("sinh",::sinh,in_domain_all));
+    m_funcs.add(new cfunc_t("tanh",::tanh,in_domain_all));
+  
+    m_funcs.add(new cfunc_t("fabs",::fabs,in_domain_all));
+/*
+    m_funcs.add(new cfunc_t("abs",::fabs,in_domain_all));
+    m_funcs.add(new cfunc_t("rndm",::inlib_random_flat_shoot,
+                                       in_domain_all));
+    m_funcs.add(new cfunc_t("toint",::inlib_toint,
+                                       in_domain_all));
+  
+    //for OpenPAW/c_pawex20.kumac
+    m_funcs.add(new cfunc_t("int",::inlib_toint,in_domain_all)); 
+  
+    m_funcs.add(new val_func_nco());
+    m_funcs.add(new val_func_vsum());
+  
+    m_funcs.add(new val_func_pow());
+    m_funcs.add(new val_func_mod());
+  
+    m_funcs.add(new val_func_array());
+    m_funcs.add(new val_func_expo());
+    m_funcs.add(new val_func_pol1());
+
+    m_funcs.add(new val_func_gauss());
+    m_funcs.add(new val_func_bw());
+    m_funcs.add(new val_func_cauchy());
+
+    m_funcs.add(new val_func_pol2());
+    m_funcs.add(new val_func_pol3());
+    m_funcs.add(new val_func_pol4());
+  
+    // For backward compatibility :
+    m_funcs.add(new val_func_breit());
+*/
+  }
+  virtual ~edvalop(){
+    delete m_valop;
+    safe_clear<valop>(m_stack);
+  }
+public:
+  edvalop(const edvalop& a_from)
+  :parent(a_from)
+
+  ,width(a_from.width)
+  ,height(a_from.height)
+  ,back_color(a_from.back_color)
+  ,front_color(a_from.front_color)
+  ,border_color(a_from.border_color)
+  ,arm_color(a_from.arm_color)
+  ,text_wmargin_factor(a_from.text_wmargin_factor)
+  ,text_hmargin_factor(a_from.text_hmargin_factor)
+  ,numeric_width(a_from.numeric_width)
+  ,numeric_height(a_from.numeric_height)
+  ,list_width(a_from.list_width)
+  ,list_height(a_from.list_height)
+  ,list_scroll_width(a_from.list_scroll_width)
+  ,list_visible_items(a_from.list_visible_items)
+  ,vars(a_from.vars)
+  ,vars_label(a_from.vars_label)
+  ,edit_what(a_from.edit_what)
+  ,show_mode(a_from.show_mode)
+
+  ,m_ttf(a_from.m_ttf)
+
+  ,m_cbks(a_from.m_cbks)
+
+  ,m_numeric(m_ttf)
+  ,m_list(m_ttf)
+
+  ,m_valop(a_from.m_valop?a_from.m_valop->copy():0)
+
+  ,m_funcs(a_from.m_funcs)
+  ,m_fminus(a_from.m_fminus)
+  ,m_on(a_from.m_on)
+
+  ,m_cols(0)
+  ,m_rows(0)
+  ,m_curop(m_valop)
+  {
+    add_fields();
+    m_switch.which = a_from.m_switch.which;
+  }
+  edvalop& operator=(const edvalop& a_from){
+    parent::operator=(a_from);
+    if(&a_from==this) return *this;
+
+    width = a_from.width;
+    height = a_from.height;
+    back_color = a_from.back_color;
+    front_color = a_from.front_color;
+    border_color = a_from.border_color;
+    arm_color = a_from.arm_color;
+    text_wmargin_factor = a_from.text_wmargin_factor;
+    text_hmargin_factor = a_from.text_hmargin_factor;
+    numeric_width = a_from.numeric_width;
+    numeric_height = a_from.numeric_height;
+    list_width = a_from.list_width;
+    list_height = a_from.list_height;
+    list_scroll_width = a_from.list_scroll_width;
+    list_visible_items = a_from.list_visible_items;
+    vars = a_from.vars;
+    vars_label = a_from.vars_label;
+    edit_what = a_from.edit_what;
+    show_mode = a_from.show_mode;
+
+    m_cbks = a_from.m_cbks;
+
+    m_switch.which = a_from.m_switch.which;
+
+    delete m_valop;
+    m_valop = a_from.m_valop?a_from.m_valop->copy():0;
+
+    m_cols = a_from.m_cols;
+    m_rows = a_from.m_rows;
+    m_funcs = a_from.m_funcs;
+
+    m_fminus = a_from.m_fminus;
+    m_on = a_from.m_on;
+
+    m_cols = 0;
+    m_rows = 0;
+    m_curop = m_valop;
+
+    return *this;
+  }
+public:
+  const _switch& container() const {return m_switch;} //must be consistent with pick().
+  void add_callback(bcbk* a_cbk) { //we take ownership of a_cbk
+    m_cbks.add(a_cbk);
+    touch();
+  }
+  void clear_cbks(){
+    m_cbks.clear();
+    touch();
+  }
+public:
+  void set_valop(valop* a_v) { //take ownership.
+    delete m_valop;
+    m_valop = a_v;
+  }
+
+  void set_result(const valop& a_v) {*m_valop = a_v;}
+
+  const valop& result() const {return *m_valop;}
+
+  //const ival_funcs& funcs() const {return m_funcs;}
+  void set_funcs(const val_funcs& a_funcs) {m_funcs = a_funcs;}
+protected:
+  bool is_fminus(const valop& a_v){
+    if(a_v.type()!=valop::FUNC) return false;
+    if(a_v.m_function!=&m_fminus) return false;
+    return true;
+  }
+protected:
+  static unsigned int action_ok()            {return 0;}
+  static unsigned int action_clear()         {return 1;}
+  static unsigned int action_undo()          {return 2;}
+  static unsigned int action_cancel()        {return 3;}
+
+  static unsigned int action_begin_numeric() {return 4;}
+  static unsigned int action_end_numeric()   {return 5;}
+  static unsigned int action_begin_var()     {return 6;}
+  static unsigned int action_end_var()       {return 7;}
+  static unsigned int action_begin_symb()    {return 8;}
+  static unsigned int action_end_symb()      {return 9;}
+  static unsigned int action_begin_latin()   {return 10;}
+  static unsigned int action_end_latin()     {return 11;}
+
+  static unsigned int action_begin_op()      {return 12;}
+  static unsigned int action_end_op()        {return 13;}
+  static unsigned int action_begin_func()    {return 14;}
+  static unsigned int action_end_func()      {return 15;}
+  static unsigned int action_minus()         {return 16;}
+
+  static unsigned int action_keep_A()        {return 17;}
+  static unsigned int action_keep_B()        {return 18;}
+  static unsigned int action_on_A()          {return 19;}
+  static unsigned int action_on_B()          {return 20;}
+  static unsigned int action_on_all()        {return 21;}
+
+  static unsigned int action_up()            {return 22;}
+  static unsigned int action_top()           {return 23;}
+  static unsigned int action_choose_edit()   {return 24;}
+  static unsigned int action_set_edit()      {return 25;}
+
+  static unsigned int action_add()           {return 26;}
+  static unsigned int action_sub()           {return 27;}
+  static unsigned int action_mul()           {return 28;}
+  static unsigned int action_div()           {return 29;}
+  static unsigned int action_parenthesis()   {return 30;}
+public:
+  class _cbk : public ecbk {
+    INLIB_CLASS_STRING(calc)
+    INLIB_CLASS_STRING(math)
+    INLIB_CLASS_STRING(ntuple)
+  public:
+    virtual return_action action() {
+
+      if(m_action==action_clear()) {
+        m_this.undo_push();
+        delete m_this.m_valop;
+        m_this.m_valop = new valop(valop::def());
+        m_this.m_curop = m_this.m_valop;
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_cancel()) {
+        m_this.m_switch.which = WHICH_PANEL();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_undo()) {
+        m_this.undo_pop();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_choose_edit()) {
+        m_this.m_list.clear();
+
+        std::vector<std::string> items;
+        items.push_back(s_calc());
+        items.push_back(s_math());
+        items.push_back(s_ntuple());
+
+        std::vector<std::string>::const_iterator it;
+        for(it=items.begin();it!=items.end();++it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_set_edit());
+          cbk_->m_var = *it;
+          m_this.m_list.add(*it,cbk_);
+        }
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_set_edit()) {
+        m_this.m_switch.which = WHICH_PANEL();
+
+             if(m_var==s_calc())   m_this.edit_what = edit_calc;      
+        else if(m_var==s_math())   m_this.edit_what = edit_math;      
+        else if(m_var==s_ntuple()) m_this.edit_what = edit_ntuple;      
+
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_keep_A()) {
+
+        if(m_this.m_curop->is_binary()||m_this.m_curop->is_unary()){
+          m_this.set_curop(m_this.m_curop->m_A->copy());
+          return return_to_render;
+
+        } else {
+          m_out << "edvalop::_cbk::action : unknown case : 0" << std::endl;
+        }
+
+      } else if(m_action==action_keep_B()) {
+
+        if(m_this.m_curop->is_binary()){
+          m_this.set_curop(m_this.m_curop->m_B->copy());
+          return return_to_render;
+
+        } else if(m_this.m_curop->is_unary()){
+          m_this.set_curop(m_this.m_curop->m_A->copy());
+          return return_to_render;
+
+        } else {
+          m_out << "edvalop::_cbk::action : unknown case : 1" << std::endl;
+        }
+
+      } else if(m_action==action_on_A()) {
+        m_this.m_on = on_A;
+      } else if(m_action==action_on_B()) {
+        m_this.m_on = on_B;
+      } else if(m_action==action_on_all()) {
+        m_this.m_on = on_all;
+
+      /////////////////////////////////////////////////
+      /// begin input /////////////////////////////////
+      /////////////////////////////////////////////////
+      } else if(m_action==action_begin_numeric()) {
+        m_this.undo_push();
+        m_this.m_numeric.value.value("");
+        m_this.m_switch.which = WHICH_NUMERIC();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_begin_var()) {
+
+        m_this.m_list.clear();
+
+       {const std::vector<std::string>& _vars = m_this.vars.values();
+        std::vector<std::string>::const_iterator it;
+        for(it=_vars.begin();it!=_vars.end();++it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_end_var());
+          cbk_->m_var = *it;
+          m_this.m_list.add(*it,cbk_);
+        }}
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_begin_symb()) {
+
+        m_this.m_list.clear();
+
+        std::vector<std::string> symbs;
+        symbs.push_back(s_psi());
+        symbs.push_back(s_gamma());
+        symbs.push_back(s_mu());
+        symbs.push_back(s_upper_delta());
+        symbs.push_back(s_partial_derivative());
+        symbs.push_back(s_h_bar());
+
+        std::vector<std::string>::const_iterator it;
+        for(it=symbs.begin();it!=symbs.end();++it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_end_symb());
+          cbk_->m_var = *it;
+          m_this.m_list.add(*it,cbk_);
+        }
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_begin_latin()) {
+
+        m_this.m_list.clear();
+
+        std::vector<std::string> symbs;
+        symbs.push_back("i");
+        symbs.push_back("m");
+        symbs.push_back("t");
+        symbs.push_back("V");
+
+        std::vector<std::string>::const_iterator it;
+        for(it=symbs.begin();it!=symbs.end();++it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_end_latin());
+          cbk_->m_var = *it;
+          m_this.m_list.add(*it,cbk_);
+        }
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_begin_func()) {
+
+        m_this.m_list.clear();
+
+        const std::vector<ival_func*>& funcs = m_this.m_funcs.funcs();
+
+        std::vector<ival_func*>::const_iterator it;
+        for(it=funcs.begin();it!=funcs.end();++it) {
+          _cbk* cbk_ = new _cbk(m_this,m_out,action_end_func());
+          cbk_->m_func = *it;
+          m_this.m_list.add((*it)->name(),cbk_);
+        }
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_begin_op()) {
+
+        m_this.m_list.clear();
+
+       {_cbk* cbk_ = new _cbk(m_this,m_out,action_end_op());
+        cbk_->m_op = valop::ASIDE;
+        m_this.m_list.add("aside",cbk_);}
+
+       {_cbk* cbk_ = new _cbk(m_this,m_out,action_end_op());
+        cbk_->m_op = valop::NVMUL;
+        m_this.m_list.add("not vis mul",cbk_);}
+
+       {_cbk* cbk_ = new _cbk(m_this,m_out,action_end_op());
+        cbk_->m_op = valop::EQUAL;
+        m_this.m_list.add("=",cbk_);}
+
+       {_cbk* cbk_ = new _cbk(m_this,m_out,action_end_op());
+        cbk_->m_op = valop::SUPS;
+        m_this.m_list.add("sups",cbk_);}
+
+       {_cbk* cbk_ = new _cbk(m_this,m_out,action_end_op());
+        cbk_->m_op = valop::SUBS;
+        m_this.m_list.add("subs",cbk_);}
+
+        m_this.m_switch.which = WHICH_LIST();
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_parenthesis()) {
+        if(m_this.do_func(m_out,m_this.m_funcs.find("")))
+          return return_to_render;
+
+      } else if(m_action==action_add()) {
+        if(m_this.do_binary_op(valop::ADD)) return return_to_render;
+      } else if(m_action==action_sub()) {
+        if(m_this.do_binary_op(valop::SUB)) return return_to_render;
+      } else if(m_action==action_mul()) {
+        if(m_this.do_binary_op(valop::MUL)) return return_to_render;
+      } else if(m_action==action_div()) {
+        if(m_this.do_binary_op(valop::DIV)) return return_to_render;
+
+      /////////////////////////////////////////////////
+      /// end leaf ////////////////////////////////////
+      /////////////////////////////////////////////////
+      } else if( (m_action==action_end_numeric()) || 
+                 (m_action==action_end_var())     ||
+                 (m_action==action_end_symb())    ||
+                 (m_action==action_end_latin())
+             ){
+        m_this.m_switch.which = WHICH_PANEL();
+
+        valop* res = 0;
+        if(m_action==action_end_numeric()) {
+          const std::string& _s = m_this.m_numeric.value.value();
+          double v;
+          if(!to<double>(_s,v)){v=0;}
+          res = new valop(valop::REAL,v);
+
+        } else if(m_action==action_end_var()) {          
+          bool found = false;
+          unsigned int index = 0;
+          const std::vector<std::string>& _vars = m_this.vars.values();
+          std::vector<std::string>::const_iterator it;
+          for(it=_vars.begin();it!=_vars.end();++it,index++) {
+            if(m_var==(*it)) {
+              res = new valop(valop::NAME,m_var,index);
+              found = true;
+              break;
+            }
+          }
+          if(!found) res = new valop(valop::def());
+
+        } else if(m_action==action_end_symb()) {
+          res = new valop(valop::SYMBOL,m_var);
+        } else if(m_action==action_end_latin()) {
+          res = new valop(valop::STRING,m_var);
+        }
+
+        if(m_this.m_curop->is_leaf()) {
+          m_this.set_curop(res);
+          return return_to_render;
+
+        } else if(m_this.m_curop->is_binary()) {
+          if(m_this.m_on==on_A) {
+            m_this.undo_push();
+            delete m_this.m_curop->m_A;
+            m_this.m_curop->m_A = res;
+            m_this.touch();
+            return return_to_render;
+
+          } else if(m_this.m_on==on_B) {
+            m_this.undo_push();
+            delete m_this.m_curop->m_B;
+            m_this.m_curop->m_B = res;
+            m_this.touch();
+            return return_to_render;
+
+          } else if(m_this.m_on==on_all) {
+            m_this.set_curop(res);
+            return return_to_render;
+
+          }
+
+        } else if(m_this.m_curop->is_unary()) {
+          if(m_this.m_on==on_A) {
+            m_this.undo_push();
+            delete m_this.m_curop->m_A;
+            m_this.m_curop->m_A = res;
+            m_this.touch();
+            return return_to_render;
+
+          } else if(m_this.m_on==on_all) {
+            m_this.set_curop(res);
+            return return_to_render;
+
+          } else {
+            m_out << "edvalop::_cbk::action : unknown case : 6" << std::endl;
+          }
+
+        } else {
+          m_out << "edvalop::_cbk::action : unknown case : 2" << std::endl;
+        }
+
+      /////////////////////////////////////////////////
+      /// end op //////////////////////////////////////
+      /////////////////////////////////////////////////
+      } else if(m_action==action_end_op()) {
+        m_this.m_switch.which = WHICH_PANEL();
+
+        if(m_this.do_binary_op(m_op)) return return_to_render;
+
+        m_out << "edvalop::_cbk::action : unknown case : 4" << std::endl;
+
+      } else if(m_action==action_minus()) {
+
+        if(m_this.m_curop->is_binary()) {
+
+          if(m_this.m_on==on_A) {
+            valop* res = m_this.do_minus(m_this.m_curop->m_A);
+            if(!res){
+              m_out << "edvalop::_cbk::action :"
+                    << " unknown case : 15"
+                    << std::endl;
+              return return_none;
+            }
+            m_this.undo_push();
+            delete m_this.m_curop->m_A;
+            m_this.m_curop->m_A = res;
+            m_this.touch();
+            return return_to_render;
+
+          } else if(m_this.m_on==on_B) {
+            valop* res = m_this.do_minus(m_this.m_curop->m_B);
+            if(!res){
+              m_out << "edvalop::_cbk::action :"
+                    << " unknown case : 16"
+                    << std::endl;
+              return return_none;
+            }
+            m_this.undo_push();
+            delete m_this.m_curop->m_B;
+            m_this.m_curop->m_B = res;
+            m_this.touch();
+            return return_to_render;
+
+          }
+
+        }
+
+        valop* res = m_this.do_minus(m_this.m_curop);
+        if(!res){
+          m_out << "edvalop::_cbk::action : unknown case : 5" << std::endl;
+          return return_none;
+        }      
+        m_this.set_curop(res);
+        return return_to_render;
+
+      } else if(m_action==action_end_func()) {
+        m_this.m_switch.which = WHICH_PANEL();
+        if(m_this.do_func(m_out,m_func)) return return_to_render;
+
+      } else if(m_action==action_up()) {
+
+        valop* _parent = m_this.get_parent(m_this.m_curop);
+        if(_parent){
+          m_this.m_curop = _parent;
+        } else {
+          m_this.m_curop = m_this.m_valop;
+        }
+        m_this.touch();
+        return return_to_render;
+
+      } else if(m_action==action_top()) {
+        m_this.m_curop = m_this.m_valop;
+        m_this.touch();
+        return return_to_render;
+
+/*
+        if(//const up_event* up_evt = 
+               safe_cast<event,up_event>(*m_event)){
+          //::printf("debug : edvalop : action_up\n");
+
+          wout alert(m_event_action->out());
+
+          cube_manip* cm = cbk::move_manip::is_maniped
+            (m_event_action->out(),m_this.m_switch,m_node,false);
+          if(cm) {
+            cbk::move_manip::manip_up
+              (alert,m_event_action->out(),m_this.m_switch,m_node,false);
+          } else {
+            cbk::move_manip::set_manip
+              (alert,m_event_action->out(),m_this.m_switch,m_node,false);
+          }
+   
+          //cbk::move_manip::toggle_manip
+          //  (alert,m_event_action->out(),m_this.m_switch,m_node,false);
+
+          m_event_action->set_done(true);
+          return return_none;
+        }
+*/
+      } else {
+        m_out << "edvalop::_cbk::action : unknown action" << std::endl;
+      }
+
+      return return_none;
+    }
+    virtual bcbk* copy() const {return new _cbk(*this);}
+  public:
+    _cbk(edvalop& a_this,std::ostream& a_out,unsigned int a_action)
+    :ecbk(a_action)    
+    ,m_this(a_this)
+    ,m_out(a_out)
+    ,m_op(valop::REAL)
+    ,m_func(0)
+    {}
+    virtual ~_cbk(){}
+  public:
+    _cbk(const _cbk& a_from)
+    :ecbk(a_from)
+    ,m_this(a_from.m_this)
+    ,m_out(a_from.m_out)
+    ,m_op(a_from.m_op)
+    ,m_var(a_from.m_var)
+    ,m_func(a_from.m_func)
+    {}
+    _cbk& operator=(const _cbk& a_from){
+      ecbk::operator=(a_from);
+      m_op = a_from.m_op;
+      m_var = a_from.m_var;
+      m_func = a_from.m_func;
+      return *this;
+    }
+  protected:
+    edvalop& m_this;
+    std::ostream& m_out;
+  public:
+    valop::e_type m_op;  
+    std::string m_var;
+    ival_func* m_func; //not owner.
+  };
+
+protected:
+  void update_sg(std::ostream& a_out) {
+    //a_out << "debug : inlib::sg::edvalop::update_sg" << std::endl;
+
+    int old_switch_which = m_switch.which;
+
+    m_switch.clear();
+
+    if(width.value()<=0) return;
+    if(height.value()<=0) return;
+
+   {unsigned int cols = 0;
+    if(edit_what.value()==edit_math) {
+      cols += 2;
+    } else if(edit_what.value()==edit_ntuple) {
+      if(vars.values().size()) {
+        cols += 1;
+      }
+    }
+    cols += 4;
+    m_cols = mx<unsigned int>(cols,5);}
+
+    m_rows = 1+4;
+
+    separator* sep = new separator;
+    sep->add(create_result(a_out));
+
+   {unsigned int col = 0;
+    if(edit_what.value()==edit_math) {
+      sep->add(create_button(a_out,"symb",action_begin_symb(),0,col++));
+      sep->add(create_button(a_out,"latin",action_begin_latin(),0,col++));
+    } else if(edit_what.value()==edit_ntuple) {
+      if(vars.values().size()) {
+        sep->add(create_button
+                   (a_out,vars_label.value(),action_begin_var(),0,col++));
+      }
+    }
+    sep->add(create_button(a_out,"12..."  ,action_begin_numeric(),0,col++));
+    sep->add(create_button(a_out,"()"     ,action_parenthesis()  ,0,col++));
+    sep->add(create_button(a_out,"-()"    ,action_minus()        ,0,col++));
+    sep->add(create_button(a_out,"f()"    ,action_begin_func()   ,0,col++));
+    }
+
+    sep->add(create_button(a_out,"+"      ,action_add()        ,1,0));
+    sep->add(create_button(a_out,"-"      ,action_sub()        ,1,1));
+    sep->add(create_button(a_out,"x"      ,action_mul()        ,1,2));
+    sep->add(create_button(a_out,"/"      ,action_div()        ,1,3));
+    if(edit_what.value()==edit_math) {
+    sep->add(create_button(a_out,"..."    ,action_begin_op()   ,1,4));
+    }
+
+  //sep->add(create_button(a_out,"keep A" ,action_keep_A()     ,1,0));
+  //sep->add(create_button(a_out,"keep B" ,action_keep_B()     ,1,1));
+
+    sep->add(create_button(a_out,"on A"   ,action_on_A()       ,2,0));
+    sep->add(create_button(a_out,"on B"   ,action_on_B()       ,2,1));
+    sep->add(create_button(a_out,"on all" ,action_on_all()     ,2,2));
+    sep->add(create_button(a_out,"Up"     ,action_up()         ,2,3));
+    sep->add(create_button(a_out,"Top"    ,action_top()        ,2,4));
+
+    sep->add(create_button(a_out,"Clear"  ,action_clear()      ,3,0));
+    sep->add(create_button(a_out,"Undo"   ,action_undo()       ,3,3));
+    sep->add(create_button(a_out,"Ok"     ,action_ok()         ,3,4));
+
+    if(show_mode.value()){
+    if(edit_what.value()==edit_calc) {
+      sep->add(create_button(a_out,"calc"   ,action_choose_edit(),3,1));
+    } else if(edit_what.value()==edit_math) {
+      sep->add(create_button(a_out,"math"   ,action_choose_edit(),3,1));
+    } else if(edit_what.value()==edit_ntuple) {
+      sep->add(create_button(a_out,"ntuple" ,action_choose_edit(),3,1));
+    }}
+
+    enforce_common_text_height(a_out,*sep);
+
+    m_numeric.width = numeric_width;
+    m_numeric.height = numeric_height;
+    m_numeric.back_color = back_color;
+    m_numeric.front_color = front_color;
+    m_numeric.border_color = border_color;
+    m_numeric.arm_color = arm_color;
+    m_numeric.text_wmargin_factor = text_wmargin_factor;
+    m_numeric.text_hmargin_factor = text_hmargin_factor;
+    m_numeric.clear_cbks();
+    m_numeric.add_callback(new _cbk(*this,a_out,action_end_numeric()));
+    m_numeric.show_cancel = true;
+    m_numeric.clear_cancel_cbks();
+    m_numeric.add_cancel_callback(new _cbk(*this,a_out,action_cancel()));
+
+    m_list.width = list_width;
+    m_list.height = list_height;
+    m_list.scroll_width = list_scroll_width;
+    m_list.text_common_height = true;
+    m_list.visible_items = list_visible_items;
+
+    m_list.back_color = back_color;
+    m_list.border_color = border_color;
+    m_list.front_color = front_color;
+    m_list.arm_color = arm_color;
+    m_list.text_hmargin_factor = 0.5f; //Apple
+    m_list.clear_cancel_cbks();
+    m_list.add_cancel_callback(new _cbk(*this,a_out,action_cancel()));
+
+    m_switch.add(sep);                    //WHICH_PANEL
+    m_switch.add(new noderef(m_numeric)); //WHICH_NUMERIC
+    m_switch.add(new noderef(m_list));    //WHICH_LIST
+
+    m_switch.which = old_switch_which;
+
+  }
+
+protected:
+  static int WHICH_PANEL()   {return 0;}
+  static int WHICH_NUMERIC() {return 1;}
+  static int WHICH_LIST()    {return 2;}
+
+  separator* create_result(std::ostream& a_out) {
+    separator* sep = new separator;
+
+    rgba* mat = new rgba();
+    mat->color = colorf_black();
+    sep->add(mat);
+
+    sep->add(new normal);
+
+    float hres = height/m_rows;
+
+    matrix* tsf = new matrix;
+    tsf->set_translate(0,height*0.5f-hres*0.5f,0);
+    sep->add(tsf);
+
+    separator* _sep = new separator;
+    sep->add(_sep);
+    
+    valop2sg v(a_out,*_sep,m_ttf);
+    if(!m_valop || !v.visit(*m_valop)) {
+      _sep->clear();
+      base_freetype* tft = base_freetype::create(m_ttf);
+      //TTNODE* tft = new TTNODE();   
+      tft->font = gui_font();
+      tft->strings.add("???");
+      _sep->add(tft);
+    }
+
+    //have an height of hres and center :
+   {vec3f mn,mx;
+    mnmx(a_out,*_sep,mn,mx);
+    float h = mx[1]-mn[1];
+
+    float scale = h?hres/h:1.0f;
+
+    float w = (mx[0]-mn[0])*scale;
+    if(w>width.value()) scale *= width.value()/w;
+
+    tsf->mul_scale(scale,scale,1);
+
+    tsf->mul_translate(-(mn[0]+mx[0])*0.5f,-(mn[1]+mx[1])*0.5f,0);}
+
+    return sep;
+  }
+
+  separator* create_button(std::ostream& a_out,
+                           const std::string& a_label,
+                           unsigned int a_action,
+                           unsigned int a_row,
+                           unsigned int a_col) {
+    separator* sep = new separator;
+
+    float wbutton = width/m_cols;
+    float hbutton = height/m_rows;
+
+    float xx = -width*0.5f+wbutton*0.5f+a_col*wbutton;
+    float yy = height*0.5f-hbutton*1.5f-a_row*hbutton;
+    matrix* m = new matrix;
+    m->set_translate(xx,yy,0);
+    sep->add(m);
+
+    text_button* b = new text_button(m_ttf);
+    b->width = wbutton;
+    b->height = hbutton;
+    b->color = front_color;
+    b->font = gui_font();
+    b->back_area::color = back_color;
+    b->back_area::border_color = border_color;
+    b->arm_color = arm_color;
+    b->wmargin_factor = text_wmargin_factor;
+    b->hmargin_factor = text_hmargin_factor;
+    b->confine = true;
+    b->hjust = center;
+
+    b->set_label(a_label);
+
+    if(a_action==action_ok()) {
+      b->copy_cbks(m_cbks);
+    } else {
+      b->add_callback(new _cbk(*this,a_out,a_action));
+    }
+
+    sep->add(b);
+
+    return sep;
+  }
+
+  static int curop_tag() {return 9999;}
+
+  void undo_push() {
+    m_curop->m_tag = curop_tag();
+    m_stack.push_back(m_valop->copy());
+    m_curop->m_tag = 0;
+  }
+
+  void undo_pop() {
+    if(m_stack.empty()) return;
+    delete m_valop;
+    m_valop = m_stack.back();	
+    m_stack.pop_back();    
+    m_curop = get_tagged();
+    if(!m_curop) m_curop = m_valop;
+    m_curop->m_tag = 0;
+  }
+
+  valop* do_minus(valop* a_v) {
+    if(a_v->is_leaf()) {
+      return new valop(valop::MINUS,a_v->copy());
+    } else if(a_v->is_unary()) {
+      if((a_v->type()==valop::MINUS)||is_fminus(*a_v)) {
+        return a_v->m_A->copy();
+      } else {
+        return new valop(valop::MINUS,a_v->copy());
+      }
+    } else if(a_v->is_binary()) {
+      return new valop(valop::FUNC,&m_fminus,a_v->copy());
+    }
+    return 0;
+  }
+
+  valop* get_parent(valop* a_op) {
+    if(a_op==m_valop) return 0;
+    get_path v;
+    v.m_node = a_op;
+    v.m_path.push_back(m_valop);
+    if(v.visit(*m_valop)) return 0;
+    if(v.m_path.size()<2) return 0;
+    return v.m_path[v.m_path.size()-2];
+  }
+
+  valop* get_tagged() {
+    if(m_valop->m_tag==curop_tag()) return m_valop;
+    get_path v;
+    v.m_node = 0;
+    v.m_tag = curop_tag();
+    v.m_path.push_back(m_valop);
+    if(v.visit(*m_valop)) return 0;
+    if(v.m_path.size()<1) return 0;
+    return v.m_path[v.m_path.size()-1];
+  }
+
+/*
+  typedef std::vector<valop*> path_t;
+
+  path_t curop_path() {
+    if(m_curop==m_valop) {
+      path_t path;
+      path.push_back(m_valop);
+      return path;
+    }
+    get_path v;
+    v.m_node = m_curop;
+    v.m_path.push_back(m_valop);
+    if(v.visit(*m_valop)) return path_t(); //empty path
+    if(v.m_path.size()<2) return path_t(); //empty path
+    return v.m_path;
+  }
+*/
+
+  void set_curop(valop* a_res) { //take ownership
+    undo_push();
+    valop* _parent = get_parent(m_curop);
+    if(_parent) {
+      _parent->replace(m_curop,a_res,true);
+      m_curop = a_res;
+    } else {
+      //WARNING : a_res may contain pointers toward objects in m_valop.
+      valop* old = m_valop;
+      m_valop = a_res->copy();
+      m_curop = m_valop;
+      delete old;
+      delete a_res;
+    }
+    touch();
+  }
+
+  bool do_binary_op(valop::e_type a_op){
+    if(!valop::is_binary(a_op)) return false;
+
+    if(m_curop->is_leaf()||m_curop->is_unary()) {
+      valop* res =
+        new valop(a_op,
+                         m_curop->copy(),
+                         new valop(valop::STRING,"?"));
+      set_curop(res);
+
+    } else if(m_curop->is_binary()){
+
+      if(m_on==on_A) {
+        undo_push();
+        m_curop->m_A =
+          new valop(a_op,
+                           m_curop->m_A,
+                           new valop(valop::STRING,"?"));
+        m_curop = m_curop->m_A;
+        touch();
+
+      } else if(m_on==on_B) {
+        undo_push();
+        m_curop->m_B =
+          new valop(a_op,
+                           m_curop->m_B,
+                           new valop(valop::STRING,"?"));
+        m_curop = m_curop->m_B;
+        touch();
+
+      } else if(m_on==on_all) {
+        valop* res =
+          new valop(a_op,
+                           m_curop->copy(),
+                           new valop(valop::STRING,"?"));
+        set_curop(res);
+      }
+    }
+    return true;
+  }
+
+  bool do_func(std::ostream& a_out,ival_func* a_func){
+    if(a_func->number_of_arguments()==1) {
+
+      if(m_curop->is_leaf()) {
+        valop* res =
+          new valop(valop::FUNC,a_func,m_curop->copy());
+        set_curop(res);
+        return true;
+
+      } else if(m_curop->is_unary()) {
+        if(m_on==on_A) {
+          undo_push();
+          m_curop->m_A = 
+            new valop(valop::FUNC,a_func,m_curop->m_A);
+          touch();
+          return true;
+
+        } else if(m_on==on_all) {
+          valop* res = 
+            new valop(valop::FUNC,a_func,m_curop->copy());
+          set_curop(res);
+          return true;
+        } else {
+          a_out << "edvalop::_cbk::action : unknown case : 7" << std::endl;
+        }
+
+      } else if(m_curop->is_binary()) {
+        if(m_on==on_A) {
+          undo_push();
+          m_curop->m_A = 
+            new valop(valop::FUNC,a_func,m_curop->m_A);
+          touch();
+          return true;
+
+        } else if(m_on==on_B) {
+          undo_push();
+          m_curop->m_B =
+            new valop(valop::FUNC,a_func,m_curop->m_B);
+          touch();
+          return true;
+
+        } else if(m_on==on_all) {
+          valop* res = 
+            new valop(valop::FUNC,a_func,m_curop->copy());
+          set_curop(res);
+          return true;
+        }
+
+      } else {
+        a_out << "edvalop::_cbk::action : unknown case : 9" << std::endl;
+      }
+
+    } else if(a_func->number_of_arguments()==2) {
+      a_out << "edvalop::_cbk::action : unknown case : 20" << std::endl;
+    } else if(a_func->number_of_arguments()==3) {
+      a_out << "edvalop::_cbk::action : unknown case : 21" << std::endl;
+    } else if(a_func->number_of_arguments()==4) {
+      a_out << "edvalop::_cbk::action : unknown case : 22" << std::endl;
+    } else if(a_func->number_of_arguments()==5) {
+      a_out << "edvalop::_cbk::action : unknown case : 23" << std::endl;
+    } else if(a_func->number_of_arguments()==6) {
+      a_out << "edvalop::_cbk::action : unknown case : 24" << std::endl;
+    } else {
+      //should not happen, max 6 args in valop.
+    }
+
+    return false;
+  }
+
+protected:
+  const base_freetype& m_ttf;
+
+  cbks m_cbks;
+
+  _switch m_switch;
+
+  numeric m_numeric;
+  list m_list;
+
+  valop* m_valop;
+  val_funcs m_funcs;
+  val_func_cfunc m_fminus;
+
+  //typedef std::pair<valop*,valop*> elem_t;
+  //std::vector<elem_t> m_stack;
+  std::vector<valop*> m_stack;
+
+  enum on_what {
+    on_all,
+    on_A,
+    on_B
+  };
+
+  on_what m_on;
+  unsigned int m_cols;
+  unsigned int m_rows;
+
+  valop* m_curop;
+};
+
+}}
+
+#endif

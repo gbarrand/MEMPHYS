@@ -1,0 +1,5 @@
+#!/bin/sh -f
+
+cd ../inlib
+_find '#define' | grep -v 'inlib_' | grep -v 'Found at' | grep -v 'my_space_my_obj' | grep -v '//#define' 
+

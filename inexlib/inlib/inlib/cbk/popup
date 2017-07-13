@@ -1,0 +1,74 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_cbk_popup
+#define inlib_cbk_popup
+
+#include "../sg/acbk"
+#include "../sg/node"
+
+namespace inlib {
+namespace sg {
+  class ilist;
+}}
+
+namespace inlib {
+namespace cbk {
+
+class popup : public sg::acbk {
+  virtual sg::return_action action() {return sg::return_none;}
+public:
+  INLIB_SCLASS(inlib::cbk::popup)
+public:
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast<popup>(this,a_class)) return p;
+    return acbk::cast(a_class);
+  }
+public:
+  virtual void add_items(sg::ilist&,int=0,int=0) const = 0;
+public:
+  popup(const std::string& a_class,unsigned int a_action = 0)
+  :acbk(a_action)
+  ,m_class(a_class)
+  ,m_node(0)
+  {}
+  virtual ~popup(){}
+public:
+  popup(const popup& a_from)
+  :acbk(a_from)
+  ,m_class(a_from.m_class)
+  ,m_node(a_from.m_node)
+  {}
+  popup& operator=(const popup& a_from){
+    acbk::operator=(a_from);
+    m_class = a_from.m_class;
+    m_node = a_from.m_node;
+    return *this;
+  }
+public:
+  static void add_class_items(sg::ilist& a_list,const std::vector<bcbk*>& a_cbks,const std::string& a_class,int a_ex,int a_ey) {
+    inlib_vforcit(bcbk*,a_cbks,it) {
+      popup* _cbk = safe_cast<bcbk,popup>(*(*it));
+      if(_cbk && (a_class==_cbk->m_class)) {
+        _cbk->m_node = 0;
+        _cbk->add_items(a_list,a_ex,a_ey);
+      }
+    }
+  }
+  static void add_node_items(sg::ilist& a_list,const std::vector<bcbk*>& a_cbks,sg::node& a_node,int a_ex,int a_ey) {
+    inlib_vforcit(bcbk*,a_cbks,it) {
+      popup* _cbk = safe_cast<bcbk,popup>(*(*it));
+      if(_cbk && a_node.cast(_cbk->m_class)) {
+        _cbk->m_node  = &a_node;
+        _cbk->add_items(a_list,a_ex,a_ey);
+      }
+    }
+  }
+protected:
+  std::string m_class;
+  sg::node* m_node; //not owner
+};
+
+}}
+
+#endif

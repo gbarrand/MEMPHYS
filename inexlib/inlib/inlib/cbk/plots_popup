@@ -1,0 +1,94 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_cbk_plots_popup
+#define inlib_cbk_plots_popup
+
+#include "popup"
+
+#include "../sg/view_plots"
+#include "fit"
+
+namespace inlib {
+namespace cbk {
+
+inline sg::return_action plots_popup_action_current_edit(sg::gui_viewer& a_gv,const popup_data& a_data) {
+  a_gv.hide_popup();
+  sg::plots* plots = safe_cast<sg::node,sg::plots>(a_data.m_node);
+  if(!plots) {
+    a_gv.popup_warn(a_data.m_ex,a_data.m_ey,"node not a sg::plots");
+    return sg::return_to_render;
+  }
+  sg::plots_data data(*plots,true,a_data.m_ex,a_data.m_ey);
+  return sg::action_resedit(a_gv,data);
+}
+
+inline sg::return_action plots_popup_action_current_fit(sg::gui_viewer& a_gv,sg::ilist& a_node,const popup_data& a_data) {
+  a_gv.hide_popup();
+  sg::plots* plots = safe_cast<sg::node,sg::plots>(a_data.m_node);
+  if(!plots) {
+    a_gv.popup_warn(a_data.m_ex,a_data.m_ey,"node not a sg::plots");
+    return sg::return_to_render;
+  }
+  sg::bcbk* _cbk =
+    new sg::fundata_cbk<sg::gui_viewer,sg::ilist,fit_data>(a_gv,a_node,cbk::action_fit,fit_data(plots,true,a_data.m_ex,a_data.m_ey));
+  _cbk->set_single_shoot(true);
+  a_gv.add_work(_cbk);
+  return sg::return_to_render;
+}
+
+class plots_popup : public popup {
+public:
+  virtual void add_items(sg::ilist& a_list,int a_x,int a_y) const {
+    //a_list.add("toggle border",
+    //  new sg::fundata_cbk<sg::gui_viewer,sg::ilist,popup_data>(m_gv,a_list,plots_popup_action_toggle_border,popup_data(*m_node,a_x,a_y)));
+
+//  a_list.add("layout",
+//    new sg::fundata_cbk<sg::gui_viewer,sg::ilist,popup_data>(m_gv,a_list,plots_popup_action_layout,popup_data(*m_node,a_x,a_y)));
+    sg::plots* plots = safe_cast<sg::node,sg::plots>(*m_node);
+    if(plots) {
+      sg::plots_data _data(*plots,true,a_x,a_y);
+      sg::add_item(m_gv,a_list,"toggle border",sg::action_toggle_border,_data);
+      sg::add_item(m_gv,a_list,"adjust size",sg::action_adjust_size,_data);
+      sg::add_item(m_gv,a_list,"set regions",sg::action_regions,_data);
+      sg::add_item(m_gv,a_list,"set current plotter",sg::action_current,_data);
+      sg::add_item(m_gv,a_list,"plotter to one",sg::action_current_to_one,_data);
+      sg::add_item(m_gv,a_list,"toggle plotter border",sg::action_toggle_view_border,_data);
+      sg::add_item(m_gv,a_list,"plotter clear bins",sg::action_clear_bins,_data);
+      sg::add_item(m_gv,a_list,"plotter clear points",sg::action_clear_points,_data);
+      sg::add_item(m_gv,a_list,"plotter clear functions",sg::action_clear_functions,_data);
+      sg::add_item(m_gv,a_list,"plotter clear",sg::action_clear,_data);
+      sg::add_item(m_gv,a_list,"clear all plotters",sg::action_clear_plots,_data);
+    }
+
+    a_list.add("edit current plotter",
+      new sg::fundata_cbk<sg::gui_viewer,sg::ilist,popup_data>(m_gv,a_list,plots_popup_action_current_edit,popup_data(*m_node,a_x,a_y)));
+    a_list.add("fit",
+      new sg::fundata_cbk<sg::gui_viewer,sg::ilist,popup_data>(m_gv,a_list,plots_popup_action_current_fit,popup_data(*m_node,a_x,a_y)));
+  }
+public:
+  virtual sg::bcbk* copy() const {return new plots_popup(*this);}
+public:
+  plots_popup(sg::gui_viewer& a_gv)
+  :popup(sg::plots::s_class(),0)
+  ,m_gv(a_gv)
+  {}
+  virtual ~plots_popup(){}
+protected:
+  plots_popup(const plots_popup& a_from)
+  :popup(a_from)
+  ,m_gv(a_from.m_gv)
+  {}
+  plots_popup& operator=(const plots_popup& a_from){
+    popup::operator=(a_from);
+    return *this;
+  }
+protected:
+  sg::gui_viewer& m_gv;
+};
+
+}}
+
+//inlib_build_use kernel
+
+#endif

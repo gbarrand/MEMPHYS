@@ -1,0 +1,76 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_enum2s
+#define inlib_sg_enum2s
+
+#include "enums"
+#include "senums"
+
+namespace inlib {
+namespace sg {
+
+inline bool gsto_mode2s(gsto_mode a_v,std::string& a_s) {
+  switch(a_v) {
+  case gsto_gl_vbo:
+    a_s = s_gsto_gl_vbo();
+    return true;
+  case gsto_gl_list:
+    a_s = s_gsto_gl_list();
+    return true;
+  case gsto_memory:
+    a_s = s_gsto_memory();
+    return true;
+  }
+  a_s.clear();
+  return false;
+}
+
+inline bool s2gsto_mode(const std::string& a_s,gsto_mode& a_v) {
+  if(a_s==s_gsto_gl_vbo()) {
+    a_v = gsto_gl_vbo;
+    return true;
+  } else if(a_s==s_gsto_gl_list()) {
+    a_v = gsto_gl_list;
+    return true;
+  } else if(a_s==s_gsto_memory()) {
+    a_v = gsto_memory;
+    return true;
+  } else {
+    a_v = gsto_memory;
+    return false;
+  }
+}
+
+inline bool s2layout_policy(const std::string& a_s,layout_policy& a_v) {
+  if(a_s==s_layout_text_under_image()) {
+    a_v = layout_text_under_image;
+    return true;
+  } else if(a_s==s_layout_text_at_left_of_image()) {
+    a_v = layout_text_at_left_of_image;
+    return true;
+  } else {
+    a_v = layout_text_under_image;
+    return false;
+  }
+}
+
+/*
+inline bool camera_type2s(camera_type& a_v,std::string& a_s) {
+  switch(a_v) {
+  case camera_ortho:
+    a_s = s_camera_ortho();
+    return true;
+  case camera_perspective:
+    a_s = s_camera_perspective();
+    return true;
+  }
+  a_s.clear();
+  return false;
+} 
+*/
+
+}}
+
+#endif
+

@@ -1,0 +1,582 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#include "mathd"
+
+#include "smath" //s_sqrt()
+
+#include <cmath>
+#include <cstdlib>
+
+extern "C" {
+inline double inlib_random_flat_shoot(double /*aSeed*/) {
+  // Shoot random numbers in [0,1] according a flat distribution.
+  //FIXME srandom(aSeed);  
+  double value  = (double)::rand();
+  value /= (double)RAND_MAX;
+  return value;
+}
+inline double inlib_toint(double a_x) {return (double)int(a_x);}
+inline double inlib_identity(double a_x) {return a_x;}
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// Functions ////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+namespace inlib {
+
+class val_func_nco : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& /*aError*/) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+      std::vector<unsigned int> is;
+      a_return.set((unsigned int)a_args[0].get_array_double(is).size());
+      return true;
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_nco(*this);}
+public:
+  val_func_nco():val_func("nco",1){}
+  virtual ~val_func_nco(){}
+protected:
+  val_func_nco(const val_func_nco& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_nco& operator=(const val_func_nco& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_vsum : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& /*aError*/) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+      std::vector<unsigned int> is;
+      const std::vector<double>& stdv = a_args[0].get_array_double(is);
+      double dv = 0;
+      size_t number = stdv.size();
+      for(size_t index=0;index<number;index++) dv += stdv[index];
+      a_return.set(dv);
+      return true;
+    } 
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_vsum(*this);}
+public:
+  val_func_vsum():val_func("vsum",1){}
+  virtual ~val_func_vsum(){}
+protected:
+  val_func_vsum(const val_func_vsum& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_vsum& operator=(const val_func_vsum& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+class val_func_pow : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    return val_func::eval1(a_args[0],a_return,aError,a_args[1],::pow);
+  }
+  virtual ival_func* copy() const { return new val_func_pow(*this);}
+public:
+  val_func_pow():val_func(s_pow(),2){}
+  virtual ~val_func_pow(){}
+protected:
+  val_func_pow(const val_func_pow& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_pow& operator=(const val_func_pow& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_mod : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    return val_func::eval1(a_args[0],a_return,aError,a_args[1],::fmod);
+  }
+  virtual ival_func* copy() const { return new val_func_mod(*this);}
+public:
+  val_func_mod():val_func(s_mod(),2){}
+  virtual ~val_func_mod(){}
+protected:
+  val_func_mod(const val_func_mod& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_mod& operator=(const val_func_mod& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+#include "array"
+
+namespace inlib {
+
+class val_func_array : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+  
+      int n = (int)x;
+      std::vector<unsigned int> orders(1);
+      orders[0] = n;
+      array<double> v(orders);
+      if(n>=2) {
+        std::vector<double>& stdv = v.vector();
+        double delta = (d_2 - d_1)/(n-1);
+        for(int i=0;i<n;i++) stdv[i] = d_1 + i * delta;
+      }
+      a_return.set(v.orders(),v.vector());
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_array(*this);}
+public:
+  val_func_array():val_func("array",3){}
+  virtual ~val_func_array(){}
+protected:
+  val_func_array(const val_func_array& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_array& operator=(const val_func_array& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+}
+
+#include "func"
+
+namespace inlib {
+
+class val_func_expo : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+  
+      func::expo func(d_1,d_2);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_expo(*this);}
+public:
+  val_func_expo():val_func("expo",3){}
+  virtual ~val_func_expo(){}
+protected:
+  val_func_expo(const val_func_expo& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_expo& operator=(const val_func_expo& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+class val_func_gauss : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+  
+      func::gaussian func(d_1,d_2,d_3);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_gauss(*this);}
+public:
+  val_func_gauss():val_func("gauss",4){}
+  virtual ~val_func_gauss(){}
+protected:
+  val_func_gauss(const val_func_gauss& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_gauss& operator=(const val_func_gauss& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_bw : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+      func::bw func(d_1,d_2,d_3);
+      a_return.set(func.value(x));
+      return true;
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_bw(*this);}
+public:
+  val_func_bw():val_func("bw",4){}
+  virtual ~val_func_bw(){}
+protected:
+  val_func_bw(const val_func_bw& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_bw& operator=(const val_func_bw& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+// For backward compatibility. Same as upper.
+class val_func_breit : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+      func::bw func(d_1,d_2,d_3);
+      a_return.set(func.value(x));
+      return true;
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_breit(*this);}
+public:
+  val_func_breit():val_func("breit",4){}
+  virtual ~val_func_breit(){}
+protected:
+  val_func_breit(const val_func_breit& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_breit& operator=(const val_func_breit& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_cauchy : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+  
+      func::cauchy func(d_1,d_2,d_3);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_cauchy(*this);}
+public:
+  val_func_cauchy():val_func("cauchy",4){}
+  virtual ~val_func_cauchy(){}
+protected:
+  val_func_cauchy(const val_func_cauchy& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_cauchy& operator=(const val_func_cauchy& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+class val_func_pol1 : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+  
+      std::vector<double> params(2);
+      params[0] = d_1;
+      params[1] = d_2;
+      func::polynomial func(params);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_pol1(*this);}
+public:
+  val_func_pol1():val_func("pol1",3){}
+  virtual ~val_func_pol1(){}
+protected:
+  val_func_pol1(const val_func_pol1& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_pol1& operator=(const val_func_pol1& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_pol2 : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+  
+      std::vector<double> params(3);
+      params[0] = d_1;
+      params[1] = d_2;
+      params[2] = d_3;
+      func::polynomial func(params);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_pol2(*this);}
+public:
+  val_func_pol2():val_func("pol2",4){}
+  virtual ~val_func_pol2(){}
+protected:
+  val_func_pol2(const val_func_pol2& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_pol2& operator=(const val_func_pol2& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_pol3 : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+      double d_4;
+      if(!TO_D(a_args[4],d_4,a_return,aError)) return false;
+  
+      std::vector<double> params(4);
+      params[0] = d_1;
+      params[1] = d_2;
+      params[2] = d_3;
+      params[3] = d_4;
+      func::polynomial func(params);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_pol3(*this);}
+public:
+  val_func_pol3():val_func("pol3",5){}
+  virtual ~val_func_pol3(){}
+protected:
+  val_func_pol3(const val_func_pol3& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_pol3& operator=(const val_func_pol3& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+class val_func_pol4 : public val_func {
+public:
+  virtual bool eval(const args& a_args,value& a_return,std::string& aError) {
+    if(a_args.size()!=m_num_args) return false;
+    if(a_args[0].type()==value::ARRAY_DOUBLE) {
+    } else {
+  
+      double x;
+      if(!TO_D(a_args[0],x,a_return,aError)) return false;
+  
+      double d_1;
+      if(!TO_D(a_args[1],d_1,a_return,aError)) return false;
+      double d_2;
+      if(!TO_D(a_args[2],d_2,a_return,aError)) return false;
+      double d_3;
+      if(!TO_D(a_args[3],d_3,a_return,aError)) return false;
+      double d_4;
+      if(!TO_D(a_args[4],d_4,a_return,aError)) return false;
+      double d_5;
+      if(!TO_D(a_args[5],d_5,a_return,aError)) return false;
+  
+      std::vector<double> params(5);
+      params[0] = d_1;
+      params[1] = d_2;
+      params[2] = d_3;
+      params[3] = d_4;
+      params[4] = d_5;
+      func::polynomial func(params);
+      a_return.set(func.value(x));
+      return true;
+  
+    }
+    return false;
+  }
+  virtual ival_func* copy() const { return new val_func_pol4(*this);}
+public:
+  val_func_pol4():val_func("pol4",6){}
+  virtual ~val_func_pol4(){}
+protected:
+  val_func_pol4(const val_func_pol4& a_from)
+  :ival_func(a_from),val_func(a_from){}
+  val_func_pol4& operator=(const val_func_pol4& a_from){
+    val_func::operator=(a_from);return *this;
+  }
+};
+
+inline val_funcs::val_funcs() {
+#ifdef INLIB_MEM
+  mem::increment(s_class().c_str());
+#endif
+
+  typedef val_func_cfunc cfunc_t;
+
+  m_funcs.push_back(new cfunc_t(s_sqrt(),::sqrt,in_domain_all));
+
+  m_funcs.push_back(new cfunc_t("exp",::exp,in_domain_all));
+  m_funcs.push_back(new cfunc_t("log",::log,in_domain_log));
+  m_funcs.push_back(new cfunc_t("log10",::log10,in_domain_log));
+
+  m_funcs.push_back(new cfunc_t(s_cos(),::cos,in_domain_all));
+  m_funcs.push_back(new cfunc_t("sin",::sin,in_domain_all));
+  m_funcs.push_back(new cfunc_t("tan",::tan,in_domain_tan));
+
+  m_funcs.push_back(new cfunc_t("acos",::acos,in_domain_acos));
+  m_funcs.push_back(new cfunc_t("asin",::asin,in_domain_acos));
+  m_funcs.push_back(new cfunc_t("atan",::atan,in_domain_all));
+
+  m_funcs.push_back(new cfunc_t("cosh",::cosh,in_domain_all));
+  m_funcs.push_back(new cfunc_t("sinh",::sinh,in_domain_all));
+  m_funcs.push_back(new cfunc_t("tanh",::tanh,in_domain_all));
+
+  m_funcs.push_back(new cfunc_t("fabs",::fabs,in_domain_all));
+  m_funcs.push_back(new cfunc_t("abs",::fabs,in_domain_all));
+  m_funcs.push_back(new cfunc_t("rndm",::inlib_random_flat_shoot,in_domain_all));
+  m_funcs.push_back(new cfunc_t("toint",::inlib_toint,in_domain_all));
+
+  //for OpenPAW/c_pawex20.kumac
+  m_funcs.push_back(new cfunc_t("int",::inlib_toint,in_domain_all)); 
+
+  m_funcs.push_back(new val_func_nco());
+  m_funcs.push_back(new val_func_vsum());
+
+  m_funcs.push_back(new val_func_pow());
+  m_funcs.push_back(new val_func_mod());
+
+  m_funcs.push_back(new val_func_array());
+  m_funcs.push_back(new val_func_expo());
+  m_funcs.push_back(new val_func_pol1());
+
+  m_funcs.push_back(new val_func_gauss());
+  m_funcs.push_back(new val_func_bw());
+  m_funcs.push_back(new val_func_cauchy());
+  m_funcs.push_back(new val_func_pol2());
+
+  m_funcs.push_back(new val_func_pol3());
+  m_funcs.push_back(new val_func_pol4());
+
+  // For backward compatibility :
+  m_funcs.push_back(new val_func_breit());
+
+  // For edvalop :
+  m_funcs.push_back(new cfunc_t("",::inlib_identity,in_domain_all));
+}
+
+}

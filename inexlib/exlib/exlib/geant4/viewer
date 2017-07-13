@@ -1,0 +1,1805 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_geant4_viewer
+#define exlib_geant4_viewer
+
+#include <G4LogicalVolumeStore.hh>
+#include <G4PhysicalVolumeStore.hh>
+#include <G4SolidStore.hh>
+
+#include <G4VStateDependent.hh>
+#include <G4StateManager.hh>
+#include <G4VTrajectoryPoint.hh>
+#include <G4SteppingManager.hh>
+#include <G4VDigi.hh>
+#include <G4Version.hh>
+
+#include "../xml/xml_style"
+#include "../xml/xml_ftp"
+
+#include <inlib/sbeg>
+#include <inlib/scolors>
+#include <inlib/sys/sleep>
+#include <inlib/wall/strings>
+
+#include <inlib/cbk/plots_popup>
+#include <inlib/sg/view_evd>
+#include <inlib/sg/plotarea>
+#include <inlib/sg/sphere>
+#include <inlib/atime2s>
+
+#include "../cbk/out"
+
+#include <inlib/sg/gui_viewer>
+#include "../sg/view_wall"
+#include "../cbk/wall"
+
+#include "visited_volume"
+#include "event_timer"
+#include "run_manager"
+#include "primary_generator"
+#include "geo"
+#include "transform"
+
+#include <inlib/file>
+#include <inlib/sg/text_hershey_marker>
+#include "../sg/text_freetype_marker"
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+
+namespace exlib {
+namespace geant4 {
+
+INLIB_GLOBAL_STRING(G4LEDATA)
+INLIB_GLOBAL_STRING(G4NEUTRONHPDATA)
+INLIB_GLOBAL_STRING(G4LEVELGAMMADATA)
+INLIB_GLOBAL_STRING(G4RADIOACTIVEDATA)
+INLIB_GLOBAL_STRING(G4ENSDFSTATEDATA)
+INLIB_GLOBAL_STRING(G4PIIDATA)
+INLIB_GLOBAL_STRING(G4NEUTRONXSDATA)
+INLIB_GLOBAL_STRING(G4REALSURFACEDATA)
+INLIB_GLOBAL_STRING(G4SAIDXSDATA)
+INLIB_GLOBAL_STRING(G4ABLADATA)
+#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER<=820
+INLIB_GLOBAL_STRING(NeutronHPCrossSections)
+#endif
+#ifdef EXLIB_HAS_PYTHIA8
+INLIB_GLOBAL_STRING(PYTHIA8DATA)
+#endif
+
+class viewer
+:public inlib::sg::gui_viewer 
+,public inlib::sg::view_evd 
+,public inlib::sg::plotarea
+,public exlib::sg::view_wall
+{
+  typedef inlib::sg::gui_viewer parent;
+  typedef inlib::sg::view_evd parent_evd;
+  typedef inlib::sg::plotarea parent_plotarea;
+  typedef exlib::sg::view_wall parent_wall;
+public:
+  virtual void render() = 0;
+  virtual void visualize_event() { //executed from state::Notify().
+    dynamic_sg().clear();
+    visualize_trajectories(/*pickable=*/false,/*all=*/true);
+  }
+  virtual void create_histos() {}
+  virtual void reset_histos() {}
+  virtual void set_entries_params(inlib::sg::entries&) {}
+  virtual void set_param(const std::string& /*a_param*/,const std::string& /*a_value*/,std::string& /*a_warn*/) {}
+  virtual void event_end() {} //executed from state::Notify().
+public:
+  INLIB_SCLASS(exlib::geant4::viewer)
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = inlib::cmp_cast<viewer>(this,a_class)) return p;
+    if(void* p = inlib::cmp_cast<inlib::sg::view_evd>(this,a_class)) return p;
+    if(void* p = inlib::cmp_cast<parent_plotarea>(this,a_class)) return p;
+    if(void* p = inlib::cmp_cast<parent_wall>(this,a_class)) return p;
+    return parent::cast(a_class);
+  }
+protected:
+  INLIB_CLASS_STRING(geom)
+  INLIB_CLASS_STRING(reset)  
+  INLIB_CLASS_STRING(plots)
+  INLIB_CLASS_STRING(utils)
+  INLIB_CLASS_STRING(wall)
+  INLIB_CLASS_STRING(export)
+  INLIB_CLASS_STRING(exit)
+
+  INLIB_CLASS_STRING_VALUE(create_histos,create histos)
+  INLIB_CLASS_STRING_VALUE(reset_histos,reset histos)
+  INLIB_CLASS_STRING_VALUE(start_run,start run)
+  INLIB_CLASS_STRING_VALUE(stop_run,stop run)
+  INLIB_CLASS_STRING_VALUE(beam_on,beam on)  
+  INLIB_CLASS_STRING_VALUE(hide_plots,hide plots)
+  INLIB_CLASS_STRING_VALUE(show_plots,show plots)
+  INLIB_CLASS_STRING_VALUE(edit_plots,edit plots) 
+  INLIB_CLASS_STRING_VALUE(clear_event,clear event)
+  INLIB_CLASS_STRING_VALUE(clear_detector,clear detector)
+
+  INLIB_CLASS_STRING(params)
+  INLIB_CLASS_STRING(icon)
+  INLIB_CLASS_STRING(about)
+  
+  inlib::sg::list* create_home_menu() {
+    //m_out << "exlib::geant4::viewer::create_home_menu : " << std::endl;
+
+    inlib::sg::list* list = new inlib::sg::list(ttf());
+    set_colors(*list);
+
+    //list->confine.value(true);
+    //list->visible_items.value(10);
+
+    inlib::sg::add_image_item(*this,*list,s_geom(),"ioda_cube.jpg",action_geom);
+    
+    inlib::sg::add_image_item(*this,*list,s_start_run(),"vis_events.jpg",action_vis_events);
+    inlib::sg::add_image_item(*this,*list,s_stop_run(),"stop_events.jpg",inlib::sg::action_stop_event_anim);
+      
+    inlib::sg::add_image_item(*this,*list,s_beam_on(),"event.jpg",action_beam_on); //for offscreen
+
+    inlib::sg::add_image_item(*this,*list,s_clear_event(),"clear_event.jpg",inlib::sg::action_clear_dynamic_sg);
+    inlib::sg::add_image_item(*this,*list,s_clear_detector(),"edit_clear.jpg",inlib::sg::action_clear_static_sg);
+    inlib::sg::add_image_item(*this,*list,s_reset(),"edit_undo.jpg",inlib::sg::action_reset_camera);
+    inlib::sg::add_image_item(*this,*list,s_hide_plots(),"white.jpg",action_hide_plots);
+    inlib::sg::add_image_item(*this,*list,s_show_plots(),"white.jpg",action_show_plots);
+    inlib::sg::add_image_item(*this,*list,s_plots(),"set_current_region.jpg",inlib::sg::action_regions_main);
+    inlib::sg::add_image_item(*this,*list,s_edit_plots(),"edit_plot.jpg",inlib::sg::action_edit_plot);
+
+    // histos :
+    inlib::sg::add_image_item(*this,*list,s_create_histos(),"white.jpg",action_create_histos); //virtual create_histos()
+    inlib::sg::add_image_item(*this,*list,s_reset_histos(),"clear_histo.jpg",action_reset_histos); //virtual reset_histos()
+
+    inlib::sg::add_image_item(*this,*list,s_export(),"document_export.jpg",exlib::out::action_main);
+
+    if(m_walls._walls().size()) {
+      inlib::sg::add_image_item(*this,*list,s_wall(),"connect_to_wall.jpg",exlib::wall::action_main);
+    }
+
+    inlib::sg::add_image_item(*this,*list,s_utils(),"tools.jpg",inlib::sg::action_utils);
+
+    if(!inlib::device::stop_app_button()){
+      inlib::sg::add_image_item(*this,*list,s_exit(),"application_exit.jpg",inlib::sg::action_set_to_exit);
+    }
+    return list;
+  }
+protected:
+  INLIB_CLASS_STRING(color)
+  INLIB_CLASS_STRING(show_name)
+  INLIB_CLASS_STRING(text_scale)
+  INLIB_CLASS_STRING(at_end)
+
+  INLIB_CLASS_STRING(false)
+  INLIB_CLASS_STRING(true)
+  
+  void visualize_trajectories(bool a_pickable,bool a_all) { //a_all = false = only primaries.
+    
+    const G4Event* event = m_run_manager.GetCurrentEvent();
+    if(!event) return;
+
+    TrajectoryVector* vec = 0;
+   {G4TrajectoryContainer* tcont = event->GetTrajectoryContainer();
+    if(tcont) vec = tcont->GetVector();}
+    if(!vec) {
+      m_warn_no_trajectory_container = true;
+      return;
+    }
+    if(vec->empty()) return;
+
+    inlib::sg::separator* sep = new inlib::sg::separator;
+      
+    inlib::sg::draw_style* ds = new inlib::sg::draw_style;
+    ds->style = inlib::sg::draw_style::lines;
+    ds->line_width = 1;
+    sep->add(ds);
+
+    inlib::xml::styles::style_t prim_def_sty;
+    map_sty_t prim_styles;
+    bool prim_found_style = get_particles_styles(s_primary(),prim_styles,prim_def_sty);
+
+    inlib::xml::styles::style_t traj_def_sty;
+    map_sty_t traj_styles;
+    get_particles_styles(s_trajectory(),traj_styles,traj_def_sty);
+
+    inlib::sg::atb_vertices* vtcs_all = 0;
+    if(!a_pickable) { //one node with all segments of all selected trajectories.
+      vtcs_all = new inlib::sg::atb_vertices;
+      vtcs_all->mode = inlib::gl::lines();
+      sep->add(vtcs_all);
+    }
+    
+    G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+
+   {inlib::colorf col;
+    bool show_name;
+    float text_scale;
+    bool at_end;
+    inlib_vforcit(G4VTrajectory*,*vec,it) {
+      G4VTrajectory* obj = *it;
+
+      //obj->GetParticleName()
+      //obj->GetTrackID()
+      //obj->GetParentID()
+      //obj->GetCharge()
+      //obj->GetPDGEncoding()
+      //obj->GetInitialMomentum().x();
+      //obj->GetInitialMomentum().y();
+      //obj->GetInitialMomentum().z();
+
+      int pointn = obj->GetPointEntries();
+      if(pointn<=0) continue;
+
+      if(!a_all && obj->GetParentID()) continue; //a_all=fase, skip not primaries.
+
+      if(!obj->GetParentID() && prim_found_style) {
+        find_particle_style(prim_styles,prim_def_sty,
+                            obj->GetParticleName(),
+                            col,show_name,text_scale,at_end);
+      } else {
+        find_particle_style(traj_styles,traj_def_sty,
+                            obj->GetParticleName(),
+                            col,show_name,text_scale,at_end);
+      }
+
+      //m_out << obj->GetParticleName() << " " << pointn << std::endl;
+
+      if(!a_pickable) {
+        float ox,oy,oz;
+        G4VTrajectoryPoint* tp = obj->GetPoint(0);
+        const G4ThreeVector& pos = tp->GetPosition();
+        ox = float(pos.x());
+        oy = float(pos.y());
+        oz = float(pos.z());
+        float x,y,z;
+        for (int i = 1; i < pointn ; i++) {
+          G4VTrajectoryPoint* tp = obj->GetPoint(i);
+          const G4ThreeVector& pos = tp->GetPosition();
+          x = float(pos.x());
+          y = float(pos.y());
+          z = float(pos.z());
+
+          vtcs_all->add(ox,oy,oz);
+          vtcs_all->add_color(col);
+          vtcs_all->add(x,y,z);
+          vtcs_all->add_color(col);
+
+          ox = x;
+          oy = y;
+          oz = z;
+        }
+	
+      } else {
+
+        //if(!show_name)
+	{
+	  std::string sobj;
+	  inlib::p2s(obj,sobj);
+          inlib::sg::infos* infos = new inlib::sg::infos;
+          infos->strings.add(sobj);
+          infos->strings.add("no_tag");
+          sep->add(infos);
+	  
+          std::vector<std::string> vinfos;
+          vinfos.push_back(obj->GetParticleName());
+
+          double px = obj->GetInitialMomentum().x();
+          double py = obj->GetInitialMomentum().y();
+          double pz = obj->GetInitialMomentum().z();
+
+	 {std::string sval("init momentum (MeV) : ");
+	  inlib::numas(px,sval);
+	  sval += " ";
+	  inlib::numas(obj->GetInitialMomentum().y(),sval);
+	  sval += " ";
+	  inlib::numas(obj->GetInitialMomentum().z(),sval);
+          vinfos.push_back(sval);}
+	  
+	 {std::string sval("energy (MeV) : ");
+          G4ParticleDefinition* pdef = particleTable->FindParticle(obj->GetParticleName());
+          G4double mass = pdef->GetPDGMass();
+          G4double energy = ::sqrt(px*px+py*py+pz*pz+mass*mass); //MeV
+	  inlib::numas(energy,sval);
+          vinfos.push_back(sval);}
+
+          dumpers()[sobj] = new dumper(*this,vinfos);
+        }
+
+        inlib::sg::atb_vertices* vtcs = new inlib::sg::atb_vertices;
+        vtcs->mode = inlib::gl::line_strip();
+        sep->add(vtcs);
+
+        for (int i = 0; i < pointn ; i++) {
+          G4VTrajectoryPoint* tp = obj->GetPoint(i); //?
+          const G4ThreeVector& pos = tp->GetPosition();
+          vtcs->add((float)pos.x(),(float)pos.y(),(float)pos.z());
+          vtcs->add_color(col);
+        }
+      }
+      
+      if(show_name) {
+        if(at_end) {
+          const G4ThreeVector& pe = obj->GetPoint(pointn-1)->GetPosition();
+          add_marker_text(*sep,(float)pe.x(),(float)pe.y(),(float)pe.z(),
+                          col,text_scale,obj->GetParticleName());
+        } else {
+          const G4ThreeVector& pb = obj->GetPoint(0)->GetPosition();
+          add_marker_text(*sep,(float)pb.x(),(float)pb.y(),(float)pb.z(),
+                          col,text_scale,obj->GetParticleName());
+        }
+      }
+
+    }}
+
+    add_in_dynamic_sg(sep);
+
+  }
+
+  bool visualize_hits_collection(const std::string& a_name) {
+  
+    G4VHitsCollection* collection = exlib::geant4::get_hits_collection(m_out,m_run_manager,a_name);
+    if(!collection) return false;
+
+    transform _tsf;
+
+    size_t number = collection->GetSize();
+
+    m_out << "exlib::geant4::viewer::visualize_hits : #hits " << number << std::endl;
+
+    for(size_t index=0;index<number;index++) {
+      G4VHit* obj = collection->GetHit(index);
+      if(!obj) continue;
+      G4LogicalVolume* lv = exlib::geant4::get_logical_volume(*obj); // The hit must have the "LV" and "TSF" AttDef.
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4Transform3D* tsf = exlib::geant4::get_transform3D(*obj);
+      if(!tsf) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4Transform3D." << std::endl;
+        continue;
+      }
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_hits : hit without G4Solid." << std::endl;
+        continue;
+      }
+      //G4Material* material = lv->GetMaterial();
+  
+      inlib::sg::separator* sep = new inlib::sg::separator;
+        
+     {inlib::sg::rgba* mat = new inlib::sg::rgba();
+      G4Colour color;
+      if(exlib::geant4::get_color(*obj,color)) {
+        mat->color = inlib::colorf(float(color.GetRed()),float(color.GetGreen()),float(color.GetBlue()),float(color.GetAlpha()));
+      } else {
+        mat->color = inlib::colorf_default();
+      }
+      sep->add(mat);}
+      
+      // Build name (for picking) :
+      //std::string s;
+      //inlib::sprintf(s,128,"WCPMT/0x%lx",(unsigned long)obj);
+  
+      inlib::mat4f mtx;
+      _tsf.set_matrix(mtx);
+      if(!add_shape(m_out,*sep,*solid,mtx,true)) {}
+
+      add_in_dynamic_sg(sep);
+    }
+  
+    return true;
+  }
+
+  bool visualize_digis_collection(const std::string& a_name) {
+
+    G4VDigiCollection* collection = exlib::geant4::get_digis_collection(m_out,m_run_manager,a_name);
+    if(!collection) return false;
+
+    transform _tsf;
+
+    size_t number = collection->GetSize();
+
+    m_out << "exlib::geant4::viewer::visualize_digis : #digis " << number << std::endl;
+
+    for(size_t index=0;index<number;index++) {
+      G4VDigi* obj = collection->GetDigi(index);
+      if(!obj) continue;
+      G4LogicalVolume* lv = exlib::geant4::get_logical_volume(*obj); // The obj must have the "LV" and "TSF" AttDef.
+      if(!lv) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4LogicalVolume." << std::endl;
+        continue;
+      }
+      G4Transform3D* tsf = exlib::geant4::get_transform3D(*obj);
+      if(!tsf) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4Transform3D." << std::endl;
+        continue;
+      }
+      G4VSolid* solid = lv->GetSolid();
+      if(!solid) {
+        m_out << "exlib::geant4::viewer::visualize_digis : digi without G4Solid." << std::endl;
+        continue;
+      }
+      //G4Material* material = lv->GetMaterial();
+  
+      inlib::sg::separator* sep = new inlib::sg::separator;
+        
+     {inlib::sg::rgba* mat = new inlib::sg::rgba();
+      G4Colour color;
+      if(exlib::geant4::get_color(*obj,color)) {
+        mat->color = inlib::colorf(float(color.GetRed()),float(color.GetGreen()),float(color.GetBlue()),float(color.GetAlpha()));
+      } else {
+        mat->color = inlib::colorf_default();
+      }
+      sep->add(mat);}
+      
+      // Build name (for picking) :
+      //std::string s;
+      //inlib::sprintf(s,128,"WCPMT/0x%lx",(unsigned long)obj);
+  
+      inlib::mat4f mtx;
+      _tsf.set_matrix(mtx);
+      if(!add_shape(m_out,*sep,*solid,mtx,true)) {}
+
+      add_in_dynamic_sg(sep);
+      
+    }
+  
+    return true;
+  }
+public:
+  viewer(run_manager& a_run_manager,
+         const std::string& a_app_name,
+         const std::string& a_app_version,
+         std::ostream& a_out,
+         inlib::sg::render_manager& a_gl_mgr,
+         const inlib::sg::base_freetype& a_ttf,
+         const inlib::sg::selection& a_selection,
+         const std::string& a_data_dir,
+         const std::string& a_res_dir)
+  :parent(a_out,a_gl_mgr,a_ttf,a_selection,0,0,false)
+  ,parent_evd(parent::get_me())
+  ,parent_plotarea(parent::get_me())
+  ,parent_wall(a_out,a_app_name,a_data_dir)
+
+  ,m_run_manager(a_run_manager)
+  //,m_data_dir(a_data_dir) //for unfold()
+  ,m_state(0)
+  ,m_warn_no_trajectory_container(false)
+  ,m_init_camera(0)
+  {
+    m_app_name = a_app_name;
+    m_app_version = a_app_version;
+    m_res_dir = a_res_dir;
+    m_data_dirs.clear();
+    m_data_dirs.push_back(a_data_dir);
+
+    //////////////////////////////////////////////////////////
+    /// sg ///////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    create_sg_evd(float(1*CLHEP::m));
+
+    set_layout_factors(0.28f,-0.32f,0.4f,0.3f); //before the below.
+    add_plots_to_scene();
+    hide_plots();
+
+    //keep a copy of starting camera. 
+    if(scene_camera()) m_init_camera = scene_camera()->copy();
+
+    //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    set_scene_clear_color(inlib::colorf_black());
+
+  //m_params.set_gui_Apple_black_on_white();
+
+    ////////////////////////////////////////////
+    ////////////////////////////////////////////
+    ////////////////////////////////////////////
+   {std::vector<std::string> vals;
+    vals.push_back(a_res_dir);
+    vals.push_back(a_data_dir); // So that user can download a font if needed :
+    inlib::env_path_append("EXLIB_FONT_PATH",vals);}
+
+    ////////////////////////////////////////////
+    /// cmaps //////////////////////////////////
+    ////////////////////////////////////////////
+    m_styles.add_colormap("default",inlib::sg::style_default_colormap());
+    m_styles.add_colormap("ROOT",inlib::sg::style_ROOT_colormap());
+
+    ////////////////////////////////////////////
+    /// <app>.style ////////////////////////////
+    ////////////////////////////////////////////
+    //look for a <app>.style in the res dir :
+   {std::string path = m_res_dir;
+    path += inlib::sep();
+    path += m_app_name;
+    path += ".style";
+    if(inlib::file::exists(path)) {
+      xml::load_style_file(m_out,path,styles());
+    }}
+
+  //m_styles.res_color(s_scene(),"screen_color",m_params.m_scene_screen_color);
+    set_gui_style(s_gui());
+
+    ////////////////////////////////////////////
+    /// <app>.ftp //////////////////////////////
+    ////////////////////////////////////////////
+    //look for a <app>.ftp in the res dir :
+   {std::string path = a_res_dir;
+    path += inlib::sep();
+    path += m_app_name;
+    path += ".ftp";
+    if(inlib::file::exists(path)) xml::load_ftp_file(m_out,path,m_ftps);}
+
+    //look for a <app>.ftp in the data dir :
+   {std::string path = a_data_dir;
+    path += inlib::sep();
+    path += m_app_name;
+    path += ".ftp";
+    if(inlib::file::exists(path)) xml::load_ftp_file(m_out,path,m_ftps);}
+    ////////////////////////////////////////////
+    ////////////////////////////////////////////
+    ////////////////////////////////////////////
+
+    m_popup_cbks.add(new inlib::cbk::plots_popup(*this));
+
+    m_state = new state(*this); //the G4StateManager is owner.
+  }
+
+  virtual ~viewer() { 
+    //m_state indirectly deleted by the run manager.
+    delete m_init_camera;
+  }
+protected:
+  viewer(const viewer& a_from)
+  :parent(a_from)
+  ,parent_evd(a_from)
+  ,parent_plotarea(a_from)
+  ,parent_wall(a_from)
+
+  ,m_run_manager(a_from.m_run_manager)
+  //,m_data_dir(a_from.m_data_dir)
+  ,m_ftps(a_from.m_ftps)
+  ,m_state(0)
+  ,m_warn_no_trajectory_container(false)
+  ,m_init_camera(0)
+  ,m_tmp_dirs(a_from.m_tmp_dirs)
+  {}
+  viewer& operator=(const viewer& a_from){
+    parent::operator=(a_from);
+    parent_evd::operator=(a_from);
+    parent_plotarea::operator=(a_from);
+
+    //m_data_dir = a_from.m_data_dir;
+    m_ftps = a_from.m_ftps;
+
+    m_tmp_dirs = a_from.m_tmp_dirs;
+
+    return *this;
+  }
+public:
+  const viewer& get_me() const {return *this;}
+  viewer& get_me() {return *this;}
+  
+  const inlib::sg::node* init_camera() const {return m_init_camera;}
+public:
+
+  const run_manager& get_run_manager() const {return m_run_manager;}
+  run_manager& get_run_manager() {return m_run_manager;}
+  
+public:
+  void clear_tmp() {
+    inlib_vforcit(std::string,m_tmp_dirs,it){
+      if(!inlib::dir::rmdir(*it)){
+        viewer::m_out << "exlib::geant4::viewer::clear_tmp :"
+                      << " can't remove directory "
+                      << inlib::sout(*it)
+                      << std::endl;
+      } /*else {
+        viewer::m_out << "exlib::geant4::viewer::clear_tmp :"
+                      << " remove directory "
+                      << inlib::sout(*it)
+                      << std::endl;
+      }*/
+    }
+    m_tmp_dirs.clear();
+  }
+
+protected:
+  void add_in_dynamic_sg(inlib::sg::group* a_group) { //it takes ownership.
+    if(a_group->empty()) {
+      delete a_group;
+    } else {
+      dynamic_sg().add(a_group);
+      if(is_connected()) {
+        inlib::args opts;
+        opts.add(inlib::wall::s_placement(),inlib::wall::s_dynamic());
+        if(!send_sg(*a_group,opts)){
+          m_out << "exlib::geant4::viewer::add_in_dynamic_sg :"
+                << " send_sg() trajectories failed."
+                << std::endl;
+        }
+      }	
+    }
+  }
+  
+  static void add_marker_text(inlib::sg::group& a_sep,
+                              float a_x,float a_y,float a_z,
+                              const inlib::colorf& a_color,
+                              float a_scale,
+                              const std::string& a_s){
+    inlib::sg::separator* sep = new inlib::sg::separator;    
+    a_sep.add(sep);
+
+    inlib::sg::rgba* color = new inlib::sg::rgba();
+    color->color = a_color;
+    sep->add(color);
+
+    inlib::sg::matrix* mtx = new inlib::sg::matrix;
+    mtx->set_translate(a_x,a_y,a_z);
+    sep->add(mtx);    
+
+    if(false) {
+      inlib::sg::text_hershey_marker* text = new inlib::sg::text_hershey_marker;
+      std::string _s = a_s;
+      text->encoding = cvt2paw(_s);
+      text->strings.add(_s);
+      text->height = text->height.value()*a_scale;
+      sep->add(text);
+    } else {
+      sg::text_freetype_marker* text = new sg::text_freetype_marker;
+      text->font = inlib::sg::font_stixgeneral_otf();
+      std::vector<sg::text_freetype::unichar> line;
+      if(!cvt2stix(a_s,line)) {}
+      text->unitext.add(line);
+      text->height = text->height.value()*a_scale;
+      sep->add(text);
+    }
+    
+  }
+  
+  static std::string cvt2paw(std::string& a_s){
+    if(a_s==s_e_plus()) {
+      a_s = "e^+";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_e_minus()) {
+      a_s = "e^-";
+      return inlib::sg::encoding_PAW();
+
+    } else if(a_s==s_gamma()) {
+      a_s = "[g]";
+      return inlib::sg::encoding_PAW();
+
+    } else if(a_s==s_mu_plus()) {
+      a_s = "[m]^+";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_mu_minus()) {
+      a_s = "[m]^-";
+      return inlib::sg::encoding_PAW();
+
+    } else if(a_s==s_nu_e()) {
+      a_s = "[n]?e";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_nu_mu()) {
+      a_s = "[n]?[m]";
+      return inlib::sg::encoding_PAW();
+
+    } else if(a_s==s_proton()) {
+      a_s = "p";
+      return inlib::sg::encoding_none();
+
+    } else if(a_s==s_neutron()) {
+      a_s = "n";
+      return inlib::sg::encoding_none();
+
+    } else if(a_s==s_pi_plus()) {
+      a_s = "[p]^+";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_pi_minus()) {
+      a_s = "[p]^-";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_pi0()) {
+      a_s = "[p]^0";
+      return inlib::sg::encoding_PAW();
+
+    } else if(a_s==s_kaon_plus()) {
+      a_s = "K^+";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_kaon_minus()) {
+      a_s = "K^-";
+      return inlib::sg::encoding_PAW();
+    } else if(a_s==s_kaon0()) {
+      a_s = "K^0";
+      return inlib::sg::encoding_PAW();
+
+    } else {
+      return inlib::sg::encoding_none();
+    }
+  }
+
+  static bool cvt2stix(const std::string& a_s,std::vector<sg::text_freetype::unichar>& a_line){
+
+    a_line.clear();
+    if(a_s==s_e_plus()) {
+      a_line.push_back(0x00065); // e
+      a_line.push_back(0x0002B); // +
+
+    } else if(a_s==s_e_minus()) {
+      a_line.push_back(0x00065); // e
+      a_line.push_back(0x0002D); // -
+
+    } else if(a_s==s_gamma()) {
+      a_line.push_back(0x003B3); // gamma
+
+    } else if(a_s==s_mu_plus()) {
+      a_line.push_back(0x003BC); // mu
+      a_line.push_back(0x0002B); // +
+
+    } else if(a_s==s_mu_minus()) {
+      a_line.push_back(0x003BC); // mu
+      a_line.push_back(0x0002D); // +
+
+    } else if(a_s==s_nu_e()) {
+      a_line.push_back(0x003BD); // nu
+    //a_line.push_back(0x0002F); // /
+      a_line.push_back(0x0002D); // -
+      a_line.push_back(0x00065); // e
+
+    } else if(a_s==s_nu_mu()) {
+      a_line.push_back(0x003BD); // nu
+    //a_line.push_back(0x0002F); // /
+      a_line.push_back(0x0002D); // -
+      a_line.push_back(0x003BC); // mu
+
+    } else if(a_s==s_proton()) {
+      a_line.push_back(0x00070); // p
+
+    } else if(a_s==s_neutron()) {
+      a_line.push_back(0x0006E); // n
+
+    } else if(a_s==s_pi_plus()) {
+      a_line.push_back(0x003C0); // pi
+      a_line.push_back(0x0002B); // +
+
+    } else if(a_s==s_pi_minus()) {
+      a_line.push_back(0x003C0); // pi
+      a_line.push_back(0x0002D); // -
+
+    } else if(a_s==s_pi0()) {
+      a_line.push_back(0x003C0); // pi
+      a_line.push_back(0x00030); // 0
+
+    } else if(a_s==s_kaon_plus()) {
+      a_line.push_back(0x0004B); // K
+      a_line.push_back(0x0002B); // +
+
+    } else if(a_s==s_kaon_minus()) {
+      a_line.push_back(0x0004B); // K
+      a_line.push_back(0x0002D); // -
+
+    } else if(a_s==s_kaon0()) {
+      a_line.push_back(0x0004B); // K
+      a_line.push_back(0x00030); // 0
+
+    } else if(a_s==s_nu()) {
+      a_line.push_back(0x003BD); // nu
+
+    } else {
+      inlib_sforcit(a_s,it) a_line.push_back(*it);
+    }
+    return true;
+  }
+
+  typedef std::map<std::string,inlib::xml::styles::style_t> map_sty_t;
+
+  bool get_particles_styles(const std::string& a_what,map_sty_t& a_map,inlib::xml::styles::style_t& a_def){
+    bool found = false;
+
+    a_map.clear();
+    a_def.clear();
+
+    a_def.push_back(inlib::xml::styles::style_item_t(s_color(),inlib::s_red()));
+    a_def.push_back(inlib::xml::styles::style_item_t(s_show_name(),s_false()));
+    a_def.push_back(inlib::xml::styles::style_item_t(s_text_scale(),"1"));
+    a_def.push_back(inlib::xml::styles::style_item_t(s_at_end(),s_true()));
+
+    // optimization. Get primary styles in a map  :
+   {std::string sbeg = a_what+inlib::res_sep();
+    inlib_vforcit(inlib::xml::styles::named_style_t,m_styles.named_styles(),it) {
+      const std::string& name = (*it).first;
+      if(inlib::is_beg(name,sbeg)) {
+        std::string key = name.substr(sbeg.size(),name.size()-sbeg.size());
+        if(key==s_default()) {
+          a_def = (*it).second;
+        } else {
+          a_map[key] = (*it).second;
+        }
+        found = true;
+      }
+    }}
+    return found;
+  }
+
+  void find_particle_style(const map_sty_t& a_map,
+                           const inlib::xml::styles::style_t& a_def,
+                           const std::string& a_part,
+                           inlib::colorf& a_col,
+                           bool& a_show_name,
+                           float& a_text_scale,
+                           bool& a_at_end){
+    a_col = inlib::colorf_default();
+    a_show_name = false;
+    a_text_scale = 1;
+    a_at_end = true;
+    
+    map_sty_t::const_iterator it = a_map.find(a_part);
+    if(it==a_map.end()) {      
+      if(!m_styles.res_color(a_def,s_color(),a_col,""))             a_col = inlib::colorf_default();
+      if(!m_styles.res_bool(a_def,s_show_name(),a_show_name,""))    a_show_name = false;
+      if(!m_styles.res_value(a_def,s_text_scale(),a_text_scale,"")) a_text_scale = 1;
+      if(!m_styles.res_bool(a_def,s_at_end(),a_at_end,""))          a_at_end = true;
+      return;
+    }
+
+    if(!m_styles.res_color((*it).second,s_color(),a_col,a_part)) {
+      if(!m_styles.res_color(a_def,s_color(),a_col,"")) a_col = inlib::colorf_default();
+    }
+    if(!m_styles.res_bool((*it).second,s_show_name(),a_show_name,""))    a_show_name = false;
+    if(!m_styles.res_value((*it).second,s_text_scale(),a_text_scale,"")) a_text_scale = 1;
+    if(!m_styles.res_bool((*it).second,s_at_end(),a_at_end,""))          a_at_end = true;
+  }
+  
+  void visualize_primary_vertices(float a_radius) {
+    const G4Event* event = m_run_manager.GetCurrentEvent();
+    if(!event) return;
+
+    inlib::colorf _col = inlib::colorf_default();
+   {const inlib::xml::styles::style_t* sty = m_styles.find_style(s_primary_vertex());
+    if(sty) m_styles.res_color(*sty,s_color(),_col,s_primary_vertex());}
+
+    inlib::sg::group* sep = new inlib::sg::separator;
+
+    inlib::sg::rgba* mat = new inlib::sg::rgba();
+    mat->color = _col;
+    sep->add(mat);
+      
+    G4int nprimv = event->GetNumberOfPrimaryVertex();
+    for(int iprimv=0;iprimv<nprimv;iprimv++) {
+      G4PrimaryVertex* primv = event->GetPrimaryVertex(iprimv);
+      if(primv) {
+        G4double x = primv->GetX0();
+        G4double y = primv->GetY0();
+        G4double z = primv->GetZ0();
+
+        inlib::sg::matrix* mtx = new inlib::sg::matrix;
+	mtx->set_translate(float(x),float(y),float(z));
+        sep->add(mtx);
+
+        inlib::sg::sphere* shape = new inlib::sg::sphere;
+	shape->radius = a_radius;
+	sep->add(shape);
+
+      }
+    }
+
+    add_in_dynamic_sg(sep);
+  }
+
+  void visualize_primary_particles() {
+    const G4Event* event = m_run_manager.GetCurrentEvent();
+    if(!event) return;
+    
+    inlib::xml::styles::style_t def_sty;
+    map_sty_t styles;
+    get_particles_styles(s_primary(),styles,def_sty);
+
+    inlib::sg::group* sep = new inlib::sg::separator;
+
+    G4int nprimv = event->GetNumberOfPrimaryVertex();
+    for(int iprimv=0;iprimv<nprimv;iprimv++) {
+      G4PrimaryVertex* primv = event->GetPrimaryVertex(iprimv);
+      if(primv) {
+        G4double x = primv->GetX0();
+        G4double y = primv->GetY0();
+        G4double z = primv->GetZ0();
+
+        G4int npart = primv->GetNumberOfParticle();
+        for(int ipart=0;ipart<npart;ipart++) {
+          G4PrimaryParticle* pp = primv->GetPrimary(ipart);
+          if(pp) {
+            const G4ParticleDefinition* pdef = pp->GetParticleDefinition();
+            std::string spart;
+            if(pdef) {
+              spart = pdef->GetParticleName();
+            } else {
+              spart = "?";
+            }
+
+            inlib::colorf col;
+            bool show_name;
+            float text_scale;
+            bool at_end;
+            find_particle_style(styles,def_sty,spart,col,show_name,text_scale,at_end);
+
+            if(show_name) {
+              add_marker_text(*sep,float(x),float(y),float(z),col,text_scale,spart);
+            }
+          }
+        }
+      }
+    }
+
+    add_in_dynamic_sg(sep);
+  }
+
+protected:
+  class state : public G4VStateDependent {
+    INLIB_SCLASS(exlib::geant4::viewer::state)
+  public: //G4VStateDependent
+    virtual G4bool Notify(G4ApplicationState aRequestedState) {
+      G4StateManager* statM = G4StateManager::GetStateManager();
+      G4ApplicationState previousState = statM->GetPreviousState();
+      if(previousState==G4State_Idle && aRequestedState==G4State_GeomClosed) {
+        //exec run begin.  
+        //::printf("debug : run begin ++++++++++++++++++++\n");
+      } else if(previousState==G4State_GeomClosed && aRequestedState==G4State_Idle) {      
+        //exec run end.    
+        //::printf("debug : run end ++++++++++++++++++++++\n");
+      } else if(previousState==G4State_GeomClosed && aRequestedState==G4State_EventProc) { 
+        //exec event begin.    
+        //::printf("debug : event begin ===================\n");
+      } else if(previousState==G4State_EventProc && aRequestedState==G4State_GeomClosed) { 
+        //exec event end.    
+        //::printf("debug : event end ===================\n");
+        m_gv.event_end();
+
+       {inlib::sg::plots& plots = m_gv.get_plots();
+        plots.touch_plotters();
+
+        view_wall* _wc = exlib::sg::cast_view_wall(m_gv);
+        if(_wc && _wc->is_connected()) { //have to send plots and trajectories.
+
+          if(plots.has_data()) {
+
+            inlib::args opts;
+            opts.add(inlib::wall::s_placement(),inlib::wall::s_screen());
+
+           {std::string scol;
+            if(!inlib::num2s(m_gv.m_params.m_plot_col,scol)){}
+            opts.add(inlib::sg::s_col(),scol);}
+
+           {std::string srow;
+            if(!inlib::num2s(m_gv.m_params.m_plot_row,srow)){}
+            opts.add(inlib::sg::s_row(),srow);}
+
+           {float scale = 1;
+            std::string stmp;
+            if(m_gv.m_data_client.get_wall_params(stmp)) {
+              unsigned int ww,wh,bw,bh,cols,rows;
+              if(inlib::wall::s2params(stmp,ww,wh,bw,bh,cols,rows) && cols) {
+                scale = m_gv.gui_camera_height()/float(cols);
+              }
+            }
+            if(!inlib::num2s(scale,stmp)){}
+            opts.add(inlib::wall::s_scale(),stmp);}
+
+            opts.add(inlib::wall::s_clear(),inlib::wall::s_screen()); //IMPORTANT
+
+            if(!_wc->send_sg(plots,opts)){
+              m_gv.out() << "exlib::geant4::viewer::state::Notify : send_sg() plots failed." << std::endl;
+            }
+
+          }
+        }}
+
+        m_gv.visualize_event();
+        m_gv.win_render();
+
+        //if(scan_mode) m_gv.steer();
+
+        if(m_sleep) inlib::sleep_milli_secs(m_sleep);
+      }    
+      return true;
+    }  
+  public:
+    state(viewer& a_gv):m_gv(a_gv),m_sleep(0){
+#ifdef INLIB_MEM
+      inlib::mem::increment(s_class().c_str());
+#endif
+    }
+    virtual ~state(){
+#ifdef INLIB_MEM
+      inlib::mem::decrement(s_class().c_str());
+#endif
+    }
+  protected:
+    state(const state& a_from)
+    :G4VStateDependent()
+    ,m_gv(a_from.m_gv)
+    ,m_sleep(a_from.m_sleep)
+    {
+#ifdef INLIB_MEM
+      inlib::mem::increment(s_class().c_str());
+#endif
+    }
+    state& operator=(const state& a_from){
+      //G4VStateDependent::operator=(a_from);
+      m_sleep = a_from.m_sleep;
+      return *this;
+    }
+  protected:    
+    viewer& m_gv;
+  public:
+    unsigned int m_sleep;
+  };
+
+  class dumper : public inlib::sg::base_dumper {
+    typedef inlib::sg::base_dumper parent;
+  public:
+    virtual void get_infos(const std::string& a_tag,std::vector<std::string>& a_v) const {a_v = m_infos;}
+    virtual base_dumper* copy() const {return new dumper(*this);}
+  public:
+    dumper(inlib::sg::gui_viewer& a_gv,const std::vector<std::string>& a_infos)
+    :parent(a_gv)
+    ,m_infos(a_infos)
+    {}
+    virtual ~dumper(){}
+  public:
+    dumper(const dumper& a_from)
+    :parent(a_from)
+    ,m_infos(a_from.m_infos)
+    {}
+    dumper& operator=(const dumper& a_from){
+      parent::operator=(a_from);
+      m_infos = a_from.m_infos;
+      return *this;
+    }
+  public:
+    std::vector<std::string> m_infos;
+  };
+
+public:
+  // actions :  
+  static inlib::sg::return_action action_params_1(inlib::sg::gui_viewer& a_gv,inlib::sg::entries& a_widget,
+                                                  const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+
+    const std::vector<std::string>& labels = a_widget.labels.values();
+    const std::vector<std::string>& vals = a_widget.values.values();
+    if(vals.size()!=1) {a_gv.pop_warn(a_data,"failed");return inlib::sg::return_to_render;}
+
+    std::string msg;
+    _this->set_param(labels[0],vals[0],msg);
+    if(msg.size()) {
+      a_gv.pop_warn(a_data,msg);
+      return inlib::sg::return_to_render;
+    }
+
+    //a_gv.hide_main_menu();
+    //a_gv.pop_list();
+    
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_params(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    inlib::sg::entries* node = new inlib::sg::entries(a_gv.ttf());
+    a_gv.set_colors(*node);
+    _this->set_entries_params(*node);
+  //node->add_uint("next event sleep (msec)",
+  //a_gv.evd_next_event_sleep());
+    inlib::sg::add_callback(a_gv,*node,action_params_1,a_data);
+    a_gv.show_widget(a_data,node);
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_create_histos(inlib::sg::gui_viewer& a_gv) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    _this->create_histos();
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_reset_histos(inlib::sg::gui_viewer& a_gv) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    _this->reset_histos();
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_geom(inlib::sg::gui_viewer& a_gv) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    view_wall* wc = exlib::sg::cast_view_wall(a_gv);
+
+    G4VPhysicalVolume* top = get_top_physical_volume(a_gv);
+    if(!top) return inlib::sg::return_to_render;
+    bool cam_was_empty = a_gv.scene_camera()?false:true;
+    if(!_this->is_evd()) _this->create_sg_evd();
+    inlib::sg::separator& _static_sg = _this->static_sg();
+
+    inlib::sg::separator* sep = new inlib::sg::separator;
+    _static_sg.add(sep);
+
+   {inlib::sg::draw_style* ds = new inlib::sg::draw_style;
+    ds->style = a_gv.m_params.m_solid?inlib::sg::draw_style::lines:inlib::sg::draw_style::filled;
+    ds->line_width = 1;
+    sep->add(ds);}
+
+    //NOTE : the overall procedure will create G4Polyhedron
+    //       for each visible G4VSolid within the G4 hierachy
+    //       and they are going to be replicated within 
+    //       the sg. All this is very memory
+    //       consuming...
+  
+    visited_volume vv(a_gv.out(),*sep);
+    vv.m_solid = a_gv.m_params.m_solid;
+    vv.m_reduced_wire_frame = a_gv.m_params.m_reduced_wire_frame;
+
+   {inlib::colorf _col(inlib::colorf_default()); //avoid black that is not sensitive to light if solid.
+    if(a_gv.m_params.m_node_color.size()) {
+      inlib::colorf _c;
+      if(!inlib::sg::find_color(_this->cmaps(),a_gv.m_params.m_node_color,_c)) {
+        a_gv.out() << "exlib::viewer::action_geom : string " << inlib::sout(a_gv.m_params.m_node_color)
+	           << " not a color in colormaps." << std::endl; 
+      } else {
+        _col = _c;
+      }
+    }
+    vv.m_color = _col;}
+
+    inlib::mat4d identity;
+    identity.set_identity();
+
+    geom_visitor gv(a_gv.out());
+    gv.m_max_depth = a_gv.m_params.m_max_depth; //def=9999
+    gv.visit(*top,identity,vv,0);
+
+    //other passes for transparent volumes.
+   {inlib_vforcit(float,vv.m_as,it) {
+      vv.m_do_transparents = *it;
+      gv.visit(*top,identity,vv,0);
+    }}
+
+    if(cam_was_empty ||
+       // still init camera ?
+       (a_gv.scene_camera() && _this->m_init_camera && 
+        cmp_camera(*(_this->m_init_camera),*a_gv.scene_camera()))
+      ){
+      a_gv.adapt_camera(*sep);
+    }
+
+    if(wc && wc->is_connected()) {
+      // See exlib/opener exsg code.
+      inlib::args opts;
+      opts.add(inlib::wall::s_placement(),inlib::wall::s_static());
+      //std::string stmp;
+      //if(!inlib::num2s(a_gv.scene_camera_radius(),stmp)){}
+      //opts.add(inlib::wall::s_radius(),stmp);
+      if(!wc->send_sg(_static_sg,opts)){
+        a_gv.out() << "exlib::geant4::viewer::g4_cbk::action :"
+                   << " send_sg() detector failed."
+                   << std::endl;
+      }
+    }
+
+    a_gv.hide_main_menu();
+ 
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_beam_on_1(inlib::sg::gui_viewer& a_gv,inlib::sg::entries& a_widget,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+
+    unsigned int nevent;
+    if(!inlib::to<unsigned int>(a_widget.values[0],nevent)) {
+      a_gv.pop_warn(a_data,"nevent not a number");
+      return inlib::sg::return_to_render;     
+    }
+
+    if(!inlib::to(a_widget.values[1],_this->next_event_sleep())) {
+      a_gv.pop_warn(a_data,"sleep nevent not an uint");
+      return inlib::sg::return_to_render;     
+    }
+
+    if(!set_store_trajectory(a_gv)) return inlib::sg::return_to_render;
+
+    a_gv.hide_main_menu();
+    a_gv.hide_console();
+    a_gv.win_render();
+
+    if(!_this->is_evd()) _this->create_sg_evd();
+  
+    _this->m_warn_no_trajectory_container = false;
+    _this->m_state->m_sleep = _this->next_event_sleep();
+    _this->m_run_manager.BeamOn(nevent);
+    _this->m_state->m_sleep = 0; //IMPORTANT.
+    if(_this->m_warn_no_trajectory_container) {
+      a_gv.pop_warn(a_data,"no trajec container");        
+      _this->m_warn_no_trajectory_container = false;
+    }
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_beam_on_one(inlib::sg::gui_viewer& a_gv) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+
+    inlib::sg::pos_data a_data(false,0,0);
+
+    if(!inlib::check_env_dir(s_G4LEDATA())){
+      a_gv.pop_warn(a_data,"g4 data not found");
+      return inlib::sg::return_to_render;     
+    }
+#ifdef EXLIB_HAS_PYTHIA8
+    if(!inlib::check_env_dir(s_PYTHIA8DATA())){
+      a_gv.pop_warn(a_data,"pythia8 data not found");
+      return inlib::sg::return_to_render;     
+    }
+#endif
+
+    if(!set_store_trajectory(a_gv)) return inlib::sg::return_to_render;
+
+    a_gv.hide_main_menu();
+    a_gv.hide_console();
+    a_gv.win_render();
+
+    if(!_this->is_evd()) _this->create_sg_evd();
+  
+    _this->m_warn_no_trajectory_container = false;
+    _this->m_state->m_sleep = 0;
+    _this->m_run_manager.BeamOn(1);
+    _this->m_state->m_sleep = 0; //IMPORTANT.
+    if(_this->m_warn_no_trajectory_container) {
+      a_gv.pop_warn(a_data,"no trajec container");        
+      _this->m_warn_no_trajectory_container = false;
+    }
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_beam_on(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    inlib::sg::entries* entries = new inlib::sg::entries(a_gv.ttf());
+    a_gv.set_colors(*entries);
+    entries->add_uint("num events",100);
+    entries->add_uint("next event sleep (msec)",_this->next_event_sleep());
+    inlib::sg::add_callback(a_gv,*entries,action_beam_on_1,a_data);
+    a_gv.show_widget(a_data,entries);
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_start_events(inlib::sg::gui_viewer& a_gv,inlib::sg::entries& a_widget,
+                                                      const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    
+    unsigned int wanted_nevent;
+    if(!inlib::to<unsigned int>(a_widget.values[0],wanted_nevent)) {
+      a_gv.pop_warn(a_data,"nevent not a number");
+      return inlib::sg::return_to_render;     
+    }
+  
+    if(!inlib::to(a_widget.values[1],_this->next_event_sleep())) {
+      a_gv.pop_warn(a_data,"sleep not a uint");
+      return inlib::sg::return_to_render;     
+    }
+  
+    if(!wanted_nevent) {
+      a_gv.pop_warn(a_data,"nothing to do.");
+      return inlib::sg::return_to_render;     
+    }
+  
+    if(!inlib::check_env_dir(s_G4LEDATA())){
+      a_gv.pop_warn(a_data,"g4 data not found");
+      return inlib::sg::return_to_render;     
+    }
+#ifdef EXLIB_HAS_PYTHIA8
+    if(!inlib::check_env_dir(s_PYTHIA8DATA())){
+      a_gv.pop_warn(a_data,"pythia8 data not found");
+      return inlib::sg::return_to_render;     
+    }
+#endif
+  
+    if(!set_store_trajectory(a_gv)) return inlib::sg::return_to_render;
+    _this->event_index() = 0;
+    a_gv.stop_event_anim();
+    if(!_this->is_evd()) _this->create_sg_evd();
+    event_timer* timer = new event_timer(a_gv,_this->m_run_manager,wanted_nevent,_this->next_event_sleep());
+    a_gv.set_event_anim(timer);
+    a_gv.hide_main_menu();
+    return inlib::sg::return_to_render;
+  }
+  
+  static inlib::sg::return_action action_vis_events(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    inlib::sg::entries* entries = new inlib::sg::entries(a_gv.ttf());
+    a_gv.set_colors(*entries);
+    entries->add_uint("num events",100);
+    entries->add_uint("next event sleep (msec)",_this->next_event_sleep());
+    inlib::sg::add_callback(a_gv,*entries,action_start_events,a_data);
+    a_gv.show_widget(a_data,entries);
+    return inlib::sg::return_to_render;
+  }
+  
+  static inlib::sg::return_action action_pv_list(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    G4PhysicalVolumeStore* pvs = G4PhysicalVolumeStore::GetInstance();
+    if(!pvs) {
+      a_gv.pop_warn(a_data,"no PV store");
+      return inlib::sg::return_to_render;
+    }
+
+    inlib::sg::list* list = new inlib::sg::list(a_gv.ttf());
+    a_gv.set_colors(*list);
+
+    inlib_vforcit(G4VPhysicalVolume*,*pvs,it) {
+      inlib::sg::add_item(a_gv,*list,(*it)->GetName(),inlib::sg::action_none);
+    }
+
+    if(list->items.values().empty()) {
+      a_gv.pop_warn(a_data,"empty");
+      delete list;
+    } else {
+      a_gv.show_widget(a_data,list);
+    }
+
+    return inlib::sg::return_to_render;
+  }
+
+  class pos_data : public inlib::sg::pos_data {
+    typedef inlib::sg::pos_data parent;
+  public:
+    pos_data(const inlib::sg::pos_data& a_data):parent(a_data),m_lv(0),m_material(0){}
+    virtual ~pos_data(){}
+  public:
+    pos_data(const pos_data& a_from)
+    :parent(a_from)
+    ,m_lv(a_from.m_lv)
+    ,m_material(a_from.m_material)
+    {}
+    pos_data& operator=(const pos_data& a_from) {
+      parent::operator=(a_from);
+      m_lv = a_from.m_lv;
+      m_material = a_from.m_material;
+      return *this;
+    }
+  public:
+    G4LogicalVolume* m_lv;
+    G4Material* m_material;
+  };
+
+  static inlib::sg::return_action action_lv_2(inlib::sg::gui_viewer& a_gv,const pos_data& a_data) {
+    a_data.m_lv->SetMaterial(a_data.m_material);
+    a_gv.pop_warn(a_data,"done",false);
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_lv_1(inlib::sg::gui_viewer& a_gv,const pos_data& a_data) {
+    const G4MaterialTable* table = G4Material::GetMaterialTable();
+    if(!table) {
+      a_gv.pop_warn(a_data,"no material table");
+      return inlib::sg::return_to_render;
+    }
+
+    inlib::sg::list* list = new inlib::sg::list(a_gv.ttf());
+    a_gv.set_colors(*list);
+
+   {inlib_vforcit(G4Material*,*table,it) {
+      pos_data data(a_data);
+      data.m_material = *it;
+      inlib::sg::add_item(a_gv,*list,(*it)->GetName(),action_lv_2,data);
+    }}
+
+    if(list->items.values().empty()) {
+      a_gv.pop_warn(a_data,"empty");
+      delete list;
+    } else {
+      a_gv.show_widget(a_data,list);
+    }
+
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_lv_list(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    G4LogicalVolumeStore* lvs = G4LogicalVolumeStore::GetInstance();
+    if(!lvs) {
+      a_gv.pop_warn(a_data,"no LV store");
+      return inlib::sg::return_to_render;
+    }
+
+    inlib::sg::list* list = new inlib::sg::list(a_gv.ttf());
+    a_gv.set_colors(*list);
+
+    inlib_vforcit(G4LogicalVolume*,*lvs,it){
+      pos_data data(a_data);
+      data.m_lv = *it;
+      inlib::sg::add_item(a_gv,*list,(*it)->GetName(),action_lv_1,data);
+    }
+
+    if(list->items.values().empty()) {
+      a_gv.pop_warn(a_data,"empty");
+      delete list;
+    } else {
+      a_gv.show_widget(a_data,list);
+    }
+
+    return inlib::sg::return_to_render;
+  }
+
+/*
+  static inlib::sg::return_action action_(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    return inlib::sg::return_to_render;
+  }
+*/
+
+  static unsigned int gun_entry_particle()   {return 0;}
+  static unsigned int gun_entry_momentum()   {return 1;}
+  static unsigned int gun_entry_pos_x()      {return 2;}
+  static unsigned int gun_entry_pos_y()      {return 3;}
+  static unsigned int gun_entry_pos_z()      {return 4;}
+  static unsigned int gun_entry_dir_x()      {return 5;}
+  static unsigned int gun_entry_dir_y()      {return 6;}
+  static unsigned int gun_entry_dir_z()      {return 7;}
+  static unsigned int gun_entry_sigma_momentum() {return 8;}
+  static unsigned int gun_entry_sigma_angle()    {return 9;}
+  static unsigned int gun_cmnd()                 {return 10;}
+    
+  INLIB_CLASS_STRING(single)
+  INLIB_CLASS_STRING(depth)
+  INLIB_CLASS_STRING(material)
+
+  static inlib::sg::return_action action_geo_sg(inlib::sg::gui_viewer& a_gv,inlib::sg::entries& a_widget,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    
+        G4VPhysicalVolume* master = get_top_physical_volume(a_gv);
+        if(!master) return inlib::sg::return_to_render;
+        std::string m_vol = master->GetName();
+
+        unsigned int min_depth;
+        if(!inlib::to<unsigned int>(a_widget.values[0],min_depth)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        unsigned int max_depth;
+        if(!inlib::to<unsigned int>(a_widget.values[1],max_depth)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        unsigned int solid_depth;
+        if(!inlib::to<unsigned int>(a_widget.values[2],solid_depth)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+  
+        const std::string satb = a_widget.values[3];
+  
+        float r,g,b,a;
+        if(!a_widget.get_color(4,r,g,b,a)) { //values[4]
+          a_gv.map_warn("get color failed");
+          return inlib::sg::return_to_render;     
+        }
+  
+        unsigned int max_time;
+        if(!inlib::to<unsigned int>(a_widget.values[5],max_time)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        unsigned int max_shapes;
+        if(!inlib::to<unsigned int>(a_widget.values[6],max_shapes)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        bool clear_scene;
+        if(!inlib::to(a_widget.values[7],clear_scene)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+  
+       {float scene_radius;
+        if(!inlib::to<float>(a_widget.values[8],scene_radius)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        if(!_this->is_evd()) { //existing scene is not a evd scene.
+          _this->create_sg_evd(scene_radius?scene_radius:1);
+        }
+        if(scene_radius) {
+          inlib::sg::base_camera* camera = a_gv.create_3D_camera(scene_radius);
+          _this->replace_camera(camera);
+        }}
+  
+        inlib::sg::separator& _static_sg = _this->static_sg();
+        if(clear_scene) _static_sg.clear();
+  
+        inlib::sg::separator* _sep = new inlib::sg::separator;
+        _static_sg.add(_sep);
+  
+        _sep->add(new inlib::sg::matrix()); //for manip.
+  
+        int depth = -1;
+        //m_geo_mgr->vds_get_depth(m_vol,depth);
+        ////::printf("debug : vds : %s %d (%d)\n",
+        ////    m_vol.c_str(),depth,m_geo_mgr->vds().size());
+  
+        exlib::geant4::geo* geo = new exlib::geant4::geo(*master);
+        geo->volume = m_vol;
+        geo->min_depth = min_depth;
+        geo->max_depth = max_depth;
+        geo->solid_depth = solid_depth;
+        geo->max_time = max_time;
+        geo->max_shapes = max_shapes;
+        geo->volume_depth = depth;
+  
+        if(satb==s_single()) {
+          geo->atb = inlib::sg::atb_single;
+          geo->color = inlib::colorf(r,g,b,a);
+  
+        } else if(satb==s_material()) {
+          geo->atb = inlib::sg::atb_by_material;
+          set_default_colors(a_gv);
+          geo->set_cmap(inlib::sg::style_ROOT_colormap());
+  
+        } else if(satb==s_depth()) {
+          geo->atb = inlib::sg::atb_by_depth;
+  
+          inlib::sg::style_povama_colormap povcmap;
+          unsigned int ncol = povcmap.size();
+  
+          inlib::sg::style_colormap cmap;
+         {for(unsigned int i=0;i<max_depth;i++) {
+            unsigned int icol = 2+i%(ncol-2);
+            inlib::sg::style_colormap::const_iterator it = povcmap.find(icol);
+            if(it==povcmap.end()) {
+              a_gv.out() << "exlib::geant4::viewer::action_geo_sg :"
+                         << " index " << icol
+                         << " not found in povama colormap."
+                         << std::endl;
+            } else {
+              cmap.add((*it).second);
+            }
+          }}
+          geo->set_cmap(cmap);
+        }
+  
+        _sep->add(geo);
+  
+       {inlib::atime begin = inlib::atime::now();
+        geo->update_sg(a_gv.out());
+        std::string st = inlib::atime2s(inlib::atime::elapsed(begin));
+        geo->reset_touched(); //avoid another update_sg at first render().
+        std::string s;
+        if(!inlib::numas<unsigned int>(geo->shape_count(),s)){}
+        s += " shapes.";
+        s += " Done in "+st+".";
+        a_gv.show_console(s);}
+  
+        std::string swarn;
+        if(geo->stopped_by_max_time())   swarn += "stopped by max time.";
+        if(geo->stopped_by_max_shapes()) swarn += " stopped by max shapes.";
+        if(geo->volume_not_found())      swarn += " "+m_vol+" not found.";
+  
+        if(swarn.size()) {
+          a_gv.map_warn(swarn);
+        } else {
+          a_gv.hide_main_menu();
+        }
+  
+        if(geo->shape_count()>=5000) _this->m_params.m_auto_hide_scene = true;
+
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_geo(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    //vis per depth.
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+
+    inlib::sg::entries* node = new inlib::sg::entries(a_gv.ttf());
+    a_gv.set_colors(*node);
+
+    node->add_uint("min depth",0);    //;
+    node->add_uint("max depth",1);    //1
+    node->add_uint("solid depth",1);  //2
+   {std::vector<std::string> opts;  
+    opts.push_back(s_single());
+    opts.push_back(s_depth());
+    opts.push_back(s_material());
+    node->add_opts("atb per",s_depth(),opts);}    //3
+    node->add_color("color",inlib::colorf_default()); //4
+    node->add_uint("max_time (sec)",5);  //5
+    if(a_gv.is_wall_screen_app()) {
+      node->add_uint("max shapes",5000);   //6
+    } else {
+      node->add_uint("max shapes",10000);  //6
+    }
+    node->add_bool("clear det sg",false);      //7
+    node->add_float("radius",0); //8 //0 = we do not recreate camera.
+    
+    inlib::sg::add_callback(a_gv,*node,action_geo_sg,a_data);
+    
+    a_gv.show_widget(a_data,node);
+  
+    return inlib::sg::return_to_render;
+  }
+  
+  static inlib::sg::return_action action_gun_1(inlib::sg::gui_viewer& a_gv,inlib::sg::entries& a_widget,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+
+    primary_generator* pg = our_primary_generator(_this->m_run_manager,a_gv);
+    if(!pg) return inlib::sg::return_to_render;
+
+        std::vector<std::string>& vals = a_widget.values.values();
+
+        double momentum;
+       {if(!inlib::to(vals[gun_entry_momentum()],momentum)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        if(momentum<=0) {
+          a_gv.map_warn("momentum<=0");
+          return inlib::sg::return_to_render;   
+        }}
+
+        double pos_x;
+        if(!inlib::to(vals[gun_entry_pos_x()],pos_x)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        double pos_y;
+        if(!inlib::to(vals[gun_entry_pos_y()],pos_y)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        double pos_z;
+        if(!inlib::to(vals[gun_entry_pos_z()],pos_z)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+
+        double dir_x;
+        if(!inlib::to(vals[gun_entry_dir_x()],dir_x)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        double dir_y;
+        if(!inlib::to(vals[gun_entry_dir_y()],dir_y)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        double dir_z;
+        if(!inlib::to(vals[gun_entry_dir_z()],dir_z)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        if(inlib::vec3d(dir_x,dir_y,dir_z).length()<=0) {
+          a_gv.map_warn("not a vector");
+          return inlib::sg::return_to_render;     
+        }
+
+        double sigma_momentum;
+        if(!inlib::to(vals[gun_entry_sigma_momentum()],sigma_momentum)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+        double sigma_angle;
+        if(!inlib::to(vals[gun_entry_sigma_angle()],sigma_angle)) {
+          a_gv.pop_warn(a_data,"not a number");
+          return inlib::sg::return_to_render;     
+        }
+
+#ifdef EXLIB_HAS_PYTHIA8
+        pg->set_cmnd(vals[gun_cmnd()]);
+        pg->reset_select_particle();
+        pg->reset_accept_event();
+        pg->reset_primary_particle();
+#endif
+
+        pg->set_particle(vals[gun_entry_particle()]);
+        pg->set_momentum(momentum);
+        pg->set_position(pos_x,pos_y,pos_z);
+        pg->set_momentum_direction(dir_x,dir_y,dir_z);
+        pg->set_sigma_momentum(sigma_momentum);
+        pg->set_sigma_angle(sigma_angle*CLHEP::deg);
+
+        a_gv.pop_list();
+    return inlib::sg::return_to_render;
+  }
+
+  static inlib::sg::return_action action_set_gun(inlib::sg::gui_viewer& a_gv,const inlib::sg::pos_data& a_data) {
+    viewer* _this = inlib::safe_cast<inlib::sg::viewer,viewer>(a_gv);
+    if(!_this) return inlib::sg::return_none;
+    
+    primary_generator* pg = our_primary_generator(_this->m_run_manager,a_gv);
+    if(!pg) return inlib::sg::return_to_render;
+
+    G4ThreeVector p = pg->position();
+    const inlib::vec3d& dir = pg->momentum_direction();
+
+    inlib::sg::entries* entries = new inlib::sg::entries(a_gv.ttf());
+    a_gv.set_colors(*entries);
+
+   {std::vector<std::string> opts;
+    opts.push_back(s_random());
+#ifdef EXLIB_HAS_PYTHIA8
+    opts.push_back(s_pythia8());
+#endif
+    opts.push_back(s_e_minus());
+    opts.push_back(s_e_plus());
+    opts.push_back(s_proton());
+    opts.push_back(s_mu_minus());
+    opts.push_back(s_mu_plus());
+    opts.push_back(s_gamma());
+    opts.push_back(s_kaon_minus());
+    opts.push_back(s_kaon_plus());
+    opts.push_back(s_pi_minus());
+    opts.push_back(s_pi_plus());
+    opts.push_back(s_pi0());
+
+   {G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+    int number = particleTable->entries();
+    for(int i=0;i<number;i++) {
+      G4ParticleDefinition* pd = particleTable->GetParticle(i);
+      if(!(pd->IsShortLived()) || pd->GetDecayTable()) opts.push_back(pd->GetParticleName());
+    }}
+
+    std::string spart;
+    if(!pg->particle(spart)) spart = s_e_minus();
+    entries->add_opts("particle",spart,opts);}
+
+    entries->add_double("momentum (MeV)",pg->momentum());
+    entries->add_double("pos x (mm)",p.x());
+    entries->add_double("pos y (mm)",p.y());
+    entries->add_double("pos z (mm)",p.z());
+    entries->add_double("dir x",dir.x());
+    entries->add_double("dir y",dir.y());
+    entries->add_double("dir z",dir.z());
+    entries->add_double("sigma momentum (MeV)",pg->sigma_momentum());
+    entries->add_double("sigma angle (deg)",pg->sigma_angle()/CLHEP::deg);
+#ifdef EXLIB_HAS_PYTHIA8
+   {std::string sdef;
+    sdef += a_gv.res_dir();
+    sdef += inlib::sep();
+    sdef += "h_zz_4mu.cmnd";
+    entries->add_file("cmnd",sdef);}
+#endif
+
+   {inlib::sg::file_chooser& fch = entries->file_chooser();
+    fch.exts.add(".cmnd");
+    fch.dirs.add(a_gv.res_dir());
+    fch.dirs.add(a_gv.data_dirs());
+    fch.initialize(a_gv.out());}
+
+    inlib::sg::add_callback(a_gv,*entries,action_gun_1,a_data);
+
+    a_gv.show_widget(a_data,entries);
+    return inlib::sg::return_to_render;
+  }
+
+protected:
+  run_manager& m_run_manager;
+  
+  //std::string m_data_dir; //for unfold()
+  inlib::ftp::ftps m_ftps;
+  state* m_state;
+
+  bool m_warn_no_trajectory_container;
+  inlib::sg::node* m_init_camera;
+
+  std::vector<std::string> m_tmp_dirs;
+};
+
+}}
+
+//exlib_build_use geant4 inlib expat inlib_glutess freetype zlib png gl2ps jpeg kernel
+//exlib_build_use zip
+
+#endif
+

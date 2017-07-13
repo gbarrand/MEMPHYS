@@ -1,0 +1,29 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_GL}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    libs="${libs} glu32.lib opengl32.lib"
+  elif [ ${build_sdk_android} = "yes" ] ; then
+    echo 'bush/use/GL : done in build_plugin' > /dev/null
+  else
+    if [ `uname` = Darwin ] ; then
+      if [ "${build_ios}" = "yes" -o "${build_ios_gnu}" = "yes" -o "${build_iossim}" = "yes" ] ; then
+        libs="${libs} -framework OpenGLES"
+      else
+        libs="${libs} -framework OpenGL"
+        libs="${libs} -framework CoreFoundation" # CF functions.
+      fi
+    else
+      inc_dirs="/usr/include"
+      inc_to_find=GL/gl.h
+      . ${bush_home}/find_inc
+
+      lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu"
+      lib_to_find=GLU
+      . ${bush_home}/find_lib
+      lib_to_find=GL
+      . ${bush_home}/find_lib
+    fi
+  fi
+fi
