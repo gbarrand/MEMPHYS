@@ -1,6 +1,0 @@
-#!/bin/sh -f
-
-cd ../inlib
-_find '#ifdef' | grep -v 'Found at' | grep -v INLIB_MEM
-
-
