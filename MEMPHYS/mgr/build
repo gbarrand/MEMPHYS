@@ -4,13 +4,16 @@
 
 build_offscreen=no
 build_root=no
+build_root_only=no
 build_verbose=no
+build_sim=yes
 
 build_args=
 while test $# -ge 1 ; do
   case $1 in
     -offscreen) build_offscreen=yes;;
     -root)      build_root=yes;;
+    -root_only) build_root_only=yes;;
     -v)         build_verbose=yes;build_args="${build_args} $1";;
     
      *) build_args="${build_args} $1";;
@@ -18,14 +21,21 @@ while test $# -ge 1 ; do
   shift
 done
 
-./build_lib_MEMPHYSCore         ${build_args}
-./build_app_sim                 ${build_args}
-./build_app_read_plot_offscreen ${build_args}
+if [ ${build_root_only} = yes ] ; then
+  build_sim=no
+  build_root=yes
+fi    
+    
+if [ ${build_sim} = yes ] ; then
+  ./build_lib_MEMPHYSCore         ${build_args}
+  ./build_app_sim                 ${build_args}
+  ./build_app_read_plot_offscreen ${build_args}
 
-if [ ${build_offscreen} = no ] ; then
-  # programs with some interactivity :     
-  ./build_app_read_plot ${build_args}
-  ./build_app_vis       ${build_args} -distrib_distrib_vis -core         
+  if [ ${build_offscreen} = no ] ; then
+    # programs with some interactivity :     
+    ./build_app_read_plot ${build_args}
+    ./build_app_vis       ${build_args} -distrib_distrib_vis -core         
+  fi  
 fi
 
 #/////////////////////////////////////////////////////

@@ -118,8 +118,8 @@ done
 /bin/mkdir -p ${to}/inexlib/inlib
 /bin/mkdir -p ${to}/inexlib/exlib
 
-/bin/cp -R -f ${inlib_home}/mgr ${to}/inexlib/inlib/.
-/bin/cp -R -f ${exlib_home}/mgr ${to}/inexlib/exlib/.
+#/bin/cp -R -f ${inlib_home}/mgr ${to}/inexlib/inlib/.
+#/bin/cp -R -f ${exlib_home}/mgr ${to}/inexlib/exlib/.
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////

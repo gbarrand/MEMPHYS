@@ -103,10 +103,10 @@ fi
 /bin/cp ${exlib_home}/exlib/app/Android/Main_java ${to}/inexlib/exlib/exlib/app/Android/.
 
 /bin/cp -R ../Cocoa   ${to}/${app}/.
-/bin/cp -R ..//iOS    ${to}/${app}/.
+/bin/cp -R ../iOS    ${to}/${app}/.
 
-/bin/cp -R ${inlib_home}/mgr ${to}/inexlib/inlib/.
-/bin/cp -R ${exlib_home}/mgr ${to}/inexlib/exlib/.
+#/bin/cp -R ${inlib_home}/mgr ${to}/inexlib/inlib/.
+#/bin/cp -R ${exlib_home}/mgr ${to}/inexlib/exlib/.
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
