@@ -1,5 +1,0 @@
-#!/bin/sh -f
-
-cd ../exlib
-_find '#define' | grep -v exlib_ | grep -v 'Found at' | grep -v 'define SWIG' | grep -v 'define  SWIG' | grep -v H5T_
-
