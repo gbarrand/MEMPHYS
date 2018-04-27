@@ -1,5 +1,0 @@
-#!/bin/sh -f
-
-CXXFLAGS="-I/usr/include/c++/v1";export CXXFLAGS
-
-/nfs/users/gbarrand/usr/local/cmake/3.8.2/bin/cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/nfs/users/gbarrand/usr/local/geant4/10.03.p01_clang -DBUILD_STATIC_LIBS=ON -DGEANT4_BUILD_VERBOSE_CODE=OFF ..

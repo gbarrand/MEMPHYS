@@ -1,7 +1,0 @@
-#
-# For example execute with :
-#   OS> <MEMPHYS vis offscreen exe> -orders=offscreen_icon -ww=32 -wh=32
-#
-exec_menu_item icon
-hide_console
-do_png icon.png
