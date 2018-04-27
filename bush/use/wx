@@ -1,0 +1,60 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_wx}" = "yes" ] ; then
+
+  if [ ${build_visual} = "yes" ] ; then
+    wxWidgets_home=/usr/local/wxWidgets/3.1.0
+    if [ ! -d ${wxWidgets_home} ] ; then
+      echo "bush/use/wx : ${wxWidgets_home} not found."
+      exit
+    fi
+
+    cppflags="${cppflags} -I${wxWidgets_home}/include/msvc"
+    cppflags="${cppflags} -I${wxWidgets_home}/include"
+    cppflags="${cppflags} -DwxMSVC_VERSION_AUTO -DWXUSINGDLL"
+    cppflags="${cppflags} -D_UNICODE"
+
+    #-DwxTOOLKIT_PREFIX=mswu"
+    #-DwxMSVC_VERSION=140
+
+    libs="${libs} -L${wxWidgets_home}/lib/vc140_x64_dll"
+
+    libs="${libs} gdi32.lib user32.lib wsock32.lib"
+
+    # for SysAllocStringLen, SysFreeString used in inlib/sys/dir :
+    libs="${libs} OleAut32.lib"
+
+  else 
+  
+    ${bush_home}/check_app wx-config 'wx-config program not found. You have to <source setup> wxWidgets.'
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+   
+    version="`wx-config --release`"
+    . ${bush_home}/vertoks
+    #echo ${version_items}
+    #echo ${version_major}
+    if [ "${version_major}" = "1"  -o "${version_major}" = "2" ] ; then
+      echo "bush/use/wx : wxWidgets version ${version} is not supported."
+      exit
+    fi
+
+    if [ `uname` = Darwin ] ; then    
+      # Darwin : it is assumed that wxWidgets is built with :
+      #    ./configure CC=clang CXX=clang++ CXXFLAGS="-stdlib=libstdc++" CPPFLAGS="-stdlib=libstdc++"
+      # All other c++ lib (geant4, pythia8) must be compiled with -stdlib=libstdc++.
+      # Else, simple app as exlib/examples/cpp/wx_hello_world.cpp crashes for us with 3.1.0.
+
+      # to compile include/wx-3.1/wx/strvararg.h :
+      cppflags="${cppflags} -stdlib=libstdc++"
+      linker_flags="${linker_flags} -stdlib=libstdc++"
+    fi
+
+    cppflags="${cppflags} `wx-config --cppflags`"
+    libs="${libs} `wx-config --libs`"
+    libs="${libs} `wx-config --optional-libs gl`"
+
+  fi
+
+fi
+

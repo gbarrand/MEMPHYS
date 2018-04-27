@@ -1,0 +1,12 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_osc_offscreen}" = "yes" ] ; then
+
+  ${bush_home}/check_app aida-config 'aida-config program not found. You have to "source setup" osc_offscreen.'
+  use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+
+  cppflags="${cppflags} `aida-config --cflags`"
+  libs="${libs} `aida-config --libs`"
+
+fi

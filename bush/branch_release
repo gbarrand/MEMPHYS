@@ -1,0 +1,65 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`
+
+tag_release=no
+push_lx2=no
+while test $# -ge 1 ; do
+  case $1 in
+    -tag) tag_release=yes;;
+    -plx2) push_lx2=yes;;
+    -*) echo "bush/branch_release : unknown option : $1." ; exit ;;
+     *) echo "bush/branch_release : unknown option : $1." ; exit ;;
+  esac
+  shift
+done
+
+app="`${bush_home}/app_name`"
+
+APP="`echo ${app} | tr '[:lower:]' '[:upper:]'`"
+maj_vers="`grep ${APP}_MAJOR_VERSION ../${app}/version | awk '{print $3}'`"
+min_vers="`grep ${APP}_MINOR_VERSION ../${app}/version | awk '{print $3}'`"
+pat_vers="`grep ${APP}_PATCH_VERSION ../${app}/version | awk '{print $3}'`"
+
+branch="${app}_${maj_vers}_${min_vers}_${pat_vers}"
+
+if [ ${tag_release} = no -a ${push_lx2} = no ] ; then
+  echo "bush/branch_release : branch will be : ${branch}"
+  exit
+fi
+
+save_dir=`pwd`
+
+tos="${save_dir}"
+tos="${tos} ${bush_home}/../inexlib/inlib"
+tos="${tos} ${bush_home}/../inexlib/exlib"
+tos="${tos} ${bush_home}/../inexlib/ourex"
+tos="${tos} ${bush_home}/../inexlib"
+tos="${tos} ${bush_home}"
+
+if [ -d "${HOME}/Documents/${app}/.git" ] ; then
+  tos="${tos} /Users/barrand/Documents/${app}"
+fi
+
+for dir in ${tos} ; do
+  if [ -d ${dir} ] ; then
+    cd ${dir}
+    if [ ${push_lx2} = yes ] ; then
+      echo "bush/branch_release : ${dir} : push branch ${branch}"
+      git push lx2 ${branch}
+    elif [ ${tag_release} = yes ] ; then
+     echo "bush/branch_release : ${dir} : create branch ${branch}"
+      git branch ${branch}
+#else
+     #    git branch -D ${branch}
+    else
+      echo "directory ${dir} not found."
+    fi
+    cd ${save_dir}
+  fi
+done
+
+cd ${save_dir}

@@ -1,0 +1,80 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# Used to build wall_[master,screen]_[X11,Windows,Cocoa] apps.
+# It is a simpler version of app_header.
+
+if [ "${bush_home}" = "" ] ; then
+  echo "bush/exlib_header : bush_home variable not set."
+  exit
+fi
+
+#//////////////////////////////////////////////////////
+#/// args : ///////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+build_no_gl=no
+build_no_wall=no
+build_enforce_vbo=no
+
+header_args=
+for arg in ${build_args} ; do
+  case ${arg} in
+#     -X11_no_gl)  build_no_gl=yes;;
+#     -x11_no_gl)  build_no_gl=yes;;
+     -no_gl)      build_no_gl=yes;;
+     -no_wall)    build_no_wall=yes;;
+     -vbo)        build_enforce_vbo=yes;;
+     # etc :
+     -*)          header_args="${header_args} ${arg}";;
+      *)          header_args="${header_args} ${arg}";;
+  esac
+done
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+build_args="${header_args}"
+
+if [ "${ourex_home}" = "" ] ; then ourex_home=${bush_home}/../inexlib/ourex;fi
+
+. ${bush_home}/ourex_args
+
+. ${bush_home}/header_app
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+if [ "${app}" = "" ] ; then
+  echo "bush/exlib_header : app variable not set."
+  exit
+fi
+
+if [ "${build_enforce_vbo}" = "yes" ] ; then
+  cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
+fi
+
+if [ ${build_no_gl} = "yes" ] ; then
+  cppflags="${cppflags} -DEXLIB_NO_GL"
+fi
+
+if [ ${build_inlib_gl} = "yes" ] ; then
+  cppflags="${cppflags} -DEXLIB_INLIB_GL"
+fi
+
+if [ "${build_no_wall}" = "no" ] ; then
+  cppflags="${cppflags} -DAPP_USE_WALL"
+fi
+
+if [ "${exlib_home}" = "" ] ; then
+  exlib_home=${bush_home}/../inexlib/exlib
+fi
+
+use_archive=yes
+if [ ${build_use_shlib} = yes ] ; then
+  use_archive=no
+  use_copy_shlib=yes
+fi
+

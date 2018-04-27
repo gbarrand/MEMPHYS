@@ -1,0 +1,25 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_flint}" = "yes" ] ; then
+  flint_sys_home=/usr/local/flint/2.5.2
+  if [ ! -d ${flint_sys_home} ] ; then
+    echo "bush/use/flint : ${flint_sys_home} not found."
+    exit
+  fi
+
+  ccflags="${ccflags} -I${flint_sys_home}/include"
+  cppflags="${cppflags} -I${flint_sys_home}/include"
+
+  if [ "${use_archive}" = "yes" ] ; then
+    if [ -f ${flint_sys_home}/lib/libflint.a ] ; then
+      libs="${libs} ${flint_sys_home}/lib/libflint.a"
+    else
+      echo "bush/use/flint : use_archive requested but ${flint_sys_home}/libflint.a not found, try with -lflint."
+      libs="${libs} -L${flint_sys_home}/lib -lflint"
+    fi
+  else     
+    libs="${libs} -L${flint_sys_home}/lib -lflint"
+  fi
+
+fi

@@ -1,0 +1,26 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_curl}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/curl : cl.exe : curl not yet supported."
+    exit
+  fi
+
+  if [ `uname` = Darwin ] ; then
+    curl_home=/opt/local
+  else
+    curl_home=/usr
+  fi
+
+  if [ ! -f ${curl_home}/include/curl/curl.h ] ; then
+    echo "bush/use/curl : ${curl_home}/include/curl/curl.h not found."
+    exit
+  fi
+
+  ccflags="${ccflags} -I${curl_home}/include"
+  cppflags="${cppflags} -I${curl_home}/include"
+
+  libs="${libs} -L${curl_home}/${lib} -lcurl"
+
+fi

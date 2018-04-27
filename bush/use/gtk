@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# ////////////////////////////////////
+# /// gtk2 ///////////////////////////
+# ////////////////////////////////////
+gtk_cflags=""
+if [ "${use_gtk}" = "yes" ] ; then
+
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/gtk : cl.exe : not supported."
+    exit
+  fi
+
+  if [ `uname` = Darwin ] ; then
+    if [ ! -d /opt/local/include/gtk-2.0 ] ; then
+      echo "bush/use/gtk : /opt/local/include/gtk-2.0 not found. Please install gtk2 with Macport."
+      echo "bush/use/gtk :   Darwin> cd /opt/local/bin;sudo ./port install gtk2 +no_x11+quartz"
+      echo "bush/use/gtk : if installing with Fink, you have to edit bush/use/gtk to change the access paths."
+      exit
+    fi
+    gtk_cflags="${gtk_cflags} `pkg-config --cflags gtk+-2.0`"
+    ccflags="${ccflags} `pkg-config --cflags gtk+-2.0`"
+    cppflags="${cppflags} `pkg-config --cflags gtk+-2.0`"
+    libs="${libs} `pkg-config --libs gtk+-2.0`"
+  else
+    if [ ! -d /usr/include/gtk-2.0 ] ; then
+      echo "bush/use/gtk : /usr/include/gtk-2.0 not found. Please install gtk2-devel."
+      exit
+    fi
+    gtk_cflags="${gtk_cflags} `pkg-config --cflags gtk+-2.0`"
+    ccflags="${ccflags} `pkg-config --cflags gtk+-2.0`"
+    cppflags="${cppflags} `pkg-config --cflags gtk+-2.0`"
+    libs="${libs} `pkg-config --libs gtk+-2.0`"
+  fi
+fi

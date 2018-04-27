@@ -1,0 +1,32 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_X11}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/X11 : cl.exe : not supported."
+    exit
+  fi
+
+  # Must be consitent with Motif (under /opt/local if installed with Macport).
+
+  if [ `uname` = Darwin ] ; then
+    inc_dirs="/opt/local/include /usr/include /usr/X11/include"
+  else
+    inc_dirs="/usr/X11R6/include /usr/include"
+  fi
+  inc_to_find=X11/X.h
+  . ${bush_home}/find_inc
+
+  if [ `uname` = Darwin ] ; then
+    lib_dirs="/opt/local/${lib} /usr/${lib} /usr/X11/${lib}"
+  else
+    lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+  fi
+  lib_to_find=X11
+  . ${bush_home}/find_lib
+
+# WARNING : Xpm not found on all machines.
+#  libs="${libs} -lXi -lXext -lXpm -lX11"
+
+fi
+

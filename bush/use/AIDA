@@ -1,0 +1,13 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_AIDA}" = "yes" ] ; then
+
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/AIDA : variable ourex_home not defined.';exit
+  fi
+  AIDA_home=${ourex_home}/AIDA
+  
+  cppflags="${cppflags} -I${AIDA_home}/v3r2p1"
+
+fi

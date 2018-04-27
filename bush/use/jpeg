@@ -1,0 +1,47 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_jpeg}" = "yes" ] ; then
+if [ "${build_use_not_our_jpeg}" = "yes" ] ; then
+  use_sys_jpeg=yes
+  use_our_jpeg=no
+else
+  use_sys_jpeg=no
+  use_our_jpeg=yes
+fi
+fi
+
+if [ "${use_sys_jpeg}" = "yes" ] ; then
+  if [ `uname` = Darwin ] ; then
+    if [ ! -e /opt/local/include/jpeglib.h ] ; then
+      echo "bush/use/jpeg : /opt/local/include/jpeglib.h not found. Use our jpeg."
+      use_our_jpeg=yes
+    else
+      cppflags="${cppflags} -I/opt/local/include"
+      libs="${libs} -L/opt/local/lib -ljpeg"
+    fi
+  else
+    if [ ! -e /usr/include/jpeglib.h ] ; then
+      echo "bush/use/jpeg : /usr/include/jpeglib.h not found. Use our jpeg."
+      use_our_jpeg=yes
+    else
+      cppflags="${cppflags} -I/usr/include"
+      libs="${libs} -ljpeg"
+    fi
+  fi
+fi
+
+if [ "${use_our_jpeg}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/jpeg : variable ourex_home not defined.';exit
+  fi
+  jpeg_home=${ourex_home}/jpeg
+  
+  ccflags="${ccflags} -I${jpeg_home}/jpeg"
+  cppflags="${cppflags} -I${jpeg_home}/jpeg"
+  ourex_pack_name=jpeg
+  . ${bush_home}/use/ourex_use
+  if [ ${build_visual} = "yes" ] ; then
+    libs="${libs} user32.lib"
+  fi
+fi

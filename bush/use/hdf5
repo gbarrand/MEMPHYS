@@ -1,0 +1,65 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# NOTE : hdf5 uses zlib.
+
+if [ "${use_hdf5}" = "yes" ] ; then
+if [ "${build_use_not_our_hdf5}" = "yes" ] ; then
+  use_sys_hdf5=yes
+  use_our_hdf5=no
+else
+  use_sys_hdf5=no
+  use_our_hdf5=yes
+fi
+fi
+
+#use_sys_hdf5=yes
+#use_our_hdf5=no
+
+if [ "${use_sys_hdf5}" = "yes" ] ; then
+  hdf5_sys_home=/opt/local  #Darwin : warning : may be not thread safe.
+  hdf5_sys_home=/usr/local/hdf5/1.6.6
+  hdf5_sys_home=/usr/local/hdf5/1.8.15
+  hdf5_sys_home=/usr/local/hdf5/1.8.19
+ #hdf5_sys_home=/usr/local/hdf5/1.10.1
+  if [ ! -d ${hdf5_sys_home} ] ; then
+    echo "bush/use/hdf5 : ${hdf5_sys_home} not found. Use our hdf5."
+    use_our_hdf5=yes
+  else
+    ccflags="${ccflags} -DEXLIB_USE_NATIVE_HDF5"
+    cppflags="${cppflags} -DEXLIB_USE_NATIVE_HDF5"
+    ccflags="${ccflags} -I${hdf5_sys_home}/include"
+    cppflags="${cppflags} -I${hdf5_sys_home}/include"
+
+   #ccflags="${ccflags} -DH5_USE_16_API"
+   #cppflags="${cppflags} -DH5_USE_16_API"
+
+    if [ "${use_archive}" = "yes" ] ; then
+      if [ -f ${hdf5_sys_home}/lib/libhdf5.a ] ; then
+        libs="${libs} ${hdf5_sys_home}/lib/libhdf5.a"
+      else
+        echo "bush/use/hdf5 : use_archive requested but ${hdf5_sys_home}/libhdf5.a not found, try with -lhdf5."
+        libs="${libs} -L${hdf5_sys_home}/lib -lhdf5"
+      fi
+    else     
+      libs="${libs} -L${hdf5_sys_home}/lib -lhdf5"
+    fi
+   
+  fi
+fi
+
+if [ "${use_our_hdf5}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/hdf5 : variable ourex_home not defined.';exit
+  fi
+  hdf5_home=${ourex_home}/hdf5
+  if [ ${build_visual} = "yes" ] ; then
+    if [ ${use_archive} = no ] ; then
+      ccflags="${ccflags} -D_HDF5USEDLL_"
+      cppflags="${cppflags} -D_HDF5USEDLL_"
+    fi
+  fi
+  ourex_pack_name=hdf5
+  . ${bush_home}/use/ourex_use
+fi
+

@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# to be sourced from another build script.
+
+for file in ${cfiles}  ; do echo ${file} >> c_tmp; done
+
+if [ -f c_tmp ] ; then
+for file in $(cat c_tmp) ; do
+  oname=`basename ${file}`
+  oname=`echo ${oname} | sed -e 's:\.c::g'`
+
+  if [ "${build_diro}" = "yes" ] ; then
+    dname=`dirname ${file}`
+    diro=`basename ${dname}`
+    /bin/mkdir -p "${build_path}/${diro}"
+    obj="${build_path}/${diro}/${oname}.o"
+  else
+    obj="${build_path}/${oname}.o"
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    if [ ${build_verbose} = yes ] ; then
+      echo "bush/compile_c : do ${file} ..."
+      if [ -f ${obj} ] ; then
+        echo "bush/compile_c : WARNING : ${obj} already exists."
+      fi
+    fi
+    eval ${cc_compiler} -c ${ccflags} -o ${obj} ${file}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+  objs="${objs} ${obj}"
+done
+/bin/rm -f c_tmp
+fi
+

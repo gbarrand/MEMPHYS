@@ -1,0 +1,37 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# we expect that the compiler command (with options) is passed in one arg.
+
+processor=
+if [ $# != 1 ] ; then
+  echo ${processor}
+  exit
+fi
+
+cpp_compiler="$1"
+
+bin_path=`dirname $0`
+
+save_dir=`pwd`
+cd ${bin_path}
+
+if [ "`uname | grep CYGWIN`" != "" ] ; then
+  #NOTE : cl.exe prints the name of the compiled source file.
+  #       We remove this output by sending it to /dev/null.
+  cl.exe /nologo /MD /O2 /W3 /EHsc /GR ./cpp/processor.cpp 1> /dev/null
+  processor="`./processor.exe`"
+  processor="`echo ${processor} | sed -e 's: :\\\ :g'`"
+  processor="`echo ${processor} | tr -d '\n\r'`"
+  /bin/rm -f ./processor.obj ./processor.exe ./processor.exe.manifest
+else
+  ${cpp_compiler} -o processor_exe ./cpp/processor.cpp
+  processor=`./processor_exe`
+  /bin/rm -f ./processor_exe
+fi
+
+cd ${save_dir}
+
+echo ${processor}

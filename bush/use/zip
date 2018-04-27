@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# NOTE : zip uses zlib.
+
+if [ "${use_zip}" = "yes" ] ; then
+if [ "${build_use_not_our_zip}" = "yes" ] ; then
+  use_sys_zip=yes
+  use_our_zip=no
+else
+  use_sys_zip=no
+  use_our_zip=yes
+fi
+fi
+
+if [ "${use_sys_zip}" = "yes" ] ; then
+  if [ ! -e /usr/include/zip.h ] ; then
+    echo "bush/use/zip : /usr/include/zip.h not found. Use our zip."
+    use_our_zip=yes
+  else
+    use_our_zip=yes
+    # what is the standard name of the lib ?
+    #cppflags="${cppflags} -I/usr/include"
+    #libs="${libs} -lz"
+  fi
+fi
+
+if [ "${use_our_zip}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/zip : variable ourex_home not defined.';exit
+  fi
+  zip_home=${ourex_home}/zip
+  ourex_pack_name=zip
+  . ${bush_home}/use/ourex_use
+fi
+

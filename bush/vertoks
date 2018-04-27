@@ -1,0 +1,21 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${version}" = "" ] ; then
+  echo 'bush/vertoks : variable version is empty.'
+  exit
+fi
+
+version_items=''
+version_major=''
+
+bush_old_IFS="${IFS}"
+IFS=.
+for item in ${version} ; do
+  version_items="${version_items} ${item}"
+  if [ "${version_major}" = "" ] ; then version_major="${item}"; fi
+done
+
+IFS="${bush_old_IFS}"
+unset bush_old_IFS
+unset item

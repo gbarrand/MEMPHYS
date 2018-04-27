@@ -1,0 +1,17 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+build_args=
+build_what=build_none
+
+build_all_args=
+
+while test $# -ge 1 ; do
+  build_all_args="${build_all_args} $1"
+  case $1 in
+    -*) build_args="${build_args} $1";;
+     *) build_args="${build_args} $1";if [ $# = 1 ] ; then build_what=$1; fi;;
+  esac
+  shift
+done
+

@@ -1,0 +1,26 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_spiapp}" = "yes" ] ; then
+if [ "${build_use_not_our_spiapp}" = "yes" ] ; then
+  use_sys_spiapp=yes
+  use_our_spiapp=no
+else
+  use_sys_spiapp=no
+  use_our_spiapp=yes
+fi
+fi
+
+if [ "${use_our_spiapp}" = "yes" ] ; then  
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/spiapp : variable ourex_home not defined.';exit
+  fi
+  spiapp_home=${ourex_home}/spiapp
+  
+  if [ ${build_visual} = "yes" ] ; then
+    cppflags="${cppflags} -I${bush_home}/visual"
+  fi
+  ourex_pack_name=spiapp
+  . ${bush_home}/use/ourex_use
+fi
+

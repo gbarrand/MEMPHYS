@@ -1,0 +1,38 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_CoinGL}" = "yes" ] ; then
+if [ "${build_use_not_our_CoinGL}" = "yes" ] ; then
+  use_sys_CoinGL=yes
+  use_our_CoinGL=no
+else
+  use_sys_CoinGL=no
+  use_our_CoinGL=yes
+fi
+fi
+
+if [ "${use_sys_CoinGL}" = "yes" ] ; then
+  echo "bush/use/CoinGL : sys CoinGL not (yet) handled."
+  exit
+fi
+
+if [ "${use_our_CoinGL}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/CoinGL : variable ourex_home not defined.';exit
+  fi
+  CoinGL_home=${ourex_home}/CoinGL
+  
+  #if [ ${build_visual} = "yes" ] ; then
+  #  cppflags="${cppflags} -DCOIN_NOT_DLL" # not needed anymore.
+  #fi
+
+  if [ ${build_inlib_gl} = yes ] ; then
+    cfiles="${cfiles} ${inlib_home}/inlib/gldum/glu.c"
+  fi
+
+  ourex_pack_name=CoinGL
+  . ${bush_home}/use/ourex_use
+
+fi
+
+

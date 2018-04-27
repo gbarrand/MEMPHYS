@@ -1,0 +1,34 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_zlib}" = "yes" ] ; then
+if [ "${build_use_not_our_zlib}" = "yes" ] ; then
+  use_sys_zlib=yes
+  use_our_zlib=no
+else
+  use_sys_zlib=no
+  use_our_zlib=yes
+fi
+fi
+
+if [ "${use_sys_zlib}" = "yes" ] ; then
+  if [ ! -e /usr/include/zlib.h ] ; then
+    echo "bush/use/zlib : /usr/include/zlib.h not found."
+    exit
+  fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_ZLIB"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_ZLIB"
+  #cppflags="${cppflags} -I/usr/include"
+  libs="${libs} -lz"
+fi
+
+if [ "${use_our_zlib}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/zlib : variable ourex_home not defined.';exit
+  fi
+  zlib_home=${ourex_home}/zlib
+  ourex_pack_name=zlib
+  . ${bush_home}/use/ourex_use
+fi
+
+

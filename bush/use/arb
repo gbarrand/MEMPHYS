@@ -1,0 +1,25 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_arb}" = "yes" ] ; then
+  arb_sys_home=/usr/local/arb/2.13.0
+  if [ ! -d ${arb_sys_home} ] ; then
+    echo "bush/use/arb : ${arb_sys_home} not found."
+    exit
+  fi
+
+  ccflags="${ccflags} -I${arb_sys_home}/include"
+  cppflags="${cppflags} -I${arb_sys_home}/include"
+
+  if [ "${use_archive}" = "yes" ] ; then
+    if [ -f ${arb_sys_home}/lib/libarb.a ] ; then
+      libs="${libs} ${arb_sys_home}/lib/libarb.a"
+    else
+      echo "bush/use/arb : use_archive requested but ${arb_sys_home}/libarb.a not found, try with -larb."
+      libs="${libs} -L${arb_sys_home}/lib -larb"
+    fi
+  else     
+    libs="${libs} -L${arb_sys_home}/lib -larb"
+  fi
+
+fi

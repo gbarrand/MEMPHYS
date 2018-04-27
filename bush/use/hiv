@@ -1,0 +1,9 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+use_HEPVis=yes
+use_CoinGL=yes
+
+. ${bush_home}/use/HEPVis
+. ${bush_home}/use/CoinGL
+

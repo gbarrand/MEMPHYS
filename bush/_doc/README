@@ -1,0 +1,7 @@
+
+  To build the web pages with doxygen :
+    UNIX> ../doc/doxygen_web
+ Pages are put under :
+    ../docs/bush_doc/<BUSH_VERSION>_<web_version>
+ with <BUSH_VERSION> being BUSH_VERSION of the ./version file.
+

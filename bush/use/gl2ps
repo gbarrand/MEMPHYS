@@ -1,0 +1,15 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_gl2ps}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/gl2ps : variable ourex_home not defined.';exit
+  fi
+  gl2ps_home=${ourex_home}/gl2ps
+  
+  ccflags="${ccflags} -I${gl2ps_home}"
+  cppflags="${cppflags} -I${gl2ps_home}"
+  ourex_pack_name=gl2ps
+  . ${bush_home}/use/ourex_use
+fi
+

@@ -1,0 +1,18 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_SoSDL}" = "yes" ] ; then
+  use_our_SoSDL=yes
+fi
+
+if [ "${use_our_SoSDL}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/SoSDL : variable ourex_home not defined.';exit
+  fi
+  SoSDL_home=${ourex_home}/SoSDL
+  
+  ourex_pack_name=SoSDL
+  . ${bush_home}/use/ourex_use
+fi
+
+

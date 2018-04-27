@@ -1,0 +1,29 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_lua}" = "yes" ] ; then
+if [ "${build_use_not_our_lua}" = "yes" ] ; then
+  use_sys_lua=yes
+  use_our_lua=no
+else
+  use_sys_lua=no
+  use_our_lua=yes
+fi
+fi
+
+if [ "${use_sys_lua}" = "yes" ] ; then
+  echo "bush/use/lua : sys not supported. We use ourex/lua."
+  exit
+fi
+
+if [ "${use_our_lua}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/lua : variable ourex_home not defined.';exit
+  fi
+  lua_home=${ourex_home}/lua
+
+  ccflags="${ccflags} -I${lua_home}/src"
+  cppflags="${cppflags} -I${lua_home}/src"
+  ourex_pack_name=lua
+  . ${bush_home}/use/ourex_use
+fi

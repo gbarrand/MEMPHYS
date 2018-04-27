@@ -1,0 +1,17 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# used on Linux when it is needed to execute with the shared lib coming in the distrib sys directory.
+
+bin_path="`dirname $0`"
+
+loader="`find ${bin_path}/../sys -name 'ld-*so.*' -print`"
+LD_LIBRARY_PATH="${bin_path}/../sys";export LD_LIBRARY_PATH
+
+# NOTE : in the distrib, we may have to include some drivers as swrast_dri.so.
+#LIBGL_DRIVERS_PATH="${bin_path}/../dri";export LIBGL_DRIVERS_PATH
+
+${loader} ${bin_path}/target_app_exe
+

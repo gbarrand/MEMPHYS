@@ -1,0 +1,22 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_qftxx}" = "yes" ] ; then
+
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/qftxx : cl.exe : qftxx not yet supported."
+    exit
+  fi
+
+  qftxx_home=/usr/local/qft++/v1
+  if [ ! -f ${qftxx_home}/include/qft++.h ] ; then
+    echo "bush/use/qftxx : ${qftxx_home}/include/qft++.h not found."
+    exit
+  fi
+
+  ccflags="${ccflags} -I${qftxx_home}/include"
+  cppflags="${cppflags} -I${qftxx_home}/include"
+
+  libs="${libs} -L${qftxx_home}/${lib} -lqft++"
+
+fi

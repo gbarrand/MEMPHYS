@@ -1,0 +1,44 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_cling}" = "yes" ] ; then
+  use_sys_cling=yes
+fi
+
+if [ "${use_sys_cling}" = "yes" ] ; then
+
+  . ${bush_home}/use_cling
+  
+  if [ ! -d "${cling_home}" ] ; then
+    echo "bush/use/cling : WARNING : not found under ${cling_home}"
+    exit
+  fi
+
+  cppflags="${cppflags} -I${cling_home}/include"
+  cppflags="${cppflags} -DLLVMRESDIR=${cling_home}"
+
+  libs="${libs} -L${cling_home}/lib"
+  libs="${libs} -lclingInterpreter -lclingUtils"
+  if [ `uname` = "Linux" ] ; then
+    libs="${libs} -lcling"
+  fi
+
+  libs="${libs} -lclangFrontend -lclangSerialization -lclangParse -lclangSema"
+  libs="${libs} -lclangEdit -lclangLex -lclangDriver -lclangCodeGen -lclangAnalysis"
+  libs="${libs} -lclangBasic  -lclangAST"
+
+  libs="${libs} `${cling_home}/bin/llvm-config --libs`"
+  libs="${libs} -lz"
+  if [ `uname` = "Darwin" ] ; then
+    libs="${libs} -lcurses"
+  elif [ `uname` = "Linux" ] ; then
+    libs="${libs} -ldl -lpthread"
+  fi
+
+ #cppflags="${cppflags} -stdlib=libc++"
+ #if using anaconda3 cling :
+ #libs="${libs} `${cling_home}/bin/llvm-config --libs bitwriter mcjit orcjit native option ipo profiledata instrumentation objcarcopts coverage`"
+  #libs="${libs} /usr/lib64/libc++.so"
+
+fi
+

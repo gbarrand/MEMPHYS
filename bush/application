@@ -1,0 +1,197 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+#////////////////////////////////////
+#////////////////////////////////////
+#////////////////////////////////////
+
+if [ "${app_src}" = "" ] ; then
+  echo "bush/application : variable app_src not defined."
+  exit
+fi
+
+if [ "${app_exe}" = "" ] ; then
+  echo "bush/application : variable app_exe not defined."
+  exit
+fi
+
+if [ ${build_verbose} = yes ] ; then
+  echo "bush/application : build path is ${build_path}"
+fi
+
+/bin/mkdir -p ${build_path}
+
+if [ ${build_clean} = "yes" ] ; then
+  /bin/rm -R -f ${build_path}
+  exit
+fi
+
+. ${bush_home}/compile
+
+file_exe=
+
+if [ "${build_app}" = "no" ] ; then
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : do not build app."
+  fi
+  if [ ${build_sdk_android} = "yes" ] ; then
+    echo dummy > /dev/null
+  else
+    file_exe=${build_path}/${app_exe}
+  fi
+  
+else #build_app
+
+app_base_name=`basename ${app_src}`
+suffix=`echo ${app_base_name} | sed 's:.*\.::'`
+if [ "${suffix}" = "${app_base_name}" ] ; then suffix=none;fi
+
+#if [ "${suffix}" = none ] ; then suffix=cpp;fi
+
+obj="${build_path}/main.o"
+
+link_it=no
+app_linker="${cpp_linker} ${cpp_linker_flags}"
+
+old_build_do_compile=${build_do_compile}
+if [ ${build_compile_main_only} = "yes" ] ; then build_do_compile=yes;fi
+
+if [ "${suffix}" = "c" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : compile ${app_src} ..."
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    eval ${cc_compiler} -c ${ccflags} -o ${obj} ${app_src}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+
+  objs="${obj} ${objs}"
+  link_it=yes
+
+elif [ "${suffix}" = "cpp" -o "${suffix}" = "cc" -o "${suffix}" = "cxx" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : compile ${app_src} ..."
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    eval ${cpp_compiler} -x c++ -c ${cppflags} -o ${obj} ${app_src}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+
+  objs="${obj} ${objs}"
+  link_it=yes
+
+elif [ "${suffix}" = "m" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : compile ${app_src} ..."
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    eval ${cc_compiler} -x objective-c -c ${ccflags} ${mflags} -o ${obj} ${app_src}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+
+  objs="${obj} ${objs}"
+  link_it=yes
+
+elif [ "${suffix}" = "mm" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : compile ${app_src} ..."
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    eval ${cpp_compiler} -x objective-c++ -c ${cppflags} ${mmflags} -o ${obj} ${app_src}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+
+  objs="${obj} ${objs}"
+  link_it=yes
+
+elif [ "${suffix}" = "f" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : compile ${app_src} ..."
+  fi
+
+  if [ ${build_do_compile} = "yes" ] ; then
+    use_f77=yes
+    . ${bush_home}/use/f77
+    eval ${f77_compiler} ${f77flags} -c -o ${obj} ${app_src}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+  fi
+
+  objs="${obj} ${objs}"
+  libs="${libs} ${f77libs}"
+
+  app_linker=${f77_linker}
+
+  link_it=yes
+
+elif [ "${suffix}" = "java" ] ; then
+
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : treat ${app_src} ..."
+  fi
+
+  plugin=lib${app}
+  if [ ${build_plugin} = "yes" ] ; then . ${bush_home}/plugin; fi
+
+  # build of the .apk done in app_distrib.
+  
+  link_it=no
+
+elif [ "${suffix}" = "ecpp" ] ; then
+
+. ${bush_home}/build_ecpp
+
+else
+  echo "bush/application : suffix ${suffix} not treated"        
+  exit
+fi
+
+if [ ${build_compile_main_only} = "yes" ] ; then
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : do not link."
+  fi
+  link_it=no;
+fi
+
+if [ "${link_it}" = "yes" ] ; then
+
+if [ ${build_sdk_android} = "yes" ] ; then
+  echo "bush/application : sdk_android : don't know how to link ${app_exe}."
+else
+
+  file_exe=${build_path}/${app_exe}
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : link ${file_exe} ..."
+  fi
+  eval ${app_linker} ${linker_flags} -o ${file_exe} ${objs} ${libs}
+  use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
+    
+  #/bin/rm -f ${objs}
+    
+  if [ `uname` = Darwin ] ; then
+    if [ ${build_debug} = "yes" ] ; then
+      if [ ! -f ${file_exe} ] ; then
+        echo "bush/application : exe not built : can't build .dSYM"
+      else
+        if [ ${build_verbose} = yes ] ; then
+          echo "bush/application : build ${file_exe}.dSYM ..."
+        fi
+        /bin/rm -R -f ${file_exe}.dSYM
+        dsymutil --out=${file_exe}.dSYM ${file_exe}
+      fi
+    fi
+  fi 
+    
+fi # sdk_android    
+fi # link_it
+fi # build_app
+
+build_do_compile=${old_build_do_compile}
