@@ -1,0 +1,143 @@
+#!/bin/sh -f
+
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+# run sim with :
+#   source run_g410x_setup.csh 
+#   setenv NeutronHPNames
+#   cd ../exa_run
+#   ../mgr/bin_clang_c++11/MEMPHYS_sim -events=0 >& out_barrand.log
+#   cd ../mgr
+
+grep barrand ../exa_run/out_barrand.log | awk '{print $7}' | sort -u > ./tmp_0
+wc -l ./tmp_0
+
+data_home=/usr/local/geant4/data_103/G4NDL4.5
+
+/bin/rm -R    ./G4NDL4.5
+/bin/mkdir -p ./G4NDL4.5
+
+for item in $(cat ./tmp_0) ; do
+  if [ -f ${item} ] ; then  
+    #echo ${item}
+    part="`echo ${item} | sed -e 's:/usr/local/geant4/data_103/G4NDL4.5/::g'`"
+    dir="`dirname ${part}`"      
+    name="`basename ${part}`"      
+    /bin/mkdir -p ./G4NDL4.5/${dir}
+    /bin/cp ${data_home}/${dir}/${name} ./G4NDL4.5/${dir}/${name}
+  else
+    echo "not a file : ${item}"
+  fi    
+done
+
+exit
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+# run sim with :
+#   source run_g410x_setup.csh 
+#   setenv NeutronHPNames
+#   cd ../exa_run
+#   ../mgr/bin_clang_c++11/MEMPHYS_sim -events=0 >& out.log
+#   cd ../mgr
+
+grep data_103 ../exa_run/out.log | sort -u > ./tmp_0
+#wc -l ./tmp_0
+
+grep HPWD ./tmp_0 | awk '{print $3}' | sort -u > ./HPWD_tmp
+wc -l ./HPWD_tmp
+
+grep -v HPWD ./tmp_0 | awk '{print $1}' | grep data_103 | sort -u > ./no_HPWD_tmp
+wc -l ./no_HPWD_tmp
+
+data_home=/usr/local/geant4/data_103/G4NDL4.5
+
+/bin/rm -R    ./G4NDL4.5
+/bin/mkdir -p ./G4NDL4.5
+
+for item in $(cat ./HPWD_tmp) ; do
+  if [ -f ${item}.z ] ; then  
+    #echo ${item}
+    part="`echo ${item} | sed -e 's:/usr/local/geant4/data_103/G4NDL4.5/::g'`"
+    dir="`dirname ${part}.z`"      
+    name="`basename ${part}.z`"      
+    /bin/mkdir -p ./G4NDL4.5/${dir}
+    /bin/cp ${data_home}/${dir}/${name} ./G4NDL4.5/${dir}/${name}
+  else
+    echo "not a file : ${item}"
+  fi    
+done
+
+exit
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////
+
+data_home=/usr/local/geant4/data_103/G4NDL4.5
+
+items=
+
+items="${items} Capture/CrossSection/8_17_Oxygen.z"
+items="${items} Elastic/CrossSection/8_17_Oxygen.z"
+items="${items} Elastic/FS/8_17_Oxygen.z"
+items="${items} Inelastic/CrossSection/8_17_Oxygen.z"
+items="${items} Inelastic/F01/8_17_Oxygen.z"
+items="${items} Inelastic/F04/8_17_Oxygen.z"
+items="${items} Inelastic/F06/8_17_Oxygen.z"
+items="${items} Inelastic/F10/8_17_Oxygen.z"
+items="${items} Inelastic/F23/8_17_Oxygen.z"
+items="${items} Inelastic/F24/8_17_Oxygen.z"
+items="${items} Inelastic/F27/8_17_Oxygen.z"
+
+items="${items} Capture/CrossSection/6_nat_Carbon.z"
+items="${items} Capture/FS/6_nat_Carbon.z"
+items="${items} Elastic/CrossSection/6_nat_Carbon.z"
+items="${items} Elastic/FS/6_nat_Carbon.z"
+items="${items} Inelastic/CrossSection/6_nat_Carbon.z"
+items="${items} Inelastic/F01/6_nat_Carbon.z"
+items="${items} Inelastic/F02/6_nat_Carbon.z"
+items="${items} Inelastic/F10/6_nat_Carbon.z"
+items="${items} Inelastic/F23/6_nat_Carbon.z"
+items="${items} Inelastic/F24/6_nat_Carbon.z"
+items="${items} Inelastic/F27/6_nat_Carbon.z"
+
+items="${items} Capture/CrossSection/26_54_Iron.z"
+items="${items} Capture/FS/26_54_Iron.z"
+items="${items} Elastic/CrossSection/26_54_Iron.z"
+items="${items} Elastic/FS/26_54_Iron.z"
+items="${items} Inelastic/CrossSection/26_54_Iron.z"
+items="${items} Inelastic/F01/26_54_Iron.z"
+items="${items} Inelastic/F02/26_54_Iron.z"
+items="${items} Inelastic/F04/26_54_Iron.z"
+items="${items} Inelastic/F06/26_54_Iron.z"
+items="${items} Inelastic/F10/26_54_Iron.z"
+items="${items} Inelastic/F23/26_54_Iron.z"
+items="${items} Inelastic/F24/26_54_Iron.z"
+items="${items} Inelastic/F27/26_54_Iron.z"
+items="${items} IsotopeProduction/CrossSection/26_54_Iron"
+items="${items} JENDL_HE/neutron/Elastic/CrossSection/26_54_Iron"
+items="${items} JENDL_HE/neutron/Inelastic/CrossSection/26_54_Iron"
+
+items="${items} Capture/CrossSection/15_31_Phosphorous.z"
+items="${items} Capture/FS/15_31_Phosphorous.z"
+items="${items} Elastic/CrossSection/15_31_Phosphorous.z"
+items="${items} Elastic/FS/15_31_Phosphorous.z"
+items="${items} Inelastic/CrossSection/15_31_Phosphorous.z"
+items="${items} Inelastic/F01/15_31_Phosphorous.z"
+items="${items} Inelastic/F02/15_31_Phosphorous.z"
+items="${items} Inelastic/F04/15_31_Phosphorous.z"
+items="${items} Inelastic/F10/15_31_Phosphorous.z"
+items="${items} Inelastic/F23/15_31_Phosphorous.z"
+items="${items} Inelastic/F27/15_31_Phosphorous.z"
+items="${items} IsotopeProduction/CrossSection/15_31_Phosphorous"
+
+/bin/rm -R    ./G4NDL4.5
+/bin/mkdir -p ./G4NDL4.5
+
+for item in ${items} ; do
+  dir="`dirname ${item}`"      
+  name="`basename ${item}`"      
+  /bin/mkdir -p ./G4NDL4.5/${dir}
+  /bin/cp ${data_home}/${dir}/${name} ./G4NDL4.5/${dir}/${name}
+done

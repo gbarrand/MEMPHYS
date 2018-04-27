@@ -1,0 +1,17 @@
+#
+#Choose Primary Generator type
+/mygen/generator muline
+/mygen/vecfile input.memphys
+#/mygen/generator normal
+#
+
+/control/verbose 1
+/run/verbose 2
+#event/verbose 1 is dumping the Stack: quite long!
+/event/verbose 0
+/tracking/verbose 0
+#JEC 24/1/06 Optical drawing option (true/false)
+/MEMPHYS/tracking/drawing/optical true
+
+#JEC 5/4/06
+/hits/verbose 0

@@ -1,0 +1,39 @@
+
+  inlib::wroot::tree* m_Event_tree;
+  int m_Event_eventId;
+  int m_Event_inputEvtId;
+  int m_Event_interMode;
+  int m_Event_vtxVol;
+  std::vector<double> m_Event_vtxPos_vec;
+  int m_Event_nPart;
+  int m_Event_leptonIndex;
+  int m_Event_protonIndex;
+    
+    inlib::wroot::tree* m_Event_track_tree;
+    int m_Event_track_pId;
+    int m_Event_track_parent;
+    float m_Event_track_timeStart;
+    std::vector<double> m_Event_track_direction_vec;
+    double m_Event_track_mass;
+    double m_Event_track_pTot;
+    double m_Event_track_ETot;
+    std::vector<double> m_Event_track_momentum_vec;
+    std::vector<double> m_Event_track_startPos_vec;
+    std::vector<double> m_Event_track_stopPos_vec;
+    int m_Event_track_startVol;
+    int m_Event_track_stopVol;
+  int m_Event_nHits;
+    
+    inlib::wroot::tree* m_Event_hit_tree;
+    int m_Event_hit_tubeId;
+    int m_Event_hit_totalPE;
+    std::vector<float> m_Event_hit_pe_vec;
+    
+  int m_Event_nDigits;
+  double m_Event_sumPE;
+    
+    inlib::wroot::tree* m_Event_digit_tree;
+    int m_Event_digit_tubeId;
+    double m_Event_digit_pe;
+    double m_Event_digit_time;
+    
