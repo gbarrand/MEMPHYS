@@ -1,8 +1,0 @@
-# Copyright (C) 2010, Guy Barrand. All rights reserved.
-# See the file bush.license for terms.
-
-if [ "${use_csz}" = "yes" ] ; then
-  ourex_pack_name=csz
-  . ${bush_home}/use/ourex_use
-fi
-
