@@ -1,0 +1,21 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_wroot_imutex
+#define inlib_wroot_imutex
+
+namespace inlib {
+namespace wroot {
+
+class imutex {
+public:
+  virtual ~imutex(){}
+public:
+  virtual bool lock() = 0;
+  virtual bool unlock() = 0;
+  //virtual bool trylock() = 0;
+};
+
+}}
+
+#endif

@@ -1,0 +1,90 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_buffer
+#define inlib_buffer
+
+#include "platform"
+
+#include <cstring>
+#include <cstddef>
+
+namespace inlib {
+
+template <class T>
+inline unsigned int write_buffer(T a_value,char* a_buffer) {
+  size_t n = sizeof(T);
+  //NOTE : a_buffer must be allocated to n.
+  if(is_little_endian()) {
+    ::memcpy(a_buffer,&a_value,n);
+  } else {
+    char* pos = (char*)&a_value;
+    for(unsigned int i=0;i<n;i++,pos++) a_buffer[n-1-i] = *pos;
+  }
+  return (unsigned int)n;
+}
+
+template <class T>
+inline unsigned int read_buffer(const char* a_buffer,T& a_value) {
+  size_t n = sizeof(T);
+  //NOTE : a_buffer must be allocated to n.
+  if(is_little_endian()) {
+    ::memcpy(&a_value,a_buffer,n);
+  } else {
+    char* pos = (char*)&a_value;
+    for(unsigned int i=0;i<n;i++,pos++) *pos = a_buffer[n-1-i];
+  }
+  return (unsigned int)n;
+}
+
+inline bool is_zip(unsigned int a_sz,const char* a_buffer,bool& a_is){
+  if(a_sz<4) {a_is=false;return false;}
+  if(((unsigned char)a_buffer[0])!='P') {a_is=false;return true;}
+  if(((unsigned char)a_buffer[1])!='K') {a_is=false;return true;}
+  if(((unsigned char)a_buffer[2])!=3)   {a_is=false;return true;}
+  if(((unsigned char)a_buffer[3])!=4)   {a_is=false;return true;}
+  a_is = true;
+  return true;
+}
+
+inline bool is_gzip(unsigned int a_sz,const char* a_buffer,bool& a_is){
+  if(a_sz<4) {a_is = false;return false;}
+  if(((unsigned char)a_buffer[0])!=31)  {a_is = false;return true;}
+  if(((unsigned char)a_buffer[1])!=139) {a_is = false;return true;}
+//if(((unsigned char)a_buffer[2])!=8)   {a_is = false;return true;}
+//if(((unsigned char)a_buffer[3])!=8)   {a_is = false;return true;}
+  a_is = true;  
+  return true;
+}
+
+inline bool is_heprep(unsigned int a_sz,const char* a_buffer,bool& a_is){
+  unsigned int num = 1023; //same logic as in fileis.
+  if(a_sz<=num) {a_is = false;return false;}
+  char old = a_buffer[num];
+  ((char*)a_buffer)[num] = 0; //to have a C string.
+  a_is = ::strstr(a_buffer,"<heprep")?true:false;
+  ((char*)a_buffer)[num] = old;
+  return true;
+}
+
+inline char* search_cstr(const char* a_beg,const char* a_end,const char* a_cstr) {
+  size_t lcstr = ::strlen(a_cstr);
+  const char* cend = a_cstr+lcstr;
+  const char* end = a_end-lcstr;
+  char* pos = const_cast<char*>(a_beg);
+  for(;pos<=end;pos++) {
+    char* cpos = const_cast<char*>(a_cstr);
+    char* bpos = pos;
+    bool found = true;
+    for(;cpos<cend;cpos++,bpos++) {
+      if(*cpos!=*bpos) {found=false;break;}
+    }
+    if(found) return pos;
+  }
+  return 0;
+}
+
+}
+
+#endif
+
