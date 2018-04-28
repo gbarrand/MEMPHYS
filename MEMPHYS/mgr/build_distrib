@@ -23,7 +23,7 @@ install_dir="${build_path}/distrib/MEMPHYS/${version}"
 apps="MEMPHYS_sim MEMPHYS_read_plot_offscreen"
 
 #if [ ${build_offscreen} = no -a ${build_root} = yes ] ; then
-  apps="${apps} MEMPHYS_read_plot MEMPHYS_read_plot_ROOT MEMPHYS_all_ROOT"
+  apps="${apps} MEMPHYS_read_plot MEMPHYS_read_plot_ROOT MEMPHYS_all_ROOT MEMPHYS_geom_ROOT"
 #fi
 
 for item in ${apps} ; do  
