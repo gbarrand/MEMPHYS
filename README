@@ -3,26 +3,51 @@
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  To build the MEMPHYS_sim program against an already installed geant4 and by using cmake :
-    OS> cd MEMPHYS/cmake
-    OS> <read README for instructions>
+    UNIX> cd <install_path>/MEMPHYS/MEMPHYS/cmake
+    UNIX> <read README for instructions to build and run>
+ (UNIX here is for Linux, macOS or Windows-10/cygwin).
 
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  To build the MEMPHYS_sim program against an already installed geant4 by using the bush scripts :
-    OS> cd MEMPHYS/mgr
-    sh> . <geant4_install_dir>/bin/geant4.sh
- ( csh> source <geant4_install_dir>/bin/geant4.csh )
-    OS> geant4-config  # to test that this program is here.
+    UNIX> cd <install_path/MEMPHYS/MEMPHYS/mgr
+      sh> . <geant4_install_dir>/bin/geant4.sh
+   ( csh> source <geant4_install_dir>/bin/geant4.csh )
+    UNIX> geant4-config  # to test that this program is here.
 
-    OS> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
-  Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
-  ( csh> source gcc_493.csh # on Lund iridium )
+   Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++>
+   ( csh> source gcc_493.csh # on Lund iridium )
   
-    OS> ./build -sys_geant4
-  ( OS> ./build -sys_geant4 -v  # to see built files.)
-  ( OS> ./build -sys_geant4 -x  # for a full trace.)
+    UNIX> ./build -sys_geant4
+  ( UNIX> ./build -sys_geant4 -v  # to see built files.)
+  ( UNIX> ./build -sys_geant4 -x  # for a full trace.)
 
+ You can build a binary zip distribution file with :
+    UNIX> ./build_distrib
+    
  At end, you should have a binary zip distribution file :
     bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
 
+ If wanting to run from this build area :
+    UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+    UNIX> cd ../exa_run
+    UNIX> ../mgr/<bin_dir>/MEMPHYS_sim  # it produces a MEMPHYS.root file.
+    
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////
+ To build (not mendatory) some X11 (or Windows) plotting program using a MEMPHYS.root data file :
+    UNIX> ./build_app_read_plot
+    
+ To build an offscreen plotting program using a MEMPHYS.root data file :
+    UNIX> ./build_app_read_plot_offscreen
+
+ If having CERN-ROOT :
+    UNIX> <in cern_root_setup[.sh,.csh] edit root_home to point to your CERN-ROOT installation>
+      sh> . ./cern_root_setup.sh
+   ( csh> source ./cern_root_setup.csh )
+    UNIX> ./build_app_read_plot_ROOT  # do some plotting on a MEMPHYS.root data file, by using CERN-ROOT plotting.
+    UNIX> ./build_app_geomt_ROOT      # dump PMTs in a MEMPHYS.root data file, by using CERN-ROOT to read the file.
+
+ If these programs are built build_distrib script will include them in the distribution file.
