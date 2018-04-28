@@ -73,7 +73,7 @@ find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
 /bin/cp -R ${bush_home} ${to}/.
-/bin/cp ./doc/README_build ${to}/README
+/bin/cp ./doc/README_for_pack ${to}/README
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
@@ -97,7 +97,7 @@ done
 /bin/cp -R ./exa_run ${to}/${app}/.
 /bin/mkdir -p ${to}/${app}/doc
 /bin/cp ./doc/History ${to}/${app}/doc/.
-/bin/cp ./doc/README ${to}/${app}/doc/.
+/bin/cp ./doc/README_for_distrib ${to}/${app}/doc/.
 
 /bin/mkdir -p ${to}/inexlib/inlib
 /bin/mkdir -p ${to}/inexlib/exlib
