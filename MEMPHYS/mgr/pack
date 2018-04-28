@@ -39,6 +39,9 @@ nos='exlib/cbk/wall:wall_client'
 
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/${app} ./applications/sim.cpp
 
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/${app} ./applications/read_plot.cpp
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/${app} ./applications/read_plot_offscreen.cpp
+
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/cpp/platform.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/visual/windef.c
 
@@ -69,6 +72,11 @@ find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
 #///////////////////////////////////////////////////
 /bin/cp -R ./source ${to}/${app}/.
 /bin/cp -R ./${app} ${to}/${app}/.
+
+/bin/cp -R ./applications/all_ROOT.cpp       ${to}/${app}/applications/.
+/bin/cp -R ./applications/geom_ROOT.cpp      ${to}/${app}/applications/.
+/bin/cp -R ./applications/read_plot_ROOT.cpp ${to}/${app}/applications/.
+
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
