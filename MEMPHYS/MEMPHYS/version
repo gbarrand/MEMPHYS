@@ -2,9 +2,9 @@
 #define MEMPHYS_version
 
 #define MEMPHYS_MAJOR_VERSION 11
-#define MEMPHYS_MINOR_VERSION 0
+#define MEMPHYS_MINOR_VERSION 1
 #define MEMPHYS_PATCH_VERSION 0
-#define MEMPHYS_VERSION       "11.0.0"
-#define MEMPHYS_VERSION_VRP   "v11r0p0"
+#define MEMPHYS_VERSION       "11.1.0"
+#define MEMPHYS_VERSION_VRP   "v11r1p0"
 
 #endif
