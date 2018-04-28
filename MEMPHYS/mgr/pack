@@ -89,7 +89,7 @@ find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
 /bin/mkdir -p ${to}/inexlib/ourex
 
 items=
-#items="${items} glutess freetype jpeg png csz expat gl2ps zlib zip"
+items="${items} glutess freetype jpeg png csz expat gl2ps zlib zip"
 items="${items} csz zlib"
 for item in ${items} ; do
   /bin/cp -R ${ourex_home}/${item} ${to}/inexlib/ourex/.

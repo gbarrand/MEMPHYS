@@ -1,0 +1,8 @@
+
+ The code had been extracted from a Mesa-7.8.1.
+ The copyright file found in this distribution had been copied under
+ a_native_copyright.
+
+ Changes :
+ - rename priorityq-heap.c to priorityq-heap.ic
+

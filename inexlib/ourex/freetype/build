@@ -1,0 +1,66 @@
+#!/bin/sh -f
+
+bush_home=../../../bush
+
+. ${bush_home}/args
+. ${bush_home}/ourex_header
+
+if [ ${build_compile} = "yes" ] ; then
+
+if [ ${build_visual} = "yes" ] ; then
+  cfiles="${cfiles} ./src/builds/win32/ftsystem.c"
+else
+  cfiles="${cfiles} ./src/builds/unix/ftsystem.c"
+fi
+
+cfiles="${cfiles} ./src/base/ftdebug.c"
+cfiles="${cfiles} ./src/base/ftinit.c"
+cfiles="${cfiles} ./src/base/ftbase.c"
+cfiles="${cfiles} ./src/base/ftbbox.c"
+cfiles="${cfiles} ./src/base/ftbdf.c"
+cfiles="${cfiles} ./src/base/ftglyph.c"
+cfiles="${cfiles} ./src/base/ftmm.c"
+cfiles="${cfiles} ./src/base/ftpfr.c"
+cfiles="${cfiles} ./src/base/ftstroke.c"
+cfiles="${cfiles} ./src/base/fttype1.c"
+cfiles="${cfiles} ./src/base/ftwinfnt.c"
+
+cfiles="${cfiles} ./src/base/ftxf86.c"
+cfiles="${cfiles} ./src/gzip/ftgzip.c"
+cfiles="${cfiles} ./src/autohint/autohint.c"
+cfiles="${cfiles} ./src/bdf/bdf.c"
+cfiles="${cfiles} ./src/cache/ftcache.c"
+cfiles="${cfiles} ./src/cff/cff.c"
+cfiles="${cfiles} ./src/cid/type1cid.c"
+cfiles="${cfiles} ./src/lzw/ftlzw.c"
+cfiles="${cfiles} ./src/pcf/pcf.c"
+cfiles="${cfiles} ./src/pfr/pfr.c"
+cfiles="${cfiles} ./src/psaux/psaux.c"
+cfiles="${cfiles} ./src/pshinter/pshinter.c"
+cfiles="${cfiles} ./src/psnames/psmodule.c"
+cfiles="${cfiles} ./src/raster/raster.c"
+cfiles="${cfiles} ./src/sfnt/sfnt.c"
+cfiles="${cfiles} ./src/smooth/smooth.c"
+cfiles="${cfiles} ./src/truetype/truetype.c"
+cfiles="${cfiles} ./src/type1/type1.c"
+cfiles="${cfiles} ./src/type42/type42.c"
+cfiles="${cfiles} ./src/winfonts/winfnt.c"
+
+ccflags="${ccflags} -I./include"
+ccflags="${ccflags} -I./include/freetype"
+ccflags="${ccflags} -I./src/builds"
+
+if [ ${build_clang} = "yes" -o ${build_sdk_mac} = "yes" -o ${build_sdk_ios} = "yes" ] ; then
+  # quiet warnings on ./src/cff/cffload.c line 1986 :
+  ccflags="${ccflags} -Wno-shift-negative-value"
+  # quiet old clang (for exa 3.4) that does not have the upper warning.
+  ccflags="${ccflags} -Wno-unknown-warning-option"
+fi
+
+. ${bush_home}/compile
+
+fi # end build_compile
+ 
+if [ ${build_archive} = "yes" ] ; then . ${bush_home}/archive; fi
+
+. ${bush_home}/clean
