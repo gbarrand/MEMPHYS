@@ -1,0 +1,31 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_smath
+#define inlib_smath
+
+#include <string>
+#include "S_STRING"
+
+namespace inlib {
+
+INLIB_GLOBAL_STRING(sqrt)
+INLIB_GLOBAL_STRING(cos)
+INLIB_GLOBAL_STRING(pow)
+INLIB_GLOBAL_STRING(mod)
+INLIB_GLOBAL_STRING(psi)
+INLIB_GLOBAL_STRING(gamma)
+INLIB_GLOBAL_STRING(mu)
+INLIB_GLOBAL_STRING(upper_delta)
+INLIB_GLOBAL_STRING(h_bar)
+
+inline const std::string& s_partial_derivative() {
+  static const std::string s_v("partiald");
+  return s_v;
+}
+
+}
+
+#endif
+
+

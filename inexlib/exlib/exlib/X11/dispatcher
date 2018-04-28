@@ -1,0 +1,60 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_X11_dispatcher
+#define exlib_X11_dispatcher
+
+#include <X11/Xlib.h>
+
+#ifdef INLIB_MEM
+#include <inlib/mem>
+#endif
+
+namespace exlib {
+namespace X11 {
+
+class dispatcher {
+protected:
+#ifdef INLIB_MEM
+  static const std::string& s_class() {
+    static const std::string s_v("exlib::X11::dispatcher");
+    return s_v;
+  }
+#endif
+public:
+  virtual bool dispatch(XEvent&) = 0;
+  virtual Window window() const = 0;
+  virtual dispatcher* copy() const = 0;
+public:
+  dispatcher():m_is_valid(true){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~dispatcher(){
+#ifdef INLIB_MEM
+    inlib::mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  dispatcher(const dispatcher& a_from):m_is_valid(a_from.m_is_valid){
+#ifdef INLIB_MEM
+    inlib::mem::increment(s_class().c_str());
+#endif
+  }
+  dispatcher& operator=(const dispatcher& a_from) { m_is_valid = a_from.m_is_valid;return *this;}
+public:
+  bool is_valid() const {return m_is_valid;}
+  void invalidate() {m_is_valid = false;}
+protected:
+  bool m_is_valid;
+};
+
+}}
+
+//exlib_build_use X11
+#ifdef INLIB_MEM
+//exlib_build_use inlib
+#endif
+
+#endif

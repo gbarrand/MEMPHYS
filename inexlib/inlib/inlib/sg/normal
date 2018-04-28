@@ -1,0 +1,60 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_normal
+#define inlib_sg_normal
+
+#include "node"
+#include "sf_vec3f"
+#include "render_action"
+
+#include <vector>
+
+namespace inlib {
+namespace sg {
+
+class normal : public node {
+  INLIB_NODE(normal,inlib::sg::normal,node)
+public:
+  sf_vec3f vec;
+public:
+  virtual const desc_fields& node_desc_fields() const {
+    INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::normal)
+    static const desc_fields s_v(parent::node_desc_fields(),1, //WARNING : take care of count.
+      INLIB_ARG_FIELD_DESC(vec)
+    );
+    return s_v;
+  }
+private:
+  void add_fields(){
+    add_field(&vec);
+  }
+public:
+  virtual void render(render_action& a_action) {
+    a_action.normal(vec.value());
+  }
+public:
+  normal()
+  :parent()
+  ,vec(vec3f(0,0,1))
+  {
+    add_fields();
+  }
+  virtual ~normal(){}
+public:
+  normal(const normal& a_from)
+  :parent(a_from)
+  ,vec(a_from.vec)
+  {
+    add_fields();
+  }
+  normal& operator=(const normal& a_from){
+    parent::operator=(a_from);
+    vec = a_from.vec;
+    return *this;
+  }
+};
+
+}}
+
+#endif

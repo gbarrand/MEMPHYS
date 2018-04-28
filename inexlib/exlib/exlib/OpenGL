@@ -1,0 +1,37 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_OpenGL
+#define exlib_OpenGL
+
+#ifdef EXLIB_INLIB_GL
+
+#include "inlib_OpenGL"
+
+#else //!EXLIB_INLIB_GL
+
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
+#if TARGET_OS_IPHONE
+#include <OpenGLES/ES1/gl.h>
+#elif defined(ANDROID)
+#include <GLES/gl.h>
+#elif _WIN32
+#include <windows.h>
+#include <GL/gl.h>
+#elif __APPLE__	
+#include <OpenGL/gl.h> //Cocoa
+#else
+#include <GL/gl.h>
+#endif
+
+#endif //EXLIB_INLIB_GL
+
+//exlib_build_use GL
+#ifdef EXLIB_INLIB_GL
+//exlib_build_use inlib
+#endif
+
+#endif
