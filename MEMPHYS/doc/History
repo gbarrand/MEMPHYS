@@ -1,16 +1,8 @@
-11.0.0 : have the simulation only. The visualization is now delivered in the MEMPHYS_vis package with the same version number.
-- have the cmake directory to build with cmake following the Geant4 example way.
+11.1.0 :
+- add applications/all_ROOT.cpp, read_plot.cpp, read_plot_offscreen.cpp, geom_ROOT.cpp, read_plot_ROOT.cpp.
 
-10.2.0 :
-- vis : plot : hits edep.
-- vis : PMS represented with inlib::sg::bifacet (more effective than sg::tube).
-- vis : "axes" menu item.
-- vis : "cam top toward -z" menu item.
-- vis : params => gui_font_modeling : can set now "font_pixmap" which gives a better rendering of texts.
-- vis : Windows, iOS, Android with ourex/geant4.10.03.p01.
-- vis : Android : inputEventFile => input.memphys, jobOptions.mac => job_options.mac.
-- mgr/use_geant4 : for g410x, use ourex/geant4.10.03.p01.
-- * : modifs to remove "pedantic warnings" if compiling with the "geant4-config --cflags" options.
+11.0.0 : have the simulation only. The visualization is now delivered in the MEMPHYS_vis package with the same version number.
+- have the cmake directory to build with cmake following the Geant4 example way. (See cmake/README for instructions).
 
 10.1.0 :
 - build with clang++ on iridium.
