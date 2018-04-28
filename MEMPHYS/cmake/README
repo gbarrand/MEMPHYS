@@ -10,7 +10,7 @@
     UNIX> <edit in ../mgr/run_g410x_setup.csh g4data_home to point toward Geant4 data files>
     csh> source ../mgr/run_g410x_setup.csh
    ( sh> . ../mgr/run_g410x_setup.sh )
-    ../cmake/bin_cmake/MEMPHYS_sim
+    UNIX> ../cmake/bin_cmake/MEMPHYS_sim  # to produce a MEMPHYS.root file.
 
  If wanting to build MEMPHYS_sim without the production of the MEMPHYS.root file :
     cmake -DAPP_USE_INLIB_WROOT=OFF ..
