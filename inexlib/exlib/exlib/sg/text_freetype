@@ -1312,16 +1312,16 @@ protected:
       vcs.push_back(inlib::vec3f(x_max,y_max,0));
       vcs.push_back(inlib::vec3f(x_min,y_max,0));
       
-      inlib::sg::tex_quadrilateral* node = new inlib::sg::tex_quadrilateral;
-      node->img.value().set(img_w,img_h,img_bpp,img_buffer,true);
-      node->expand = true;
-      node->back_color = inlib::colorf_white(); //used as back pixel when expanding.
-      node->back_color.value().set_a(0);        //transparent background.
-      //node->nearest = false;                    //to have antialiasing on texture.
-      node->corners.set_values(vcs);
+      inlib::sg::tex_quadrilateral* _node = new inlib::sg::tex_quadrilateral;
+      _node->img.value().set(img_w,img_h,img_bpp,img_buffer,true);
+      _node->expand = true;
+      _node->back_color = inlib::colorf_white(); //used as back pixel when expanding.
+      _node->back_color.value().set_a(0);        //transparent background.
+      //_node->nearest = false;                    //to have antialiasing on texture.
+      _node->corners.set_values(vcs);
       
-      m_bitmaps.add(node);
-      m_tqs.push_back(node);
+      m_bitmaps.add(_node);
+      m_tqs.push_back(_node);
   
       /*
       if(bitmap->bitmap.pixel_mode==ft_pixel_mode_mono) {
@@ -1682,7 +1682,7 @@ public:
     }
     virtual ~serrors() {}
   protected:
-    serrors(const serrors&) {}
+    serrors(const serrors& a_from):parent(a_from) {}
     serrors& operator=(const serrors&){return *this;}
   };
   static std::string serror(int a_FT_Error) {    

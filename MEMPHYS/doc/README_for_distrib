@@ -5,7 +5,7 @@
 
     UNIX> cd <install_path>/MEMPHYS/<version>
     UNIX> <if needed edit run_g410x_setup[.sh,.csh] to point to geant4 10.x data file directories>
-   Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++ runtime>
+   Linux> <if needed source setup a gcc_[version].[sh,csh] file to have the correct g++ run time>
    ( csh> source gcc_493.csh # on Lund iridium )
     UNIX> cd exa_run
     UNIX> ../bin/MEMPHYS_sim  # it produces a MEMPHYS.root file.

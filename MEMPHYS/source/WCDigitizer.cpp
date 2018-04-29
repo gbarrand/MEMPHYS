@@ -76,7 +76,7 @@ void MEMPHYS::WCDigitizer::Digitize() {
   }//Loop on hit (=PMT)    
   
   G4int acc = 0; // accumulated # hits within time window...
-  G4int accold = 0;
+  //G4int accold = 0;
   G4int beginning;
   
   for ( G4int j = 1 ; j <= WCDigitizer::TimeHistoMaxBin ; j++) {
@@ -89,7 +89,7 @@ void MEMPHYS::WCDigitizer::Digitize() {
       RealOffset -= WCDigitizer::TimeHistoStep*float(j);
       break;
     }
-    accold = acc; // check if it works, will be removed soon	
+    //accold = acc; // check if it works, will be removed soon	
   }    
 
 //   G4cout << "(JEC) WCDigitizer: ";
