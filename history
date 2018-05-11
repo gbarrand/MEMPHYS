@@ -5,6 +5,7 @@
 - inexlib/inlib/inlib/forit, strip, xml/tree : g++ 8.1.0 : rm warnings.
 - inexlib/inlib/inlib/glutess : GLU_[FALSE,TRUE] => INLIB_GLU_[FALSE,TRUE].
   To avoid a cpp clash with an inclusion of glu.h from another source.
+- inexlib/ourex/gl2ps/source/gl2ps.c : gl2psBeginPage : gl2ps->boundary init missing. Have : gl2ps->boundary = GL_FALSE;.
 - history file.
 
 11.1.0 :

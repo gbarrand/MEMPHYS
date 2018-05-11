@@ -5729,6 +5729,8 @@ GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer,
   glFeedbackBuffer(gl2ps->buffersize, GL_3D_COLOR, gl2ps->feedback);
   glRenderMode(GL_FEEDBACK);  
 
+  gl2ps->boundary = GL_FALSE; /*G.Barrand*/
+    
   return GL2PS_SUCCESS;
 }
 
