@@ -173,9 +173,7 @@ public:
   ///////////////////////////////////////////////////////
   /// elements //////////////////////////////////////////
   ///////////////////////////////////////////////////////
-  void add_element(const std::string& a_name,
-                   const std::vector<atb>& a_atbs,
-                   const std::string& a_value){
+  void add_element(const std::string& a_name,const std::vector<atb>& a_atbs,const std::string& a_value){
     m_childs.push_back(new element(a_name,a_atbs,a_value));
   }
   
@@ -222,9 +220,7 @@ public:
 
 */  
 
-  bool element_atb_value(const std::string& a_elem,
-                         const std::string& a_atb,
-                         std::string& a_value) const {
+  bool element_atb_value(const std::string& a_elem,const std::string& a_atb,std::string& a_value) const {
     a_value.clear();
     inlib_lforcit(ielem*,m_childs,it) {
       if(element* _elem = id_cast<ielem,element>(*(*it))) {
@@ -237,9 +233,7 @@ public:
   }
   
   template <class T>
-  bool element_atb_value(const std::string& a_elem,
-                         const std::string& a_atb,
-                         T& a_value) const {
+  bool element_atb_value(const std::string& a_elem,const std::string& a_atb,T& a_value) const {
     std::string sv;
     if(!element_atb_value(a_elem,a_atb,sv)) {a_value=T();return false;}
     return to<T>(sv,a_value);
@@ -257,8 +251,7 @@ public:
     return false;
   }
 
-  bool set_element_value(const std::string& a_name,
-                         const std::string& a_value,int a_index = 0){
+  bool set_element_value(const std::string& a_name,const std::string& a_value,int a_index = 0){
     int index = 0;
     inlib_lforcit(ielem*,m_childs,it) {
       if(element* _elem = id_cast<ielem,element>(*(*it))) {
@@ -278,8 +271,7 @@ public:
     return true;
   }
 
-  bool set_attribute_value(const std::string& a_atb,
-                           const std::string& a_value) {
+  bool set_attribute_value(const std::string& a_atb,const std::string& a_value) {
     inlib_vforit(atb,m_atbs,it) {
       if((*it).first==a_atb) {
         (*it).second = a_value;
@@ -325,12 +317,12 @@ public:
    {const std::vector<atb>& atbs = a_tree.attributes();
     size_t atbn = atbs.size();       
     for(size_t index=0;index<atbn;index++) {
-      const std::string& atb = atbs[index].first;
+      const std::string& _atb = atbs[index].first;
       const std::string& atbv = atbs[index].second;
       if(atbv.empty()) {
         visitor->f_out << "check_item :"
             << " for XML item " << sout(a_tree.tag_name())
-            << ", attribute " << sout(atb) << " has an empty value."
+            << ", attribute " << sout(_atb) << " has an empty value."
             << std::endl;
         visitor->m_status = false;
       }
@@ -341,12 +333,12 @@ public:
       const std::vector<atb>& atbs = _elem->attributes();
       size_t atbn = atbs.size();       
       for(size_t index=0;index<atbn;index++) {
-        const std::string& atb = atbs[index].first;
+        const std::string& _atb = atbs[index].first;
         const std::string& atbv = atbs[index].second;
         if(atbv.empty()) {
           visitor->f_out << "ItemM::check_item :"
               << " for XML item " << sout(a_tree.tag_name())
-              << ", attribute " << sout(atb) << " has an empty value."
+              << ", attribute " << sout(_atb) << " has an empty value."
               << std::endl;
           visitor->m_status = false;
         }
@@ -356,8 +348,7 @@ public:
     return true;
   }
   
-  static void collect_by_tag(tree& a_tree,const std::string& a_tag,
-                             std::vector<tree*>& a_items) {
+  static void collect_by_tag(tree& a_tree,const std::string& a_tag,std::vector<tree*>& a_items) {
     if(a_tree.tag_name()==a_tag) a_items.push_back(&a_tree);
     inlib_lforcit(ielem*,a_tree.m_childs,it) {
       if(tree* _tree = id_cast<ielem,tree>(*(*it))) {
