@@ -21,17 +21,20 @@ install_dir="${build_path}/distrib/MEMPHYS/${version}"
 /bin/mkdir -p ${install_dir}/bin
 
 apps="MEMPHYS_sim MEMPHYS_read_plot_offscreen"
-
-#if [ ${build_offscreen} = no -a ${build_root} = yes ] ; then
-  apps="${apps} MEMPHYS_read_plot MEMPHYS_read_plot_ROOT MEMPHYS_all_ROOT MEMPHYS_geom_ROOT"
-#fi
+apps="${apps} MEMPHYS_read_plot MEMPHYS_read_plot_ROOT MEMPHYS_all_ROOT MEMPHYS_geom_ROOT"
 
 for item in ${apps} ; do  
   if [ ${build_visual} = "yes" ] ; then
     if [ -x ${build_path}/${item}.exe ] ; then
       /bin/cp ${build_path}/${item}.exe ${install_dir}/bin/.
     else
-      echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item}.exe not found. Continue."
+      if [ ${item} = MEMPHYS_sim ] ; then
+        echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item}.exe not found."
+        /bin/rm -R -f ${build_path}/distrib
+        exit
+      else
+        echo "MEMPHYS/mgr/build : distrib : optional application ${build_path}/${item}.exe not found. Continue."
+      fi
     fi
     if [ -f ${build_path}/${item}.exe.manifest ] ; then
       /bin/cp ${build_path}/${item}.exe.manifest ${install_dir}/bin/.
@@ -40,7 +43,13 @@ for item in ${apps} ; do
     if [ -x ${build_path}/${item} ] ; then
       /bin/cp ${build_path}/${item} ${install_dir}/bin/.
     else
-      echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item} not found. Continue."
+      if [ ${item} = MEMPHYS_sim ] ; then
+        echo "MEMPHYS/mgr/build : distrib : ${build_path}/${item} not found."
+        /bin/rm -R -f ${build_path}/distrib
+        exit
+      else
+        echo "MEMPHYS/mgr/build : distrib : optional application ${build_path}/${item} not found. Continue."
+      fi
     fi      
   fi      
 done
@@ -72,6 +81,8 @@ exa_run_dir="${install_dir}/exa_run"
 /bin/cp ../scripts/slurm/sim_slurm        ${exa_run_dir}/.
 /bin/cp ../scripts/ROOT/analysis.C        ${exa_run_dir}/.
 /bin/cp ../scripts/ROOT/hits.C            ${exa_run_dir}/.
+
+/bin/cp ../exa_run/times.ttf              ${exa_run_dir}/.  # for MEMPHYS_read_plot_offscreen.
 
 platform=`${bush_home}/platform "${cpp_compiler}"`
 if [ "${platform}" = "" ] ; then
