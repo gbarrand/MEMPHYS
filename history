@@ -1,0 +1,18 @@
+11.1.1 :
+- exa_run/times.ttf : for the read_plot.cpp and read_plot_offscreen apps to have nice fonts.
+- mgr/ref/out_read_plot_offscreen.png : reference plot to help testing an installation.
+- mgr/build_distrib : change message for optional not built applications.
+- inexlib/inlib/inlib/forit, strip, xml/tree : g++ 8.1.0 : rm warnings.
+- inexlib/inlib/inlib/glutess : GLU_[FALSE,TRUE] => INLIB_GLU_[FALSE,TRUE].
+  To avoid a cpp clash with an inclusion of glu.h from another source.
+- history file.
+
+11.1.0 :
+- add applications read_plot.cpp, read_plot_offscreen.cpp that permits to do analysis and plotting
+  on the MEMPHYS.root file by using softinex tools.
+ 
+11.0.0 :
+- have in this release the simulation only. The structure of what is under MEMPHYS/MEMPHYS is similar
+  to a Geant4 example. The visualisation is displaced in the MEMPHYS_vis package.
+- have cmake/CMakeLists.txt to build with cmake in a similar way as a Geant4 example.
+  See cmake/README for instructions.
