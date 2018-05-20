@@ -1,0 +1,8 @@
+#!/bin/sh -f
+
+MEMPHYS_dir="`dirname $0`"
+
+cd ${MEMPHYS_dir}
+. ./run_g410x_setup.sh
+cd ./exa_run
+../bin/MEMPHYS_sim
