@@ -64,7 +64,7 @@ find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
 /bin/mkdir -p ${to}/inexlib/exlib/exlib
 /bin/cp ${exlib_home}/exlib/zlib ${to}/inexlib/exlib/exlib/.
 
-/bin/rm -R -f ${to}/inexlib/exlib/exlib/Windows
+#/bin/rm -R -f ${to}/inexlib/exlib/exlib/Windows
 /bin/rm -R -f ${to}/inexlib/exlib/exlib/yacc
 
 #///////////////////////////////////////////////////
