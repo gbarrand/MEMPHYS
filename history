@@ -1,3 +1,11 @@
+11.2.0 :
+- have inexlib/ourex/geant4.10.03.p01 : clearly users have problems to build
+  by using a "sys geant4" (a pre installed geant4). Then we restore a more
+  straightforward build by embarquing geant4 in the source packing. Moreover
+  our "build distrib" is not ready for a "sys geant4" having not the archive libs
+  (then having only shared libs), and asking people to install geant4 with archive
+  (having the cmake "-DBUILD_STATIC_LIBS=ON") complicate their life.
+
 11.1.1 :
 - exa_run/times.ttf : for the read_plot.cpp and read_plot_offscreen apps to have nice fonts.
 - mgr/ref/out_read_plot_offscreen.png : reference plot to help testing an installation.
