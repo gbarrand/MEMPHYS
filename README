@@ -33,7 +33,7 @@
  To build the MEMPHYS_sim program against an already installed geant4 and by using cmake :
     UNIX> cd <install_path>/MEMPHYS/MEMPHYS/cmake
     UNIX> <read README for instructions to build and run>
- (UNIX here is for Linux, macOS or Windows-10/cygwin).
+ (UNIX here is for Linux, macOS. Not tested or Windows-10/cygwin).
 
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
