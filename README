@@ -1,5 +1,33 @@
 
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+ /// build by using the default inexlib/ourex/geant4 : /////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  To build :
+    UNIX> cd MEMPHYS/mgr
+    UNIX> ./build
+  ( UNIX> ./build -v  # to see built files.)
+  ( UNIX> ./build -x  # for a full trace.)
+
+ (here UNIX is for Linux, macOS, Windows-10/cygwin)
+
+  If the GNU parallel application is known from your prompt, you can use
+ the "-parallel" option so that C and C++ file compilations are distributed
+ on your cores. This feature had been tested with success on macOS with a MacPorts
+ installation of the GNU parallel program and on centos7 with the GNU distribution.
+ This can clearly boosts a lot the build of the ourex/geant4 package.
+
+ You can build a binary zip distribution file with :
+    UNIX> ./build_distrib
+    
+ At end, you should have a binary zip distribution file :
+    bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
+
+ If wanting to run from this build area :
+    UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+    UNIX> cd ../exa_run
+    UNIX> ../mgr/<bin_dir>/MEMPHYS_sim  # it produces a MEMPHYS.root file.
+    
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  To build the MEMPHYS_sim program against an already installed geant4 and by using cmake :
@@ -55,4 +83,7 @@
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
- See the MEMPHYS section on http://gbarrand.github.io (or still on http://softinex.lal.in2p3.fr) for more.
+
+  See the MEMPHYS section on http://gbarrand.github.io for more.
+
+
