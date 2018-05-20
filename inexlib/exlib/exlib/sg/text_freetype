@@ -1291,19 +1291,19 @@ protected:
         }
       }
 
-      FT_BBox bbox;
-      FT_Glyph_Get_CBox(glyph,ft_glyph_bbox_pixels,&bbox);
-      //float _width  = float(bbox.xMax)-float(bbox.xMin);
-      //float _height = float(bbox.yMax)-float(bbox.yMin);
+      FT_BBox _bbox;
+      FT_Glyph_Get_CBox(glyph,ft_glyph_bbox_pixels,&_bbox);
+      //float _width  = float(_bbox.xMax)-float(_bbox.xMin);
+      //float _height = float(_bbox.yMax)-float(_bbox.yMin);
       //aAdvance = int(face->glyph->advance.x/64);
       
       std::vector<inlib::vec3f> vcs;
-      //::printf("debug : box : %d %d %d %d\n",bbox.xMin,bbox.xMax,bbox.yMin,bbox.yMax);
+      //::printf("debug : box : %d %d %d %d\n",_bbox.xMin,_bbox.xMax,_bbox.yMin,_bbox.yMax);
       float scale = height.value()/m_char_height;
-      float x_min = float(bbox.xMin)*scale+m_trans_x;
-      float x_max = float(bbox.xMax)*scale+m_trans_x;
-      float y_min = float(bbox.yMin)*scale+m_trans_y;
-      float y_max = float(bbox.yMax)*scale+m_trans_y;
+      float x_min = float(_bbox.xMin)*scale+m_trans_x;
+      float x_max = float(_bbox.xMax)*scale+m_trans_x;
+      float y_min = float(_bbox.yMin)*scale+m_trans_y;
+      float y_max = float(_bbox.yMax)*scale+m_trans_y;
       //::printf("debug : scale %g, trans %g %g\n",m_scale,m_trans_x,m_trans_y);
       //::printf("debug : corners %g %g %g %g\n",x_min,x_max,y_min,y_max);
       
