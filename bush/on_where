@@ -21,7 +21,7 @@ on_my_openstack_ubuntu=no
 if [ "`uname -n`" = barrand-ubuntu ] ; then on_my_openstack_ubuntu=yes; fi
 
 on_my_openstack_centos7=no
-if [ "`uname -n`" = barrand-centos7 ] ; then on_my_openstack_centos7=yes; fi
+if [ "`uname -n`" = barrand-centos7.lal.in2p3.fr ] ; then on_my_openstack_centos7=yes; fi
 
 on_macpro4=no
 if [ "`uname -n`" = "macpro4.lal.in2p3.fr" ] ; then on_macpro4=yes; fi

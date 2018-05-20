@@ -4,20 +4,10 @@
 # to be sourced from another build script.
 
 # NOTE : if adding some code that uses a shell variable defined in the calling script,
-#        think to update the parallel usage in compile_cpp.
+#        think to update the parallel usage in compile_c.
 
 oname=`basename ${file}`
-
-oname=`echo ${oname} | sed -e 's:\.cc::g'`
-oname=`echo ${oname} | sed -e 's:\.cxx::g'`
-oname=`echo ${oname} | sed -e 's:\.C::g'`
-oname=`echo ${oname} | sed -e 's:\.cpp::g'`
-
-for item in ${build_archive_headers} ; do
-  if [ ${item} = ${oname} ] ; then
-    _cppflags="-DINLIB_TAKE_CODE"
-  fi
-done
+oname=`echo ${oname} | sed -e 's:\.c::g'`
 
 if [ "${build_diro}" = "yes" ] ; then
   dname=`dirname ${file}`
@@ -32,14 +22,13 @@ if [ "${build_o_ext}" != "" ] ; then obj="${obj}${build_o_ext}"; fi
 
 if [ ${build_do_compile} = "yes" ] ; then
   if [ ${build_verbose} = yes ] ; then
-    echo "bush/compile_one_cpp : do ${file} ..."
+    echo "bush/compile_one_c : do ${file} ..."
     if [ -f ${obj} ] ; then
-      echo "bush/compile_one_cpp : WARNING : ${obj} already exists."
+      echo "bush/compile_one_c : WARNING : ${obj} already exists."
     fi
   fi
-  eval ${cpp_compiler} -x c++ -c ${cppflags} ${_cppflags} -o ${obj} ${file}
+  eval ${cc_compiler} -c ${ccflags} -o ${obj} ${file}
   use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 fi
 
 objs="${objs} ${obj}"
-

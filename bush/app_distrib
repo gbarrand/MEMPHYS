@@ -80,12 +80,70 @@ elif [ ${build_cocoa} = "yes" -o ${build_cocoa_gnu} = "yes" ] ; then
 
     head_app=${build_path}/distrib/${build_app_distrib_dir}/${version}/${app}.app
     head=${head_app}/Contents
+
+    #///////////////////////////////////////////////////
+    #///////////////////////////////////////////////////
+    #///////////////////////////////////////////////////
     /bin/mkdir -p ${head}/MacOS
     /bin/cp ${file_exe} ${head}/MacOS/${app}
     if [ -d ../comres ] ; then
       /bin/cp -R -f ../comres ${head}/Resources
     fi
   
+    #///////////////////////////////////////////////////
+    #/// .dylib : //////////////////////////////////////
+    #///////////////////////////////////////////////////
+    if [ "${dylibs}" != "" ] ; then  # not used for the moment.
+      echo 'bush/app_distrib : treatement of dylibs in distrib not yet tested.'
+      exit
+      
+      install_name_tool_exe=/usr/bin/install_name_tool
+      if [ "`uname -n`" = "MacPro4-2.local" ] ; then install_name_tool_exe=/opt/local/bin/install_name_tool; fi
+
+      if [ ! -x ${install_name_tool_exe} ] ; then
+        echo "bush/app_distrib : ${install_name_tool_exe} not found.."
+	exit
+      fi
+      
+      /bin/mkdir -p ${head}/lib
+
+      for item in ${dylibs} ; do /bin/cp ${item} ${head}/lib/.;done
+
+     #otool -X -L "${head}/MacOS/${app}"
+
+      # Change the install names of dylibs in the application binary :
+      for item in ${dylibs} ; do
+        lib_name="`basename ${item}`"
+        old_name="${build_path}/${lib_name}"
+        new_name="@executable_path/../lib/${lib_name}"
+        ${install_name_tool_exe} -change  ${old_name} ${new_name} "${head}/MacOS/${app}"
+      done
+
+      # Change the id of dylibs :  
+      for item in ${dylibs} ; do
+        lib_name="`basename ${item}`"
+        new_name="@executable_path/../lib/${lib_name}"
+        ${install_name_tool_exe} -id ${new_name} "${head}/lib/${lib_name}"
+      done
+
+      # Change the install names of dylibs in dylibs  :
+      for item0 in ${dylibs} ; do
+        lib_name0="`basename ${item0}`"
+        for item in ${dylibs} ; do
+	  if [ ${item} != ${item0} ] ; then
+            lib_name="`basename ${item}`"
+            old_name="${build_path}/${lib_name}"
+            new_name="@executable_path/../lib/${lib_name}"
+            ${install_name_tool_exe} -change  ${old_name} ${new_name} "${head}/lib/${lib_name0}"
+	  fi
+        done
+      done
+
+    fi
+    
+    #///////////////////////////////////////////////////
+    #/// .icns, .plist : ///////////////////////////////
+    #///////////////////////////////////////////////////
     #builtin-infoPlistUtility ioda-Info.plist -genpkginfo ${head}/Resources/PkgInfo -expandbuildsettings -platform macosx -o $  {head}/Info.plist
   
     /bin/cp ${bush_home}/app_PkgInfo ${head}/PkgInfo
@@ -356,44 +414,7 @@ if [ "${target}" != "" ] ; then
     fi
     
     if [ `uname` = Linux ] ; then
-      sys_dir="${head}/sys"
-      /bin/mkdir -p ${sys_dir}
-      ldd ${head}/bin/${app_exe} > ./tmp_0
-      awk '{if ($2 == "=>") print "cp " $3 " target_dir"; else print "cp " $1 " target_dir";}' ./tmp_0 > ./tmp_1
-      grep '.so' ./tmp_1 > ./tmp_2
-      sed -e "s:target_dir:${sys_dir}:g" ./tmp_2 > ./tmp_3
-      chmod a+x ./tmp_3
-      ./tmp_3
-      /bin/rm -f ./tmp_0 ./tmp_1 ./tmp_2 ./tmp_3
-  
-      /bin/cp ${bush_home}/exec_app ./tmp_0
-      sed -e "s:target_app_exe:${app_exe}:g" ./tmp_0 > ${head}/bin/exec_${app}
-      chmod a+x ${head}/bin/exec_${app}
-      /bin/rm -f ./tmp_0
-  
-      dri_so=/usr/lib/x86_64-linux-gnu/dri/swrast_dri.so  # ubuntu-14.04.3.
-      if [ ! -f ${dri_so} ] ; then
-        dri_so=/usr/lib64/dri/swrast_dri.so          # sl-release-6.7-1.slc6.x86_64
-      fi
-      if [ -f ${dri_so} ] ; then
-        dri_dir="${head}/dri"
-        /bin/mkdir -p ${dri_dir}
-        /bin/cp ${dri_so} ${dri_dir}/.
-        # find related shared libs :
-        ldd ${dri_so} > ./tmp_0
-        awk '{if ($2 == "=>") print "cp " $3 " target_dir"; else print "cp " $1 " target_dir";}' ./tmp_0 > ./tmp_1
-        grep '.so' ./tmp_1 > ./tmp_2
-        sed -e "s:target_dir:${sys_dir}:g" ./tmp_2 > ./tmp_3
-        chmod a+x ./tmp_3
-        ./tmp_3
-        /bin/rm -f ./tmp_0 ./tmp_1 ./tmp_2 ./tmp_3
-  
-        sed -e "s:#LIBGL_DRIVERS_PATH:LIBGL_DRIVERS_PATH:g" ${head}/bin/exec_${app} > ./tmp_0
-        /bin/mv ./tmp_0 ${head}/bin/exec_${app}
-        chmod a+x ${head}/bin/exec_${app}
-  
-      fi
-  
+      . ${bush_home}/sys_app
     fi 
       
     platform=`${bush_home}/platform "${cpp_compiler}"`

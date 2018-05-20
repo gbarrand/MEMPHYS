@@ -41,7 +41,7 @@
   ( bush/use_f77  # for what? FORTRAN. Yes there is still some legacy around. )
 @endverbatim
 
-  A couple of things tied to the system, as the shared lib or plugin externsion are put in :
+  A couple of things tied to the system, as the shared lib or plugin extension are put in :
 @verbatim
     bush/use_sys
 @endverbatim

@@ -13,6 +13,11 @@
     -g  : to compile with -g.
  -debug : to compile with -g.
  -c++11 : to compile with c++11 extensions. (Used in bush/use_cpp).
+ -parallel : if the GNU parallel application is known from your prompt, C and C++ file compilations
+             are distributed on your cores. This feature had been tested only on macOS for the moment
+             with a MacPorts installation of the parallel program. Since good part of the code of our
+             apps is pure header, it will not boost the "main" part of them, but it clearly boosts the
+             build of the ourex externals, in particular if using some ourex/geant4<versio> one.
 @endverbatim
 
  On apps (for example from pmx/mgr) :

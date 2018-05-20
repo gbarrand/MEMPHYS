@@ -1,5 +1,6 @@
 # Copyright (C) 2010, Guy Barrand. All rights reserved.
 # See the file bush.license for terms.
+
 if [ "${app_exe}" = "" ] ; then
   echo "bush/darwin_app : app_exe variable not defined."
   exit

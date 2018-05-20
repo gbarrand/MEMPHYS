@@ -31,9 +31,14 @@ ${bush_home}/find_rm /tmp "${app}_source-${version}*"
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
 dirs="${inlib_home}:${exlib_home}"
+
 if [ ${app} = g4exa ] ; then
   dirs="${dirs}:${ourex_home}/AIDA/v3r2p1"
-  dirs="${dirs}:${ourex_home}/geant4/include/Geant4"
+fi
+
+geant4_version=geant4.10.03.p01
+if [ ${app} = g4exa -o ${app} = g4view -o ${app} = MEMPHYS_vis ] ; then
+  dirs="${dirs}:${ourex_home}/${geant4_version}/include/Geant4"
 fi
 
 nos='exlib/cbk/wall:wall_client'
@@ -52,6 +57,7 @@ done
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../X11/main.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../Windows/main.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../offscreen/main.cpp
+${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../WebGL/main.cpp
 
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../Cocoa/main.mm
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../Cocoa/main.mm
@@ -60,6 +66,10 @@ ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" 
 
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ${bush_home}/cpp/platform.cpp
 ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ${bush_home}/visual/windef.c
+
+if [ ${app} = MEMPHYS_vis ] ; then
+  ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to}/${app} ../../MEMPHYS/MEMPHYS/Analysis.hh
+fi
 
 /bin/rm -f ${inlib_incs}
 
@@ -79,17 +89,19 @@ items="${items} freetype jpeg png expat gl2ps zip zlib csz"
 #items="${items} glutess"
 if [ ${app} = g4exa ] ; then items="${items} AIDA";fi
 if [ ${app} = g4view ] ; then items="${items} pythia8";fi
+if [ ${app} = TouchSky ] ; then items="${items} cfitsio hdf5 wcslib lua";fi
 for item in ${items} ; do
   /bin/cp -R ${ourex_home}/${item} ${to}/inexlib/ourex/.
 done
 
-#if [ ${app} = g4exa ] ; then
-#  /bin/mkdir -p ${to}/inexlib/ourex/geant4
-#  /bin/cp -R ${ourex_home}/geant4/include ${to}/inexlib/ourex/geant4/.
-#  /bin/cp -R ${ourex_home}/geant4/source ${to}/inexlib/ourex/geant4/.
-#  /bin/cp ${ourex_home}/geant4/build ${to}/inexlib/ourex/geant4/.
-#  /bin/cp ${ourex_home}/geant4/README ${to}/inexlib/ourex/geant4/.
-#fi
+if [ ${app} = g4exa -o ${app} = g4view -o ${app} = MEMPHYS_vis ] ; then
+  /bin/mkdir -p ${to}/inexlib/ourex/${geant4_version}
+  /bin/cp -R ${ourex_home}/${geant4_version}/include ${to}/inexlib/ourex/${geant4_version}/.
+  /bin/cp -R ${ourex_home}/${geant4_version}/source ${to}/inexlib/ourex/${geant4_version}/.
+  /bin/cp ${ourex_home}/${geant4_version}/build ${to}/inexlib/ourex/${geant4_version}/.
+  /bin/cp ${ourex_home}/${geant4_version}/README ${to}/inexlib/ourex/${geant4_version}/.
+  /bin/cp ${ourex_home}/${geant4_version}/a_native_copyright ${to}/inexlib/ourex/${geant4_version}/.
+fi
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
@@ -119,6 +131,45 @@ if [ ${app} = g4exa ] ; then
   /bin/cp ${exlib_home}/examples/geant4/A01/set_plots ${to}/inexlib/exlib/examples/geant4/A01/.
   /bin/cp ${exlib_home}/examples/geant4/A01/plots ${to}/inexlib/exlib/examples/geant4/A01/.
   /bin/cp ${inlib_home}/inlib/svalues  ${to}/inexlib/inlib/inlib/.
+fi
+
+if [ ${app} = MEMPHYS_vis ] ; then
+  /bin/rm -R -f ${to}/inexlib/exlib/exlib/yacc
+  /bin/mkdir -p ${to}/MEMPHYS
+  /bin/cp -R ../../MEMPHYS/MEMPHYS ${to}/MEMPHYS/.
+  /bin/cp -R ../../MEMPHYS/source  ${to}/MEMPHYS/.
+  /bin/cp ../doc/README_for_pack ${to}/README
+fi
+
+if [ ${app} = TouchSky ] ; then
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/slua
+  /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.cpp ${to}/inexlib/exlib/exlib/slua/.
+  /bin/cp ${exlib_home}/exlib/slua/exlib_swig_lua.cpp ${to}/inexlib/exlib/exlib/slua/.
+  /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.icc ${to}/inexlib/exlib/exlib/slua/.
+  /bin/cp ${exlib_home}/exlib/slua/exlib_swig_lua.icc ${to}/inexlib/exlib/exlib/slua/.
+
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/swig
+  /bin/cp ${exlib_home}/exlib/swig/inlib_i ${to}/inexlib/exlib/exlib/swig/.
+  /bin/cp ${inlib_home}/inlib/printer ${to}/inexlib/inlib/inlib/.
+  /bin/cp ${inlib_home}/inlib/get_cout ${to}/inexlib/inlib/inlib/.
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/cbk
+  /bin/cp ${exlib_home}/exlib/cbk/wall ${to}/inexlib/exlib/exlib/cbk/.
+  /bin/cp -R ${inlib_home}/inlib/waxml ${to}/inexlib/inlib/inlib/.
+  /bin/cp -R ${inlib_home}/inlib/rroot ${to}/inexlib/inlib/inlib/.
+  /bin/cp -R ${inlib_home}/inlib/store ${to}/inexlib/inlib/inlib/.
+
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/spy
+  /bin/cp ${exlib_home}/exlib/spy/inlib.py ${to}/inexlib/exlib/exlib/spy/.
+  /bin/cp ${exlib_home}/exlib/spy/exlib.py ${to}/inexlib/exlib/exlib/spy/.
+fi
+
+if [ ${app} = ArcheryTune ] ; then
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/cbk
+  /bin/cp ${exlib_home}/exlib/cbk/wall ${to}/inexlib/exlib/exlib/cbk/.
+fi
+
+if [ -f ../history ] ; then
+  /bin/cp ../history ${to}/.
 fi
 
 /bin/mkdir -p ${to}/inexlib/exlib/inlib/wall
