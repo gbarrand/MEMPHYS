@@ -96,6 +96,14 @@ for item in ${items} ; do
   /bin/cp -R ${ourex_home}/${item} ${to}/inexlib/ourex/.
 done
 
+geant4_version=geant4.10.03.p01
+/bin/mkdir -p ${to}/inexlib/ourex/${geant4_version}
+/bin/cp -R ${ourex_home}/${geant4_version}/include ${to}/inexlib/ourex/${geant4_version}/.
+/bin/cp -R ${ourex_home}/${geant4_version}/source ${to}/inexlib/ourex/${geant4_version}/.
+/bin/cp ${ourex_home}/${geant4_version}/build ${to}/inexlib/ourex/${geant4_version}/.
+/bin/cp ${ourex_home}/${geant4_version}/README ${to}/inexlib/ourex/${geant4_version}/.
+/bin/cp ${ourex_home}/${geant4_version}/a_native_copyright ${to}/inexlib/ourex/${geant4_version}/.
+
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////

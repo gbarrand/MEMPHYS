@@ -60,6 +60,8 @@ find . -maxdepth 1 -name 'run*setup.sh' -exec /bin/cp {} ${install_dir}/. \;
 find . -maxdepth 1 -name 'gcc_*.csh' -exec /bin/cp {} ${install_dir}/. \;
 find . -maxdepth 1 -name 'gcc_*.sh' -exec /bin/cp {} ${install_dir}/. \;
   
+/bin/cp run_from_docker  ${install_dir}/.
+
 /bin/cp cern_root_setup.sh  ${install_dir}/.
 /bin/cp cern_root_setup.csh ${install_dir}/.
 /bin/cp ../doc/README_for_distrib ${install_dir}/README
