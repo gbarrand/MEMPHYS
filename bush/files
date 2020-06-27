@@ -1,6 +1,0 @@
-#!/bin/sh -f
-
-# Copyright (C) 2010, Guy Barrand. All rights reserved.
-# See the file bush.license for terms.
-
-find . -name '*' -type f -print | wc -l
