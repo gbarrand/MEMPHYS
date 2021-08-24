@@ -1,0 +1,32 @@
+#!/bin/sh -f
+
+bush_home=../../../bush
+
+. ${bush_home}/args
+. ${bush_home}/ourex_header
+
+if [ ${build_visual} = "yes" ] ; then
+  libs="${libs} user32.lib"
+fi
+
+. ${bush_home}/ourex_generic
+
+if [ ${build_app} = "yes" ] ; then
+
+  cppflags="${cppflags} -I."
+
+  if [ ${build_visual} = "yes" ] ; then
+    cppflags="${cppflags} -wd4305 -wd4244"
+  fi
+
+  use_archive=yes
+  . ${bush_home}/preplib
+
+  objs=
+  app_src=./test.cxx
+  app=test
+  app_exe=test
+
+  . ${bush_home}/application
+
+fi
