@@ -12,6 +12,10 @@
 #//////////////////////////////////////////////////////
 cppflags="${cppflags} -DINLIB_USE_CSZ"
 
+if [ ${build_visual} = "yes" ] ; then
+  cppflags="${cppflags} -I../applications"  # to bypass "read.icc" not found.
+fi
+
 use_inlib=yes
 use_exlib=yes
 use_csz=yes
@@ -29,6 +33,7 @@ use_cern_root=yes
 #//////////////////////////////////////////////////////
 
 objs=
+app=MEMPHYS_read_plot_ROOT
 app_exe=MEMPHYS_read_plot_ROOT
 app_src=../applications/read_plot_ROOT.cpp
 

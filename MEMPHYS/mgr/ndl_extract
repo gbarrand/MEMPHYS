@@ -4,10 +4,10 @@
 #/////////////////////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////////////////////
 # run sim with :
-#   source run_g410x_setup.csh 
+#   source setenv_g4data.csh 
 #   setenv NeutronHPNames
 #   cd ../exa_run
-#   ../mgr/bin_clang_c++11/MEMPHYS_sim -events=0 >& out_barrand.log
+#   ../mgr/bin_clang/MEMPHYS_sim -events=0 >& out_barrand.log
 #   cd ../mgr
 
 grep barrand ../exa_run/out_barrand.log | awk '{print $7}' | sort -u > ./tmp_0
@@ -36,7 +36,7 @@ exit
 #/////////////////////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////////////////////
 # run sim with :
-#   source run_g410x_setup.csh 
+#   source setenv_g4data.csh 
 #   setenv NeutronHPNames
 #   cd ../exa_run
 #   ../mgr/bin_clang_c++11/MEMPHYS_sim -events=0 >& out.log

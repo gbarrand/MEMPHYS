@@ -17,7 +17,7 @@ save_dir=`pwd`
 cd ..
 
 inlib_incs=./inlib_incs
-c++ -o ${inlib_incs} ${inlib_home}/apps/incs.cpp
+c++ -o ${inlib_incs} -I${inlib_home} ${inlib_home}/apps/incs.cpp
 use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 
 to=/tmp/${app}
@@ -51,9 +51,9 @@ ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to=${to} ${bush_home}/
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
 find ${to}/${app}/Users -name 'inexlib' -exec /bin/mv {} ${to}/. \;
-/bin/rm -R ${to}/${app}/Users
+/bin/rm -R -f ${to}/${app}/Users
 find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
-/bin/rm -R ${to}/Users
+/bin/rm -R -f ${to}/Users
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////
@@ -64,8 +64,7 @@ find ${to}/Users -name 'bush' -exec /bin/mv {} ${to}/. \;
 /bin/mkdir -p ${to}/inexlib/exlib/exlib
 /bin/cp ${exlib_home}/exlib/zlib ${to}/inexlib/exlib/exlib/.
 
-#/bin/rm -R -f ${to}/inexlib/exlib/exlib/Windows
-/bin/rm -R -f ${to}/inexlib/exlib/exlib/yacc
+/bin/rm -R -f ${to}/inexlib/inlib/inlib/yacc
 
 #///////////////////////////////////////////////////
 #///////////////////////////////////////////////////

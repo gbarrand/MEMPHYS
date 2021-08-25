@@ -3,6 +3,6 @@
 MEMPHYS_dir="`dirname $0`"
 
 cd ${MEMPHYS_dir}
-. ./run_g410x_setup.sh
+. ./setenv_g4data.sh
 cd ./exa_run
 ../bin/MEMPHYS_sim

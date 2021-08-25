@@ -29,6 +29,10 @@ done
 #//////////////////////////////////////////////////////
 cppflags="${cppflags} -DAPP_USE_INLIB_WROOT"
 
+if [ ${build_visual} = "yes" ] ; then
+  cppflags="${cppflags} -I../MEMPHYS -I../source" # to bypass "../MEMPHYS/Analysis.h" not found (because MEMPHYS is uppercase).
+fi
+
 use_exlib=yes
 
 use_geant4=yes
@@ -59,6 +63,7 @@ for file in $(cat ./tmp_1) ; do cppfiles="${cppfiles} ${file}";done
 #//////////////////////////////////////////////////////
 
 objs=
+app=MEMPHYS_sim
 app_exe=MEMPHYS_sim
 app_src=../applications/sim.cpp
 

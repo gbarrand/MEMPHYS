@@ -12,15 +12,19 @@
 #//////////////////////////////////////////////////////
 cppflags="${cppflags} -DINLIB_USE_CSZ"
 
+if [ ${build_visual} = "yes" ] ; then
+  cppflags="${cppflags} -I../applications"  # to bypass "read.icc" not found.
+fi
+
 use_exlib=yes
 use_inlib=yes
 use_csz=yes
 use_freetype=yes
 use_zlib=yes
-use_GL=yes
 
 if [ ${build_visual} = "yes" ] ; then
   use_Windows=yes
+  use_WGL=yes
 else
   use_GLX=yes
   use_X11=yes
@@ -31,8 +35,8 @@ fi
 . ${bush_home}/use/csz
 . ${bush_home}/use/freetype
 . ${bush_home}/use/zlib
-. ${bush_home}/use/GL
 . ${bush_home}/use/GLX
+. ${bush_home}/use/WGL
 . ${bush_home}/use/X11
 . ${bush_home}/use/Windows
 
@@ -41,6 +45,7 @@ fi
 #//////////////////////////////////////////////////////
 
 objs=
+app=MEMPHYS_read_plot
 app_exe=MEMPHYS_read_plot
 app_src=../applications/read_plot.cpp
 

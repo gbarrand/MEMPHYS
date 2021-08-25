@@ -20,6 +20,7 @@ use_cern_root=yes
 #//////////////////////////////////////////////////////
 
 objs=
+app=MEMPHYS_all_ROOT
 app_exe=MEMPHYS_all_ROOT
 app_src=../applications/all_ROOT.cpp
 
