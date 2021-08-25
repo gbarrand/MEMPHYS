@@ -1472,7 +1472,8 @@
     FT_Error  error;
 
 
-    if ( !stroker || border > 1 )
+  /*if ( !stroker || border > 1 ) */ /*G.Barrand : Android : remove warning "FT_StrokerBorder > 1 is always false". */
+    if ( !stroker || ((border!=FT_STROKER_BORDER_LEFT)&&(border!=FT_STROKER_BORDER_RIGHT)) ) /*G.Barrand*/
     {
       error = FT_Err_Invalid_Argument;
       goto Exit;
