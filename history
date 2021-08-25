@@ -1,4 +1,7 @@
-11.2.0 :
+12.0.0:
+- a lot of .cpp code put in the .hh to be a maximum "pure header".
+
+11.2.0 : keep in sync with MEMPHYS/11.2.0.
 - have inexlib/ourex/geant4.10.03.p01 : clearly users have problems to build
   by using a "sys geant4" (a pre installed geant4). Then we restore a more
   straightforward build by embarquing geant4 in the source packing. Moreover
