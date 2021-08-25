@@ -21,8 +21,44 @@
 #include "globals.hh"
 #include "G4Version.hh"
 
-//MEMPHYS
-#include "../MEMPHYS/PhysicsMessenger.hh"
+///////////////////////////////////////////////////////////////////////////
+/// messenger : ///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+#include "G4UImessenger.hh"
+#include "G4UIcmdWithAString.hh"
+#include "G4UIdirectory.hh"
+namespace MEMPHYS {
+class PhysicsMessenger : public G4UImessenger {
+public:
+  PhysicsMessenger(PhysicsList* a_MEMPHYSPhys):m_MEMPHYSPhysics(a_MEMPHYSPhys) {
+    m_MEMPHYSDir = new G4UIdirectory("/MEMPHYS/physics/secondaries/");
+    m_MEMPHYSDir->SetGuidance("Commands to change secondary interaction model for protons");
+
+    m_hadmodelCmd = new G4UIcmdWithAString("/MEMPHYS/physics/secondaries/model",this);
+    m_hadmodelCmd->SetGuidance("Available options: GHEISHA BERTINI BINARY");
+    m_hadmodelCmd->SetGuidance("Description:");
+    m_hadmodelCmd->SetGuidance("GHEISHA = standard, fast G4 hadronic interaction model");
+    m_hadmodelCmd->SetGuidance("BERTINI = Bertini cascade model");
+    m_hadmodelCmd->SetGuidance("BINARY  = Binary cascade model (2KM default)");
+    m_hadmodelCmd->SetParameterName("secondaries", true, false);
+    m_hadmodelCmd->SetDefaultValue("BINARY");
+    m_hadmodelCmd->SetCandidates("GHEISHA BERTINI BINARY");
+  }
+  virtual ~PhysicsMessenger() {
+    delete m_hadmodelCmd;
+    delete m_MEMPHYSDir;
+  }
+public:
+  virtual void SetNewValue(G4UIcommand* command, G4String newValue); //implemented at end of file.
+private:
+  PhysicsList*        m_MEMPHYSPhysics;
+  G4UIdirectory*      m_MEMPHYSDir;
+  G4UIcmdWithAString* m_hadmodelCmd;
+};
+}
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 using namespace CLHEP; //G.Barrand
 
@@ -1424,4 +1460,16 @@ void MEMPHYS::PhysicsList::SetSecondaryHad(G4String hadval) {
 }//SetSecondaryHad
 
 #endif //G4VERSION_NUMBER
+
+///////////////////////////////////////////////////////////////////////////
+/// messenger : ///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+void MEMPHYS::PhysicsMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
+  if (command == m_hadmodelCmd) m_MEMPHYSPhysics->SetSecondaryHad(newValue);
+}
+
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 

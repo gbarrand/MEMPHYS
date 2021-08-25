@@ -50,9 +50,11 @@
 
 //MEMPHYS
 #include "../MEMPHYS/WCSD.hh"
-#include "../MEMPHYS/DetectorMessenger.hh"
-#include "../MEMPHYS/Cast.hh"
-#include "../MEMPHYS/Analysis.hh" //on Windows may bring <windows.h> that 
+#include "../MEMPHYS/Analysis.hh"
+
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 #if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand.
 using namespace CLHEP;
@@ -112,21 +114,6 @@ MEMPHYS::DetectorConstruction::DetectorConstruction(MEMPHYS::Analysis& aAnalysis
   messenger = new DetectorMessenger(this);
 
 }//Ctor
-
-//-----------------------------------------------------------------------------------------------
-
-void MEMPHYS::DetectorConstruction::UpdateGeometry() {
-  G4RunManager::GetRunManager()->DefineWorldVolume(Construct());
-} //UpdateGeometry
-
-//----------------------------------------------------------------------------------------------
-MEMPHYS::DetectorConstruction::~DetectorConstruction(){;}
-
-//-----------------------------------------------------------------------------------------------
-G4int MEMPHYS::DetectorConstruction::GetTubeID(std::string tubeTag){
-  return tubeLocationMap[tubeTag];
-} 
-//-----------------------------------------------------------------------------------------------
 
 G4VPhysicalVolume* MEMPHYS::DetectorConstruction::Construct() {
   //-----------------
@@ -235,9 +222,6 @@ G4VPhysicalVolume* MEMPHYS::DetectorConstruction::Construct() {
  
 void MEMPHYS::DetectorConstruction::SetRockGeometry() {
   
-  //JEC FIXME how to remove ?
-  lArDLength =   8.5*m;       //JEC 17/11/05 JHF2kmConstructlArD.cc                           
-
   //------------------------------
   // Calculate Volume Dimensions
   //------------------------------
@@ -1296,24 +1280,6 @@ G4LogicalVolume* MEMPHYS::DetectorConstruction::ConstructWC() {
 
 //---------------------------------------------------------------------------------------------
 
-// These routines are object registration routines that you can pass
-// to the traversal code.
-
-void MEMPHYS::DetectorConstruction::PrintGeometryTree(G4VPhysicalVolume* aPV ,
-						    int aDepth, 
-						    int replicaNo, 
-						    const G4Transform3D& aTransform) {
-  for (int levels = 0; levels < aDepth; levels++) G4cout << " ";
-  G4cout << aPV->GetName() << " Level:" << aDepth << " replica[" << replicaNo << "] "
-	 << " Pos:" << aTransform.getTranslation() 
-	 << " Rot:" << aTransform.getRotation().getTheta()/deg 
-	 << "," << aTransform.getRotation().getPhi()/deg 
-	 << "," << aTransform.getRotation().getPsi()/deg
-	 << G4endl;
-}//PrintGeometryTree
-
-//---------------------------------------------------------------------------------------------
-
 void MEMPHYS::DetectorConstruction::GetWCGeom(G4VPhysicalVolume* aPV ,
 					    int aDepth, 
 					    int /*replicaNo*/, 
@@ -1683,22 +1649,18 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
   G4double pressure    = 1.e-19*hep_pascal;
   G4double temperature = 0.1*kelvin;
   G4double a = 1.01*g/mole;
-  new G4Material("Vaccuum", 1., a, density,
-                   kStateGas,temperature,pressure);
+  new G4Material("Vaccuum", 1., a, density, kStateGas,temperature,pressure);
 
   //---Water
   
   a = 1.01*g/mole;
-  G4Element* elH 
-    = new G4Element("Hydrgen","H", 1,a);
+  G4Element* elH = new G4Element("Hydrgen","H", 1,a);
   
   a = 16.00*g/mole;
-  G4Element* elO 
-    = new G4Element("Oxygen","O", 8,a);
+  G4Element* elO = new G4Element("Oxygen","O", 8,a);
   
   density = 1.00*g/cm3;
-  G4Material* Water 
-    = new G4Material("Water",density,2);
+  G4Material* Water = new G4Material("Water",density,2);
   Water->AddElement(elH, 2);
   Water->AddElement(elO, 1);
 
@@ -1712,16 +1674,13 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
  //---Steel
   
   a= 12.01*g/mole;
-  G4Element* elC 
-    = new G4Element("Carbon","C", 6,a);
+  G4Element* elC = new G4Element("Carbon","C", 6,a);
   
   a = 55.85*g/mole;
-  G4Element* elFe
-    = new G4Element("Iron","Fe", 26,a);
+  G4Element* elFe = new G4Element("Iron","Fe", 26,a);
   
   density = 7.8*g/cm3;
-  G4Material* Steel
-    = new G4Material("Steel",density,2);
+  G4Material* Steel = new G4Material("Steel",density,2);
   Steel->AddElement(elC, 1.*perCent);
   Steel->AddElement(elFe, 99.*perCent);
   
@@ -1780,20 +1739,17 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
   //---Air
   
   a = 14.01*g/mole;
-  G4Element* elN 
-    = new G4Element("Nitrogen","N", 7,a);
+  G4Element* elN = new G4Element("Nitrogen","N", 7,a);
   
   density = 1.290*mg/cm3;
-  G4Material* Air 
-    = new G4Material("Air",density,2);
+  G4Material* Air = new G4Material("Air",density,2);
   Air->AddElement(elN, 70.*perCent);
   Air->AddElement(elO, 30.*perCent);
   
   //---Plastic
   
   density = 0.95*g/cm3;
-  G4Material* Plastic
-    = new G4Material("Plastic",density,2);
+  G4Material* Plastic = new G4Material("Plastic",density,2);
   Plastic->AddElement(elC, 1);
   Plastic->AddElement(elH, 2);
 
@@ -1803,15 +1759,13 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
   G4Element* elAl = new G4Element("Aluminum", "Al", 13, a);  
 
   density = 2.7*g/cm3;
-  G4Material* Aluminum
-    = new G4Material("Aluminum",density,1);
+  G4Material* Aluminum = new G4Material("Aluminum",density,1);
   Aluminum->AddElement(elAl, 1);
 
   //---Black sheet
 
   density = 0.95*g/cm3;
-  G4Material* Blacksheet
-    = new G4Material("Blacksheet",density,2);
+  G4Material* Blacksheet = new G4Material("Blacksheet",density,2);
   Blacksheet->AddElement(elC, 1);
   Blacksheet->AddElement(elH, 2);
 
@@ -2262,5 +2216,4 @@ void MEMPHYS::DetectorConstruction::ConstructMaterials() {
    myST2->AddProperty("EFFICIENCY", PP, EFFICIENCY_glasscath, NUM);
    OpGlassCathodeSurface->SetMaterialPropertiesTable(myST2);
 }//ConstructMaterials
-
 

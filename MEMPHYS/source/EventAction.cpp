@@ -25,7 +25,6 @@
 #include <vector>
 
 //MEMPHYS
-#include "../MEMPHYS/Cast.hh"
 #include "../MEMPHYS/Analysis.hh"
 #include "../MEMPHYS/Trajectory.hh"
 #include "../MEMPHYS/RunAction.hh"
@@ -36,10 +35,6 @@
 #include "../MEMPHYS/DetectorConstruction.hh"
 
 #include <inlib/mnmx>
-
-#if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand.
-using namespace CLHEP;
-#endif
 
 MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,
 				  MEMPHYS::RunAction& myRun, 
@@ -59,18 +54,6 @@ MEMPHYS::EventAction::EventAction(MEMPHYS::Analysis& aAnalysis,
 }//Ctor
 
 //-------------------------------------------------------------------------------------------
-
-MEMPHYS::EventAction::~EventAction(){
-}//Dtor
-
-//-------------------------------------------------------------------------------------------
-
-void MEMPHYS::EventAction::BeginOfEventAction(const G4Event* /*evt*/){
-
-  if(m_verbose==1) G4cout << " (JEC) EventAction::Begin EventAction" << G4endl;
-  //if (evt) evt->Print();
-
-}//BeginOfEventAction
 
 void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   if(m_verbose==1) G4cout << " (JEC) EventAction::End EventAction" << G4endl;
@@ -104,9 +87,9 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	 << " start in volume " << vtxvol
 	 << G4endl;
   G4cout << "Vertex (" 
-	 << vtx.x()/cm << " , "
-	 << vtx.y()/cm << " , "
-	 << vtx.z()/cm << " , "
+	 << vtx.x()/CLHEP::cm << " , "
+	 << vtx.y()/CLHEP::cm << " , "
+	 << vtx.z()/CLHEP::cm << " , "
 	 << ")"
 	 << G4endl;
   }
@@ -175,8 +158,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 
   fill_track(pId,parent,timeStart,dx,dy,dz,
              mass,pTot,ETot,px,py,pz,
-             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             vtx.x()/CLHEP::cm,vtx.y()/CLHEP::cm,vtx.z()/CLHEP::cm,
+             vtx.x()/CLHEP::cm,vtx.y()/CLHEP::cm,vtx.z()/CLHEP::cm,
              startVol,stopVol);
 
   //----------------
@@ -241,8 +224,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   
   fill_track(pId,parent,timeStart,dx,dy,dz,
              mass,pTot,ETot,px,py,pz,
-             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
-             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,
+             vtx.x()/CLHEP::cm,vtx.y()/CLHEP::cm,vtx.z()/CLHEP::cm,
+             vtx.x()/CLHEP::cm,vtx.y()/CLHEP::cm,vtx.z()/CLHEP::cm,
              startVol,stopVol);
 
   // --------------------------
@@ -333,7 +316,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
       parent = 999;
     }//eoif
     
-    timeStart =  trj->GetGlobalTime()/ns;
+    timeStart =  trj->GetGlobalTime()/CLHEP::ns;
     
     mom    = trj->GetInitialMomentum();
     mommag = mom.mag();
@@ -379,8 +362,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
 	   << " parent " << parent
 	   << " creation time " << timeStart 
 	   << " Volumes " << startVol << " " << stopVol << "\n"
-	   << " Start Pos (" << start.x()/cm << "," << start.y() << "," << start.z() << ")\n"
-	   << " Stop Pos (" << stop.x()/cm << "," << stop.y() << "," << stop.z() << ")\n"
+	   << " Start Pos (" << start.x()/CLHEP::cm << "," << start.y() << "," << start.z() << ")\n"
+	   << " Stop Pos (" << stop.x()/CLHEP::cm << "," << stop.y() << "," << stop.z() << ")\n"
 	   << " dx,dy,dz " << dx << " " << dy << " " << dz << "\n"
 	   << " m " << mass
 	   << " ETot " << ETot
@@ -391,8 +374,8 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
     
     fill_track(pId,parent,timeStart,dx,dy,dz,
                mass,pTot,ETot,px,py,pz,
-               start.x()/cm,start.y()/cm,start.z()/cm,
-               stop.x()/cm,stop.y()/cm,stop.z()/cm,
+               start.x()/CLHEP::cm,start.y()/CLHEP::cm,start.z()/CLHEP::cm,
+               stop.x()/CLHEP::cm,stop.y()/CLHEP::cm,stop.z()/CLHEP::cm,
                startVol,stopVol);
     
     ntrack++;
@@ -541,7 +524,7 @@ void MEMPHYS::EventAction::EndOfEventAction(const G4Event* evt) {
   }
   
   fill_event(event_id,vecRecNumber,mode,vtxvol,
-             vtx.x()/cm,vtx.y()/cm,vtx.z()/cm,ntrack,
+             vtx.x()/CLHEP::cm,vtx.y()/CLHEP::cm,vtx.z()/CLHEP::cm,ntrack,
              leadingLeptonIndex,outgoingProtonIndex,
              nHits,nDigits,sumPE);
     
@@ -808,5 +791,3 @@ void MEMPHYS::EventAction::fill_event(int event_id,int vecRecNumber,int mode,int
 #endif
 }    
 
-void MEMPHYS::EventAction::fill_hit_time(float /*peArrivalTime*/) {
-}
