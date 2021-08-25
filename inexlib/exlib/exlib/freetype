@@ -1,0 +1,20 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_freetype
+#define exlib_freetype
+
+#ifdef EXLIB_USE_NATIVE_FREETYPE
+#include <ft2build.h>
+#else
+#include <ourex_ft2build.h>
+#endif
+
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_OUTLINE_H
+
+//exlib_build_use freetype
+
+#endif
+

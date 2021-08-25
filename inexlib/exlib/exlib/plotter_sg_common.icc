@@ -1,0 +1,40 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+    //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+   {std::string res_dir;
+    std::string EXLIB_RES_DIR;
+    if(inlib::get_env("EXLIB_RES_DIR",EXLIB_RES_DIR) && inlib::dir::is_a(EXLIB_RES_DIR)) {
+      res_dir = EXLIB_RES_DIR;
+    } else {
+      res_dir = "."+inlib::sep()+"res";
+      if(!inlib::dir::is_a(res_dir)) {
+        res_dir = ".."+inlib::sep()+"res";
+        if(!inlib::dir::is_a(res_dir)) {
+          res_dir = ".";
+        }
+      }
+    }
+    inlib::env_append_path("EXLIB_FONT_PATH",res_dir);}
+
+    //////////////////////////////////////////////////////////
+    /// scene graph //////////////////////////////////////////
+    //////////////////////////////////////////////////////////
+    m_camera.height = 1;
+    float z = 10*1;
+    m_camera.znear = 0.1f*z;
+    m_camera.zfar = 10*z; //100*z induces problems with lego rendering.
+    m_camera.position = inlib::vec3f(0,0,z);
+    m_camera.orientation = inlib::rotf(inlib::vec3f(0,0,1),0);
+    m_camera.focal = z;
+    m_sg.add(new inlib::sg::noderef(m_camera));
+
+    m_plots.cols = a_cols;
+    m_plots.rows = a_rows;
+    m_plots.border_scale = 1.001f; //cooking for offsreen to avoid seeing 1 pixel at left, or top from border.
+    m_plots.adjust_size(a_width,a_height);
+
+    m_sg.add(new inlib::sg::noderef(m_plots));
+
