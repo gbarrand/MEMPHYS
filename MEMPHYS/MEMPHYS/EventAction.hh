@@ -24,15 +24,19 @@ class PrimaryGeneratorAction;
 
 class EventAction : public G4UserEventAction {
   
- public:
+public:
   EventAction(Analysis&,
 	      RunAction&, 
 	      DetectorConstruction&,
 	      PrimaryGeneratorAction&);
-  virtual ~EventAction();
+  virtual ~EventAction() {}
   
- public:
-  void BeginOfEventAction(const G4Event*);
+public:
+  void BeginOfEventAction(const G4Event* /*evt*/){
+    if(m_verbose==1) G4cout << " (JEC) EventAction::Begin EventAction" << G4endl;
+    //if (evt) evt->Print();
+  }
+
   void EndOfEventAction(const G4Event*);
   
   //RunAction& GetRunAction(){return runAction;}
@@ -54,7 +58,7 @@ class EventAction : public G4UserEventAction {
                   double vtx_x,double vtx_y,double vtx_z,int ntrack,
                   int leadingLeptonIndex,int outgoingProtonIndex,
                   int nHits,int nDigits,double sumPE);
-  void fill_hit_time(float peArrivalTime);
+  void fill_hit_time(float peArrivalTime) {}
 
  private:
   //JEC FIXME is it necessary to maintain fAnalysis?

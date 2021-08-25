@@ -34,20 +34,40 @@ public:
   TrackInformation(): saveit(false), drawit(false), status(active) {}
   //  TrackInformation(const TrackInformation* aninfo) 
   // { saveit = aninfo->saveit;}
-  TrackInformation(const G4Track*);
+
+  TrackInformation(const G4Track*) {
+    saveit = false;
+    drawit = false;
+    status = active;
+  }
+
   virtual ~TrackInformation() {}
   
-  inline void *operator new(size_t);
-  inline void operator delete(void *aTrackInfo);
-  inline int operator ==(const TrackInformation& right) const
-  {return (this==&right);}
+  void* operator new(size_t) { 
+    return (void*)allocator()->MallocSingle();
+  }
+
+  void operator delete(void *aTrackInfo){ 
+    allocator()->FreeSingle((MEMPHYS::TrackInformation*)aTrackInfo);
+  }
+
+  int operator ==(const TrackInformation& right) const {return (this==&right);}
 
   
   //Sets the track status to s (does not check validity of flags)
   void SetTrackStatusFlags(G4int s){status=s;}
   //Does a smart add of track status flags (disabling old flags that conflict)
   //If s conflicts with itself it will not be detected
-  void AddTrackStatusFlag(G4int s);
+  void AddTrackStatusFlag(G4int s) {
+    if(s&active) //track is now active
+      status&=~inactive; //remove any flags indicating it is inactive 
+    else if(s&inactive) //track is now inactive
+      status&=~active; //remove any flags indicating it is active
+    status|=s; //add new flags
+  }//AddTrackStatusFlag
+
+//------------------------------------------------------------------------
+
   int GetTrackStatus()  {return status;}
 
   void SetDrawOption(G4bool b) {drawit = b;}
@@ -57,31 +77,26 @@ public:
   G4bool GetSaveOption() {return saveit;}
 
 
-  void Print() const;
+  void Print() const {
+    G4cout << "TrackInformation : [" << saveit 
+           << "]-[" << drawit 
+           << "]-[" << status << "]"
+           << G4endl;
+  }
 
-
+private:
+  static G4Allocator<TrackInformation>* allocator() {
+    //warning : it can't be on the stack, since it is managed by the G4RunManager.
+    static G4Allocator<TrackInformation>* s_allocator = new G4Allocator<TrackInformation>;
+    return s_allocator;
+  }
 private:
   G4bool saveit; 
   G4bool drawit;
   G4int  status; 
 
 };
-}
 
-//JEC 10/1/06 introduce MEMPHYS
-namespace MEMPHYS {
-  extern G4Allocator<TrackInformation> aTrackInfoAllocator;
 }
-
-inline void* MEMPHYS::TrackInformation::operator new(size_t) { 
-  void* aTrackInfo;
-  aTrackInfo = (void*)MEMPHYS::aTrackInfoAllocator.MallocSingle();
-  return aTrackInfo;
-}
-
-inline void MEMPHYS::TrackInformation::operator delete(void *aTrackInfo){ 
-  MEMPHYS::aTrackInfoAllocator.FreeSingle((MEMPHYS::TrackInformation*)aTrackInfo);
-}
-
 
 #endif

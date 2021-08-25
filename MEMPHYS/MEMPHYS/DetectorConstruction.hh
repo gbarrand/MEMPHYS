@@ -1,43 +1,38 @@
-#ifndef MEMPHYSDetectorConstruction_H
-#define MEMPHYSDetectorConstruction_H 1
+#ifndef MEMPHYSDetectorConstruction_h
+#define MEMPHYSDetectorConstruction_h
 
 //Geant4
+#include "G4Version.hh"
 #include "G4Transform3D.hh"
 #include "G4VUserDetectorConstruction.hh"
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4OpticalSurface.hh"
-#include "globals.hh"
+#include "G4UnitsTable.hh"
+#include "G4RunManager.hh"
+#include "G4UImessenger.hh"
+#include "G4UIdirectory.hh"
+#include "G4UIcmdWithAString.hh"
 
 //std
 #include <fstream>
 #include <map>
 #include <string>
 
-class G4Box;
-class G4Tubs;
-class G4Material;
-class G4LogicalVolume;
-class G4AssemblyVolume;
-class G4VPhysicalVolume;
-
 namespace MEMPHYS {
 
 class Analysis; 
-class DetectorMessenger;
 class WCSD;
-class Analysis; 
-
 
 enum cyl_location {endcap1,wall,endcap2}; //geographical position of the PMTs
 
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
- public:
-
+public:
   DetectorConstruction(Analysis&);
-  virtual ~DetectorConstruction();
-  
+  virtual ~DetectorConstruction() {}
+
+public:  
   G4VPhysicalVolume* Construct();
 
   // Related to the WC geometry
@@ -45,7 +40,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction {
   void Set8inchPMTGeometry();
   void Set12inchPMTGeometry(); //JEC 26/1/06 
   void SetRockGeometry();
-  void UpdateGeometry();
+  void UpdateGeometry() {G4RunManager::GetRunManager()->DefineWorldVolume(Construct());}
 
   G4double GetWaterTubeLength()   {return WCLength;}
   G4double GetWaterTubePosition() {return WCPosition;}
@@ -55,7 +50,8 @@ class DetectorConstruction : public G4VUserDetectorConstruction {
 
   // Related to the WC tube IDs
   //JEC 25/1/06 no more static functions + const char*
-  G4int GetTubeID(std::string tubeTag);
+  G4int GetTubeID(const std::string& tubeTag) {return tubeLocationMap[tubeTag];} 
+
   G4Transform3D GetTubeTransform(int tubeNo){return tubeIDMap[tubeNo];}
 
 private:
@@ -82,11 +78,57 @@ private:
   void DumpGeometryTableToFile(); //JEC FIXME deprecated use FillGeometryTuple
   void FillGeometryTuple();
 
-  void PrintGeometryTree(G4VPhysicalVolume*, int, int, const G4Transform3D&);
+  void PrintGeometryTree(G4VPhysicalVolume* aPV,int aDepth,int replicaNo,const G4Transform3D& aTransform) {
+    for (int levels = 0; levels < aDepth; levels++) G4cout << " ";
+    G4cout << aPV->GetName() << " Level:" << aDepth << " replica[" << replicaNo << "] "
+           << " Pos:" << aTransform.getTranslation() 
+           << " Rot:" << aTransform.getRotation().getTheta()/CLHEP::deg 
+           << "," << aTransform.getRotation().getPhi()/CLHEP::deg 
+           << "," << aTransform.getRotation().getPsi()/CLHEP::deg
+           << G4endl;
+  }
+  
   void DescribeAndRegisterPMT(G4VPhysicalVolume*, int, int, const G4Transform3D&);
   void GetWCGeom(G4VPhysicalVolume*, int, int, const G4Transform3D&);
 
-
+private:
+  class DetectorMessenger: public G4UImessenger {
+  public:
+    DetectorMessenger(MEMPHYS::DetectorConstruction* MEMPHYSDet):MEMPHYSDetector(MEMPHYSDet) { 
+      MEMPHYSDir = new G4UIdirectory("/MEMPHYS/");
+      MEMPHYSDir->SetGuidance("Commands to change the geometry of the simulation");
+    
+      PMTConfig = new G4UIcmdWithAString("/MEMPHYS/WCgeom",this);
+      PMTConfig->SetGuidance("Set the geometry configuration for the WC.");
+      PMTConfig->SetGuidance("Available options 8inch");
+      PMTConfig->SetParameterName("PMTConfig", false);
+      PMTConfig->SetDefaultValue("8inch");
+      PMTConfig->SetCandidates("8inch");
+      PMTConfig->AvailableForStates(G4State_PreInit, G4State_Idle);
+    }
+    virtual ~DetectorMessenger() {
+      delete PMTConfig;
+      delete MEMPHYSDir;
+    }
+  public:
+    virtual void SetNewValue(G4UIcommand* command, G4String newValue) {
+      if( command == PMTConfig ) { 
+        if (newValue == "8inch") {
+          MEMPHYSDetector->Set8inchPMTGeometry();
+        } else {
+          G4cout << "That geometry choice not defined!" << G4endl;
+        }
+      }
+      MEMPHYSDetector->UpdateGeometry();
+    }
+  private:
+    DetectorConstruction* MEMPHYSDetector;
+  private: //commands
+    G4UIdirectory*      MEMPHYSDir;
+    G4UIcmdWithAString* PMTConfig;
+  };
+  
+private:  
   //JEC FIXME is it necessary to maintain fAnalysis?
   Analysis&  fAnalysis;            //the Analysis JEC 18/11/05
   

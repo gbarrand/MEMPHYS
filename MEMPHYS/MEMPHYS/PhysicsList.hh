@@ -6,12 +6,10 @@
 #include "G4Version.hh"
 #include "globals.hh"
 
-//MEMPHYS
-#include "PhysicsMessenger.hh"
-
 //JEC 10/1/06 introduce MEMPHYS
 namespace MEMPHYS {
 
+class PhysicsMessenger;
 
 class PhysicsList: public G4VUserPhysicsList {
   public:

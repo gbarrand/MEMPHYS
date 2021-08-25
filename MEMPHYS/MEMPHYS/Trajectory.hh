@@ -2,47 +2,112 @@
 #ifndef MEMPHYSTrajectory_h
 #define MEMPHYSTrajectory_h 1
 
-//Geant4 
-#include "G4VTrajectory.hh"
-#include "G4Allocator.hh"
-#include "G4ios.hh"
-#include "globals.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4TrajectoryPoint.hh"
-#include "G4Track.hh"
-#include "G4Step.hh"
 #include "G4Version.hh"
+#include "G4VTrajectory.hh"
+#include "G4Step.hh"
+#include "G4VProcess.hh"
+#include "G4TrajectoryPoint.hh"
+#include "G4ParticleTable.hh"
+#include "G4AttDefStore.hh"
+#include "G4AttDef.hh"
+#include "G4AttValue.hh"
+#include "G4UnitsTable.hh"
 
-//std
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
-
-
-class G4Polyline;
 
 typedef std::vector<G4VTrajectoryPoint*>  TrajectoryPointContainer;
 
-//JEC 10/1/06 introduce MEMPHYS
 namespace MEMPHYS {
-
 
 class Trajectory : public G4VTrajectory {
 
- public:
+public:
+  Trajectory()
+  :positionRecord(0), 
+  fTrackID(0), 
+  fParentID(0),
+  PDGEncoding(0), 
+  PDGCharge(0.0), 
+  ParticleName(""),
+  initialMomentum( G4ThreeVector() ),
+  SaveIt(false),
+  creatorProcess(""),
+  globalTime(0.0)
+  {}
 
-  
-  // Constructor/Destrcutor
-   Trajectory();
-   Trajectory(const G4Track* aTrack);
-   Trajectory(Trajectory &);
+  Trajectory(const G4Track* aTrack) {
+    // Following is for the first trajectory point
+    positionRecord = new TrajectoryPointContainer();
+    positionRecord->push_back(new G4TrajectoryPoint(aTrack->GetPosition()));
 
-   virtual ~Trajectory();
+    fTrackID = aTrack->GetTrackID();
+    fParentID = aTrack->GetParentID();
+
+    G4ParticleDefinition * fpParticleDefinition = aTrack->GetDefinition();
+    PDGEncoding = fpParticleDefinition->GetPDGEncoding();
+    PDGCharge = fpParticleDefinition->GetPDGCharge();
+    ParticleName = fpParticleDefinition->GetParticleName();
+    initialMomentum = aTrack->GetMomentum();
+
+    stoppingPoint  = aTrack->GetPosition();
+    stoppingDirection = aTrack->GetMomentumDirection();
+    stoppingVolume = aTrack->GetVolume();
+
+    SaveIt = false;  //JEC 15/12/05 SaveIt = false at creation time now
+    //   if ( aTrack->GetUserInformation() != 0 ) {
+    //     SaveIt = true;
+    //   } else { 
+    //     SaveIt = false;
+    //   }
+
+    if (aTrack->GetCreatorProcess() != 0 ) {
+      const G4VProcess* tempproc = aTrack->GetCreatorProcess();
+      creatorProcess = tempproc->GetProcessName();
+    } else {
+      creatorProcess = "";
+    }
+
+    globalTime = aTrack->GetGlobalTime();
+  }
+
+  Trajectory(Trajectory & right):G4VTrajectory() {
+    positionRecord = new TrajectoryPointContainer();
+    for(size_t i=0;i<right.positionRecord->size();i++) {
+      G4TrajectoryPoint* rightPoint = (G4TrajectoryPoint*)((*(right.positionRecord))[i]);
+      positionRecord->push_back(new G4TrajectoryPoint(*rightPoint));
+    }
+    fTrackID         = right.fTrackID;
+    fParentID        = right.fParentID;
+    PDGEncoding      = right.PDGEncoding;
+    PDGCharge        = right.PDGCharge;
+    ParticleName     = right.ParticleName;
+    initialMomentum  = right.initialMomentum;
+    stoppingPoint    = right.stoppingPoint;
+    stoppingDirection = right.stoppingDirection;
+    stoppingVolume   = right.stoppingVolume;
+    SaveIt           = right.SaveIt;
+    creatorProcess   = right.creatorProcess;
+    globalTime       = right.globalTime;
+  }
+
+  virtual ~Trajectory() {
+    //  positionRecord->clearAndDestroy();
+    size_t i;
+    for(i=0;i<positionRecord->size();i++){
+      delete  (*positionRecord)[i];
+    }
+    positionRecord->clear();
+    delete positionRecord;
+  }
 
   // Operators
-  inline void* operator new(size_t);
-  inline void  operator delete(void*);
-  inline int operator == (const Trajectory& right) const
-  {return (this==&right);} 
+  void* operator new(size_t) {return (void*)allocator()->MallocSingle();}
+  void operator delete(void* aTrajectory) {
+    allocator()->FreeSingle((Trajectory*)aTrajectory);
+  }
+
+  int operator == (const Trajectory& right) const {return (this==&right);} 
 
   //inherited methods 
   virtual G4int GetTrackID() const { return fTrackID; }
@@ -52,23 +117,93 @@ class Trajectory : public G4VTrajectory {
   virtual G4int GetPDGEncoding() const { return PDGEncoding; }
   virtual G4ThreeVector GetInitialMomentum() const { return initialMomentum; }
   virtual int GetPointEntries() const { return (int)positionRecord->size(); }
-  virtual G4VTrajectoryPoint* GetPoint(G4int i) const 
-  { return (*positionRecord)[i]; }
+  virtual G4VTrajectoryPoint* GetPoint(G4int i) const { return (*positionRecord)[i]; }
+
   //JEC FIXME what to do with these Show/Draw routines...
-  virtual void ShowTrajectory(std::ostream& os=G4cout) const;
+  virtual void ShowTrajectory(std::ostream& os = G4cout) const {
+    G4VTrajectory::ShowTrajectory(os);
+    // ... or override with your own code here.
+  }
+
 #if defined(G4VERSION_NUMBER) && G4VERSION_NUMBER>=1031 //G.Barrand
-  virtual void DrawTrajectory() const;
+  virtual void DrawTrajectory() const {
+    G4VTrajectory::DrawTrajectory();
+    // ... or override with your own code here.
+  }
 #else
-  virtual void DrawTrajectory(G4int i_mode=0) const;
+  virtual void DrawTrajectory(G4int i_mode = 0) const {
+    G4VTrajectory::DrawTrajectory(i_mode);
+    // ... or override with your own code here.
+  }
 #endif
 
   //Used by G.Barrand (not yet 6/4/06)
-  virtual const std::map<G4String,G4AttDef>* GetAttDefs() const;
-  virtual std::vector<G4AttValue>* CreateAttValues() const;
+  virtual const std::map<G4String,G4AttDef>* GetAttDefs() const {
+    G4bool isNew;
+    std::map<G4String,G4AttDef>* store = G4AttDefStore::GetInstance("Trajectory",isNew);
+    if (isNew) {    
+      G4String ID("ID");
+      (*store)[ID] = G4AttDef(ID,"Track ID","Bookkeeping","","G4int");
+    
+      G4String PID("PID");
+      (*store)[PID] = G4AttDef(PID,"Parent ID","Bookkeeping","","G4int");
+    
+      G4String PN("PN");
+      (*store)[PN] = G4AttDef(PN,"Particle Name","Physics","","G4String");
+    
+      G4String Ch("Ch");
+      (*store)[Ch] = G4AttDef(Ch,"Charge","Physics","","G4double");
+    
+      G4String PDG("PDG");
+      (*store)[PDG] = G4AttDef(PDG,"PDG Encoding","Physics","","G4int");
+    
+      G4String IMom("IMom");
+      (*store)[IMom] = G4AttDef(IMom, "Momentum of track at start of trajectory",
+  			      "Physics","","G4ThreeVector");
+    
+      G4String NTP("NTP");
+      (*store)[NTP] = G4AttDef(NTP,"No. of points","Physics","","G4int");
+    }
+    return store;
+  }
 
+  virtual std::vector<G4AttValue>* CreateAttValues() const {
+    std::vector<G4AttValue>* values = new std::vector<G4AttValue>;
+  
+    std::ostringstream s;
+    s.str("");
+    s << fTrackID;
+    values->push_back(G4AttValue("ID",s.str(),""));
+  
+    s.str("");
+    s << fParentID;
+    values->push_back(G4AttValue("PID",s.str(),""));
+  
+    values->push_back(G4AttValue("PN",ParticleName,""));
+  
+    s.str("");
+    s << PDGCharge;
+    values->push_back(G4AttValue("Ch",s.str(),""));
+
+    s.str("");
+    s << PDGEncoding;
+    values->push_back(G4AttValue("PDG",s.str(),""));
+
+    s.str("");
+    s << G4BestUnit(initialMomentum,"Energy");
+    values->push_back(G4AttValue("IMom",s.str(),""));
+
+    s.str("");
+    s << GetPointEntries();
+    values->push_back(G4AttValue("NTP",s.str(),""));
+
+    return values;
+  }
 
   //Other Get/Set
-  G4ParticleDefinition* GetParticleDefinition();
+  G4ParticleDefinition* GetParticleDefinition() {
+    return (G4ParticleTable::GetParticleTable()->FindParticle(ParticleName));
+  }
 
   G4String GetCreatorProcessName() const { return creatorProcess; }
   G4double GetGlobalTime() const { return globalTime; }
@@ -87,12 +222,33 @@ class Trajectory : public G4VTrajectory {
 
 
   // Other member functions
-  virtual void AppendStep(const G4Step* aStep);
-  virtual void MergeTrajectory(G4VTrajectory* secondTrajectory);
+  virtual void AppendStep(const G4Step* aStep) {
+    positionRecord->push_back( new G4TrajectoryPoint(aStep->GetPostStepPoint()->GetPosition() ));
+  }
 
+  virtual void MergeTrajectory(G4VTrajectory* secondTrajectory) {
+    if(!secondTrajectory) return;
+    Trajectory* seco         = (Trajectory*)secondTrajectory;
+    stoppingPoint  = seco->stoppingPoint;
+    stoppingDirection  = seco->stoppingDirection;
+    stoppingVolume = seco->stoppingVolume;
+    G4int ent = seco->GetPointEntries();
+    for(G4int i=1;i<ent;i++) // initial point of the second trajectory should not be merged
+    { 
+      positionRecord->push_back((*(seco->positionRecord))[i]);
+      //    positionRecord->push_back(seco->positionRecord->removeAt(1));
+    }
+    delete (*seco->positionRecord)[0];
+    seco->positionRecord->clear();
+  }
 
-
- private:
+private:
+  static G4Allocator<Trajectory>* allocator() {
+    //warning : it can't be on the stack, since it is managed by the G4RunManager.
+    static G4Allocator<Trajectory>* s_allocator = new G4Allocator<Trajectory>;
+    return s_allocator;
+  }
+private:
 
   TrajectoryPointContainer* positionRecord;
   G4int                     fTrackID;
@@ -110,23 +266,6 @@ class Trajectory : public G4VTrajectory {
   G4String                  creatorProcess;
   G4double                  globalTime;
 };
-}
-
-//JEC 10/1/06 introduce MEMPHYS
-namespace MEMPHYS {
-  extern G4Allocator<Trajectory> myTrajectoryAllocator;
-}
-
-inline void* MEMPHYS::Trajectory::operator new(size_t)
-{
-  void* aTrajectory;
-  aTrajectory = (void*)MEMPHYS::myTrajectoryAllocator.MallocSingle();
-  return aTrajectory;
-}
-
-inline void MEMPHYS::Trajectory::operator delete(void* aTrajectory)
-{
-  MEMPHYS::myTrajectoryAllocator.FreeSingle((MEMPHYS::Trajectory*)aTrajectory);
 }
 
 #endif
