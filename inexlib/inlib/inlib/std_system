@@ -1,0 +1,28 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_std_system
+#define inlib_std_system
+
+#include <cstdlib>
+#include <ostream>
+
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
+namespace inlib {
+
+inline int std_system(std::ostream& a_out,const std::string& a_string) {
+#if TARGET_OS_IPHONE
+  a_out << "inlib::std_system : system() not available on iOS. Can't execute \"" << a_string << "\"." << std::endl;
+  return EXIT_FAILURE;
+#else
+  return ::system(a_string.c_str());
+  (void)a_out;
+#endif
+}
+
+}
+
+#endif

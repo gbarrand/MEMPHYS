@@ -1,0 +1,22 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_file_exists
+#define inlib_file_exists
+
+#include <string>
+#include <cstdio>
+
+namespace inlib {
+namespace file {
+
+inline bool exists(const std::string& a_string) {
+  FILE* file = ::fopen(a_string.c_str(),"rb");
+  if(!file) return false;
+  ::fclose(file);
+  return true;
+}
+
+}}
+
+#endif

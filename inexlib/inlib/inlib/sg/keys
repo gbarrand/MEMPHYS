@@ -1,0 +1,16 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_keys
+#define inlib_sg_keys
+
+#include "../typedefs"
+
+namespace inlib {
+namespace sg {
+
+inline key_code key_shift() {return 0x01000020;}  //same as in Qt qnamespace.h.
+
+}}
+
+#endif

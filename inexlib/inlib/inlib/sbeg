@@ -1,0 +1,55 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sbeg
+#define inlib_sbeg
+
+#include <string>
+
+namespace inlib {
+
+inline bool is_beg(const std::string& a_s,const std::string& a_b,bool a_forward = true){
+  //look if a_s begin with a_b.
+  std::string::size_type ls = a_s.size();
+  std::string::size_type lb = a_b.size();
+  if(lb>ls) return false;
+  if(!lb) return false;
+  if(a_forward) {
+    const char* ps = a_s.c_str();
+    const char* pb = a_b.c_str();
+    for(std::string::size_type index=0;index<lb;index++,ps++,pb++) {
+      if(*ps!=*pb) return false;
+    }
+  } else {
+    const char* ps = a_s.c_str()+lb-1;
+    const char* pb = a_b.c_str()+lb-1;
+    for(std::string::size_type index=0;index<lb;index++,ps--,pb--) {
+      if(*ps!=*pb) return false;
+    }
+  }
+  return true;
+}
+
+inline bool is_beg(const std::string& a_s,const std::string& a_b,std::string& a_cmd,bool a_forward = true){
+  if(!inlib::is_beg(a_s,a_b,a_forward)) {a_cmd.clear();return false;}
+  if(a_s.size()<(a_b.size()+1)) {a_cmd.clear();return true;}
+  // a_s.size() >= a_b.size()+1 :
+  a_cmd = a_s.substr(a_b.size()+1,a_s.size()-(a_b.size()+1));
+  return true;
+}
+
+inline bool is_space_sharp(const std::string& a_s){
+  std::string::size_type ls = a_s.size();
+  const char* ps = a_s.c_str();
+  bool found_not_space = false;
+  for(std::string::size_type index=0;index<ls;index++,ps++) {
+    if((*ps)==' ') continue;
+    if((*ps)=='#') return found_not_space?false:true;
+    found_not_space = true;
+  }
+  return false;
+}
+
+}
+
+#endif

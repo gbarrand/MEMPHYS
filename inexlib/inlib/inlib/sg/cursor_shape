@@ -1,0 +1,18 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_cursor_shape
+#define inlib_sg_cursor_shape
+
+namespace inlib {
+namespace sg {
+
+enum cursor_shape {
+  cursor_default = 0,
+  cursor_target
+};
+
+}}
+
+#endif
+

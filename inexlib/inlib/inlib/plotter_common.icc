@@ -1,0 +1,110 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+  //proxies to have less verbose user programming :
+
+  //WARNING : the plotter must have at least 1x1 plotting area,
+  //          else the below will crash because current_plotter()
+  //          will return a null pointer.
+
+  inlib::sg::plots& plots() {return m_plots;}
+  const inlib::sg::plots& plots() const {return m_plots;}
+
+  void next() {m_plots.next();}
+  bool set_current_plotter(unsigned int a_index) {return m_plots.set_current_plotter(a_index);}
+
+  void add_plottable(inlib::sg::plottable* a_plottable) {
+    m_plots.current_plotter().add_plottable(a_plottable); //it takes ownership.
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::h1d& a_histo) {
+  //inlib::sg::plottable* p = new inlib::sg::h1d2plot<inlib::histo::h1d>(a_histo);
+    inlib::sg::plottable* p = new inlib::sg::h1d2plot(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::h2d& a_histo) {
+  //inlib::sg::plottable* p = new inlib::sg::h2d2plot<inlib::histo::h2d>(a_histo);
+    inlib::sg::plottable* p = new inlib::sg::h2d2plot(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::p1d& a_histo) {
+    inlib::sg::plottable* p = new inlib::sg::p1d2plot(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::c2d& a_cloud) {
+    inlib::sg::plottable* p = new inlib::sg::c2d2plot(a_cloud);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot(const inlib::histo::c3d& a_cloud) {
+    inlib::sg::plottable* p = new inlib::sg::c3d2plot(a_cloud);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot_cp(const inlib::histo::h1d& a_histo) {
+  //inlib::sg::plottable* p = new inlib::sg::h1d2plot_cp<inlib::histo::h1d>(a_histo);
+    inlib::sg::plottable* p = new inlib::sg::h1d2plot_cp(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot_cp(const inlib::histo::h2d& a_histo) {
+  //inlib::sg::plottable* p = new inlib::sg::h2d2plot_cp<inlib::histo::h2d>(a_histo);
+    inlib::sg::plottable* p = new inlib::sg::h2d2plot_cp(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot_cp(const inlib::histo::p1d& a_histo) {
+    inlib::sg::plottable* p = new inlib::sg::p1d2plot_cp(a_histo);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+
+  //inlib::sg::plottable* plot(const inlib::histo::p2d& a_histo) {
+  //  inlib::sg::plottable* p = new inlib::sg::p2d2plot(a_histo);
+  //  m_plots.current_plotter().add_plottable(p); //it takes ownership.
+  //  return p;
+  //}
+
+  inlib::sg::plottable* plot_cp(const inlib::histo::c2d& a_cloud) {
+    inlib::sg::plottable* p = new inlib::sg::c2d2plot_cp(a_cloud);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  inlib::sg::plottable* plot_cp(const inlib::histo::c3d& a_cloud) {
+    inlib::sg::plottable* p = new inlib::sg::c3d2plot_cp(a_cloud);
+    m_plots.current_plotter().add_plottable(p); //it takes ownership.
+    return p;
+  }
+
+  template <class T>
+  inlib::sg::plottable* plot(const T& a_func) {
+    inlib::sg::plottable* p = new inlib::sg::f1d2plot<T>(a_func);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+
+  template <class T>
+  inlib::sg::plottable* plot(const std::vector<T>& a_xs,const std::vector<T>& a_ys) {
+    inlib::sg::plottable* p = new inlib::sg::xy2plot<T>(a_xs,a_ys);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+
+  inlib::sg::plottable* plot_fit(const std::vector<std::string>& a_names,const std::vector<double>& a_output) {
+    inlib::sg::plottable* p = new inlib::sg::fit2plot(a_names,a_output);
+    m_plots.current_plotter().add_plottable(p);
+    return p;
+  }
+

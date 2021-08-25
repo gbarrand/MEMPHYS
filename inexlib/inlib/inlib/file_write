@@ -1,0 +1,62 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_file_write
+#define inlib_file_write
+
+#include "forit"
+
+#include <string>
+#include <vector>
+#include <cstdio>
+
+namespace inlib {
+namespace file {
+
+inline bool write(const std::string& a_file,const std::string& a_string) {
+  // a_string could contain \n separated lines.
+  FILE* file = ::fopen(a_file.c_str(),"wb");
+  if(!file) return false;
+  if(::fprintf(file,"%s",a_string.c_str())<0) {
+    ::fclose(file);
+    return false;
+  }
+  ::fclose(file);
+  return true;
+}
+
+inline bool write(const std::string& a_file,const std::vector<std::string>& a_text){
+  FILE* file = ::fopen(a_file.c_str(),"wb");
+  if(!file) return false;
+  inlib_vforcit(std::string,a_text,it) {
+    if(::fprintf(file,"%s\n",(*it).c_str())<0) {
+      ::fclose(file);
+      return false;
+    }
+  }
+  ::fclose(file);
+  return true;
+}
+
+inline bool write_bytes(const std::string& a_file,const char* a_buffer,size_t a_length){
+  FILE* file = ::fopen(a_file.c_str(),"wb");
+  if(!file) return false;
+  if(!a_length) {
+    ::fclose(file);
+    return true;
+  }
+  size_t nitem = ::fwrite((char*)a_buffer,a_length,(size_t)1,file);
+  ::fclose(file);
+  return (nitem!=1?false:true);
+}
+
+inline bool make_empty(const std::string& a_file) {
+  FILE* file = ::fopen(a_file.c_str(),"wb");
+  if(!file) return false;
+  ::fclose(file);
+  return true;
+}
+
+}}
+
+#endif

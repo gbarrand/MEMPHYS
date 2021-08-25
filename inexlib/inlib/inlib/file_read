@@ -1,0 +1,175 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_file_read
+#define inlib_file_read
+
+#include <cstdio>
+#include <cstring>
+
+#include <vector>
+#include <string>
+
+#ifdef INLIB_MEM
+#include "mem"
+#endif
+
+namespace inlib {
+namespace file {
+
+inline bool read_buff(FILE* a_file,char* a_buff,unsigned int a_lbuf,size_t& a_length) {
+  a_length = ::fread(a_buff,1,a_lbuf,a_file);
+  return true;
+}
+
+inline bool read_cstring(FILE* a_file,char* a_buff,unsigned int a_lbuf,size_t& a_length) {
+  if(::fgets(a_buff,a_lbuf,a_file)==NULL) {
+    a_length = 0;
+    return false; //EOF
+  }
+
+  size_t l = ::strlen(a_buff);
+  //  On Windows, editors when saving binary files,
+  // put \r\n at place of \n ; we then look for \r\n.
+  if( (l>=2) && (a_buff[l-2]=='\r') && (a_buff[l-1]=='\n') ) {
+    a_buff[l-2] = '\0';
+    l -= 2;
+  } else if( (l>=1) && (a_buff[l-1]=='\n') ) {
+    a_buff[l-1] = '\0';
+    l -= 1;
+  }
+
+  a_length = l;
+  return true;
+}
+
+
+inline bool read(FILE* a_FILE,std::vector<std::string>& a_text){
+  a_text.clear();
+  unsigned int BUFSIZE = 65536;
+  char* buffer = new char[BUFSIZE+1];
+  if(!buffer) return false;
+  while(true) {
+    size_t l;
+    if(!read_cstring(a_FILE,buffer,BUFSIZE,l)) break; // EOF.
+    a_text.push_back(buffer);
+  }
+  delete [] buffer;
+  return true;
+}
+
+inline bool read_number_of_lines(FILE* a_FILE,size_t& a_number){
+  a_number = 0;
+  unsigned int BUFSIZE = 65536;
+  char* buffer = new char[BUFSIZE+1];
+  if(!buffer) return false;
+  while(true) {
+    size_t l;
+    if(!read_cstring(a_FILE,buffer,BUFSIZE,l)) break; // EOF.
+    a_number++;
+  }
+  delete [] buffer;
+  return true;
+}
+
+inline bool read(const std::string& a_file,std::vector<std::string>& a_text){
+  FILE* file = ::fopen(a_file.c_str(),"rb");
+  if(!file) {a_text.clear();return false;}
+  bool status = read(file,a_text);
+  ::fclose(file);
+  return status;
+}
+
+inline bool read_num(const std::string& a_file,std::vector<std::string>::size_type a_num,std::vector<std::string>& a_text,const std::string& a_cmt = ""){
+  a_text.clear();
+  FILE* file = ::fopen(a_file.c_str(),"rb");
+  if(!file) return false;
+  unsigned int BUFSIZE = 65536;
+  char* buffer = new char[BUFSIZE+1];
+  if(!buffer) {::fclose(file);return false;}
+  while(true) {
+    size_t l;
+    if(!read_cstring(file,buffer,BUFSIZE,l)) break; // EOF.
+    if(a_cmt.size()&&(!strncmp(a_cmt.c_str(),buffer,a_cmt.size()))) continue;
+    if(a_text.size()<a_num) {
+      a_text.push_back(buffer);
+    } else {
+      break;
+    }
+  }
+  delete [] buffer;
+  ::fclose(file);
+  return true;
+}
+
+inline bool read_bytes(const std::string& a_file,char*& a_buffer,long& a_length){
+  // Returned buffer should be deleted with delete [].
+  FILE* file = ::fopen(a_file.c_str(),"rb");
+  if(!file) {
+    a_buffer = 0;
+    a_length = 0L;
+    return false;
+  }
+  // Get file size :
+  ::fseek(file,0L,SEEK_END);
+  long filesize = ::ftell(file);
+  if(!filesize) {
+    ::fclose(file);
+    a_buffer = new char[1];
+#ifdef INLIB_MEM
+    mem::increment(s_new().c_str());
+#endif
+    a_length = 0L;
+    return true; //empty file.
+  }
+  // Add one byte to be able to add \n if file contain lines.
+  a_buffer = new char[filesize+1];
+  if(!a_buffer) {
+    ::fclose(file);
+    a_buffer = 0;
+    a_length = 0L;
+    return false;
+  }
+#ifdef INLIB_MEM
+  mem::increment(s_new().c_str());
+#endif
+  ::rewind(file);
+  size_t nitem = ::fread(a_buffer,(size_t)filesize,(size_t)1,file);
+  if(nitem!=1){
+    ::fclose(file);
+    delete [] a_buffer;
+#ifdef INLIB_MEM
+    mem::decrement(s_new().c_str());
+#endif
+    a_buffer = 0;
+    a_length = 0L;
+    return false;
+  }
+  ::fclose(file);
+  a_buffer[filesize] = 0;
+  a_length = filesize;
+  return true;
+}
+
+}}
+
+#include "forit"
+
+namespace inlib {
+namespace file {
+
+inline bool found(const std::string& a_file,const std::string& a_what,std::vector<std::string>& a_found){
+  a_found.clear();
+  std::vector<std::string> text;
+  if(!file::read(a_file,text)) return false;
+  inlib_vforcit(std::string,text,it) {
+    if((*it).find(a_what)!=std::string::npos) {
+      a_found.push_back(*it);
+    }
+  }
+  return true;
+}
+
+}}
+
+#endif
