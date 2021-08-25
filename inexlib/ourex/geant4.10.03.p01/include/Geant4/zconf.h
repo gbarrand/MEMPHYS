@@ -167,6 +167,9 @@
 #  ifndef WIN32
 #    define WIN32
 #  endif
+#  ifdef Z_HAVE_UNISTD_H /*G.Barrand*/
+#    undef Z_HAVE_UNISTD_H
+#  endif
 #endif
 #if (defined(MSDOS) || defined(OS2) || defined(WINDOWS)) && !defined(WIN32)
 #  if !defined(__GNUC__) && !defined(__FLAT__) && !defined(__386__)

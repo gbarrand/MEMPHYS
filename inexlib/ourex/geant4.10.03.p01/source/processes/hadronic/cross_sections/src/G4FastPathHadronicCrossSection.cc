@@ -34,6 +34,7 @@
   #define _USE_MATH_DEFINES // for C++
   #include <math.h>
 #endif
+
 #include <cmath>
 #include <array>
 

@@ -49,7 +49,7 @@ void destroy_pool( G4double*& buffer)
 }
 
 
-#if defined(WIN32) || defined(ANDROID) //G.Barrand : add ANDROID.
+#if defined(WIN32) || defined(ANDROID)
 // No bother with WIN
 void create_pool_align( G4double*& buffer , G4int ps)
 {

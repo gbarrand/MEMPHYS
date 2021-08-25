@@ -45,7 +45,6 @@
 #include "G4UIdirectory.hh"
 #include "G4UImanager.hh"
 
-
 // Constructor and destructor
 
 G4CascadeParamMessenger::G4CascadeParamMessenger(G4CascadeParameters* params)

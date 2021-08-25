@@ -485,8 +485,9 @@ G4SetMetaState( G4FFGEnumerations::MetaState WhichMetaState )
 {
 G4FFG_FUNCTIONENTER__
 
-    G4bool IsValidMetaState = (WhichMetaState >= G4FFGEnumerations::MetaStateFirst
-                               && WhichMetaState <= G4FFGEnumerations::MetaStateLast);
+  //G.Barrand : Android : G4int() in the below line :
+  G4bool IsValidMetaState = (G4int(WhichMetaState) >= G4FFGEnumerations::MetaStateFirst
+			     && G4int(WhichMetaState) <= G4FFGEnumerations::MetaStateLast);
     G4bool IsSameMetaState = (MetaState_ == WhichMetaState);
     
     if(!IsSameMetaState && IsValidMetaState)
@@ -552,8 +553,9 @@ void G4FissionFragmentGenerator
 {
 G4FFG_FUNCTIONENTER__
 
-    G4bool IsValidScheme = (NewScheme >= G4FFGEnumerations::FissionSamplingSchemeFirst
-                            && NewScheme <= G4FFGEnumerations::FissionSamplingSchemeLast);
+  //G.Barrand : Android : G4int() in the below line :
+  G4bool IsValidScheme = (G4int(NewScheme) >= G4FFGEnumerations::FissionSamplingSchemeFirst
+			  && G4int(NewScheme) <= G4FFGEnumerations::FissionSamplingSchemeLast);
     G4bool IsSameScheme = (NewScheme == SamplingScheme_);
 
     if(!IsSameScheme && IsValidScheme)

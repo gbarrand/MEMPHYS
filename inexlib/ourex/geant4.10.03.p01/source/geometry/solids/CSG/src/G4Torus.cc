@@ -80,11 +80,15 @@
 using namespace CLHEP;
 
 //G.Barrand : ANDROID : begin :
+#if defined(__ANDROID_API__) && __ANDROID_API__>=14
+#define std_hypot std::hypot
+#else
 #include <cmath>
 inline double std_hypot(double a_x,double a_y) {
   return ::hypot(a_x,a_y);
 }
-//G.Barrand : end.
+#endif
+//G.Barrand : ANDROID : end.
 
 ///////////////////////////////////////////////////////////////
 //
@@ -1649,5 +1653,11 @@ G4Polyhedron* G4Torus::CreatePolyhedron () const
 {
   return new G4PolyhedronTorus (fRmin, fRmax, fRtor, fSPhi, fDPhi);
 }
+
+//G.Barrand : ANDROID : begin :
+#if defined(__ANDROID_API__) && __ANDROID_API__>=14
+#undef std_hypot
+#endif
+//G.Barrand : ANDROID : end.
 
 #endif // !defined(G4GEOM_USE_TORUS) || !defined(G4GEOM_USE_SYS_USOLIDS)

@@ -39,7 +39,7 @@
 #include "G4AutoLock.hh"
 #include "globals.hh"
 
-#if defined (WIN32)
+#if defined(WIN32) || (defined(__CYGWIN__) && defined(__GNUC__))  //G.Barrand : __CGYWIN__.
    #include <Windows.h>
 #else
    #include <unistd.h>

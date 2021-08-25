@@ -4,7 +4,21 @@ bush_home=../../../bush
 
 . ${bush_home}/args
 
-build_args="${build_args} -c++11 -bdir_suffix=_c++11"     
+#//////////////////////////////////////
+#/// specific args : //////////////////
+#//////////////////////////////////////
+build_std_gnuxx11=no
+
+items="${build_args}"
+build_args=
+for item in ${items} ; do
+  if [ ${item} = "-gnu" -a "`uname | grep CYGWIN`" != "" ] ; then build_std_gnuxx11=yes; fi
+  build_args="${build_args} ${item}"
+done
+
+#//////////////////////////////////////
+#//////////////////////////////////////
+#//////////////////////////////////////
 
 . ${bush_home}/ourex_header
 
@@ -45,8 +59,23 @@ g4_dirs="${g4_dirs} digits_hits tracking event run"
 g4_dirs="${g4_dirs} parameterisations readout"
 g4_dirs="${g4_dirs} error_propagation"
 g4_dirs="${g4_dirs} physics_lists"
-g4_dirs="${g4_dirs} processes"    # must exclude abla directory.
 g4_dirs="${g4_dirs} persistency"
+g4_dirs="${g4_dirs} processes"    # must exclude abla directory.
+
+#g4_dirs=physics_lists
+#g4_dirs=processes
+#g4_dirs=processes/hadronic/models/lend
+#g4_dirs=tmp
+#include/Geant4/Shielding.icc
+#ccfiles="${ccfiles} ./source/physics_lists/lists/src/G4PhysListFactory.cc"
+#source/global/management/src/G4Threading.cc
+#ccfiles="${ccfiles} ./source/global/HEPRandom/src/G4UniformRandPool.cc"
+#ccfiles="${ccfiles} ./source/processes/hadronic/cross_sections/src/G4FastPathHadronicCrossSection.cc"
+#ccfiles="${ccfiles} ./source/processes/hadronic/models/cascade/cascade/src/G4CascadeParamMessenger.cc"
+#ccfiles="${ccfiles} ./source/processes/hadronic/models/lend/src/nf_stringToDoubles.cc"
+#ccfiles="${ccfiles} ./source/processes/hadronic/models/lend/src/ptwXY_core.cc"
+#ccfiles="${ccfiles} ./source/processes/hadronic/models/lend/src/statusMessageReporting.cc"
+#ccfiles="${ccfiles} source/processes/hadronic/models/lend/src/MCGIDI_energy.cc"
 
 #g4_dirs=""
 #g4_dirs="${g4_dirs} processes"
@@ -62,6 +91,16 @@ g4_dirs="${g4_dirs} persistency"
 
 cppflags="${cppflags} "
 cppflags="${cppflags} ${G4_cppflags}"
+
+if [ ${build_std_gnuxx11} = yes ] ; then
+  cppflags="${cppflags} -std=gnu++11"
+else
+  cppflags="${cppflags} -std=c++11"
+fi
+#if [ ${build_sdk_mac} = "yes" ] ; then
+#  cppflags="${cppflags} -std=c++14"
+#fi
+
 #cppflags="${cppflags} -DG4USE_STL -DG4USE_STD_NAMESPACE"
 cppflags="${cppflags} -DG4VERBOSE -DG4_STORE_TRAJECTORY"
 
@@ -70,6 +109,9 @@ if [ ${build_visual} = "yes" ] ; then
   cppflags="${cppflags} -wd4800 -wd4305 -wd4244 -wd4146"
   ccflags="${ccflags} -DWIN32"
   cppflags="${cppflags} -DWIN32"
+  #cppflags="${cppflags} -bigobj"
+elif [ ${build_clang} = "yes" ] ; then
+  cppflags="${cppflags} -Wno-deprecated-declarations"
 fi
 
 cppflags="${cppflags} -I./include/Geant4"
@@ -80,25 +122,23 @@ cppflags="${cppflags} -I../zlib/include"
 #exit
 
 for dir in ${g4_dirs} ; do
-
-if [ ${build_verbose} = yes ] ; then
-  echo "//////////////////////////////////"
-  echo "/// compiling ${dir} ..."
-  echo "//////////////////////////////////"
-fi
-
-find ./source/${dir} -name '*.c' -print >> c_tmp
-find ./source/${dir} -name "*.cc" -print > cpp_tmp
-
-. ${bush_home}/compile
-
+  if [ ${build_verbose} = yes ] ; then
+    echo "//////////////////////////////////"
+    echo "/// compiling ${dir} ..."
+    echo "//////////////////////////////////"
+  fi
+  find ./source/${dir} -name '*.c' -print > c_tmp
+  find ./source/${dir} -name "*.cc" -print > cpp_tmp
+  . ${bush_home}/compile
 done
 
 fi # end build_compile
 
 if [ ${build_visual} = "yes" ] ; then
-  # geant4 explodes a 65535 limit of the linker.
+  # geant4 explodes a 65535 limit of the link.exe linker.
   build_shlib=no
+else
+  if [ "`uname | grep CYGWIN`" != "" -a ${build_gnu} = yes ] ; then build_shlib=no; fi
 fi
 
 if [ ${build_archive} = "yes" ] ; then . ${bush_home}/archive; fi
