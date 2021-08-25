@@ -6,6 +6,9 @@ if [ "${use_exlib}" = "yes" ] ; then
     exlib_home=${bush_home}/../inexlib/exlib
   fi
 
+  ccflags="${ccflags} -I${exlib_home}"
+
   cppflags="${cppflags} -I${exlib_home}"
+
 fi
 

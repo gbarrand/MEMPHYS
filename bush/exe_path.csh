@@ -8,15 +8,15 @@ if ( "${exe_path}" == "" ) then
   echo 'bush/exe_path : variable exe_path not defined.'
 
 else
-  
+
   if ( "`printenv PATH`" == "" ) then
     setenv PATH "${exe_path}"
-  else 
+  else
     setenv PATH "${exe_path}:${PATH}"
   endif
   #if ( "${build_verbose}" == "yes" ) then
   #  echo "PATH : ${PATH}"
   #endif
-  
+
 endif
 

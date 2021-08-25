@@ -6,7 +6,7 @@ if [ "${use_gl2ps}" = "yes" ] ; then
     echo 'bush/use/gl2ps : variable ourex_home not defined.';exit
   fi
   gl2ps_home=${ourex_home}/gl2ps
-  
+
   ccflags="${ccflags} -I${gl2ps_home}"
   cppflags="${cppflags} -I${gl2ps_home}"
   ourex_pack_name=gl2ps

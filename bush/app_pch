@@ -41,7 +41,7 @@ fi
 suffix=`echo ${app_src} | sed 's:.*\.::'`
 if [ "${suffix}" = "" ] ; then
   echo "no suffix found in ${app_src}."
-  exit  
+  exit
 fi
 
 dir=`dirname ${app_src}`

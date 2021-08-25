@@ -3,5 +3,8 @@
 if [ "${use_Cocoa}" = "yes" ] ; then
   if [ `uname` = Darwin ] ; then
     libs="${libs} -framework Cocoa"
+  else
+    echo 'bush/use/Cocoa : not on Darwin.'
+    exit
   fi
 fi

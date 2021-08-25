@@ -17,33 +17,42 @@ if [ "${use_sys_mpi}" = "yes" ] ; then
 
   if [ "`uname -n | grep ccage`" != "" ] ; then
 
-    cppflags="${cppflags} -DEXLIB_USE_NATIVE_MPI"
     cppflags="${cppflags} -I/usr/include/openmpi-x86_64"
     libs="${libs} -L/usr/lib64/openmpi/lib -lmpi_cxx -lmpi"
 
   elif [ `uname` = Darwin ] ; then
-    mpi_home=/opt/local
-
-    if [ ! -d ${mpi_home}/include/openmpi-mp ] ; then
-      echo 'use_mpi : MPI not found. We use exlib/mpi/dummy/mpi.h.'
-    else
-      cppflags="${cppflags} -DEXLIB_USE_NATIVE_MPI"
+    if [ -d /opt/local/include/openmpi-mp ] ; then
+      mpi_home=/opt/local
       cppflags="${cppflags} -I${mpi_home}/include/openmpi-mp"
       libs="${libs} -L${mpi_home}/lib/openmpi-mp -lmpi_cxx -lmpi"
+    elif [ -d /usr/local/openmpi/3.1.2 ] ; then
+      mpi_home=/usr/local/openmpi/3.1.2
+      cppflags="${cppflags} -I${mpi_home}/include"
+      libs="${libs} -L${mpi_home}/lib -lmpi"
+    else
+      echo 'use_mpi : MPI not found.'
+      exit
     fi
 
   else
-    mpi_home=/usr
 
-    if [ ! -d ${mpi_home}/include/openmpi-x86_64 ] ; then
-      echo 'use_mpi : MPI not found. We use exlib/mpi/dummy/mpi.h.'
-    else
-      cppflags="${cppflags} -DEXLIB_USE_NATIVE_MPI"
+    if [ -d /usr/include/openmpi-x86_64 ] ; then #ostackc
+      mpi_home=/usr
       cppflags="${cppflags} -I${mpi_home}/include/openmpi-x86_64"
       libs="${libs} -L${mpi_home}/${lib}/openmpi/lib -lmpi_cxx -lmpi"
+    elif [ -d /usr/include/openmpi ] ; then #ostackess
+      mpi_home=/usr
+      cppflags="${cppflags} -I${mpi_home}/include/openmpi"
+      libs="${libs} -L${mpi_home}/${lib}/openmpi/lib -lmpi_cxx -lmpi"
+    else
+      echo 'use_mpi : MPI not found.'
+      exit
     fi
 
   fi
+
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_MPI"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_MPI"
 
 fi
 

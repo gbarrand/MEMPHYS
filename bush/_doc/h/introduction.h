@@ -18,7 +18,7 @@
   With it we can build our apps on Windows (forever highly exotic) from a CYGWIN prompt by using the Microsoft VisualC++ compiler
  but by avoiding the VisualStudio IDE, and also build macOS/Cocoa apps without having to pass by the Xcode IDE. (It is a pain
  for a single developer, for the same app, to maintain various IDEs). With bush we can build also offscreen version of
- our apps, WebGL and Android version of them. (Obviously we build on Linux, which is a piece of cake).
+ our apps, WebAssembly and Android version of them. (Obviously we build on Linux, which is a piece of cake).
 
   If having problem with the compiler and access to some package, the files to look/customize are :
 @verbatim
@@ -37,6 +37,11 @@
  when developing; we embed anyway all the code in a "main.cpp" and compile everything. (Ok, the drawback is that the development
  loop is more lengthy than a traditional approach with libraries plus a make logic, but as it permits us to build for highly
  heterogeneous environments, and that it is a high priority for us, we stay with this approach for the moment).
+
+@section bush_android Android
+
+  bush scripts are not yet ready to build for any Android SDK/NDK and device architectures, then we still promote the Android SDK
+ build/make system to build apps for this platform. See the "Build for Android" section under the softinex portal for more.
 
 */
 

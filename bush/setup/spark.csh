@@ -1,8 +1,12 @@
 
-setenv SPARK_HOME /usr/local/spark/2.3.0/spark-2.3.0-bin-hadoop2.7
-setenv PYSPARK_SUBMIT_ARGS "--master local[2]"
+set on_my_mac_2018="`networksetup -listallhardwareports | grep '86:00'`"
+if ( "${on_my_mac_2018}" != "" ) then
+  set java_home=/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home
+  setenv JAVA_HOME ${java_home}
+endif
 
-# Make pyspark available anywhere
-setenv PATH "${SPARK_HOME}/bin:$PATH"
+set spark_home=/usr/local/spark/2.3.0/spark-2.3.0-bin-hadoop2.7
+
+setenv PATH "${spark_home}/bin:$PATH"
 
 

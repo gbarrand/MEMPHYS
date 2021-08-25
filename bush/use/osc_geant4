@@ -7,7 +7,7 @@ if [ "${use_osc_geant4}" = "yes" ] ; then
   use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 
   cppflags="${cppflags} `g4lab-config --cflags`"
-  
+
   libs="${libs} `g4lab-config --libs`"
 
 fi

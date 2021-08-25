@@ -13,22 +13,28 @@ fi
 
 if [ "${use_sys_jpeg}" = "yes" ] ; then
   if [ `uname` = Darwin ] ; then
-    if [ ! -e /opt/local/include/jpeglib.h ] ; then
-      echo "bush/use/jpeg : /opt/local/include/jpeglib.h not found. Use our jpeg."
-      use_our_jpeg=yes
-    else
+    if [ -e /opt/local/include/jpeglib.h ] ; then
       cppflags="${cppflags} -I/opt/local/include"
-      libs="${libs} -L/opt/local/lib -ljpeg"
+      if [ "${use_archive}" = "yes" ] ; then
+        libs="${libs} /opt/local/lib/libjpeg.a"
+      else	
+        libs="${libs} /opt/local/lib/libjpeg.dylib"
+      fi	
+    else
+      echo "bush/use/jpeg : jpeglib.h not found."
+      exit
     fi
   else
-    if [ ! -e /usr/include/jpeglib.h ] ; then
-      echo "bush/use/jpeg : /usr/include/jpeglib.h not found. Use our jpeg."
-      use_our_jpeg=yes
-    else
+    if [ -e /usr/include/jpeglib.h ] ; then
       cppflags="${cppflags} -I/usr/include"
       libs="${libs} -ljpeg"
+    else
+      echo "bush/use/jpeg : jpeglib.h not found."
+      exit
     fi
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_JPEG"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_JPEG"
 fi
 
 if [ "${use_our_jpeg}" = "yes" ] ; then
@@ -36,7 +42,7 @@ if [ "${use_our_jpeg}" = "yes" ] ; then
     echo 'bush/use/jpeg : variable ourex_home not defined.';exit
   fi
   jpeg_home=${ourex_home}/jpeg
-  
+
   ccflags="${ccflags} -I${jpeg_home}/jpeg"
   cppflags="${cppflags} -I${jpeg_home}/jpeg"
   ourex_pack_name=jpeg

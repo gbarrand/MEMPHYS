@@ -14,17 +14,15 @@ fi
 #//////////////////////////////////////////////////////
 
 build_no_gl=no
-build_no_wall=no
 build_enforce_vbo=no
 
 header_args=
 for arg in ${build_args} ; do
   case ${arg} in
-#     -X11_no_gl)  build_no_gl=yes;;
-#     -x11_no_gl)  build_no_gl=yes;;
-     -no_gl)      build_no_gl=yes;;
-     -no_wall)    build_no_wall=yes;;
-     -vbo)        build_enforce_vbo=yes;;
+#     -X11_no_gl)     build_no_gl=yes;;
+#     -x11_no_gl)     build_no_gl=yes;;
+     -no_gl)          build_no_gl=yes;;
+     -vbo)            build_enforce_vbo=yes;;
      # etc :
      -*)          header_args="${header_args} ${arg}";;
       *)          header_args="${header_args} ${arg}";;
@@ -64,8 +62,8 @@ if [ ${build_inlib_gl} = "yes" ] ; then
   cppflags="${cppflags} -DEXLIB_INLIB_GL"
 fi
 
-if [ "${build_no_wall}" = "no" ] ; then
-  cppflags="${cppflags} -DAPP_USE_WALL"
+if [ "${inlib_home}" = "" ] ; then
+  inlib_home=${bush_home}/../inexlib/inlib
 fi
 
 if [ "${exlib_home}" = "" ] ; then

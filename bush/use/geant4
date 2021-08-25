@@ -25,8 +25,6 @@ if [ "${use_sys_geant4}" = "yes" ] ; then
     cppflags="${cppflags} `geant4-config --cflags`"
     libs="${libs} `geant4-config --libs`"
 
-    geant4_cppflags="`geant4-config --cflags`"
-
   else
 
     CLHEP_version=2.0.4.2
@@ -37,31 +35,27 @@ if [ "${use_sys_geant4}" = "yes" ] ; then
     cppflags="${cppflags} -I/usr/local/CLHEP/${CLHEP_version}/include"
     libs="${libs} -L/usr/local/CLHEP/${CLHEP_version} -lCLHEP"
 
-    geant4_cppflags="-I/usr/local/CLHEP/${CLHEP_version}/include"
-
     if [ "${G4INSTALL}" = "" ] ; then
       echo "bush/use/geant4 : G4INSTALL not defined. You have to source setup geant4."
       exit
-    fi  
+    fi
     if [ "${G4SYSTEM}" = "" ] ; then
       echo "bush/use/geant4 : G4SYSTEM not defined. You have to source setup geant4."
       exit
-    fi  
-  
+    fi
+
     if [ ! -d ${G4INSTALL}/include ] ; then
       echo "bush/use/geant4 : ${G4INSTALL}/include not found. geant4 not properly installed."
       exit
     fi
-  
+
     if [ ! -e ${G4INSTALL}/lib/${G4SYSTEM}/libG4processes.${shex} ] ; then
       echo "bush/use/geant4 : ${G4INSTALL}/lib/${G4SYSTEM}/libG4processes.${shex} not found."
       echo " geant4 not installed with global libs. Stop."
       exit
     fi
-  
-    cppflags="${cppflags} -I${G4INSTALL}/include"
 
-    geant4_cppflags="${geant4_cppflags} -I${G4INSTALL}/include"
+    cppflags="${cppflags} -I${G4INSTALL}/include"
 
     # core global libraries "
     geant4_global_libs="-lG4readout -lG4run -lG4event -lG4tracking -lG4processes -lG4digits_hits -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global"
@@ -108,9 +102,5 @@ if [ "${use_our_geant4}" = "yes" ] ; then
 
   libs="${libs} ${geant4_libs}"
 
-  # for examples/geant4/A01 :
-  geant4_cppflags="-I${geant4_home}/include/Geant4"
-
-  geant4_ld_library_path="${geant4_build_dir}"
 
 fi

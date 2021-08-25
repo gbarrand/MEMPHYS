@@ -5,6 +5,13 @@ if [ "${use_dl}" = "yes" ] ; then
 
   if [ ${build_visual} = "yes" ] ; then
     echo dummy > /dev/null
+
+  elif [ ${build_sdk_android} = "yes" ] ; then
+    echo dummy > /dev/null
+
+  elif [ ${build_emcc} = "yes" ] ; then
+    echo dummy > /dev/null
+
   else
 
     lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu"

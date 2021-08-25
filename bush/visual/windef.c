@@ -15,22 +15,37 @@
  archive library and produces the .def file for
  this library. For example :
    DOS> dumpbin /out:tmp /symbols MyLib.arc
-   DOS> obuild_windef.exe MyLib < tmp > MyLib.def
- Note that obuild_windef is a standalone program that 
+   DOS> .\windef.exe MyLib tmp > MyLib.def
+ Note that windef is a standalone program that
  can be easily reconstructed with :
-   DOS> cl /Foobuild_windef.exe obuild_windef.c
+   DOS> cl /Fowindef.exe windef.c
 */
 
 #include <string.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 char** GetWords (char*,const char*,int*);
+int read_cstring(FILE*,char*,size_t,size_t*);
 
 int main (int aArgn,char** aArgs) {
+  FILE* file;
+/*#define MAX_STRING 65536*/
 #define MAX_STRING 8192
   char buffer[MAX_STRING+1];
-  int length;
+  size_t length;
+
+  if(aArgn!=3) {
+    printf("windef : two arguments expected.\n");
+    return EXIT_FAILURE;
+  }
+
+  file = fopen(aArgs[2],"rb");
+  if(!file) {
+    printf("windef : can't open \"%s\".\n",aArgs[2]);
+    return EXIT_FAILURE;
+  }
 
   /*EXETYPE WINDOWS\n\ */
   printf("\
@@ -38,20 +53,7 @@ LIBRARY %s\n\
 EXPORTS\n",aArgs[1]);
 
   while(1){
-    if(fgets(buffer,MAX_STRING,stdin)==NULL) return EXIT_FAILURE;
-    /*
-      On some system (NT) editors when saving binary files 
-      put \r\n at place of \n ; we then look for \r\n.
-    */
-    length = strlen(buffer);
-    if( (length>=2) && (buffer[length-2]=='\r') && (buffer[length-1]=='\n') ) {
-      buffer[length-2] = '\0';
-      length--;
-      length--;
-    } else if((length>=1) && (buffer[length-1]=='\n')) {
-      buffer[length-1] = '\0';
-      length--;
-    }
+    if(!read_cstring(file,buffer,MAX_STRING,&length)) break; // EOF.
     if(strstr(buffer,"SECT")==NULL) continue;
     if(strstr(buffer,"External")==NULL) continue;
     if(strstr(buffer,"??_")!=NULL) {
@@ -63,7 +65,7 @@ EXPORTS\n",aArgs[1]);
       }
     }
 
-    {    
+    {
       char** words;
       int    wordn;
       words  = GetWords (buffer," ",&wordn);
@@ -112,6 +114,7 @@ EXPORTS\n",aArgs[1]);
     /*printf("%s\n",buffer);*/
   }
 
+  fclose(file);
   aArgn = 0;
 
   return EXIT_SUCCESS;
@@ -141,13 +144,13 @@ char** GetWords(char* a_string,const char* a_limiter,int* a_number) {
   iline = 0;
 
   token = string;
-  while(1) { 
+  while(1) {
     char* pos;
     pos = strstr (token,a_limiter);
     if(pos!=NULL) {
       *pos = '\0';
       if(*token!='\0') {
-	if(iline>=nline) { 
+	if(iline>=nline) {
 	  nline    +=16;
 	  list      = (char**)realloc(list,nline*sizeof(char*));
 	  if(list==NULL) return NULL;
@@ -155,7 +158,7 @@ char** GetWords(char* a_string,const char* a_limiter,int* a_number) {
 	list[iline]      = token;
 	iline++;
       }
-      token = pos + strlen(a_limiter);          
+      token = pos + strlen(a_limiter);
     } else { /*last word*/
       if(*token!='\0') {
 	if(iline>=nline) {
@@ -169,7 +172,7 @@ char** GetWords(char* a_string,const char* a_limiter,int* a_number) {
       break;
     }
   }
-  
+
   for(count=0;count<iline;count++) list[count] = STRDUP(list[count]);
   STRDEL(string);
 
@@ -182,3 +185,25 @@ char** GetWords(char* a_string,const char* a_limiter,int* a_number) {
     return             list;
   }
 }
+
+int read_cstring(FILE* a_file,char* a_buff,size_t a_lbuf,size_t* a_length) {
+  size_t l;
+  if(fgets(a_buff,a_lbuf,a_file)==NULL) {
+    *a_length = 0;
+    return 0; //EOF
+  }
+  l = strlen(a_buff);
+  //  On Windows, editors when saving binary files,
+  // put \r\n at place of \n ; we then look for \r\n.
+  if( (l>=2) && (a_buff[l-2]=='\r') && (a_buff[l-1]=='\n') ) {
+    a_buff[l-2] = '\0';
+    l -= 2;
+  } else if( (l>=1) && (a_buff[l-1]=='\n') ) {
+    a_buff[l-1] = '\0';
+    l -= 1;
+  }
+
+  *a_length = l;
+  return 1;
+}
+

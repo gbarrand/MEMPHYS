@@ -15,11 +15,11 @@ inline void sleep(unsigned int a_secs) {
 }
 
 inline void usleep(unsigned int a_micro_secs) {
-  LARGE_INTEGER ft; 
+  LARGE_INTEGER ft;
   ft.QuadPart = -10*int(a_micro_secs); // Convert to 100 nanosecond interval, negative value indicates relative time
-  HANDLE timer = CreateWaitableTimer(NULL, TRUE, NULL); 
-  SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
-  WaitForSingleObject(timer, INFINITE); 
+  HANDLE timer = CreateWaitableTimer(NULL, TRUE, NULL);
+  SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+  WaitForSingleObject(timer, INFINITE);
   CloseHandle(timer);
 }
 

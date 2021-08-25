@@ -23,26 +23,27 @@ if [ "${app_exe}" = "" ] ; then
 fi
 
 if [ `uname` = Linux ] ; then
+if [ "`uname -r | grep Microsoft`" = "" ] ; then
   if [ "${build_app_distrib_dir}" = "" ] ; then build_app_distrib_dir="${app}"; fi
-  
+
   head_app=${build_path}/distrib/${build_app_distrib_dir}
   head=${head_app}/${version}
-  
+
   sys_dir="${head}/sys"
   /bin/mkdir -p ${sys_dir}
   ldd ${head}/bin/${app_exe} > ./tmp_0
   awk '{if ($2 == "=>") print "cp " $3 " target_dir"; else print "cp " $1 " target_dir";}' ./tmp_0 > ./tmp_1
-  grep '.so' ./tmp_1 > ./tmp_2
+  grep '.so' ./tmp_1 | grep -v 'linux-vdso.so' > ./tmp_2
   sed -e "s:target_dir:${sys_dir}:g" ./tmp_2 > ./tmp_3
   chmod a+x ./tmp_3
   ./tmp_3
   /bin/rm -f ./tmp_0 ./tmp_1 ./tmp_2 ./tmp_3
-  
+
   /bin/cp ${bush_home}/exec_app ./tmp_0
   sed -e "s:target_app_exe:${app_exe}:g" ./tmp_0 > ${head}/bin/exec_${app}
   chmod a+x ${head}/bin/exec_${app}
   /bin/rm -f ./tmp_0
-  
+
   dri_so=/usr/lib/x86_64-linux-gnu/dri/swrast_dri.so  # ubuntu-14.04.3.
   if [ ! -f ${dri_so} ] ; then
     dri_so=/usr/lib64/dri/swrast_dri.so          # sl-release-6.7-1.slc6.x86_64
@@ -54,17 +55,18 @@ if [ `uname` = Linux ] ; then
     # find related shared libs :
     ldd ${dri_so} > ./tmp_0
     awk '{if ($2 == "=>") print "cp " $3 " target_dir"; else print "cp " $1 " target_dir";}' ./tmp_0 > ./tmp_1
-    grep '.so' ./tmp_1 > ./tmp_2
+    grep '.so' ./tmp_1 | grep -v 'linux-vdso.so' > ./tmp_2
     sed -e "s:target_dir:${sys_dir}:g" ./tmp_2 > ./tmp_3
     chmod a+x ./tmp_3
     ./tmp_3
     /bin/rm -f ./tmp_0 ./tmp_1 ./tmp_2 ./tmp_3
-  
+
     sed -e "s:#LIBGL_DRIVERS_PATH:LIBGL_DRIVERS_PATH:g" ${head}/bin/exec_${app} > ./tmp_0
     /bin/mv ./tmp_0 ${head}/bin/exec_${app}
     chmod a+x ${head}/bin/exec_${app}
-  
+
   fi
-  
-fi 
+
+fi
+fi
 

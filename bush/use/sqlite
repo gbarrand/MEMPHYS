@@ -9,7 +9,7 @@ if [ "${use_sqlite}" = "yes" ] ; then
     else
       if [ -e /opt/local/include/sqlite3.h ] ; then
         cppflags="${cppflags} -I/opt/local/include"
-        libs="${libs} -L/opt/local/lib -lsqlite3"
+        libs="${libs} /opt/local/lib/libsqlite3.dylib"
       else
         echo "bush/use/sqlite : sqlite3 not found."
       fi

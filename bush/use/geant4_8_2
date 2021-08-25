@@ -10,17 +10,17 @@ if [ "${use_geant4}" = "yes" ] ; then
     CLHEP_home=/usr/local/CLHEP/2.0.4.2
     geant4_home=/usr/local/geant4/8.2
   fi
-  
+
   if [ ! -d ${CLHEP_home} ] ; then
     echo "bush/use/geant4_8_2 : ${CLHEP_home} not found."
     exit
   fi
-    
+
   if [ ! -d ${geant4_home} ] ; then
     echo "bush/use/geant4_8_2 : ${geant4_home} not found."
     exit
   fi
-    
+
   cppflags="${cppflags} -I${CLHEP_home}/include"
 
   cppflags="${cppflags} -I${geant4_home}/include"
@@ -29,5 +29,5 @@ if [ "${use_geant4}" = "yes" ] ; then
   libs="${libs} -lG4track -lG4particles -lG4geometry -lG4graphics_reps -lG4materials -lG4intercoms -lG4global"
 
   libs="${libs} -L${CLHEP_home}/lib -lCLHEP"
-  
+
 fi

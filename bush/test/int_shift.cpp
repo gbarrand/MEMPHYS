@@ -4,7 +4,7 @@
 int main() {
 
   int i = -1;
-  
+
   ::printf("debug i %x\n",i);
   ::printf("debug i << : \n");
   ::printf("debug <<1  : %x\n",i<<1);
@@ -13,7 +13,7 @@ int main() {
   ::printf("debug <<16 : %x\n",i<<16);
   ::printf("debug <<31 : %x\n",i<<31);
   ::printf("debug <<32 : %x\n",i<<32);
-  
+
   ::printf("debug >> : \n");
   ::printf("debug >>1  : %x\n",i>>1);
   ::printf("debug >>2  : %x\n",i>>2);
@@ -21,7 +21,7 @@ int main() {
   ::printf("debug >>16 : %x\n",i>>16);
   ::printf("debug >>31 : %x\n",i>>31);
   ::printf("debug >>32 : %x\n",i>>32);
-  
+
   unsigned int j = 0xffffffff;
   ::printf("debug j %x\n",j);
   ::printf("debug j << : \n");

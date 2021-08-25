@@ -8,7 +8,8 @@ if [ "${use_SDL}" = "yes" ] ; then
   fi
 
   if [ `uname` = Darwin ] ; then
-
+    # sudo port install libsdl
+    
     if [ ! -d /opt/local/include/SDL ] ; then
       echo 'bush/use/SDL : SDL not found under /opt/local/include.'
       exit
@@ -17,7 +18,7 @@ if [ "${use_SDL}" = "yes" ] ; then
     ccflags="${ccflags} -I/opt/local/include"
     cppflags="${cppflags} -I/opt/local/include"
 
-    libs="${libs} -L/opt/local/lib -lSDL"
+    libs="${libs} /opt/local/lib/libSDL.dylib"
 
   else
 

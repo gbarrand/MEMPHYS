@@ -4,7 +4,7 @@
 template <class FUNC>
 class A {
 public:
-  A(FUNC a_func) {    
+  A(FUNC a_func) {
     ::printf("A::A : %g\n",a_func(0));
   }
 };

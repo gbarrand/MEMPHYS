@@ -14,7 +14,9 @@ if [ "${use_gmp}" = "yes" ] ; then
     ccflags="${ccflags} -I/opt/local/include"
     cppflags="${cppflags} -I/opt/local/include"
 
-    libs="${libs} -L/opt/local/lib -lmpfr -lgmpxx -lgmp"
+    libs="${libs} /opt/local/lib/libmpfr.dylib"
+    libs="${libs} /opt/local/lib/libgmpxx.dylib"
+    libs="${libs} /opt/local/lib/libgmp.dylib"
 
     if [ ${build_gnu} = "yes" ] ; then
       echo "bush/use/gmp : /opt/local/lib/libmpfr,gmp,gmpxx not built with gnu."

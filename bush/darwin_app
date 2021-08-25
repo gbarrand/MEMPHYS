@@ -1,6 +1,19 @@
 # Copyright (C) 2010, Guy Barrand. All rights reserved.
 # See the file bush.license for terms.
 
+if [ `uname` = "Darwin" ] ; then
+
+if [ "${app}" = "" ] ; then
+  if [ "${app_exe}" = "" ] ; then
+    echo "bush/darwin_app : variables app and app_exe not defined."
+    exit
+  fi
+  app="`basename ${app_exe}`"
+  #if [ ${build_verbose} = yes ] ; then
+    echo "bush/darwin_app : warning : app variable not defined, we take basename of ${app_exe}. Got app=${app}"
+  #fi
+fi
+
 if [ "${app_exe}" = "" ] ; then
   echo "bush/darwin_app : app_exe variable not defined."
   exit
@@ -14,15 +27,27 @@ fi
 install_name_tool_exe=/usr/bin/install_name_tool
 if [ "`uname -n`" = "MacPro4-2.local" ] ; then install_name_tool_exe=/opt/local/bin/install_name_tool; fi
 
-/bin/rm -R -f ${build_path}/${app_exe}.app
+/bin/rm -R -f ${build_path}/${app}.app
 
-head=${build_path}/${app_exe}.app/Contents
+head=${build_path}/${app}.app/Contents
 /bin/mkdir -p ${head}/MacOS
-/bin/cp ${build_path}/${app_exe} ${head}/MacOS
+/bin/cp ${build_path}/${app} ${head}/MacOS
 
-/bin/mkdir -p ${head}/Resources
-darwin_app_res_dir=${head}/Resources
-#/bin/cp -R ./tests/nib.nib ${head}/Resources/${app_exe}.nib
+darwin_app_res_dir="${head}/Resources"
+/bin/mkdir -p ${darwin_app_res_dir}
+if [ "${resfiles}" != "" ] ; then
+  for item in ${resfiles} ; do
+    dir_name=`dirname ${item}`
+    wildcard=`basename ${item}`
+    find ${dir_name} -name "${wildcard}" -exec /bin/cp -f {} ${darwin_app_res_dir}/. \;
+  done
+fi
+if [ "${resdirs}" != "" ] ; then
+  for item in ${resdirs} ; do
+    /bin/cp -R ${item} ${darwin_app_res_dir}/.
+  done
+fi
+#/bin/cp -R ./tests/nib.nib ${head}/Resources/${app}.nib
 
 if [ "${darwin_app_libs}" != "" ] ; then
 
@@ -42,7 +67,7 @@ if [ "${darwin_app_libs}" != "" ] ; then
     ${install_name_tool_exe} -change  ${old_name} ${new_name} "${head}/MacOS/${app_exe}"
   done
 
-  # Change the id of dylibs :  
+  # Change the id of dylibs :
   for item in ${darwin_app_libs} ; do
     lib_name="`basename ${item}`"
     new_name="@executable_path/../lib/${lib_name}"
@@ -74,3 +99,5 @@ if [ "${darwin_app_dlls}" != "" ] ; then
   done
 
 fi # darwin_dlls
+
+fi

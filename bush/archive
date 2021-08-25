@@ -46,20 +46,24 @@ else
   if [ ${build_visual} = "yes" ] ; then
 
     /bin/rm -f tmp_0
-    #find ${build_path} -name '*.o' -print > tmp_0
-    for file in ${objs} ; do echo ${file} >> tmp_0; done
 
+    for file in ${objs} ; do echo ${file} >> tmp_0; done
     lib.exe /nologo /out:${file_a} @tmp_0
 
     /bin/rm -f tmp_0
 
   else
 
-    ${ar_cmd} -cr ${file_a} ${objs}
+    ${ar_cmd} -cr ${ar_flags} ${file_a} ${objs}
 
-    # Android plugin wants ranlib on the .a :
-    ${ranlib_cmd} ${file_a}
-
+    if [ "${build_emcc}" = "yes" ] ; then
+      if [ ${build_verbose} = yes ] ; then
+        echo "bush/archive : emcc : ${file_a} : we do not do ranlib."
+      fi
+    else
+      # Android plugin wants ranlib on the .a :
+      ${ranlib_cmd} ${ranlib_flags} ${file_a}
+    fi
   fi
 
   if [ ${build_shlib} = "yes" ] ; then
@@ -78,6 +82,11 @@ else
         echo "bush/archive : sdk_iossim : ${libname} : we do not build shared lib."
       fi
 
+    elif [ "${build_emcc}" = "yes" ] ; then
+      if [ ${build_verbose} = yes ] ; then
+        echo "bush/archive : emcc : ${libname} : we do not build shared lib."
+      fi
+
     elif [ ${build_visual} = "yes" ] ; then
       #echo "bush/archive : visual : ${libname} : can't build shared lib."
       echo dummy > /dev/null
@@ -90,10 +99,11 @@ else
 
       file_sh="${build_path}/${libname}.dll"
 
-      # Build the obuild_windef.exe utility program :
-      /bin/rm -f ./cl_exe_tmp
-      eval cl.exe /nologo /MD /O2 /W3 /wd4996 /Fewindef.exe ${bush_home}/visual/windef.c > ./cl_exe_tmp
-      use_status=$?;if [ ${use_status} != 0 ] ; then cat ./cl_exe_tmp;/bin/rm -f ./cl_exe_tmp;exit ${use_status}; fi
+      # Build the windef.exe utility program :
+      /bin/cp ${bush_home}/visual/windef.c ./tmp_windef.c
+      ${bush_home}/vc++ -c -o ./windef.o ./tmp_windef.c
+      ${bush_home}/vc++ -o ./windef.exe ./windef.o
+      /bin/rm -f ./windef.o ./tmp_windef.c
 
       # Building the .def file :
       /bin/rm -f ./dumpbin_exe_tmp
@@ -101,7 +111,7 @@ else
       use_status=$?;if [ ${use_status} != 0 ] ; then cat ./dumpbin_exe_tmp;/bin/rm -f ./dumpbin_exe_tmp;exit ${use_status}; fi
       /bin/rm -f ./dumpbin_exe_tmp
 
-      ./windef.exe ${libname} < ${file_symbs} > ${file_def}
+      ./windef.exe ${libname} ${file_symbs} > ${file_def}
 
       # Building the linking library :
       # It produces a .exp file.
@@ -110,35 +120,23 @@ else
       use_status=$?;if [ ${use_status} != 0 ] ; then cat ./lib_exe_tmp;/bin/rm -f ./lib_exe_tmp;exit ${use_status}; fi
       /bin/rm -f ./lib_exe_tmp
 
-      # Bulding the runtime library (dll) :
-      if [ "${MSVCDir}" != "" ] ;  then
-        # Visual Studio 2003
-        vc_linker_path="`cygpath \"${MSVCDir}\"/bin`"
-        archive_linker="\"${vc_linker_path}\"/link.exe"
-      else
-        if [ "${VCINSTALLDIR}" != "" ] ;  then
-          # Visual Studio >= 9.0
-          vc_linker_path="`cygpath \"${VCINSTALLDIR}\"/bin`"
-          archive_linker="\"${vc_linker_path}\"/link.exe"
-        else
-          echo "bush/archive : Env variables MSVCDir and VCINSTALLDIR not defined."
-          echo "bush/archive : You have to setup Visual."
-          exit
-         fi  
-      fi  
+      # Building the dynamically loadable library (dll) :
+      eval ${cpp_linker} ${cpp_linker_flags} -dll -o ${file_sh} ${file_exp} ${file_a} ${libs}
 
-      if [ ${build_debug} = "yes" ] ; then
-        archive_linker="${archive_linker} /nologo /DEBUG:FULL" 
-      fi
-
-      eval ${archive_linker} /nologo /dll /out:${file_sh} ${file_exp} ${file_a} ${libs}
-
-      /bin/rm -f ${file_o} ${file_symbs} ${file_def} ${file_exp} windef.exe
-      /bin/rm -f windef.obj windef.exe.manifest
+      if [ ${build_keep_symbs} = no ] ; then
+        /bin/rm -f ${file_symbs} ${file_def} ${file_exp}
+      fi	
+      /bin/rm -f ${file_o}
+      /bin/rm -f windef.exe windef.obj windef.exe.manifest
 
     elif [ ${build_sdk_android} = "yes" ] ; then
       if [ ${build_verbose} = yes ] ; then
         echo "bush/archive : android : ${libname} : we do not build shared lib."
+      fi
+
+    elif [ ${build_gnu} = "yes" -a "`uname | grep CYGWIN`" != "" ] ; then
+      if [ ${build_verbose} = yes ] ; then
+        echo "bush/archive : cygwin/gnu : ${libname} : we do not build shared lib."
       fi
 
     else # Mac, Linux :

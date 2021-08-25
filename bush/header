@@ -8,6 +8,7 @@ build_intel=no
 build_clang=no
 build_cling_clang=no
 build_visual=no
+build_emcc=no
 build_sdk_mac=no
 build_sdk_mac_gnu=no
 build_sdk_ios=no
@@ -17,10 +18,18 @@ build_sdk_android=no
 
 build_m32=no
 
-build_cxx11=no
+#build_cxx11=no
+#build_cxx14=no
+#build_cxx17=no
+#build_gnu11=no
+
+build_ansi=no
+build_pedantic=no
+
 build_debug=no
 build_set_x=no
 build_verbose=no
+build_verbose_name=no
 build_mem=no	
 build_mem_atexit=no	
 build_rmo=no
@@ -33,6 +42,7 @@ build_archive=yes
 build_app=yes
 build_plugin=yes
 build_distrib=yes
+build_darwin_app=no
 
 build_compile_main_only=no
 build_compile_only=no
@@ -45,9 +55,16 @@ build_no_distrib=no
 
 build_shlib=yes
 build_use_shlib=no
+build_keep_symbs=no
+build_skip_done=no
+
 build_inlib_gl=no
+build_enforce_glx=no
+build_enforce_agl=no
+build_enforce_wgl=no
 
 build_use_not_our=
+build_use_version=
 build_D=
 build_use_our_stl=no
 build_g4flags=no
@@ -55,7 +72,7 @@ build_g4flags=no
 build_bin_dir=
 build_app_distrib_dir=	
 build_ourex_bin_dir=
-build_bin_dir_suffix=
+build_check_all=no
 
 build_args_file=
 
@@ -77,6 +94,7 @@ for arg in ${build_args} ; do
     -clang)       build_clang=yes;;
     -cling_clang) build_cling_clang=yes;;
     -visual)      build_visual=yes;;
+    -emcc)        build_emcc=yes;;
     -sdk_mac)     build_sdk_mac=yes;;
     -sdk_mac_gnu) build_sdk_mac_gnu=yes;;
     -sdk_ios)     build_sdk_ios=yes;;
@@ -84,17 +102,24 @@ for arg in ${build_args} ; do
     -sdk_iossim)  build_sdk_iossim=yes;;
     -sdk_android) build_sdk_android=yes;;
 
-    -c++11)        build_cxx11=yes;;
+   #-c++11)        build_cxx11=yes;;
+   #-c++14)        build_cxx14=yes;;
+   #-c++17)        build_cxx17=yes;;
+   #-g++11)        build_gnu11=yes;;
+   
+    -ansi)         build_ansi=yes;;
+    -pedantic)     build_pedantic=yes;;
+
     -g)            build_debug=yes;;
     -debug)        build_debug=yes;;
     -x)            build_set_x=yes;;
     -v)            build_verbose=yes;;
+    -verbose_name) build_verbose_name=yes;;
 
     -a_only)       build_shlib=no;;
     -m32)          build_m32=yes;;
     -bin_*)        build_bin_dir=${arg};;
     -ourex_bin_*)  build_ourex_bin_dir=${arg};;   # See bush/use/ourex_use. Used in wall/mgr/build.
-    -bdir_suffix*) build_bin_dir_suffix=${arg};;
     -app_distrib_dir_*)  build_app_distrib_dir=${arg};;
 
     -clean)        build_clean=yes;;
@@ -111,9 +136,11 @@ for arg in ${build_args} ; do
     -no_distrib)        build_no_distrib=yes;;
     -link_only)         build_link_only=yes;;
     -compile_main_only) build_compile_main_only=yes;;
+    -check_all)         build_check_all=yes;;
 
-    -sys_*)        build_use_not_our="${build_use_not_our} ${arg}";;
-    -D_*)          build_D="${build_D} ${arg}";;
+    -sys_*)             build_use_not_our="${build_use_not_our} ${arg}";;
+    -D_*)               build_D="${build_D} ${arg}";;
+    -version_*)         build_use_version="${build_use_version} ${arg}";;
 
     -mem)          build_mem=yes;;
     -mem_atexit)   build_mem_atexit=yes;;
@@ -121,7 +148,14 @@ for arg in ${build_args} ; do
     -g4flags)      build_g4flags=yes;;
     -use_shlib)    build_use_shlib=yes;;
     -inlib_stl)    build_use_our_stl=yes;;
+
     -inlib_gl)     build_inlib_gl=yes;;
+    -glx)          build_enforce_glx=yes;;
+    -agl)          build_enforce_agl=yes;;
+    -wgl)          build_enforce_wgl=yes;;
+
+    -keep_symbs)   build_keep_symbs=yes;;
+    -skip_done)    build_skip_done=yes;;
 
     -*) echo "bush/header : unknown option : $arg for ${package}." ; exit ;;
 
@@ -137,7 +171,7 @@ for arg in ${build_args} ; do
 done
 
 if [ ${build_verbose} = yes ] ; then
-  echo "bush/header : args : \"${build_all_args}\"."   
+  echo "bush/header : args : \"${build_all_args}\"."
 fi
 
 if [ ${build_set_x} = "yes" ] ; then set -x; fi
@@ -156,7 +190,7 @@ if [ ${build_set_x} = "yes" ] ; then set -x; fi
 #////////////////////////////////////
 #////////////////////////////////////
 
-/bin/rm -f c_tmp cc_tmp cxx_tmp cpp_tmp C_tmp m_tmp mm_tmp
+/bin/rm -f c_tmp cc_tmp cxx_tmp cpp_tmp C_tmp m_tmp mm_tmp f_tmp
 
 cfiles=
 ccfiles=
@@ -166,9 +200,14 @@ C_files=
 mfiles=
 mmfiles=
 
+resfiles=
+resdirs=
+
 objs=
 libs=
 dylibs=
+
+wasm_funcs=
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
@@ -185,26 +224,34 @@ else
   if [ ${build_m32} = yes ] ; then build_dir="${build_dir}_m32"; fi
 fi
 
-if [ "${build_bin_dir_suffix}" != "" ] ; then
-  # exa -bdir_suffix=_11
-  build_bin_dir_suffix=`echo ${build_bin_dir_suffix} | sed 's:.*\=::'`
-  build_dir="${build_dir}${build_bin_dir_suffix}"
-fi
-
 if [ "${build_app_distrib_dir}" != "" ] ; then
   build_app_distrib_dir="`echo ${build_app_distrib_dir} | sed -e 's:\-app_distrib_dir_::g'`"
 fi
 
 if [ ${build_debug} = "yes" ] ; then
 if [ ${build_visual} = "yes" ] ; then
-  if [ "`echo ${build_dir} | sed -e 's:_debug::g'`" == "${build_dir}" ] ; then
+  if [ "`echo ${build_dir} | sed -e 's:_debug::g'`" = "${build_dir}" ] ; then
     echo "bush/header : enforcing _debug suffix in build_dir."
     build_dir="${build_dir}_debug"
   fi
 fi
 fi
 
-build_path="./${build_dir}"
+build_root_path="`printenv BUSH_BUILD_ROOT_PATH`"
+if [ "${build_root_path}" != "" ] ; then
+  #echo 'bush/header : experimental : use BUSH_BUILD_ROOT_PATH.'
+  if [ ${build_verbose} = yes ] ; then
+    echo "bush/header : BUSH_BUILD_ROOT_PATH value is \"${build_root_path}\""
+  fi
+  if [ ! -d "${build_root_path}" ] ; then
+    echo 'bush/header : directory of env BUSH_BUILD_ROOT_PATH not found.'
+    echo "bush/header : BUSH_BUILD_ROOT_PATH value is \"${build_root_path}\""
+    exit
+  fi
+  build_path="${build_root_path}/${build_dir}"
+else
+  build_path="./${build_dir}"
+fi
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
@@ -295,6 +342,14 @@ if [ ${build_no_distrib} = "yes" ] ; then build_distrib=no; fi
 for build_item in ${build_use_not_our} ; do
   build_item="`echo ${build_item} | sed -e 's:\-sys_::g'`"
   var="build_use_not_our_${build_item}"
+  eval ${var}=yes
+done
+#//////////////////////////////////////////////////////
+#/// -version_<pack> : ///////////////////////////////////
+#//////////////////////////////////////////////////////
+for build_item in ${build_use_version} ; do
+  build_item="`echo ${build_item} | sed -e 's:\-version_::g'`"
+  var="build_use_version_${build_item}"
   eval ${var}=yes
 done
 

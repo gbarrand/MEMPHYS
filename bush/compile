@@ -4,11 +4,23 @@
 # to be sourced from another build script.
 
 if [ "${build_args_file}" != "" ] ; then
-  mmfiles=
   cfiles=
   ccfiles=
-  f77files=
-  cppfiles="${build_args_file}"
+  cxxfiles=
+  cppfiles=
+  C_files=
+  mfiles=
+  mmfiles=
+
+  suffix=`echo ${build_args_file} | sed 's:.*\.::'`
+  if [ "${suffix}" = "${build_args_file}" ] ; then suffix=none;fi
+  if [ "${suffix}" = none ] ; then suffix=cpp;fi
+
+  if [ "${suffix}" = "hm" ] ; then
+    mmfiles="${build_args_file}"
+  else
+    cppfiles="${build_args_file}"
+  fi
 fi
 
 for build_item in ${build_D} ; do

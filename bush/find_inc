@@ -26,7 +26,7 @@ if [ "${find_inc_home}" = "" ] ; then
 fi
 
 if [ "${build_verbose}" = "yes" ] ; then
-  echo "bush/find_inc : ${inc_to_find}.${shex} found under ${find_inc_home}."
+  echo "bush/find_inc : ${inc_to_find} found under ${find_inc_home}."
 fi
 
 cppflags="${cppflags} -I${find_inc_home}"

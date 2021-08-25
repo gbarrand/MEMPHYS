@@ -7,12 +7,12 @@ else if ( "`uname`" == "Linux" ) then
     set cling_home=/exp/si/barrand/usr/local/cling/0.6_dev/x86_64-centos7-gcc48-opt/inst
   else
     set cling_home=/usr/local/cling/0.6_dev/inst
-  endif      
+  endif
 endif
 
-if ( ! -d "${cling_home}" ) then 
+if ( ! -d "${cling_home}" ) then
   echo "bush/setup/cling.csh : cling not found."
-else  
+else
   set ld_path="${cling_home}/lib"
   source ../ld_library_path.csh
   set exe_path="${cling_home}/bin"

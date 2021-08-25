@@ -51,7 +51,7 @@ for dir in ${tos} ; do
       echo "bush/branch_release : ${dir} : push branch ${branch}"
       git push lx2 ${branch}
     elif [ ${tag_release} = yes ] ; then
-     echo "bush/branch_release : ${dir} : create branch ${branch}"
+      echo "bush/branch_release : ${dir} : create branch ${branch}"
       git branch ${branch}
 #else
      #    git branch -D ${branch}

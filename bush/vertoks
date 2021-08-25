@@ -8,14 +8,27 @@ fi
 
 version_items=''
 version_major=''
+version_minor=''
+version_release=''
 
 bush_old_IFS="${IFS}"
 IFS=.
 for item in ${version} ; do
   version_items="${version_items} ${item}"
-  if [ "${version_major}" = "" ] ; then version_major="${item}"; fi
+  if [ "${version_major}" = "" ] ; then
+    version_major="${item}"
+  elif [ "${version_minor}" = "" ] ; then
+    version_minor="${item}"
+  elif [ "${version_release}" = "" ] ; then
+    version_release="${item}"
+  fi
 done
 
 IFS="${bush_old_IFS}"
 unset bush_old_IFS
 unset item
+
+#echo ${version_items}
+#echo ${version_major}
+#echo ${version_minor}
+#echo ${version_release}

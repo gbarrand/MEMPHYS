@@ -7,8 +7,12 @@ for arg in ${build_args} ; do
     -intel)        ourex_args="${ourex_args} ${arg}";;
     -clang)        ourex_args="${ourex_args} ${arg}";;
     -cling_clang)  ourex_args="${ourex_args} ${arg}";;
-    -c++11)        ourex_args="${ourex_args} ${arg}";;
+   #-c++11)        ourex_args="${ourex_args} ${arg}";;
+   #-c++14)        ourex_args="${ourex_args} ${arg}";;
+   #-c++17)        ourex_args="${ourex_args} ${arg}";;
+   #-g++11)        ourex_args="${ourex_args} ${arg}";;
     -visual)       ourex_args="${ourex_args} ${arg}";;
+    -emcc)         ourex_args="${ourex_args} ${arg}";;
     -sdk_mac)      ourex_args="${ourex_args} ${arg}";;
     -sdk_mac_gnu)  ourex_args="${ourex_args} ${arg}";;
     -sdk_ios)      ourex_args="${ourex_args} ${arg}";;
@@ -22,12 +26,18 @@ for arg in ${build_args} ; do
     -a_only)       ourex_args="${ourex_args} ${arg}";;
     -m32)          ourex_args="${ourex_args} ${arg}";;
     -use_shlib)    ourex_args="${ourex_args} ${arg}";;
+    -skip_done)    ourex_args="${ourex_args} ${arg}";;
     -bin_*)        ourex_args="${ourex_args} ${arg}";;
-    -bdir_suffix*) ourex_args="${ourex_args} ${arg}";;
     -sys_*)        ourex_args="${ourex_args} ${arg}";;
     -D_*)          ourex_args="${ourex_args} ${arg}";;
+    -version_*)    ourex_args="${ourex_args} ${arg}";;
 
     -inlib_gl)     ourex_args="${ourex_args} ${arg}";; #must be passed to ourex/[CoinGL,HEPVis]/build.
+    -glx)          ourex_args="${ourex_args} ${arg}";; #must be passed to ourex/[CoinGL,HEPVis]/build.
+    -agl)          ourex_args="${ourex_args} ${arg}";; #must be passed to ourex/[CoinGL,HEPVis]/build.
+    -wgl)          ourex_args="${ourex_args} ${arg}";; #must be passed to ourex/[CoinGL,HEPVis]/build.
+
+    -keep_symbs)   ourex_args="${ourex_args} ${arg}";;
 
     -parallel)     ourex_args="${ourex_args} ${arg}";;
 #   -clean)        ourex_args="${ourex_args} ${arg}";; #we don't want -clean in ourex_args.

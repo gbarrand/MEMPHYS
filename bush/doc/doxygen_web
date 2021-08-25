@@ -11,16 +11,15 @@ version="`${bush_home}/app_vers`"
 #echo ${app}
 #exit
 
-doc_version=${version}_1
-
 build_verbose=no
 build_set_x=no
 build_clear=no
+build_to_git_pages=yes
 
 build_args=""
 while test $# -ge 1 ; do
   case $1 in
-    -h) 
+    -h)
         echo "Options :"
         echo "  -web : build user web pages."
         echo "  -clear : rm *.html, *.png, etc..."
@@ -29,6 +28,8 @@ while test $# -ge 1 ; do
         exit ;;
     -x) build_set_x=yes;build_args="${build_args} $1" ;;
     -clear) build_clear=yes ;;
+    -to_github) build_to_git_pages=yes;;
+    -not_to_github) build_to_git_pages=no;;
     -*) echo "bush/doc/doxygen_web : unknwon option : $1" ; exit ;;
   esac
   shift
@@ -45,7 +46,18 @@ cd ${bush_home}
 bush_home=`pwd`
 cd "${save_dir}"
 
-web_dir="${bush_home}/../docs/${app}_doc/${doc_version}"
+if [ ${build_to_git_pages} = yes ] ; then
+  if [ ${app} = softinex ] ; then
+   #doc_version=${version}_1
+   #web_dir="${bush_home}/../../github/gbarrand.github.io/${doc_version}"
+    web_dir="${bush_home}/../../github/gbarrand.github.io"
+  else
+    web_dir="${bush_home}/../../github/${app}"
+  fi
+else
+  doc_version=${version}_1
+  web_dir="${bush_home}/../docs/${app}_doc/${doc_version}"
+fi
 /bin/mkdir -p ${web_dir}
 
 # To find Times.ttf :
@@ -57,7 +69,7 @@ find "${web_dir}"  -name '*.dot' -type f -exec /bin/rm -f {} \;
 find "${web_dir}"  -name '*.gif' -type f -exec /bin/rm -f {} \;
 find "${web_dir}"  -name '*.css' -type f -exec /bin/rm -f {} \;
 
-if [ "${build_clear}" = "yes" ] ; then exit; fi  
+if [ "${build_clear}" = "yes" ] ; then exit; fi
 
 cd ./doxygen
 
@@ -71,8 +83,8 @@ else
 fi
 
 sed -e "s|@PROJECT_NAME@|${app}|g"             ./Doxyfile > ./tmp_0;/bin/mv ./tmp_0 ./Doxyfile
-sed -e "s|@PROJECT_NUMBER@|${doc_version}|g"   ./Doxyfile > ./tmp_0;/bin/mv ./tmp_0 ./Doxyfile
-sed -e "s|@OUTPUT_DIRECTORY@|${web_dir}|g" ./Doxyfile > ./tmp_0;/bin/mv ./tmp_0 ./Doxyfile
+sed -e "s|@PROJECT_NUMBER@|${version}|g"       ./Doxyfile > ./tmp_0;/bin/mv ./tmp_0 ./Doxyfile
+sed -e "s|@OUTPUT_DIRECTORY@|${web_dir}|g"     ./Doxyfile > ./tmp_0;/bin/mv ./tmp_0 ./Doxyfile
 
 /bin/cp ${bush_home}/doc/header.html .
 /bin/cp ${bush_home}/doc/footer.html .
@@ -92,13 +104,13 @@ cd "${save_dir}"
 /bin/cp ${bush_home}/doc/table.css "${web_dir}"/html/.
 if [ -f ./doxygen/index_lx.html ] ; then
   /bin/cp ./doxygen/index_lx.html "${web_dir}"/.
-fi    
+fi
 
 if [ -f ./doxygen/icon.png ] ; then
   /bin/cp ./doxygen/icon.png "${web_dir}"/.
 else
   echo 'file ./doxygen/icon.png not found.'
-fi    
+fi
 
 # we take the doxygen.css of the 16.8. Recent
 # doxygen.css makes that the table font is more
@@ -107,3 +119,21 @@ fi
 
 cd "${save_dir}"
 
+#///////////////////////////////////////////////////////////////
+#/// wasm : ////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////
+if [ ${app} != softinex ] ; then
+  wasm_from="${save_dir}/../mgr/bin_wasm/"
+  if [ -d ${wasm_from} ] ; then
+    wasm_to="${web_dir}/wasm"
+    /bin/rm -R -f ${wasm_to}
+
+    cd ${web_dir}
+    unzip -q ${wasm_from}/distrib/${app}-${version}-wasm.zip
+    /bin/mv ${app}/${version} wasm
+
+    cd "${save_dir}"
+  else
+    echo "directory ${wasm_from} not found."    
+  fi
+fi

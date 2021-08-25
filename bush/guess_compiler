@@ -2,37 +2,49 @@
 # See the file bush.license for terms.
 
 if [ ${build_gnu} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : gnu";fi
 elif [ ${build_intel} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : intel";fi
 elif [ ${build_clang} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : clang";fi
 elif [ ${build_cling_clang} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : cling_clang";fi
 elif [ ${build_visual} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : visual";fi
+elif [ ${build_emcc} = "yes" ] ; then
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : emcc";fi
 
 elif [ ${build_sdk_mac} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_mac compiler";fi
 elif [ ${build_sdk_mac_gnu} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_mac_gnu compiler";fi
 elif [ ${build_sdk_ios} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_ios compiler";fi
 elif [ ${build_sdk_ios_gnu} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_ios_gnu compiler";fi
 elif [ ${build_sdk_iossim} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_iossim compiler";fi
 
 elif [ ${build_sdk_android} = "yes" ] ; then
-  echo dummy > /dev/null
+  if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : sdk_android compiler";fi
 
 else
   if [ "`uname | grep CYGWIN`" != "" ] ; then
     build_visual=yes
+    if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : visual (guessed)";fi
+
   elif [ `uname` = "Darwin" ] ; then
     ${bush_home}/check_app clang++
-    build_status=$?;if [ ${build_status} = 0 ] ; then build_clang=yes; else build_gnu=yes; fi
+    build_status=$?;if [ ${build_status} = 0 ] ; then
+      build_clang=yes
+      if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : clang (guessed)";fi
+    else
+      build_gnu=yes
+      if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : gnu (guessed)";fi
+    fi
+
   elif [ `uname` = "Linux" ] ; then
     build_gnu=yes
+    if [ ${build_verbose} = yes ] ; then echo "bush/guess_compiler : gnu (guessed)";fi
   fi
 fi

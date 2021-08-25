@@ -21,7 +21,7 @@ if [ "${use_our_fruitstrap}" = "yes" ] ; then
     echo 'bush/use/fruitstrap : variable ourex_home not defined.';exit
   fi
   fruitstrap_home=${ourex_home}/fruitstrap
-  
+
   fruitstrap_build_dir="${fruitstrap_home}/${build_dir}"
 
   if [ ! -d ${fruitstrap_build_dir} ] ; then

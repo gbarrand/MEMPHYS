@@ -20,16 +20,16 @@ fi
 
 old_IFS="${IFS}"
 IFS=:
-for check_app_path in $PATH ; do
-  #echo Look ${check_app_path}
-  if [ -f "${check_app_path}/$1" ] ; then
-    #echo Found in ${check_app_path}
-    IFS="${old_IFS}"    
+for item in $PATH ; do
+  #echo Look ${item}
+  if [ -f "${item}/$1" ] ; then
+    #echo Found in ${item}
+    IFS="${old_IFS}"
     unset old_IFS
     exit 0
   fi
 done
-if [ "$2" != "" ] ; then echo $2; fi
+if [ "$2" != "" ] ; then echo "$2"; fi
 IFS="${old_IFS}"
 unset old_IFS
 exit 1

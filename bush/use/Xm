@@ -9,12 +9,12 @@ if [ "${use_Xm}" = "yes" ] ; then
 
   # WARNING : it must be consitent with X11. Else you may have at app startup :
   #             Error : Unresolved inheritance operation
-  
+
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   if [ `uname` = Darwin ] ; then
-    inc_dirs="/opt/local/include /usr/include /usr/X11/include"
+    inc_dirs="/opt/local/include"
   else
     inc_dirs="/usr/X11R6/include /usr/include"
   fi
@@ -27,21 +27,13 @@ if [ "${use_Xm}" = "yes" ] ; then
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   if [ `uname` = Darwin ] ; then
-    lib_dirs="/opt/local/${lib} /usr/${lib} /usr/X11/${lib}"
+    libs="${libs} /opt/local/lib/libXm.dylib"
   else
     lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+    # WARNING : Xmu must be after Xm.
+    lib_to_find=Xm
+    . ${bush_home}/find_lib
   fi
-  # WARNING : Xmu must be after Xm.
-  lib_to_find=Xm
-  . ${bush_home}/find_lib
-  lib_to_find=Xmu
-  . ${bush_home}/find_lib
-  lib_to_find=Xt
-  . ${bush_home}/find_lib
-  lib_to_find=Xi
-  . ${bush_home}/find_lib
-  lib_to_find=Xext
-  . ${bush_home}/find_lib
 
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////

@@ -8,14 +8,14 @@ if [ "${py_path}" = "" ] ; then
   echo 'bush/pythonpath : variable py_path not defined.'
 
 else
-  
+
   if [ "${PYTHONPATH}" = "" ] ; then
     PYTHONPATH="${py_path}"
     export PYTHONPATH
-  else 
+  else
     PYTHONPATH="${PYTHONPATH}:${py_path}"
     export PYTHONPATH
   fi
-  
+
 fi
 

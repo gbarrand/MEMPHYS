@@ -14,15 +14,24 @@ fi
 fi
 
 if [ "${use_sys_zip}" = "yes" ] ; then
-  if [ ! -e /usr/include/zip.h ] ; then
-    echo "bush/use/zip : /usr/include/zip.h not found. Use our zip."
-    use_our_zip=yes
-  else
-    use_our_zip=yes
+  if [ -e /usr/include/zip.h ] ; then
     # what is the standard name of the lib ?
-    #cppflags="${cppflags} -I/usr/include"
-    #libs="${libs} -lz"
+    cppflags="${cppflags} -I/usr/include"
+    libs="${libs} -lz"
+  elif [ -e /opt/local/include/minizip/zip.h ] ; then
+    ccflags="${ccflags} -I/opt/local/include/minizip"
+    cppflags="${cppflags} -I/opt/local/include/minizip"
+    if [ "${use_archive}" = "yes" ] ; then
+      libs="${libs} /opt/local/lib/libminizip.a"
+    else	
+      libs="${libs} /opt/local/lib/libminizip.dylib"
+    fi	
+  else
+    echo "bush/use/zip : zip.h not found."
+    exit
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_ZIP"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_ZIP"
 fi
 
 if [ "${use_our_zip}" = "yes" ] ; then

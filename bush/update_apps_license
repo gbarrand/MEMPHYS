@@ -12,10 +12,10 @@ fi
 
 license_path=$1
 
-app_name=`basename ${license_path} | sed -e 's:.license::g'`
+app=`basename ${license_path} | sed -e 's:.license::g'`
 
 #echo ${license_path}
-#echo ${app_name}
+#echo ${app}
 #exit
 
-sed -e "s:xxxx:${app_name}:g" ${bush_home}/xxxx.license > tmp_0;/bin/mv tmp_0 ${license_path}
+sed -e "s:xxxx:${app}:g" ${bush_home}/xxxx.license > tmp_0;/bin/mv tmp_0 ${license_path}

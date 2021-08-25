@@ -3,13 +3,17 @@
 
 if [ "${auto_use_pack}" = "" ] ; then
   echo 'bush/auto_use : variable auto_use_pack not defined.'
-  exit  
+  exit
+fi
+
+if [ "${auto_use_file}" = "" ] ; then
+  echo 'bush/auto_use : variable auto_use_file not defined.'
+  exit
 fi
 
 #//////////////////////////////////////////////////////////////////////////
 #/// look for an //${auto_use_pack}_build_use in ${auto_use_file} file ////
 #//////////////////////////////////////////////////////////////////////////
-
 app_uses="`grep ${auto_use_pack}_build_use ${auto_use_file}`"
 if [ "${app_uses}" != "" ] ; then
   app_uses=`echo ${app_uses} | sed -e "s:${auto_use_pack}_build_use::g"`
@@ -19,6 +23,24 @@ if [ "${app_uses}" != "" ] ; then
       echo dummy > /dev/null
     else
       use_var="use_${item}"
+      eval ${use_var}=yes
+    fi
+  done
+fi
+
+#//////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////
+#<pack>_build_take_not_our and NOT <pack>_build_use_not_our to avoid clashes with the upper logic.
+app_uses="`grep ${auto_use_pack}_build_take_not_our ${auto_use_file}`"
+if [ "${app_uses}" != "" ] ; then
+  app_uses=`echo ${app_uses} | sed -e "s:${auto_use_pack}_build_take_not_our::g"`
+  for item in ${app_uses} ; do
+    #echo "set build_take_not_our_${item}"
+    if [ ${item} = "//" -o ${item} = '/*' -o ${item} = '*/' -o ${item} = '#' ] ; then
+      echo dummy > /dev/null
+    else
+      use_var="build_use_not_our_${item}"
       eval ${use_var}=yes
     fi
   done
@@ -40,6 +62,49 @@ if [ "${app_uses}" != "" ] ; then
   fi
 fi
 
+app_uses="`grep ${auto_use_pack}_Windows_build_use ${auto_use_file}`"  # used in exlib/examples/cpp/cube_SoQt.cpp
+if [ "${app_uses}" != "" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    app_uses=`echo ${app_uses} | sed -e "s:${auto_use_pack}_Windows_build_use::g"`
+    for item in ${app_uses} ; do
+      #echo "set use_${item}"
+      if [ ${item} = "//" -o ${item} = '/*' -o ${item} = '*/' -o ${item} = '#' ] ; then
+        echo dummy > /dev/null
+      else
+        use_var="use_${item}"
+        eval ${use_var}=yes
+      fi
+    done
+  fi
+fi
+
+app_uses="`grep ${auto_use_pack}_Darwin_build_use ${auto_use_file}`"
+if [ "${app_uses}" != "" ] ; then
+  if [ `uname` = "Darwin" ] ; then
+    app_uses=`echo ${app_uses} | sed -e "s:${auto_use_pack}_Darwin_build_use::g"`
+    for item in ${app_uses} ; do
+      #echo "set use_${item}"
+      if [ ${item} = "//" -o ${item} = '/*' -o ${item} = '*/' -o ${item} = '#' ] ; then
+        echo dummy > /dev/null
+      else
+        use_var="use_${item}"
+        eval ${use_var}=yes
+      fi
+    done
+  fi
+fi
+
+app_cfiles="`grep ${auto_use_pack}_build_cfile ${auto_use_file}`"
+if [ "${app_cfiles}" != "" ] ; then
+  app_cfiles=`echo ${app_cfiles} | sed -e "s:${auto_use_pack}_build_cfile::g"`
+  for item in ${app_cfiles} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : cfile ${item}"
+      cfiles="${cfiles} ${item}"
+    fi
+  done
+fi
+
 app_cppfiles="`grep ${auto_use_pack}_build_cppfile ${auto_use_file}`"
 if [ "${app_cppfiles}" != "" ] ; then
   app_cppfiles=`echo ${app_cppfiles} | sed -e "s:${auto_use_pack}_build_cppfile::g"`
@@ -51,10 +116,85 @@ if [ "${app_cppfiles}" != "" ] ; then
   done
 fi
 
+app_mfiles="`grep ${auto_use_pack}_build_mfile ${auto_use_file}`"
+if [ "${app_mfiles}" != "" ] ; then
+  app_mfiles=`echo ${app_mfiles} | sed -e "s:${auto_use_pack}_build_mfile::g"`
+  for item in ${app_mfiles} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : mfile ${item}"
+      mfiles="${mfiles} ${item}"
+    fi
+  done
+fi
+
+app_mmfiles="`grep ${auto_use_pack}_build_mmfile ${auto_use_file}`"
+if [ "${app_mmfiles}" != "" ] ; then
+  app_mmfiles=`echo ${app_mmfiles} | sed -e "s:${auto_use_pack}_build_mmfile::g"`
+  for item in ${app_mmfiles} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : mmfile ${item}"
+      mmfiles="${mmfiles} ${item}"
+    fi
+  done
+fi
+
+app_scrfiles="`grep ${auto_use_pack}_build_scrfile ${auto_use_file}`"
+if [ "${app_scrfiles}" != "" ] ; then
+  app_scrfiles=`echo ${app_scrfiles} | sed -e "s:${auto_use_pack}_build_scrfile::g"`
+  for item in ${app_scrfiles} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : scrfile ${item}"
+      if [ `uname` = "Darwin" ] ; then
+        mmfiles="${mmfiles} ${item}"
+      else
+        cppfiles="${cppfiles} ${item}"
+      fi
+    fi
+  done
+fi
+
+app_resfiles="`grep ${auto_use_pack}_build_resfile ${auto_use_file}`"
+if [ "${app_resfiles}" != "" ] ; then
+  app_resfiles=`echo ${app_resfiles} | sed -e "s:${auto_use_pack}_build_resfile::g"`
+  for item in ${app_resfiles} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : resfile ${item}"
+      resfiles="${resfiles} ${item}"
+    fi
+  done
+fi
+
+app_resdirs="`grep ${auto_use_pack}_build_resdir ${auto_use_file}`"
+if [ "${app_resdirs}" != "" ] ; then
+  app_resdirs=`echo ${app_resdirs} | sed -e "s:${auto_use_pack}_build_resdir::g"`
+  for item in ${app_resdirs} ; do
+    if [ ${item} != "//" ] ; then
+      #echo "app : resdir ${item}"
+      resdirs="${resdirs} ${item}"
+    fi
+  done
+fi
+
 # default is use_archive=yes
 app_use_shlib="`grep ${auto_use_pack}_use_shlib ${auto_use_file}`"
 if [ "${app_use_shlib}" != "" ] ; then
   use_archive=no
+fi
+
+# default is build_darwin_app=no
+app_darwin_app="`grep ${auto_use_pack}_build_darwin_app ${auto_use_file}`"
+if [ "${app_darwin_app}" != "" ] ; then
+  build_darwin_app=yes
+fi
+
+app_ccflags="`grep ${auto_use_pack}_build_ccflags ${auto_use_file}`"
+if [ "${app_ccflags}" != "" ] ; then
+  app_ccflags=`echo ${app_ccflags} | sed -e "s:${auto_use_pack}_build_ccflags::g"`
+  for item in ${app_ccflags} ; do
+    if [ ${item} != "//" ] ; then
+      ccflags="${ccflags} ${item}"
+    fi
+  done
 fi
 
 app_cppflags="`grep ${auto_use_pack}_build_cppflags ${auto_use_file}`"
@@ -71,7 +211,7 @@ fi
 #if [ "${app_visual_cppflags}" != "" ] ; then
 #  app_visual_cppflags=`echo ${app_visual_cppflags} | sed -e "s:${auto_use_pack}_build_visual_cppflags::g"`
 #  for item in ${app_visual_cppflags} ; do
-#    if [ ${item} != "//" ] ; then
+#   if [ ${item} != "//" ] ; then
 #      if [ ${build_visual} = "yes" ] ; then
 #        cppflags="${cppflags} ${item}"
 #      fi
@@ -101,6 +241,13 @@ if [ "${use_skip}" = "yes" ] ; then
 fi
 
 
+app_bigobj="`grep ${auto_use_pack}_build_bigobj ${auto_use_file}`"
+if [ "${app_bigobj}" != "" ] ; then
+  if [ ${build_visual} = yes ] ; then
+    cppflags="${cppflags} -bigobj"
+  fi
+fi
+
 #if [ "${use_not_visual}" = "yes" ] ; then
 #  if [ ${build_visual} = yes ] ; then
 #    if [ ${build_verbose} = yes ] ; then
@@ -129,12 +276,12 @@ if [ ${build_visual} = "yes" ] ; then
     fi
     exit
   fi
-  if [ "${use_Qt}" = "yes" ] ; then
-    if [ ${build_verbose} = yes ] ; then
-      echo "bush/auto_use : use_Qt and build_visual are not compatible. Skip ${auto_use_file}."
-    fi
-    exit
-  fi
+  #if [ "${use_Qt}" = "yes" ] ; then
+  #  if [ ${build_verbose} = yes ] ; then
+  #   echo "bush/auto_use : use_Qt and build_visual are not compatible. Skip ${auto_use_file}."
+  #  fi
+  #  exit
+  #fi
 else
   if [ "${use_Windows}" = "yes" ] ; then
     if [ ${build_verbose} = yes ] ; then

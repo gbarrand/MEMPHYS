@@ -8,19 +8,13 @@ if [ "${use_curl}" = "yes" ] ; then
   fi
 
   if [ `uname` = Darwin ] ; then
-    curl_home=/opt/local
+    ccflags="${ccflags} -I/opt/local/include"
+    cppflags="${cppflags} -I/opt/local/includew"
+    libs="${libs} /opt/local/lib/libcurl.dylib"
   else
-    curl_home=/usr
+    ccflags="${ccflags} -I/usr/include"
+    cppflags="${cppflags} -I/usr/include"
+    libs="${libs} -L/usr/${lib} -lcurl"
   fi
-
-  if [ ! -f ${curl_home}/include/curl/curl.h ] ; then
-    echo "bush/use/curl : ${curl_home}/include/curl/curl.h not found."
-    exit
-  fi
-
-  ccflags="${ccflags} -I${curl_home}/include"
-  cppflags="${cppflags} -I${curl_home}/include"
-
-  libs="${libs} -L${curl_home}/${lib} -lcurl"
 
 fi

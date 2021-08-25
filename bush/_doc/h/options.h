@@ -25,7 +25,7 @@
      -offscreen -bin_offscreen : to build offscreen version of the app, with binary directory being mgr/bin_offscreen.
      -android : result is put in bin_sdk_android.
      -x11 -bin_x11 : to build the X11 version of the app (for example on a Mac, which is not the default), with
-                     binary directory being mgr/bin_x11.     
+                     binary directory being mgr/bin_x11.
 @endverbatim
 
 */

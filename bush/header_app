@@ -8,9 +8,17 @@ app="`dirname ${app}`"
 app="`basename ${app}`"
 APP="`echo ${app} | tr '[:lower:]' '[:upper:]'`"
 
-app_name=${app}
-app_exe=${app}
+#app_name=${app}
 app_src=
+
+if [ ${build_visual} = "yes" ] ; then
+  app_exe="${app}.exe"
+elif [ ${build_emcc} = "yes" ] ; then
+  app_exe="${app}.html"
+else
+  app_exe=${app}
+fi
+
 
 if [ -f ../${app}/version ] ; then
   maj_vers="`grep ${APP}_MAJOR_VERSION ../${app}/version | awk '{print $3}'`"

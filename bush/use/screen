@@ -5,34 +5,54 @@
 
 if [ ${build_wx} = "yes" ] ; then
   use_wx=yes
+  if [ `uname` = Darwin ] ; then
+    use_AGL=yes
+    use_AGLU=yes
+  fi
+elif [ ${build_sdl2} = "yes" ] ; then
+  use_SDL2=yes
 elif [ ${build_visual} = "yes" ] ; then
   use_Windows=yes
   if [ ${build_no_gl} = "yes" ] ; then
     use_DirectX=yes
   fi
+  use_WGL=yes
+  use_WGLU=yes
 elif [ ${build_cocoa} = "yes" -o ${build_cocoa_gnu} = "yes" ] ; then
   use_Cocoa=yes
+  use_AGL=yes
+  use_AGLU=yes
 elif [ ${build_ios} = "yes" -o ${build_ios_gnu} = "yes" -o ${build_iossim} = "yes" ] ; then
-  use_ios=yes
+  use_iOS=yes
+  use_AGL=yes
+  use_AGLU=yes
 elif [ ${build_x11} = "yes" ] ; then
   use_X11=yes
-  if [ ${build_no_gl} = "no" ] ; then
-    use_GLX=yes
-  fi
+  #if [ ${build_no_gl} = "no" ] ; then
+  #  use_GLX=yes
+  #fi
+  use_GLX=yes
+  use_GLUX=yes
 elif [ ${build_android} = "yes" ] ; then
   use_Android=yes
 fi
 
+. ${bush_home}/use/GLUX
 . ${bush_home}/use/GLX
 . ${bush_home}/use/X11
 
+. ${bush_home}/use/WGLU
+. ${bush_home}/use/WGL
 . ${bush_home}/use/Windows
 . ${bush_home}/use/DirectX
 
+. ${bush_home}/use/AGLU
+. ${bush_home}/use/AGL
 . ${bush_home}/use/Cocoa
-. ${bush_home}/use/ios
+. ${bush_home}/use/iOS
 . ${bush_home}/use/Android
 . ${bush_home}/use/wx
+. ${bush_home}/use/SDL2
 
-. ${bush_home}/use/GL
+. ${bush_home}/use/GLU
 

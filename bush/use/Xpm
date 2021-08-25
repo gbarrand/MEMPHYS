@@ -9,12 +9,12 @@ if [ "${use_Xpm}" = "yes" ] ; then
 
   # WARNING : it must be consitent with X11. Else you may have at app startup :
   #             Error : Unresolved inheritance operation
-  
+
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   if [ `uname` = Darwin ] ; then
-    inc_dirs="/opt/local/include /usr/include /usr/X11/include"
+    inc_dirs="/opt/local/include"
   else
     inc_dirs="/usr/X11R6/include /usr/include"
   fi
@@ -25,11 +25,11 @@ if [ "${use_Xpm}" = "yes" ] ; then
   #//////////////////////////////////////////////
   #//////////////////////////////////////////////
   if [ `uname` = Darwin ] ; then
-    lib_dirs="/opt/local/${lib} /usr/${lib} /usr/X11/${lib}"
+    libs="${libs} /opt/local/lib/libXpm.dylib"
   else
     lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=Xpm
+    . ${bush_home}/find_lib
   fi
-  lib_to_find=Xpm
-  . ${bush_home}/find_lib
 
 fi

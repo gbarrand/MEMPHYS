@@ -12,13 +12,22 @@ fi
 fi
 
 if [ "${use_sys_expat}" = "yes" ] ; then
-  if [ ! -e /usr/include/expat.h ] ; then
-    echo "bush/use/expat : /usr/include/expat.h not found. Use our expat."
-    use_our_expat=yes
-  else
+  if [ -e /usr/include/expat.h ] ; then
     #cppflags="${cppflags} -I/usr/include"
     libs="${libs} -lexpat"
+  elif [ -e /opt/local/include/expat.h ] ; then
+    cppflags="${cppflags} -I/opt/local/include"
+    if [ "${use_archive}" = "yes" ] ; then
+      libs="${libs} /opt/local/lib/libexpat.a"
+    else
+      libs="${libs} /opt/local/lib/libexpat.dylib"
+    fi
+  else
+    echo "bush/use/expat : expat.h not found."
+    exit
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_EXPAT"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_EXPAT"
 fi
 
 if [ "${use_our_expat}" = "yes" ] ; then
@@ -26,7 +35,7 @@ if [ "${use_our_expat}" = "yes" ] ; then
     echo 'bush/use/expat : variable ourex_home not defined.';exit
   fi
   expat_home=${ourex_home}/expat
-  
+
   ourex_pack_name=expat
   . ${bush_home}/use/ourex_use
 fi

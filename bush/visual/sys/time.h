@@ -30,7 +30,7 @@ inline int gettimeofday(timeval* a_t,void*) {
 #endif
 
 #ifndef __PRETTY_FUNCTION__
-#define __PRETTY_FUNCTION__ __FUNCTION__ 
+#define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
 
 #endif

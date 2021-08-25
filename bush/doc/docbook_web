@@ -20,7 +20,7 @@ build_clear=no
 build_args=""
 while test $# -ge 1 ; do
   case $1 in
-    -h) 
+    -h)
         echo "Options :"
         echo "  -clear : rm *.html, *.png, etc..."
         echo "  -x : execute with set -x."
@@ -60,7 +60,7 @@ web_dir="${bush_home}/../docs/${app}_doc/docbook_${doc_version}"
 find "${web_dir}" -name '*.html' -type f -exec /bin/rm -f {} \;
 find "${web_dir}" -name '*.png' -type f -exec /bin/rm -f {} \;
 
-if [ "${build_clear}" = "yes" ] ; then exit; fi  
+if [ "${build_clear}" = "yes" ] ; then exit; fi
 
 cd ./docbook
 

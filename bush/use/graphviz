@@ -23,6 +23,8 @@ if [ "${use_sys_graphviz}" = "yes" ] ; then
   cppflags="${cppflags} `pkg-config --cflags libgvc`"
   libs="${libs} `pkg-config --libs libgvc`"
 
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_GRAPHVIZ"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_GRAPHVIZ"
 fi
 
 if [ "${use_our_graphviz}" = "yes" ] ; then
@@ -31,7 +33,8 @@ if [ "${use_our_graphviz}" = "yes" ] ; then
   fi
   graphviz_home=${ourex_home}/graphviz
 
-  gv_incs="-I${graphviz_home}/lib/cdt"
+  gv_incs=
+  gv_incs="${gv_incs} -I${graphviz_home}/lib/cdt"
   gv_incs="${gv_incs} -I${graphviz_home}/lib/graph"
   gv_incs="${gv_incs} -I${graphviz_home}/lib/xdot"
   gv_incs="${gv_incs} -I${graphviz_home}/lib/common"
@@ -42,6 +45,7 @@ if [ "${use_our_graphviz}" = "yes" ] ; then
   gv_incs="${gv_incs} -I${graphviz_home}/lib/pathplan"
   gv_incs="${gv_incs} -I${graphviz_home}/lib/gvc"
   gv_incs="${gv_incs} -I${graphviz_home}/lib/dotgen"
+
 
   cppflags="${cppflags} ${gv_incs}"
 

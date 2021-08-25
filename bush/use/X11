@@ -7,10 +7,10 @@ if [ "${use_X11}" = "yes" ] ; then
     exit
   fi
 
-  # Must be consitent with Motif (under /opt/local if installed with Macport).
+  # Must be consitent with Motif (under /opt/local if installed with MacPorts).
 
   if [ `uname` = Darwin ] ; then
-    inc_dirs="/opt/local/include /usr/include /usr/X11/include"
+    inc_dirs="/opt/local/include"
   else
     inc_dirs="/usr/X11R6/include /usr/include"
   fi
@@ -18,15 +18,12 @@ if [ "${use_X11}" = "yes" ] ; then
   . ${bush_home}/find_inc
 
   if [ `uname` = Darwin ] ; then
-    lib_dirs="/opt/local/${lib} /usr/${lib} /usr/X11/${lib}"
+    libs="${libs} /opt/local/lib/libX11.dylib"
   else
     lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=X11
+    . ${bush_home}/find_lib
   fi
-  lib_to_find=X11
-  . ${bush_home}/find_lib
-
-# WARNING : Xpm not found on all machines.
-#  libs="${libs} -lXi -lXext -lXpm -lX11"
 
 fi
 

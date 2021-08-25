@@ -1,6 +1,16 @@
 
 on_Windows=no
 if [ "`uname | grep CYGWIN`" != "" ] ; then on_Windows=yes; fi
+if [ "`uname -r | grep Microsoft`" != "" ] ; then on_Windows=yes; fi
+
+#on_cygwin=no
+#if [ "`uname | grep CYGWIN`" != "" ] ; then on_cygwin=yes; fi
+
+#on_lx_lal=no
+#if [ "`uname -n | grep lal.in2p3.fr | grep lx`" != "" ] ; then on_lx_lal=yes; fi
+
+on_wsl=no
+if [ "`uname -r | grep Microsoft`" != "" ] ; then on_wsl=yes; fi
 
 on_my_win_xp=no
 if [ "`uname -n`" = "PC-PANO" ] ; then on_my_win_xp=yes; fi
@@ -11,17 +21,29 @@ if [ "`uname -n`" = "DESKTOP-MM96SJQ" ] ; then on_my_win_vb=yes; fi
 on_my_win_acer=no
 if [ "`uname -n`" = "DESKTOP-3JDU611" ] ; then on_my_win_acer=yes; fi
 
-on_my_mac=no
+on_my_mac_2014=no
+on_my_mac_2018=no
 if [ `uname` = Darwin ] ; then
-  on_my_mac="`networksetup -listallhardwareports | grep '78:31'`"
-  if [ "${on_my_mac}" != "" ] ; then on_my_mac=yes; else on_my_mac=no; fi
+  on_my_mac_2014="`networksetup -listallhardwareports | grep '78:31'`"
+  if [ "${on_my_mac_2014}" != "" ] ; then on_my_mac_2014=yes; else on_my_mac_2014=no; fi
+  on_my_mac_2018="`networksetup -listallhardwareports | grep '86:00'`"
+  if [ "${on_my_mac_2018}" != "" ] ; then on_my_mac_2018=yes; else on_my_mac_2018=no; fi
 fi
 
 on_my_openstack_ubuntu=no
-if [ "`uname -n`" = barrand-ubuntu ] ; then on_my_openstack_ubuntu=yes; fi
+if [ "`uname -n | grep barrand-ubuntu`" != "" ] ; then
+  on_my_openstack_ubuntu=yes
+fi
 
 on_my_openstack_centos7=no
-if [ "`uname -n`" = barrand-centos7.lal.in2p3.fr ] ; then on_my_openstack_centos7=yes; fi
+if [ "`uname -n | grep barrand-centos7`" != "" ] ; then
+  on_my_openstack_centos7=yes
+fi
+
+on_my_openstack_ess_u16=no
+if [ "`uname -n | grep barrand-ess-u16`" != "" ] ; then
+  on_my_openstack_ess_u16=yes
+fi
 
 on_macpro4=no
 if [ "`uname -n`" = "macpro4.lal.in2p3.fr" ] ; then on_macpro4=yes; fi

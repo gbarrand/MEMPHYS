@@ -5,11 +5,15 @@
 
 bush_home=`dirname $0`
 
-run_gdb=no
+run_debugger=no
 #run_mpi=no
 run_args=
 build_args=
 run_offscreen=no
+run_wasm_py=no
+run_wasm_http=no
+run_port=8080
+run_exe=no
 
 while test $# -ge 1 ; do
   case $1 in
@@ -18,6 +22,15 @@ while test $# -ge 1 ; do
     -intel)       build_args="${build_args} $1";;
     -clang)       build_args="${build_args} $1";;
     -visual)      build_args="${build_args} $1";;
+
+    -wasm)        build_args="${build_args} $1";;
+    -wasm_py)     build_args="${build_args} -wasm";run_wasm_py=yes;;
+    -wasm_http)   build_args="${build_args} -wasm";run_wasm_http=yes;;
+    -port)        if [ $# -ge 2 ] ; then
+                    run_port=$2
+                    shift
+                  fi
+                  ;;
 
     -no_screen)   build_args="${build_args} $1";;
     -cocoa)       build_args="${build_args} $1";;
@@ -28,21 +41,22 @@ while test $# -ge 1 ; do
     -x11)         build_args="${build_args} $1";;
     -wx)          build_args="${build_args} $1";;
 
-    -c++11)       build_args="${build_args} $1";;
-    
     -v)           build_args="${build_args} $1";;
     -x)           build_args="${build_args} $1";;
+    -g)           build_args="${build_args} $1";;
 
-    # local options : 
-    -offscreen) run_offscreen=yes;;
-    -gdb) run_gdb=yes;;
-    #-mpi) run_mpi=yes;;
+    # local options :
+    -offscreen)   run_offscreen=yes;;
+    -debugger)    run_exe=yes;run_debugger=yes;;
+   #-mpi)         run_mpi=yes;;
+    -run_exe)     run_exe=yes;;
+    -term*)       run_exe=yes;run_args="${run_args} -terminal";;
 
     -bin_*)        build_args="${build_args} $1";;
     -distrib_*)    build_args="${build_args} $1";;
 
-    -*) run_args="${run_args} $1";;  
-     *) run_args="${run_args} $1";;  
+    -*) run_args="${run_args} $1";;
+     *) run_args="${run_args} $1";;
   esac
   shift
 done
@@ -64,14 +78,7 @@ if [ "${build_app_distrib_dir}" = "" ] ; then build_app_distrib_dir="${app}"; fi
 #    mpirun --prefix /opt/local/libexec -np 2 ${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app} ${run_args}
 #  fi
 
-if [ "${run_gdb}" = "yes" ] ; then
-  if [ `uname` = Darwin ] ; then
-    /opt/local/bin/ggdb ${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app}
-  else
-    gdb ${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app}
-  fi
-
-elif [ ${build_cocoa} = "yes" -o ${build_cocoa_gnu} = "yes" ] ; then
+if [ ${build_cocoa} = "yes" -o ${build_cocoa_gnu} = "yes" ] ; then
   osx_vers="`sw_vers -productVersion`"
   is_10_5=no
   if [ "`echo ${osx_vers} | sed -e 's:10.5::g'`" != "${osx_vers}" ] ; then
@@ -83,17 +90,53 @@ elif [ ${build_cocoa} = "yes" -o ${build_cocoa_gnu} = "yes" ] ; then
     fi
     open ${build_path}/distrib/${build_app_distrib_dir}/${version}/${app}.app
   else
-    open ${build_path}/distrib/${build_app_distrib_dir}/${version}/${app}.app --args ${run_args}
+    if [ ${run_exe} = yes ] ; then
+      path_exe=./${build_path}/distrib/${build_app_distrib_dir}/${version}/${app}.app/Contents/MacOS/${app}
+      if [ "${run_debugger}" = "yes" ] ; then
+        echo "app_run : run args are : ${run_args}"	
+        if [ `uname` = Darwin ] ; then
+          lldb ${path_exe}
+        else
+          gdb ${path_exe}
+        fi
+      else
+        ${path_exe} ${run_args}
+      fi
+    else
+      # warning : if passing a document file, it must be with an absolute path.
+      open ${build_path}/distrib/${build_app_distrib_dir}/${version}/${app}.app --args ${run_args}
+    fi
   fi
 
 elif [ ${build_visual} = yes -a "${SSH_CLIENT}" != "" ] ; then
-  path="${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app}.exe"
- #path="/cygdrive/c/cygwin/usr/local/${app}/${version}/bin/${app}.exe"
+  path="${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app_exe}"
+ #path="/cygdrive/c/cygwin/usr/local/${app}/${version}/bin/${app_exe}"
   path=`cygpath -w -a ${path}`
   cmd="${HOME}/PsExec.exe -s -i '${path}' ${run_args}"
   eval ${cmd}
 
+elif [ ${build_wasm} = "yes" ] ; then
+
+  cd ${build_path}/distrib/${build_app_distrib_dir}/${version}
+  if [ ${run_wasm_py} = "yes" ] ; then
+    python -m SimpleHTTPServer ${run_port}
+  elif [ ${run_wasm_http} = "yes" ] ; then
+    http-server . -p ${run_port}
+  else
+    emrun --no_browser --hostname 0.0.0.0 --port ${run_port} .
+  fi
+
 else
-  ${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app} ${run_args}
+  path_exe=${build_path}/distrib/${build_app_distrib_dir}/${version}/bin/${app_exe}
+  if [ "${run_debugger}" = "yes" ] ; then
+    echo "app_run : run args are : ${run_args}"	
+    if [ `uname` = Darwin ] ; then
+      lldb ${path_exe}
+    else
+      gdb ${path_exe}
+    fi
+  else
+    ${path_exe} ${run_args}
+  fi
 fi
 

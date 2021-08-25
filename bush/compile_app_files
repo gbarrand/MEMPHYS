@@ -10,7 +10,7 @@ app="`${bush_home}/app_name`"
 find ../${app} -name '*' -type f -not -xattr -print > ./tmp_0
 grep -v '.icc' ./tmp_0 | grep -v '.ic' | grep -v '.help' > ./tmp_1
 
-for item in $(cat tmp_1) ; do  
+for item in $(cat tmp_1) ; do
   ./build -v -compile_only ${item}
 done
 

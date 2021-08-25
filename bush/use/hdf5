@@ -17,17 +17,8 @@ fi
 #use_our_hdf5=no
 
 if [ "${use_sys_hdf5}" = "yes" ] ; then
-  hdf5_sys_home=/opt/local  #Darwin : warning : may be not thread safe.
-  hdf5_sys_home=/usr/local/hdf5/1.6.6
-  hdf5_sys_home=/usr/local/hdf5/1.8.15
-  hdf5_sys_home=/usr/local/hdf5/1.8.19
- #hdf5_sys_home=/usr/local/hdf5/1.10.1
-  if [ ! -d ${hdf5_sys_home} ] ; then
-    echo "bush/use/hdf5 : ${hdf5_sys_home} not found. Use our hdf5."
-    use_our_hdf5=yes
-  else
-    ccflags="${ccflags} -DEXLIB_USE_NATIVE_HDF5"
-    cppflags="${cppflags} -DEXLIB_USE_NATIVE_HDF5"
+  hdf5_sys_home=/usr/local/hdf5/1.12.0
+  if [ -d ${hdf5_sys_home} ] ; then
     ccflags="${ccflags} -I${hdf5_sys_home}/include"
     cppflags="${cppflags} -I${hdf5_sys_home}/include"
 
@@ -41,11 +32,33 @@ if [ "${use_sys_hdf5}" = "yes" ] ; then
         echo "bush/use/hdf5 : use_archive requested but ${hdf5_sys_home}/libhdf5.a not found, try with -lhdf5."
         libs="${libs} -L${hdf5_sys_home}/lib -lhdf5"
       fi
-    else     
+    else
       libs="${libs} -L${hdf5_sys_home}/lib -lhdf5"
     fi
-   
+
+  elif [ -f /usr/include/hdf5.h ] ; then
+    hdf5_sys_home=/usr
+    ccflags="${ccflags} -I${hdf5_sys_home}/include"
+    cppflags="${cppflags} -I${hdf5_sys_home}/include"
+
+    if [ "${use_archive}" = "yes" ] ; then
+      if [ -f ${hdf5_sys_home}/lib64/libhdf5.a ] ; then
+        libs="${libs} ${hdf5_sys_home}/lib64/libhdf5.a"
+      else
+        echo "bush/use/hdf5 : use_archive requested but ${hdf5_sys_home}/libhdf5.a not found, try with .so"
+        libs="${libs} ${hdf5_sys_home}/lib64/libhdf5.so"
+      fi
+    else
+      libs="${libs} ${hdf5_sys_home}/lib64/libhdf5.so"
+    fi
+
+  else
+    echo "bush/use/hdf5 : ${hdf5_sys_home} not found."
+    exit
   fi
+
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_HDF5"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_HDF5"
 fi
 
 if [ "${use_our_hdf5}" = "yes" ] ; then

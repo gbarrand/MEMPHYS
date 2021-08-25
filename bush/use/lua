@@ -13,6 +13,8 @@ fi
 
 if [ "${use_sys_lua}" = "yes" ] ; then
   echo "bush/use/lua : sys not supported. We use ourex/lua."
+  #ccflags="${ccflags} -DEXLIB_USE_NATIVE_LUA"
+  #cppflags="${cppflags} -DEXLIB_USE_NATIVE_LUA"
   exit
 fi
 

@@ -18,6 +18,8 @@ if [ "${use_sys_geant4}" = "yes" ] ; then
 
   cppflags="${cppflags} `geant4-config --cflags`"
 
+  . ${bush_home}/cppflags_add_std_cxx11
+  
   # check that we link apps with geant4 archive libs since our application
   # distribution packing (bush/app_distrib) does not handle (yet) shared libs
   # (.dylib on macOS, .so on Linux).
@@ -35,7 +37,7 @@ if [ "${use_sys_geant4}" = "yes" ] ; then
       fi
     fi
   done
-  if [ ${geant4_lib_path} == none ] ; then
+  if [ ${geant4_lib_path} = none ] ; then
     echo "bush/use/geant4_10_03_p01 : geant4 lib path not found from 'geant4-config --libs'."
     exit
   fi
@@ -52,16 +54,13 @@ if [ "${use_sys_geant4}" = "yes" ] ; then
     fi
   done
 
-  if [ ${found_a} == no ] ; then
+  if [ ${found_a} = no ] ; then
     echo "bush/use/geant4_10_03_p01 : no .a library found in ${geant4_lib_path} :"
     echo 'bush/use/geant4_10_03_p01 : you have to build geant4 with the cmake option -DBUILD_STATIC_LIBS=ON'
     echo 'bush/use/geant4_10_03_p01 : since our application distribution packing (bush/app_distrib) does not'
     echo 'bush/use/geant4_10_03_p01 : handle (yet) shared libs (.dylib on macOS, .so on Linux).'
     exit
   fi
-
-  geant4_cppflags="`geant4-config --cflags`"
-
 fi
 
 if [ "${use_our_geant4}" = "yes" ] ; then
@@ -78,8 +77,10 @@ if [ "${use_our_geant4}" = "yes" ] ; then
     exit
   fi
 
-  cppflags="${cppflags} -I${geant4_home}/include/Geant4"
+  . ${bush_home}/cppflags_add_std_cxx11
   
+  cppflags="${cppflags} -I${geant4_home}/include/Geant4"
+
   if [ ${build_visual} = "yes" ] ; then
     cppflags="${cppflags} -DWIN32"  # for G4Threading.h
   fi
@@ -101,9 +102,5 @@ if [ "${use_our_geant4}" = "yes" ] ; then
 
   libs="${libs} ${geant4_libs}"
 
-  # for examples/geant4/A01 :
-  geant4_cppflags="-I${geant4_home}/include/Geant4"
-
-  geant4_ld_library_path="${geant4_build_dir}"
 
 fi

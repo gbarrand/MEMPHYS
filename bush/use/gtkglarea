@@ -6,7 +6,7 @@ if [ "${use_gtkglarea}" = "yes" ] ; then
     echo 'bush/use/gtkglarea : variable ourex_home not defined.';exit
   fi
   gtkglarea_home=${ourex_home}/gtkglarea
-  
+
   ccflags="${ccflags} -I${gtkglarea_home}"
   cppflags="${cppflags} -I${gtkglarea_home}"
   ourex_pack_name=gtkglarea

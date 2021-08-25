@@ -18,7 +18,7 @@ if [ "${use_arb}" = "yes" ] ; then
       echo "bush/use/arb : use_archive requested but ${arb_sys_home}/libarb.a not found, try with -larb."
       libs="${libs} -L${arb_sys_home}/lib -larb"
     fi
-  else     
+  else
     libs="${libs} -L${arb_sys_home}/lib -larb"
   fi
 

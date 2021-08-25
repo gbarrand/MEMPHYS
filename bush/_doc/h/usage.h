@@ -20,7 +20,7 @@
 
 @section bush_usage_tweak Tweak things
 
- In general in softinex we arrange to minimize the number of "externals", but as they aer hard to avoid we have some logic
+ In general in softinex we arrange to minimize the number of "externals", but as they are hard to avoid we have some logic
  to deal with them. The "access" to an external (mainly the -I to find the includes, and the -L to find the lib), is put in
  a "use" file which is under bush/use. For example use/X11 to compile and link a X11 application, etc...
 @verbatim

@@ -9,7 +9,7 @@ found_g4num=no
 
 items="${build_args}"
 build_args=
-for item in ${items} ; do  
+for item in ${items} ; do
   case ${item} in
     -g410x) build_geant4_10x=yes;found_g4num=yes;;
     -g495) build_geant4_95=yes;found_g4num=yes;;
@@ -28,6 +28,3 @@ if [ "`uname -n`" = "PC-PANO" ] ; then
   build_geant4_82=no
 fi
 
-if [ ${build_geant4_10x} = "yes" ] ; then
-  build_args="${build_args} -c++11 -bdir_suffix=_c++11"     
-fi

@@ -11,12 +11,12 @@ else
 fi
 fi
 
-if [ "${use_our_spiapp}" = "yes" ] ; then  
+if [ "${use_our_spiapp}" = "yes" ] ; then
   if [ "${ourex_home}" = "" ] ; then
     echo 'bush/use/spiapp : variable ourex_home not defined.';exit
   fi
   spiapp_home=${ourex_home}/spiapp
-  
+
   if [ ${build_visual} = "yes" ] ; then
     cppflags="${cppflags} -I${bush_home}/visual"
   fi

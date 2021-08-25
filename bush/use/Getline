@@ -12,7 +12,7 @@ if [ "${use_our_Getline}" = "yes" ] ; then
     echo 'bush/use/Getline : variable ourex_home not defined.';exit
   fi
   Getline_home=${ourex_home}/Getline
-  
+
   ccflags="${ccflags} -I${Getline_home}"
   cppflags="${cppflags} -I${Getline_home}"
 

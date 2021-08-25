@@ -21,7 +21,7 @@ if [ "${use_our_CoinXt}" = "yes" ] ; then
     echo 'bush/use/CoinXt : variable ourex_home not defined.';exit
   fi
   CoinXt_home=${ourex_home}/CoinXt
-  
+
   if [ ${build_visual} = "yes" ] ; then
     echo "bush/use/CoinXt : build_visual : not available with this compiler."
     exit

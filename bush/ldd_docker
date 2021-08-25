@@ -6,7 +6,7 @@
 if [ `uname` != Linux ] ; then
   echo 'bush/ldd_docker : must be run on Linux.'
   exit
-fi  
+fi
 
 if [ $# != 1 ] ; then
   echo 'bush/ldd_docker : <program> is expected.'
@@ -16,7 +16,7 @@ fi
 app_exe="$1"
 
 if [ ! -x ${app_exe} ] ; then
-  echo 'bush/ldd_docker : ${app_exe} is not an executable.'
+  echo "bush/ldd_docker : ${app_exe} is not an executable."
   exit
 fi
 

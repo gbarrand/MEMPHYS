@@ -5,6 +5,17 @@
 #////////////////////////////////////
 #////////////////////////////////////
 
+if [ "${app}" = "" ] ; then
+  if [ "${app_exe}" = "" ] ; then
+    echo "bush/application : variables app and app_exe not defined."
+    exit
+  fi
+  app="`basename ${app_exe}`"
+  #if [ ${build_verbose} = yes ] ; then
+    echo "bush/application : warning : app variable not defined, we take basename of ${app_exe}. Got app=${app}"
+  #fi
+fi
+
 if [ "${app_src}" = "" ] ; then
   echo "bush/application : variable app_src not defined."
   exit
@@ -26,9 +37,22 @@ if [ ${build_clean} = "yes" ] ; then
   exit
 fi
 
+if [ ${build_check_all} = "yes" ] ; then
+  if [ -d ../${app} ] ; then
+    find ../${app} -name "*" -type f -print >> cpp_tmp
+    build_app=no
+  else    
+    echo "bush/application : directory ../${app} not found."
+    exit
+  fi  
+fi
+
 . ${bush_home}/compile
 
 file_exe=
+
+app_base_name=`basename ${app_src}`
+app_dir_name=`dirname ${app_src}`
 
 if [ "${build_app}" = "no" ] ; then
   if [ ${build_verbose} = yes ] ; then
@@ -39,10 +63,13 @@ if [ "${build_app}" = "no" ] ; then
   else
     file_exe=${build_path}/${app_exe}
   fi
-  
+
+elif [ "${build_wasm}" = "yes" ] ; then
+
+. ${bush_home}/app_wasm
+
 else #build_app
 
-app_base_name=`basename ${app_src}`
 suffix=`echo ${app_base_name} | sed 's:.*\.::'`
 if [ "${suffix}" = "${app_base_name}" ] ; then suffix=none;fi
 
@@ -142,15 +169,11 @@ elif [ "${suffix}" = "java" ] ; then
   if [ ${build_plugin} = "yes" ] ; then . ${bush_home}/plugin; fi
 
   # build of the .apk done in app_distrib.
-  
+
   link_it=no
 
-elif [ "${suffix}" = "ecpp" ] ; then
-
-. ${bush_home}/build_ecpp
-
 else
-  echo "bush/application : suffix ${suffix} not treated"        
+  echo "bush/application : suffix ${suffix} not treated"
   exit
 fi
 
@@ -165,17 +188,20 @@ if [ "${link_it}" = "yes" ] ; then
 
 if [ ${build_sdk_android} = "yes" ] ; then
   echo "bush/application : sdk_android : don't know how to link ${app_exe}."
+elif [ "${build_wasm}" = "yes" ] ; then
+  echo dummy > /dev/null
 else
 
   file_exe=${build_path}/${app_exe}
+
   if [ ${build_verbose} = yes ] ; then
     echo "bush/application : link ${file_exe} ..."
   fi
   eval ${app_linker} ${linker_flags} -o ${file_exe} ${objs} ${libs}
   use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
-    
+
   #/bin/rm -f ${objs}
-    
+
   if [ `uname` = Darwin ] ; then
     if [ ${build_debug} = "yes" ] ; then
       if [ ! -f ${file_exe} ] ; then
@@ -188,9 +214,9 @@ else
         dsymutil --out=${file_exe}.dSYM ${file_exe}
       fi
     fi
-  fi 
-    
-fi # sdk_android    
+  fi
+
+fi # sdk_android
 fi # link_it
 fi # build_app
 

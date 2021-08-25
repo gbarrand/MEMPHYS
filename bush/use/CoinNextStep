@@ -21,7 +21,7 @@ if [ "${use_our_CoinNextStep}" = "yes" ] ; then
     echo 'bush/use/CoinNextStep : variable ourex_home not defined.';exit
   fi
   CoinNextStep_home=${ourex_home}/CoinNextStep
-  
+
   cppflags="${cppflags} -I${CoinNextStep_home}/source/framework"
 
   ourex_pack_name=CoinNextStep

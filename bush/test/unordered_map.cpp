@@ -14,7 +14,7 @@ public:
   virtual ~Key_Hash();
   Key_Hash(const Key_Hash&);
   Key_Hash& operator=(const Key_Hash&);
-public:  
+public:
   //inline size_t operator()(const Key& x) const throw() {
   inline size_t operator()(const Key& x) const { //clang/Linux : with throw() it does not compile.
     return 0;
@@ -27,7 +27,7 @@ public:
   virtual ~Key_EqualTo();
   Key_EqualTo(const Key_EqualTo&);
   Key_EqualTo& operator=(const Key_EqualTo&);
-public:  
+public:
   inline bool operator()(const Key& lhs, const Key& rhs ) const {
     return true;
   }

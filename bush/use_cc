@@ -20,6 +20,12 @@ if [ ${build_gnu} = "yes" ] ; then
     elif [ "`echo ${osx_vers} | sed -e 's:10.12::g'`" != "${osx_vers}" ] ; then
       cc_compiler=/opt/local/bin/gcc-mp-5
       cc_linker=/opt/local/bin/gcc-mp-5
+    elif [ "`echo ${osx_vers} | sed -e 's:10.13::g'`" != "${osx_vers}" ] ; then
+      cc_compiler=/opt/local/bin/gcc-mp-5
+      cc_linker=/opt/local/bin/gcc-mp-5
+    elif [ "`echo ${osx_vers} | sed -e 's:10.14::g'`" != "${osx_vers}" ] ; then
+      cc_compiler=/opt/local/bin/gcc-mp-8
+      cc_linker=/opt/local/bin/gcc-mp-8
     else
       echo 'bush/use_cc : gcc not found under /opt/local/bin.'
       exit
@@ -36,7 +42,7 @@ elif [ ${build_intel} = "yes" ] ; then
 
 elif [ ${build_clang} = "yes" ] ; then
   config_name=clang
-  
+
   found=no
   items="clang clang-3.9 clang-3.5 clang-3.4 clang-3.3"
   for item in ${items} ; do
@@ -51,9 +57,22 @@ elif [ ${build_clang} = "yes" ] ; then
   done
 
   if [ ${found} = no ] ; then
-    echo "${items} not found."
+    echo "bush/use_cc : ${items} not found."
     exit
   fi
+
+  if [ ${build_ansi} = "yes" ] ; then ccflags="${ccflags} -ansi"; fi
+  if [ ${build_pedantic} = "yes" ] ; then ccflags="${ccflags} -pedantic"; fi
+
+elif [ ${build_emcc} = "yes" ] ; then
+  config_name=emcc
+
+  ${bush_home}/check_app emcc 'bush/use_cc : emcc not found.'
+  use_status=$?;
+  if [ ${use_status} != 0 ] ; then exit; fi
+
+  cc_compiler=emcc
+  cc_linker=emcc
 
 elif [ ${build_sdk_mac} = "yes" -o ${build_sdk_mac_gnu} = "yes" ] ; then
 
@@ -104,19 +123,19 @@ elif [ ${build_cling_clang} = "yes" ] ; then
   config_name=cling_clang
 
   . ${bush_home}/use_cling
-  
+
   if [ "${cling_home}" = "" ] ; then
     echo "bush/use_cc : cling_home not defined."
     exit
   fi
-  
+
   if [ ${build_verbose} = yes ] ; then
     echo "bush/use_cc : cling_home is ${cling_home}."
   fi
 
   cc_compiler=${cling_home}/bin/clang
   cc_linker=${cpp_compiler}
-  
+
 elif [ ${build_sdk_ios} = "yes" -o ${build_sdk_ios_gnu} = "yes" ] ; then
 
   # options taken from the output of :
@@ -131,27 +150,6 @@ elif [ ${build_sdk_ios} = "yes" -o ${build_sdk_ios_gnu} = "yes" ] ; then
     cc_compiler=/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/llvm-gcc-4.2
     cc_linker=${cc_compiler}
   fi
-
-  # see also use_cpp :
-  #sdk_dirs="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs /Developer/SDKs"
-  #sdk_verss="10.0 9.3 9.0 8.1 7.1 5.0"
-  #found=no
-  #for sdk_dir in ${sdk_dirs} ; do
-  #  for sdk_vers in ${sdk_verss} ; do
-  #    if [ ${found} = no ] ; then
-  #      ios_sdk="${sdk_dir}/iPhoneOS${sdk_vers}.sdk"
-  #      ios_vers=${sdk_vers}
-  #     if [ -d "${ios_sdk}" ] ; then found=yes;fi
-  #   fi
-  # done
-  #done
-  #if [ ${found} = no ] ; then
-  #  echo "bush/use_cc : iOS sdk not found."
-  #  exit
-  #fi
-  #echo "${ios_sdk}"
-  #echo "${ios_vers}"
-  #exit
 
   ios_sdk="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
   if [ ! -d "${ios_sdk}" ] ; then
@@ -177,7 +175,7 @@ elif [ ${build_sdk_ios} = "yes" -o ${build_sdk_ios_gnu} = "yes" ] ; then
   # the below is to stay consistent with use_cpp :
   ccflags="${ccflags} -fvisibility=hidden"
 
- #ccflags="${ccflags} -gdwarf-2 -mno-thumb" 
+ #ccflags="${ccflags} -gdwarf-2 -mno-thumb"
  #ccflags="${ccflags} -Os"
 
   mflags="${mflags} -fobjc-abi-version=2 -fobjc-legacy-dispatch"
@@ -216,6 +214,11 @@ elif [ ${build_visual} = "yes" ] ; then
     echo "bush/use_cc : build_visual : bush_home not defined."
     exit
   fi
+
+  ${bush_home}/check_app cl.exe 'bush/use_cc : cl.exe not found. You have to setup VisualC++.'
+  use_status=$?;
+  if [ ${use_status} != 0 ] ; then exit; fi
+
   cc_compiler=${bush_home}/vc++
 
   if [ "${build_set_x}" = "yes" ] ; then ccflags="${ccflags} -verbose"; fi
@@ -227,58 +230,13 @@ elif [ ${build_visual} = "yes" ] ; then
 elif [ ${build_sdk_android} = "yes" ] ; then
   config_name=sdk_android
 
-  sdk_home=/usr/local/Android/android-sdk_r16-macosx
+  . ${bush_home}/use_android
 
-  # WARNING : must be in sync with use_cpp, plugin, use/Android.
+  cc_compiler=${ndk_cc_compiler}
 
- #build_ndk_vers=r15b
-  build_ndk_vers=r7
-  build_ndk_vers=r10e
-  
-  ndk_home=/usr/local/Android/android-ndk-${build_ndk_vers}
-
-  if [ ${build_ndk_vers} = r7 ] ; then
-    ndk_bin=${ndk_home}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin
-    ndk_platform="${ndk_home}/platforms/android-9/arch-arm"
-  elif [ ${build_ndk_vers} = r10e ] ; then
-    ndk_bin=${ndk_home}/toolchains/arm-linux-androideabi-4.8/prebuilt/darwin-x86_64/bin
-    ndk_platform="${ndk_home}/platforms/android-9/arch-arm"
-  else
-    echo "bush/use_cc : ndk version ${build_ndk_vers} not yet supported."
-    exit
-  fi    
-
-  cc_compiler=${ndk_bin}/arm-linux-androideabi-gcc
-
- #ccflags="${ccflags} -MMD -MP -MF <some .d path>"
- #ccflags="${ccflags} -O2 -DNDEBUG -g"
- #ccflags="${ccflags} -Ijni"
- #ccflags="${ccflags} -I${ndk_home}/sources/cxx-stl/system/include"
-
-  if [ ${build_ndk_vers} = r7 ] ; then
-    ccflags="${ccflags} -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__"
-    ccflags="${ccflags} -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
-  fi
-  
-  ccflags="${ccflags} -fpic"
-  ccflags="${ccflags} -ffunction-sections -funwind-tables -fstack-protector"
-  ccflags="${ccflags} -fomit-frame-pointer -fno-strict-aliasing"
-  ccflags="${ccflags} -finline-limit=64"
-  
-  ccflags="${ccflags} -mthumb"
-  ccflags="${ccflags} -Os"
-  ccflags="${ccflags} -march=armv5te -mtune=xscale -msoft-float"
-
-  ccflags="${ccflags} -Wno-psabi -Wa,--noexecstack"
-  
-  ccflags="${ccflags} -I${ndk_platform}/usr/include"
-  
+  ccflags="${ccflags} ${ndk_ccflags}"
   ccflags="${ccflags} -DANDROID"
 
-  if [ ${build_ndk_vers} = r10e ] ; then
-    ccflags="${ccflags} -no-canonical-prefixes -Wformat -Werror=format-security"
-  fi
-  
   cc_linker=${cc_compiler}
 
 else
@@ -291,8 +249,19 @@ if [ ${build_visual} = "yes" ] ; then
   if [ ${build_debug} = "yes" ] ; then
     ccflags="${ccflags} -g"
     cc_linker_flags="${cc_linker_flags} -g"
-  else    
+  else
     ccflags="${ccflags} -DNDEBUG"
+  fi
+
+elif [ ${build_emcc} = "yes" ] ; then
+
+  if [ ${build_debug} = "yes" ] ; then
+    ccflags="${ccflags} -g -g4"
+    ccflags="${ccflags} -s DEMANGLE_SUPPORT=1"
+    ccflags="${ccflags} -s ASSERTIONS=1"
+    ccflags="${ccflags} -Werror"
+  else
+    ccflags="${ccflags} -O3 -g0"
   fi
 
 else
@@ -310,6 +279,10 @@ fi
 
 # NOTE : if not using plugin at all -fPIC is not needed,
 #        but we have some in osc software.
-if [ `uname` = "Linux" ] ; then ccflags="${ccflags} -fPIC";fi
+if [ `uname` = "Linux" ] ; then
+  if [ ${build_visual} = "no" ] ; then
+    ccflags="${ccflags} -fPIC"
+  fi
+fi
 
 ccflags0="${ccflags}"

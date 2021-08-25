@@ -24,20 +24,15 @@ done
 . ${bush_home}/use/freetype
 . ${bush_home}/use/expat
 #. ${bush_home}/use/glutess
-. ${bush_home}/use/gl2ps
 
-if [ ${build_tntnet} = "yes" ] ; then
-  use_tntnet=yes
-  use_zip=yes
-  use_thread=yes
-  use_dl=yes
-  . ${bush_home}/use/tntnet
-  . ${bush_home}/use/zip
-  . ${bush_home}/use/thread
-  . ${bush_home}/use/dl
+if [ ${build_macos_metal} = "yes" ] ; then
+  use_metal=yes
+  . ${bush_home}/use/metal
 fi
 
-. ${bush_home}/use/zlib #after zip.
+. ${bush_home}/use/thread  # may be needed for APP_USE_DATA_CLIENT, Python.
+
+. ${bush_home}/use/zlib
 
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh -f
 
 find . -name '.git' -exec du -ks {} \; | awk '{print $1;}' > ./git_size_tmp
 awk '{ sum += $1 } END { print sum }' ./git_size_tmp

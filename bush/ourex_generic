@@ -10,9 +10,11 @@ if [ ${build_compile} = "yes" ] ; then
 
 /bin/rm -f c_tmp
 /bin/rm -f cpp_tmp
+/bin/rm -f f_tmp
 
 # for example to put a file in front :
 #echo './source/SoPlotter.cxx' >> cpp_tmp
+#echo './source/SoGL2PSAction.cxx' >> cpp_tmp
 
 if [ -d ./source ] ; then
   find ./source -maxdepth 1 -name '*.c' -print >> c_tmp
@@ -25,6 +27,9 @@ if [ -d ./src ] ; then
   find ./src -maxdepth 1 -name '*.cpp' -print >> cpp_tmp
   find ./src -maxdepth 1 -name '*.cxx' -print >> cpp_tmp
   find ./src -maxdepth 1 -name '*.f' -print >> f_tmp
+  if [ `uname` = Darwin ] ; then
+    find ./src -maxdepth 1 -name '*.mm' -print >> mm_tmp
+  fi
 fi
 
 gen_flags=

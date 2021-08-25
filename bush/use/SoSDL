@@ -10,7 +10,7 @@ if [ "${use_our_SoSDL}" = "yes" ] ; then
     echo 'bush/use/SoSDL : variable ourex_home not defined.';exit
   fi
   SoSDL_home=${ourex_home}/SoSDL
-  
+
   ourex_pack_name=SoSDL
   . ${bush_home}/use/ourex_use
 fi

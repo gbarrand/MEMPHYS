@@ -7,7 +7,7 @@ if [ "${use_AIDA}" = "yes" ] ; then
     echo 'bush/use/AIDA : variable ourex_home not defined.';exit
   fi
   AIDA_home=${ourex_home}/AIDA
-  
+
   cppflags="${cppflags} -I${AIDA_home}/v3r2p1"
 
 fi

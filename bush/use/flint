@@ -18,7 +18,7 @@ if [ "${use_flint}" = "yes" ] ; then
       echo "bush/use/flint : use_archive requested but ${flint_sys_home}/libflint.a not found, try with -lflint."
       libs="${libs} -L${flint_sys_home}/lib -lflint"
     fi
-  else     
+  else
     libs="${libs} -L${flint_sys_home}/lib -lflint"
   fi
 

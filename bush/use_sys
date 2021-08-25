@@ -58,19 +58,31 @@ fi
 #           be seen as a kind of advanced archive, and as such
 #           don't have to be linked.
 
+arex=a
+ar_flags=
+ranlib_flags=
+
 shopts=
 if [ ${build_sdk_android} = "yes" ] ; then
   shex=so
   shopts="${shopts} -shared"
 
-  ar_cmd=${ndk_bin}/arm-linux-androideabi-ar
-  ranlib_cmd=${ndk_bin}/arm-linux-androideabi-ranlib
+  ar_cmd="${ndk_ar_cmd}"
+  ranlib_cmd="${ndk_ranlib_cmd}"
 
-  strip_cmd="${ndk_bin}/arm-linux-androideabi-strip --strip-unneeded"
+elif [ ${build_emcc} = "yes" ] ; then
+  #shex=so
+  #shopts="${shopts} -shared"
 
-elif [ ${build_visual} = "yes" ] ; then
+  ar_cmd="emar"
+  ranlib_cmd="emranlib"
 
-  shex=lib
+elif [ "`uname | grep CYGWIN`" != "" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    shex=lib
+  else
+    shex=dll.a
+  fi
   ar_cmd=ar
   ranlib_cmd=ranlib
 
@@ -81,6 +93,9 @@ elif [ `uname` = Darwin ] ; then
 
   ar_cmd=ar
   ranlib_cmd=ranlib
+
+  ar_flags="${ar_flags} -S"  # -S so that ar does not do ranlib.
+  ranlib_flags="${ranlib_flags} -no_warning_for_no_symbols"
 
 else
   shex=so
@@ -93,8 +108,12 @@ fi
 cc_shlib_builder="${cc_compiler} ${shopts}"
 cpp_shlib_builder="${cpp_compiler} ${shopts}"
 
-if [ ${build_visual} = "yes" ] ; then
-  pgpy=pyd
+if [ "`uname | grep CYGWIN`" != "" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    pgpy=pyd
+  else
+    pgpy=dll
+  fi
 else
   pgpy=so
 fi
@@ -121,7 +140,35 @@ if [ `uname` = "Linux" ] ; then
   if [ ${is_ubuntu} = yes ] ; then
     # if "--as-needed" (now the default on ubuntu), an app linking shared libs doing OpenGL
     # but doing no GL in its main will not link.
-    linker_flags="${linker_flags} -Wl,--no-as-needed"
-    pgflags="${pgflags} -Wl,--no-as-needed"  # for exa for OnXXt.so plugin.
+    if [ ${build_visual} = "no" ] ; then
+      linker_flags="${linker_flags} -Wl,--no-as-needed"
+      pgflags="${pgflags} -Wl,--no-as-needed"  # for exa for OnXXt.so plugin.
+    fi
   fi
 fi
+
+#////////////////////////////////////////////////////////////////
+#/// parallel : /////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////
+parallel_exe=
+if [ `uname` = Darwin ] ; then
+  if [ -x /opt/local/bin/parallel ] ; then
+    parallel_exe=/opt/local/bin/parallel
+  fi
+elif [ `uname` = Linux ] ; then
+  if [ -x /usr/bin/parallel ] ; then #ostacku
+    parallel_exe=/usr/bin/parallel
+  elif [ "`uname -n`" = barrand-centos7.lal.in2p3.fr -o "`uname -n`" = barrand-centos7 ] ; then
+    if [ -x /usr/local/parallel/20120122/bin/parallel ] ; then
+      LC_ALL=en_US.UTF-8;export LC_ALL
+      parallel_exe=/usr/local/parallel/20120122/bin/parallel
+    fi
+  fi
+fi
+
+#////////////////////////////////////////////////////////////////
+#/// CYGWIN, WSL : //////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////
+c_drive=
+if [ "`uname | grep CYGWIN`" != "" ] ;       then c_drive=/cygdrive/c; fi
+if [ "`uname -r | grep Microsoft`" != "" ] ; then c_drive=/mnt/c; fi

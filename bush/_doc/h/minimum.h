@@ -30,7 +30,7 @@
   The great backquoting and the definitive pipe :
 @verbatim
      if [ "`uname`" = Darwin ] ; then
-       echo 'On my beloved Mac ?'
+       echo 'Yay, I am on a Mac.'
      elif [ "`uname | grep CYGWIN`" != "" ] ; then
        echo 'Aie, I am on a Windows.'
      else

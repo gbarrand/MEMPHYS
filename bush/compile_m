@@ -24,6 +24,10 @@ for file in $(cat m_tmp) ; do
         echo "bush/compile_m : WARNING : ${obj} already exists."
       fi
     fi
+    if [ `uname` != Darwin ] ; then
+      echo "bush/compile_m : objective-c : not available on this platform. Can't compile ${file}."
+      exit
+    fi
     eval ${cpp_compiler} -x objective-c -c ${cppflags} ${mflags} -o ${obj} ${file}
     use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
   fi

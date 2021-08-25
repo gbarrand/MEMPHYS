@@ -4,10 +4,10 @@
 # to be sourced in <app>/mgr/build scripts.
 
 if [ ${build_visual} = "yes" ] ; then
-  if [ ${build_verbose} = yes ] ; then  
+  if [ ${build_verbose} = yes ] ; then
     echo "bush/app_GL_VBO : NOTE : today -DEXLIB_HAS_GL_VBO not supported."
   fi
-  
+
 elif [ "${build_cocoa}" = "yes" -o "${build_cocoa_gnu}" = "yes" ] ; then
   cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
 
@@ -17,12 +17,15 @@ elif [ "${build_ios}" = "yes" -o "${build_ios_gnu}" = "yes" -o "${build_iossim}"
 elif [ "${build_android}" = "yes" ] ; then
   cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
 
-elif [ ${build_no_gl} = "yes" ] ; then
+elif [ "${build_wasm}" = "yes" ] ; then
+  cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
+
+elif [ "${build_no_gl}" = "yes" ] ; then
   echo dummy > /dev/null
 
 else
-  if [ `uname` = Darwin ] ; then
-    cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
+  if [ `uname` = Darwin ] ; then  # use MacPorts GLX.
+    #cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
     cppflags="${cppflags} -DEXLIB_HAS_GL_LIST"
   else
     cppflags="${cppflags} -DEXLIB_HAS_GL_LIST"
@@ -30,7 +33,7 @@ else
       cppflags="${cppflags} -DEXLIB_HAS_GL_VBO"
     else
       # NOTE : Linux to remote X11 : EXLIB_HAS_GL_VBO crashes
-      if [ ${build_verbose} = yes ] ; then  
+      if [ ${build_verbose} = yes ] ; then
         echo "bush/app_GL_VBO : NOTE : cpp macro EXLIB_HAS_GL_VBO not set."
       fi
     fi

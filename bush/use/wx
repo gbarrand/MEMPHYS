@@ -25,34 +25,53 @@ if [ "${use_wx}" = "yes" ] ; then
     # for SysAllocStringLen, SysFreeString used in inlib/sys/dir :
     libs="${libs} OleAut32.lib"
 
-  else 
-  
-    ${bush_home}/check_app wx-config 'wx-config program not found. You have to <source setup> wxWidgets.'
-    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
-   
-    version="`wx-config --release`"
+  else
+
+    wx_config=
+    ${bush_home}/check_app wx-config
+    use_status=$?;if [ ${use_status} = 0 ] ; then
+      wx_config=wx-config
+    else
+      ${bush_home}/check_app wx-config-3.0 'wx-config program not found. You have to <source setup> wxWidgets.'
+      use_status=$?;if [ ${use_status} = 0 ] ; then
+        wx_config=wx-config-3.0
+      else
+        exit ${use_status}
+      fi
+    fi
+
+    version="`${wx_config} --version`"
     . ${bush_home}/vertoks
-    #echo ${version_items}
-    #echo ${version_major}
     if [ "${version_major}" = "1"  -o "${version_major}" = "2" ] ; then
       echo "bush/use/wx : wxWidgets version ${version} is not supported."
       exit
     fi
 
-    if [ `uname` = Darwin ] ; then    
-      # Darwin : it is assumed that wxWidgets is built with :
-      #    ./configure CC=clang CXX=clang++ CXXFLAGS="-stdlib=libstdc++" CPPFLAGS="-stdlib=libstdc++"
-      # All other c++ lib (geant4, pythia8) must be compiled with -stdlib=libstdc++.
-      # Else, simple app as exlib/examples/cpp/wx_hello_world.cpp crashes for us with 3.1.0.
+    if [ `uname` = Darwin ] ; then
+      version="${version_major}.${version_minor}.${version_release}"
+      if [ ${version} = "3.1.0" ] ; then
+        # Darwin : it is assumed that wxWidgets is built with :
+        #   ./configure --prefix=<dir> CC=clang CXX=clang++ CXXFLAGS="-stdlib=libstdc++" CPPFLAGS="-stdlib=libstdc++"
+        # All other c++ lib (geant4, pythia8) must be compiled with -stdlib=libstdc++.
+        # Else, simple app as exlib/examples/cpp/wx_hello_world.cpp crashes for us with 3.1.0.
 
-      # to compile include/wx-3.1/wx/strvararg.h :
-      cppflags="${cppflags} -stdlib=libstdc++"
-      linker_flags="${linker_flags} -stdlib=libstdc++"
+        # to compile include/wx-3.1/wx/strvararg.h :
+        cppflags="${cppflags} -stdlib=libstdc++"
+        linker_flags="${linker_flags} -stdlib=libstdc++"
+
+      else
+        # Darwin : it is assumed that wxWidgets is built with :
+        #   ./configure --prefix=<dir> CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" CPPFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
+
+        cppflags="${cppflags} -stdlib=libc++"
+        linker_flags="${linker_flags} -stdlib=libc++"
+
+      fi
     fi
 
-    cppflags="${cppflags} `wx-config --cppflags`"
-    libs="${libs} `wx-config --libs`"
-    libs="${libs} `wx-config --optional-libs gl`"
+    cppflags="${cppflags} `${wx_config} --cppflags`"
+    libs="${libs} `${wx_config} --libs`"
+    libs="${libs} `${wx_config} --optional-libs gl`"
 
   fi
 

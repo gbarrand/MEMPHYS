@@ -17,7 +17,7 @@ for file in $(cat ./f_tmp) ; do
     diro=`basename ${dname}`
     /bin/mkdir -p "${build_path}/${diro}"
     obj="${build_path}/${diro}/${oname}.o"
-  else 
+  else
     obj="${build_path}/${oname}.o"
   fi
 
@@ -30,7 +30,7 @@ for file in $(cat ./f_tmp) ; do
   fi
   if [ ${build_visual} = "yes" ] ; then
     if [ "${f77_compiler}" = "" ] ; then
-      echo "bush/compile_f77 : variable f77_compiler not defined."
+      echo "bush/compile_f77 : variable f77_compiler not defined. Can't compile ${file}."
       exit
     fi
     visual_obj="`cygpath -w -a ${obj}`"

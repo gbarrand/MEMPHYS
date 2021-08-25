@@ -24,11 +24,11 @@ if [ `uname` = Darwin ] ; then
   elif [ ${which_cling} = anaconda3 ] ; then
     cling_home="${HOME}/anaconda3/envs/cling"  #0.4~dev
   fi
-  
+
 elif [ `uname` = Linux ] ; then
 
   which_cling=usr_local
-  
+
   #if [ `uname -n` = osboxes ] ; then which_cling=anaconda3;fi
 
   pch_cpp_flags="${pch_cpp_flags} -std=c++11"
@@ -54,7 +54,7 @@ elif [ `uname` = Linux ] ; then
 
   pch_cpp_flags="${pch_cpp_flags} -std=c++11"
 
-else  
+else
   echo "bush/use_cling : cling not found."
   exit
 fi

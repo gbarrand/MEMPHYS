@@ -9,22 +9,40 @@ if [ "`uname | grep CYGWIN`" != "" ] ; then
 
 else
 
-  if [ -x /usr/local/wxWidgets/3.1.0/bin/wx-config ] ; then
+  if [ `uname` = Darwin ] ; then
+    # sudo port install wxWidgets-3.2    
+    wxWidgets_home=/opt/local/Library/Frameworks/wxWidgets.framework/Versions/wxWidgets/3.1
+  elif [ "`uname -n`" = deco.lal.in2p3.fr ] ; then
+    wxWidgets_home=/exp/si/barrand/usr/local/wxWidgets/3.1.0
+  elif [ -d /usr/local/wxWidgets/3.1.3 ] ; then
+    wxWidgets_home=/usr/local/wxWidgets/3.1.3
+  elif [ -d /usr/local/wxWidgets/3.1.1 ] ; then
+    wxWidgets_home=/usr/local/wxWidgets/3.1.1
+  elif [ -d /usr/local/wxWidgets/3.1.0 ] ; then
     wxWidgets_home=/usr/local/wxWidgets/3.1.0
+  else
+    echo 'wxWidgets not found.'
+  fi
+
+  if [ "${wxWidgets_home}" != "" ] ; then
+  if [ -x ${wxWidgets_home}/bin/wx-config ] ; then
     PATH="${wxWidgets_home}/bin:${PATH}"
-    if [ `uname` = "Linux" ]; then
+    if [ `uname` = "Linux" ] ; then
       lib_path="${wxWidgets_home}/lib"
       if [ -z "${LD_LIBRARY_PATH}" ] ; then
         LD_LIBRARY_PATH="${lib_path}"
+        export LD_LIBRARY_PATH
       else
         wx_status=1;(echo $LD_LIBRARY_PATH | grep "${lib_path}" > /dev/null  ) && wx_status=0
         if [ $wx_status != 0 ] ; then
           LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${lib_path}"
+          export LD_LIBRARY_PATH
         fi
         unset wx_status
       fi
       unset lib_path
     fi
+  fi
   fi
 
 fi

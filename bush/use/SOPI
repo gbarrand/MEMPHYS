@@ -11,17 +11,14 @@ else
 fi
 fi
 
-if [ "${use_sys_SOPI}" = "yes" ] ; then  
+if [ "${use_sys_SOPI}" = "yes" ] ; then
   if [ ${build_visual} = "yes" ] ; then
     echo "bush/use/SOPI : headers do not compile with cl.exe."
     exit
   fi
 
   SOPI_sys_home=/usr/local/SOPI/2.125
-  if [ ! -d ${SOPI_sys_home} ] ; then
-    echo "bush/use/SOPI : ${SOPI_sys_home} not found. Use our SOPI."
-    use_our_SOPI=yes
-  else
+  if [ -d ${SOPI_sys_home} ] ; then
     cppflags="${cppflags} -I${SOPI_sys_home}/include"
     libs="${libs} -L${SOPI_sys_home}/lib -lBaseTools -lSUtils -lHiStats"
     libs="${libs} -lTArray -lNTools"
@@ -29,10 +26,13 @@ if [ "${use_sys_SOPI}" = "yes" ] ; then
     #-lSysTools -lTArray -lNTools -lSkyMap -lSamba -lSkyT"
     #-lcfitsio -lfftw3 -lfftw3f -llapack -lblas
     #-lPI -lPIext -lPIGcont
+  else
+    echo "bush/use/SOPI : ${SOPI_sys_home} not found."
+    exit
   fi
 fi
 
-if [ "${use_our_SOPI}" = "yes" ] ; then  
+if [ "${use_our_SOPI}" = "yes" ] ; then
   if [ "${ourex_home}" = "" ] ; then
     echo 'bush/use/SOPI : variable ourex_home not defined.';exit
   fi

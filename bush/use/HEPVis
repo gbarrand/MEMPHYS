@@ -21,7 +21,7 @@ if [ "${use_our_HEPVis}" = "yes" ] ; then
     echo 'bush/use/HEPVis : variable ourex_home not defined.';exit
   fi
   HEPVis_home=${ourex_home}/HEPVis
-  
+
   ourex_pack_name=HEPVis
   . ${bush_home}/use/ourex_use
 fi

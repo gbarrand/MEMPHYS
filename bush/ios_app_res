@@ -15,8 +15,8 @@ if [ -d ../icons ] ; then
   cp ../icons/icon_144.png ../iOS/Icon-144.png
   cp ../icons/icon_152.png ../iOS/Icon-152.png
   cp ../icons/icon_320_480.png   ../iOS/Default.png
-  cp ../icons/icon_640_960.png   ../iOS/Default~iphone.png 
-  cp ../icons/icon_640_1136.png  ../iOS/Default-568h@2x.png 
+  cp ../icons/icon_640_960.png   ../iOS/Default~iphone.png
+  cp ../icons/icon_640_1136.png  ../iOS/Default-568h@2x.png
 
 else
   echo "bush/ios_app_res : warning : no ../icons found."

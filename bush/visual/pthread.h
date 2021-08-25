@@ -64,7 +64,7 @@ struct pthread_attr_t {
 
 inline int pthread_attr_init(pthread_attr_t*) {return -1;}
 inline int pthread_attr_setstacksize(pthread_attr_t*,size_t) {return -1;}
-     
+
 #ifdef __cplusplus
 }
 #endif

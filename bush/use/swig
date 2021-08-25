@@ -5,7 +5,8 @@ if [ "${use_swig}" = "yes" ] ; then
 
   #swig_exe=/usr/local/SWIG/1.3.33/bin/swig
   #swig_exe=/usr/local/SWIG/2.0.7/bin/swig
-  swig_exe=/usr/local/SWIG/3.0.2/bin/swig
+  #swig_exe=/usr/local/SWIG/3.0.2/bin/swig
+  swig_exe=/usr/local/SWIG/4.0.2/bin/swig
 
   if [ ! -x "${swig_exe}" ] ; then
     echo "bush/use/swig : swig program not found."
@@ -13,7 +14,7 @@ if [ "${use_swig}" = "yes" ] ; then
   fi
 
   if [ "${ourex_home}" = "" ] ; then
-    echo 'bush/use/pivy : variable ourex_home not defined.';exit
+    echo 'bush/use/swig : variable ourex_home not defined.';exit
   fi
   pivy_home=${ourex_home}/pivy
 

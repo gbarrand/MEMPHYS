@@ -74,7 +74,7 @@ int getachar(FILE *stream) {
  static BOOLEAN last_char_was_newline = 0;
  int c;
 
- c = getc(stream); 
+ c = getc(stream);
  if (last_char_was_newline) line_number++;
  if (c == '\n') last_char_was_newline=1;
  else           last_char_was_newline=0;
@@ -91,7 +91,7 @@ long sloc_count(char *filename, FILE *stream) {
  int c;
  int mode = NORMAL;              /* NORMAL, INSTRING, or INCOMMENT */
  int comment_type = ANSIC_STYLE; /* ANSIC_STYLE or CPP_STYLE */
- 
+
 
  /* The following implements a state machine with transitions; the
     main state is "mode" and "comment_type", the transitions are

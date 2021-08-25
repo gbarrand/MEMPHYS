@@ -15,27 +15,28 @@ fi
 
 if [ "${use_sys_png}" = "yes" ] ; then
   if [ `uname` = Darwin ] ; then
-    if [ -e /usr/X11/include/png.h ] ; then
-      cppflags="${cppflags} -I/usr/X11/include"
-      libs="${libs} -L/usr/X11/lib -lpng"
+    if [ -e /opt/local/include/png.h ] ; then
+      cppflags="${cppflags} -I/opt/local/include"
+      if [ "${use_archive}" = "yes" ] ; then
+        libs="${libs} /opt/local/lib/libpng.a"
+      else	
+        libs="${libs} /opt/local/lib/libpng.dylib"
+      fi	
     else
-      if [ -e /opt/local/include/png.h ] ; then
-        cppflags="${cppflags} -I/opt/local/include"
-        libs="${libs} -L/opt/local/lib -lpng"
-      else
-        echo "bush/use/png : /opt/local/include/png.h not found. Use our png."
-        use_our_png=yes
-      fi
+      echo "bush/use/png : png.h not found."
+      exit
     fi
   else
-    if [ ! -e /usr/include/png.h ] ; then
-      echo "bush/use/png : /usr/include/png.h not found. Use our png."
-      use_our_png=yes
-    else
+    if [ -e /usr/include/png.h ] ; then
       cppflags="${cppflags} -I/usr/include"
       libs="${libs} -lpng"
+    else
+      echo "bush/use/png : png.h not found."
+      exit
     fi
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_PNG"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_PNG"
 fi
 
 if [ "${use_our_png}" = "yes" ] ; then

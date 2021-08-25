@@ -17,117 +17,47 @@ fi
 fi
 
 if [ "${use_sys_Python}" = "yes" ] ; then
+  use_py3=yes
+  if [ "${build_use_version_py2}" = "yes" ] ; then use_py3=no; fi
 
-  #/////////////////////////////////////////////////////////////
-  #/// use an lcg installation ? (lxplus or local) /////////////
-  #/// If so, it coworks with the env variable BUILD_CONFIG ////
-  #/////////////////////////////////////////////////////////////
-  lcg_area=
-  if [ "`uname -n | grep lxplus`" != "" ] ; then
-    lcg_area=/afs/cern.ch/sw/lcg/external
-  fi
-  if [ "${MYSITEROOT}" != "" ] ; then
-    lcg_area="${MYSITEROOT}/lcg/external"
-  fi
-  #/////////////////////////////////////////////////////////////
-  #/////////////////////////////////////////////////////////////
-  #/////////////////////////////////////////////////////////////
-  is_lx2=no
-  #if [ "`uname -n | grep lx2`" != "" ] ; then is_lx2=yes;fi
-  #/////////////////////////////////////////////////////////////
-  #/////////////////////////////////////////////////////////////
-  #/////////////////////////////////////////////////////////////
+  on_lx_lal=no
+  #if [ "`uname -n | grep lal.in2p3.fr | grep lx`" != "" ] ; then on_lx_lal=yes; fi
 
   Python_ld_library_path=
   py_exe=
 
-  if [ ${build_visual} = "yes" ] ; then
-
-    if [ -d "c:/usr/local/Python27" ] ; then
-      Python_home=c:/usr/local/Python27
-      cppflags="${cppflags} -I${Python_home}/include"
-      libs="${libs} ${Python_home}/libs/python27.lib"
-      py_exe="${Python_home}/python.exe"
-
-    elif [ -d "c:/Python27" ] ; then
-      Python_home=c:/Python27
-      cppflags="${cppflags} -I${Python_home}/include"
-      libs="${libs} ${Python_home}/libs/python27.lib"
-      py_exe="${Python_home}/python.exe"
-
-    elif [ -d "/usr/include/python2.7_cygwin_does_not_work" ] ; then
-      # from cygwin installer, but it does not compile with VisualC++.
-      ccflags="${ccflags}   -I/usr/include/python2.7"
-      cppflags="${cppflags} -I/usr/include/python2.7"
-      libs="${libs} /usr/lib/libpython2.7.dll.a"
-      py_exe="/usr/bin/python"
-
-    else      
-      echo "bush/use/Python : WARNING : Python not found."
-      exit
+  if [ "${BUSH_BUILD_CONFIG}" != "" ] ; then
+    if [ "${build_verbose}" = "yes" ] ; then
+      echo "bush/use/Python : use BUSH_BUILD_CONFIG ${BUSH_BUILD_CONFIG}"
     fi
 
-
-  elif [ `uname` = Darwin ] ; then
-
-    #NOTE : since 10.9 (Mavericks) Python is no more in the SDK.
-    #if [ ${build_sdk_mac} = "yes" ] ; then
-    #  Python_home=${macosx_sdk}/System/Library/Frameworks/Python.framework/Versions/Current
-    #elif [ ${build_sdk_mac_gnu} = "yes" ] ; then
-    #  Python_home=${macosx_sdk}/System/Library/Frameworks/Python.framework/Versions/Current
-    #elif [ ${build_clang} = "yes" ] ; then
-    #  Python_home=/System/Library/Frameworks/Python.framework/Versions/Current
-    #else
-    #  Python_home=/System/Library/Frameworks/Python.framework/Versions/Current
-    #fi
-
-    # if working with boost/python from MacPorts, you have to use :
-    Python_home=/opt/local/Library/Frameworks/Python.framework/Versions/2.7
-
-    #Python_home=/usr/local/Python/2.7.8
-  
-    if [ ! -d "${Python_home}" ] ; then
-      echo "bush/use/Python : WARNING : not found under ${Python_home}"
-      exit
-    fi
-
-    ccflags="${ccflags}   -I${Python_home}/Headers"
-    cppflags="${cppflags} -I${Python_home}/Headers"
-    libs="${libs} ${Python_home}/Python"
-
-   #ccflags="${ccflags}   -I${Python_home}/include/python2.7"
-   #cppflags="${cppflags} -I${Python_home}/include/python2.7"
-   #libs="${libs} -L${Python_home}/lib -lpython2.7"
-
-    py_exe="${Python_home}/bin/pythonw"
-
-  elif [ "${lcg_area}" != "" ] ; then
-
-    if   [ "${BUILD_CONFIG}" = "x86_64-slc5-gcc43-opt" ] ; then
-      Python_vers=2.7
+    if [ "${BUSH_BUILD_CONFIG}" = "LCG_97apython3_gcc9" ] ; then
+      lcg_area=/cvmfs/sft.cern.ch/lcg/releases
+      Python_home=${lcg_area}/Python/3.7.6-b96a9/x86_64-centos7-gcc9-opt
+      Python_version=3.7m
+    elif   [ "${BUSH_BUILD_CONFIG}" = "x86_64-slc5-gcc43-opt" ] ; then
+      lcg_area=/afs/cern.ch/sw/lcg/external
+      Python_version=2.7
       Python_home="${lcg_area}/Python/2.7.3/x86_64-slc5-gcc43-opt"
-    elif [ "${BUILD_CONFIG}" = "x86_64-slc5-gcc46-opt" ] ; then
-      Python_vers=2.7
+    elif [ "${BUSH_BUILD_CONFIG}" = "x86_64-slc5-gcc46-opt" ] ; then
+      lcg_area=/afs/cern.ch/sw/lcg/external
+      Python_version=2.7
       Python_home="${lcg_area}/Python/2.7.3/x86_64-slc5-gcc46-opt"
-    elif [ "${BUILD_CONFIG}" = "x86_64-slc6-gcc46-opt" ] ; then
-      Python_vers=2.7
+    elif [ "${BUSH_BUILD_CONFIG}" = "x86_64-slc6-gcc46-opt" ] ; then
+      lcg_area=/afs/cern.ch/sw/lcg/external
+      Python_version=2.7
       Python_home="${lcg_area}/Python/2.7.3/x86_64-slc6-gcc46-opt"
-    elif [ "${BUILD_CONFIG}" = "x86_64-slc6-gcc48-opt" ] ; then
-      Python_vers=2.7
+    elif [ "${BUSH_BUILD_CONFIG}" = "x86_64-slc6-gcc48-opt" ] ; then
+      lcg_area=/afs/cern.ch/sw/lcg/external
+      Python_version=2.7
       Python_home="${lcg_area}/Python/2.7.4/x86_64-slc6-gcc48-opt"
     else
-      echo 'bush/use/Python : use an lcg installation :'
-      echo '  you have to define the BUILD_CONFIG variable, for example :'
-      echo '    x86_64-slc5-gcc46-opt'
-      echo '  and ensure to be in the corresponding environment. In particular'
-      echo '  to be sure to have setup the corresponding compiler. Here :'
-      echo '    sh> g++ --version'
-      echo '  should return a 4.6.x version number.'
+      echo "bush/use/GLX : unknown BUSH_BUILD_CONFIG ${BUSH_BUILD_CONFIG}"
       exit
     fi
 
     # NOTE : at run time python-config needs a correct LD_LIBRARY_PATH
-    #        to attach libpython<version>.so. It complicates. 
+    #        to attach libpython<version>.so. It complicates.
     #        Moreover the --cflags option returns options that
     #        induces pedantic warnings. Then we prefer to set
     #        ccflags, cppflags, libs ourself.
@@ -136,49 +66,228 @@ if [ "${use_sys_Python}" = "yes" ] ; then
     #cppflags="${cppflags} `${py_conf} --cflags`"
     #libs="${libs}         `${py_conf} --libs`"
 
-    ccflags="${ccflags}   -I${Python_home}/include/python${Python_vers}"
-    cppflags="${cppflags} -I${Python_home}/include/python${Python_vers}"
-    libs="${libs} -L${Python_home}/lib -lpython${Python_vers}"
+    ccflags="${ccflags}   -I${Python_home}/include/python${Python_version}"
+    cppflags="${cppflags} -I${Python_home}/include/python${Python_version}"
+    libs="${libs} -L${Python_home}/lib -lpython${Python_version}"
     libs="${libs} -L/usr/${lib} -lpthread -lutil"
 
     Python_ld_library_path="${Python_home}/lib"
     py_exe="${Python_home}/bin/python"
 
+  elif [ ${build_visual} = "yes" ] ; then
+
+    if [ ${use_py3} = "yes" ] ; then
+     #Python_version=36
+      Python_version=39
+      Python_home=${c_drive}/Users/barrand/AppData/Local/Programs/Python/Python${Python_version}
+      if [ ! -d "${Python_home}" ] ; then
+        echo "bush/use/Python : WARNING : not found under ${Python_home}"
+        exit
+      fi
+      cppflags="${cppflags} -I${Python_home}/include"
+      libs="${libs} ${Python_home}/libs/python${Python_version}.lib"
+      py_exe="${Python_home}/python.exe"
+      
+    else
+    
+      if [ -d "${c_drive}/usr/local/Python27" ] ; then
+        Python_home=${c_drive}/usr/local/Python27
+        cppflags="${cppflags} -I${Python_home}/include"
+        libs="${libs} ${Python_home}/libs/python27.lib"
+        py_exe="${Python_home}/python.exe"
+  
+      elif [ -d "${c_drive}/Python27" ] ; then
+        Python_home=${c_drive}/Python27
+        cppflags="${cppflags} -I${Python_home}/include"
+        libs="${libs} ${Python_home}/libs/python27.lib"
+        py_exe="${Python_home}/python.exe"
+  
+      elif [ -d "/usr/include/python2.7_cygwin_does_not_work" ] ; then
+        # from cygwin installer, but it does not compile with VisualC++.
+        ccflags="${ccflags}   -I/usr/include/python2.7"
+        cppflags="${cppflags} -I/usr/include/python2.7"
+        libs="${libs} /usr/lib/libpython2.7.dll.a"
+        py_exe="/usr/bin/python"
+  
+      else
+        echo "bush/use/Python : WARNING : Python not found."
+        exit
+      fi
+  
+    fi
+    
+  elif [ `uname` = Darwin ] ; then
+
+    if [ ${use_py3} = "yes" ] ; then
+     #Python_home=/opt/local/Library/Frameworks/Python.framework/Versions/3.6
+     #ccflags="${ccflags}   -I${Python_home}/include/python3.6m"
+     #cppflags="${cppflags} -I${Python_home}/include/python3.6m"
+     #libs="${libs} -L${Python_home}/lib -lpython3.6m"
+     #py_exe="${Python_home}/bin/python3.6m"
+      
+      Python_home=/opt/local/Library/Frameworks/Python.framework/Versions/3.8
+      ccflags="${ccflags}   -I${Python_home}/include/python3.8"
+      cppflags="${cppflags} -I${Python_home}/include/python3.8"
+      libs="${libs} -L${Python_home}/lib -lpython3.8"
+      py_exe="${Python_home}/bin/python3.8"
+      
+      if [ ! -d "${Python_home}" ] ; then
+        echo "bush/use/Python : WARNING : not found under ${Python_home}"
+        exit
+      fi
+  
+
+    else
+      #NOTE : since 10.9 (Mavericks) Python is no more in the SDK.
+      #if [ ${build_sdk_mac} = "yes" ] ; then
+      #  Python_home=${macosx_sdk}/System/Library/Frameworks/Python.framework/Versions/Current
+      #elif [ ${build_sdk_mac_gnu} = "yes" ] ; then
+      #  Python_home=${macosx_sdk}/System/Library/Frameworks/Python.framework/Versions/Current
+      #elif [ ${build_clang} = "yes" ] ; then
+      #  Python_home=/System/Library/Frameworks/Python.framework/Versions/Current
+      #else
+      #  Python_home=/System/Library/Frameworks/Python.framework/Versions/Current
+      #fi
+  
+      #Python_home=/System/Library/Frameworks/Python.framework/Versions/2.7
+  
+      # if working with boost/python from MacPorts, you have to use :
+      Python_home=/opt/local/Library/Frameworks/Python.framework/Versions/2.7
+  
+      #Python_home=/usr/local/Python/2.7.8
+  
+      if [ ! -d "${Python_home}" ] ; then
+        echo "bush/use/Python : WARNING : not found under ${Python_home}"
+        exit
+      fi
+  
+      ccflags="${ccflags}   -I${Python_home}/include/python2.7"
+      cppflags="${cppflags} -I${Python_home}/include/python2.7"
+      libs="${libs} -L${Python_home}/lib -lpython2.7"
+  
+      py_exe="${Python_home}/bin/pythonw"
+
+    fi
+     
   else
 
-    Python_lib="${Python_home}/${lib}"
+    if [ ${use_py3} = "yes" ] ; then
 
-    if [ "${is_lx2}" = "yes" ] ; then
-      Python_vers=2.7
-      Python_home=/usr/local/python-2.7.1
-      Python_lib="${Python_home}/lib"
+      if [ `uname -n` = vm-75222.lal.in2p3.fr ] ; then
+        Python_home=/opt/anaconda
+        Python_version=python3.6m
+        Python_lib="-L${Python_home}/lib -lpython3.6m"
+        py_exe="${Python_home}/bin/python3.6"
 
-    elif [ -f /usr/include/python2.7/Python.h ] ; then
-      Python_vers=2.7
-      Python_home=/usr
-    elif [ -f /usr/include/python2.6/Python.h ] ; then
-      Python_vers=2.6
-      Python_home=/usr
-    elif [ -f /usr/include/python2.5/Python.h ] ; then
-      Python_vers=2.5
-      Python_home=/usr
-    elif [ -f /usr/include/python2.4/Python.h ] ; then
-      Python_vers=2.4
-      Python_home=/usr
+     #elif [ -f /opt/python/3.6.5.1/include/python3.6m/Python.h ] ; then  #cori.nersc.
+      elif [ -f /usr/common/software/python/3.6-anaconda-4.4/include/python3.6m/Python.h ] ; then  #cori.nersc.
+        Python_home=/usr/common/software/python/3.6-anaconda-4.4
+        #/usr/common/software/python/3.6-anaconda-4.4/
+        #Python_home=/opt/python/3.6.5.1
+        Python_version=python3.6m
+       # NOTE : with NERSC/cori/spark, the below way to link does not permit to find libpython3.so at run time.
+        Python_lib="-L${Python_home}/lib -lpython3"
+       # NOTE : the below does not work too :
+       #Python_lib="-Wl,-rpath,/opt/python/3.6.5.1/lib -L${Python_home}/lib -lpython3"
+       # NOTE : the below is ok :
+       #Python_lib="/opt/python/3.6.5.1/lib/python3.6/config-3.6m-x86_64-linux-gnu/libpython3.6m.a"
+        py_exe="${Python_home}/bin/python3.6m"
+
+      elif [ -d /usr/local/Python/3.8.0 ] ; then  #ostackc, ostackess
+        Python_home=/usr/local/Python/3.8.0
+        Python_version=python3.8
+        Python_lib="-L${Python_home}/lib -lpython3.8"
+        py_exe="${Python_home}/bin/python3.8"
+
+      elif [ -d /usr/local/Python/3.6.6 ] ; then  #ostackc
+        Python_home=/usr/local/Python/3.6.6
+        Python_version=python3.6m
+        Python_lib="-L${Python_home}/lib -lpython3.6m"
+        py_exe="${Python_home}/bin/python3.6m"
+
+      elif [ -d /usr/include/python3.4m ] ; then  #ostacku
+        Python_home=/usr
+        Python_version=python3.4m
+        Python_lib="-L${Python_home}/lib/x86_64-linux-gnu -lpython3.4m"
+        py_exe="${Python_home}/bin/python3.4m"
+
+      elif [ -d /usr/include/python3.5m ] ; then  #ostackess
+        Python_home=/usr
+        Python_version=python3.5m
+        Python_lib="-L${Python_home}/lib/x86_64-linux-gnu -lpython3.5m"
+        py_exe="${Python_home}/bin/python3.5m"
+  
+      elif [ -d "${HOME}/lib/anaconda3" ] ; then  #USER=plaszczy
+        Python_home="${HOME}/lib/anaconda3"
+        Python_version=python3.6m
+        Python_lib="-L${Python_home}/lib -lpython3.6m"
+        py_exe="${Python_home}/bin/python3.6m"
+  
+      else
+        echo "bush/use/Python : Python3.x not found."
+        exit
+      fi
+  
+      if [ ! -d "${Python_home}" ] ; then
+        echo "bush/use/Python : WARNING : not found under ${Python_home}"
+        exit
+      fi
+  
+      ccflags="${ccflags}   -I${Python_home}/include/${Python_version}"
+      cppflags="${cppflags} -I${Python_home}/include/${Python_version}"
+      libs="${libs} ${Python_lib}"
+      
     else
-      echo "bush/use/Python : Python 2.[7,6,5,4] not found."
-      exit
+    
+      if [ "${on_lx_lal}" = "yes" -a -f /usr/local/include/python2.7/Python.h ] ; then
+        # It is unusable. The python lib is related to a libgc not corresponding to the default g++.
+        Python_version=2.7
+        Python_home=/usr/local
+        Python_lib="${Python_home}/lib"
+  
+      elif [ -f /usr/include/python2.7/Python.h ] ; then
+        Python_version=2.7
+        Python_home=/usr
+        Python_lib="${Python_home}/${lib}"
+  
+      elif [ -f /usr/include/python2.6/Python.h ] ; then
+        Python_version=2.6
+        Python_home=/usr
+        Python_lib="${Python_home}/${lib}"
+      elif [ -f /usr/include/python2.5/Python.h ] ; then
+        Python_version=2.5
+        Python_home=/usr
+        Python_lib="${Python_home}/${lib}"
+      elif [ -f /usr/include/python2.4/Python.h ] ; then
+        Python_version=2.4
+        Python_home=/usr
+        Python_lib="${Python_home}/${lib}"
+      else
+        echo "bush/use/Python : Python 2.[7,6,5,4] not found."
+        exit
+      fi
+
+      ccflags="${ccflags}   -I${Python_home}/include/python${Python_version}"
+      cppflags="${cppflags} -I${Python_home}/include/python${Python_version}"
+
+      if [ "${use_archive}" = "yes" ] ; then
+        if [ -f ${Python_lib}/libpython${Python_version}.a ] ; then
+          libs="${libs} ${Python_lib}/libpython${Python_version}.a"
+        else
+          echo "bush/use/Python : use_archive requested but ${Python_lib}/libpython${Python_version}.a not found, try with -lpython  ${Python_version}."
+          libs="${libs} -L${Python_lib} -lpython${Python_version}"
+        fi
+      else
+        libs="${libs} -L${Python_lib} -lpython${Python_version}"
+      fi
+  
+      py_exe="${Python_home}/bin/python"
+  
     fi
-
-    ccflags="${ccflags}   -I${Python_home}/include/python${Python_vers}"
-    cppflags="${cppflags} -I${Python_home}/include/python${Python_vers}"
-
-    libs="${libs} -L${Python_lib} -lpython${Python_vers}"
-
-    py_exe="${Python_home}/bin/python"
-
+      
   fi
 
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_PYTHON"
   cppflags="${cppflags} -DEXLIB_USE_NATIVE_PYTHON"
 
   if [ "${build_verbose}" = "yes" ] ; then
@@ -215,15 +324,8 @@ if [ "${use_our_Python}" = "yes" ] ; then
     exit
   fi
 
-  if [ "${use_archive}" = "yes" ] ; then
-    libs="${libs} ${Python_build_dir}/libourex_Python.a"
-  else
-    if [ ${build_visual} = "yes" ] ; then
-      libs="${libs} ${Python_build_dir}/ourex_Python.lib"
-    else
-      libs="${libs} -L${Python_build_dir} -lourex_Python"
-    fi
-  fi
+  ourex_pack_name=Python
+  . ${bush_home}/use/ourex_use
 
   if [ ${build_visual} = "yes" ] ; then
     libs="${libs} shell32.lib"

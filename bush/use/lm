@@ -5,7 +5,7 @@ if [ "${use_lm}" = "yes" ] ; then
 
   if [ ${build_visual} = "yes" ] ; then
     libs="${libs}"
-  else 
+  else
     libs="${libs} -lm"
   fi
 

@@ -8,7 +8,7 @@ if [ $# != 2 ] ; then
   exit
 fi
 
-#set -v 
+#set -v
 #echo "debug $1"
 #echo "debug $2"
 

@@ -26,7 +26,7 @@ if [ ${build_install} = "yes" ] ; then
 
     echo "bush/app_install : usage of fruitstrap does not work yet with a build of our own. (It is ok with an Xcode one)."
     exit
-    
+
     use_fruitstrap=yes
     . ${bush_home}/use/fruitstrap
     if [ ! -x ${fruitstrap_exe} ] ; then
@@ -53,11 +53,11 @@ if [ ${build_install} = "yes" ] ; then
       zip_path="./${build_dir}/distrib/${zip_file}"
       if [ ! -f ${zip_path} ] ; then
         echo "bush/app_install : file ${zip_path} does not exist."
-      else 
+      else
         install_dir=/usr/local/${build_app_distrib_dir}
         if [ ! -d ${install_dir} ] ; then
           echo "bush/app_install : directory ${install_dir} does not exist."
-        else       
+        else
           if [ ${build_verbose} = "yes" ] ; then
             echo "bush/app_install : install ${zip_path} under ${install_dir} ..."
           fi
@@ -66,7 +66,7 @@ if [ ${build_install} = "yes" ] ; then
           cd ${install_dir}
           if [ -d ${version} ] ; then
             echo "bush/app_install : ${version} already exists in ${install_dir}."
-          else   
+          else
             unzip -q ${zip_file}
             /bin/rm -f ./${zip_file}
             /bin/mv ${build_app_distrib_dir}/${version} .

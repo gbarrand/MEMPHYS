@@ -21,7 +21,7 @@ if [ "${use_our_CoinWin}" = "yes" ] ; then
     echo 'bush/use/CoinWin : variable ourex_home not defined.';exit
   fi
   CoinWin_home=${ourex_home}/CoinWin
-  
+
   #cppflags="${cppflags} -DSOWIN_NOT_DLL" # not neded anymore.
 
   ourex_pack_name=CoinWin

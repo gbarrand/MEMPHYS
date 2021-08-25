@@ -8,6 +8,8 @@
 
 oname=`basename ${file}`
 
+oname=`echo ${oname} | sed -e 's:\.h::g'`
+
 oname=`echo ${oname} | sed -e 's:\.cc::g'`
 oname=`echo ${oname} | sed -e 's:\.cxx::g'`
 oname=`echo ${oname} | sed -e 's:\.C::g'`
@@ -31,14 +33,20 @@ fi
 if [ "${build_o_ext}" != "" ] ; then obj="${obj}${build_o_ext}"; fi
 
 if [ ${build_do_compile} = "yes" ] ; then
-  if [ ${build_verbose} = yes ] ; then
-    echo "bush/compile_one_cpp : do ${file} ..."
-    if [ -f ${obj} ] ; then
-      echo "bush/compile_one_cpp : WARNING : ${obj} already exists."
+  if [ ${build_skip_done} = yes -a -f ${obj} ] ; then
+    if [ ${build_verbose} = yes ] ; then
+      echo "bush/compile_one_cpp : ${obj} already exists. Do not compile again."
     fi
+  else
+    if [ ${build_verbose} = yes ] ; then
+      echo "bush/compile_one_cpp : compile ${file} ..."
+      #if [ -f ${obj} ] ; then
+      #  echo "bush/compile_one_cpp : WARNING : ${obj} already exists."
+      #fi
+    fi
+    eval ${cpp_compiler} -x c++ -c ${cppflags} ${_cppflags} -o ${obj} ${file}
+    use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
   fi
-  eval ${cpp_compiler} -x c++ -c ${cppflags} ${_cppflags} -o ${obj} ${file}
-  use_status=$?;if [ ${use_status} != 0 ] ; then exit ${use_status};fi
 fi
 
 objs="${objs} ${obj}"

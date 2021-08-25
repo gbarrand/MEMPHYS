@@ -3,7 +3,7 @@
 
 if [ "${use_yacc}" = "yes" ] ; then
 
-  if [ `uname` = Darwin ] ; then  
+  if [ `uname` = Darwin ] ; then
 
     yacc_exe=/opt/local/bin/byacc
 

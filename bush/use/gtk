@@ -14,15 +14,15 @@ if [ "${use_gtk}" = "yes" ] ; then
 
   if [ `uname` = Darwin ] ; then
     if [ ! -d /opt/local/include/gtk-2.0 ] ; then
-      echo "bush/use/gtk : /opt/local/include/gtk-2.0 not found. Please install gtk2 with Macport."
+      echo "bush/use/gtk : /opt/local/include/gtk-2.0 not found. Please install gtk2 with MacPorts."
       echo "bush/use/gtk :   Darwin> cd /opt/local/bin;sudo ./port install gtk2 +no_x11+quartz"
       echo "bush/use/gtk : if installing with Fink, you have to edit bush/use/gtk to change the access paths."
       exit
     fi
-    gtk_cflags="${gtk_cflags} `pkg-config --cflags gtk+-2.0`"
-    ccflags="${ccflags} `pkg-config --cflags gtk+-2.0`"
-    cppflags="${cppflags} `pkg-config --cflags gtk+-2.0`"
-    libs="${libs} `pkg-config --libs gtk+-2.0`"
+    gtk_cflags="${gtk_cflags} `/opt/local/bin/pkg-config --cflags gtk+-2.0`"
+    ccflags="${ccflags} `/opt/local/bin/pkg-config --cflags gtk+-2.0`"
+    cppflags="${cppflags} `/opt/local/bin/pkg-config --cflags gtk+-2.0`"
+    libs="${libs} `/opt/local/bin/pkg-config --libs gtk+-2.0`"
   else
     if [ ! -d /usr/include/gtk-2.0 ] ; then
       echo "bush/use/gtk : /usr/include/gtk-2.0 not found. Please install gtk2-devel."

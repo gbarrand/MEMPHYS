@@ -8,12 +8,14 @@ fi
 if [ "${use_sys_cling}" = "yes" ] ; then
 
   . ${bush_home}/use_cling
-  
+
   if [ ! -d "${cling_home}" ] ; then
     echo "bush/use/cling : WARNING : not found under ${cling_home}"
     exit
   fi
 
+  . ${bush_home}/cppflags_add_std_cxx11
+  
   cppflags="${cppflags} -I${cling_home}/include"
   cppflags="${cppflags} -DLLVMRESDIR=${cling_home}"
 

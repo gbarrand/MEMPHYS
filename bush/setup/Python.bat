@@ -1,4 +1,4 @@
-@ECHO off 
+@ECHO off
 
 FOR /F "usebackq delims=;" %%d IN (`CD`) DO SET save_dir=%%d
 

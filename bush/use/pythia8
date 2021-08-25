@@ -24,7 +24,7 @@ if [ "${use_our_pythia8}" = "yes" ] ; then
     echo 'bush/use/pythia8 : variable ourex_home not defined.';exit
   fi
   pythia8_home=${ourex_home}/pythia8
-  
+
   ourex_pack_name=pythia8
   . ${bush_home}/use/ourex_use
   ccfiles="${ccfiles} ${pythia8_home}/LHAPDFDummy.cc"

@@ -21,7 +21,7 @@ if [ "${use_our_KUIP}" = "yes" ] ; then
     echo 'bush/use/KUIP : variable ourex_home not defined.';exit
   fi
   KUIP_home=${ourex_home}/KUIP
-  
+
   ourex_pack_name=KUIP
   . ${bush_home}/use/ourex_use
 fi

@@ -12,17 +12,46 @@ fi
 fi
 
 if [ "${use_sys_freetype}" = "yes" ] ; then
-  if [ `uname` = Darwin ] ; then  
-    if [ -d /usr/X11/include/freetype2  ] ; then
-      cppflags="${cppflags} -I/usr/X11/include -I/usr/X11/include/freetype2"
-      libs="${libs} -L/usr/X11/lib -lfreetype"
+  if [ `uname` = Darwin ] ; then
+    if [ -d /opt/local/include/freetype2  ] ; then
+      cppflags="${cppflags} -I/opt/local/include/freetype2"
+      if [ "${use_archive}" = "yes" ] ; then
+        libs="${libs} /opt/local/lib/libfreetype.a"
+        libs="${libs} /opt/local/lib/libbz2.a"
+        libs="${libs} /opt/local/lib/libbrotlidec-static.a"
+        libs="${libs} /opt/local/lib/libbrotlicommon-static.a"
+      else	
+        libs="${libs} /opt/local/lib/libfreetype.dylib"
+      fi
     else
-      echo "bush/use/freetype : /usr/X11/include/freetype2 not found. Use our freetype2."
-      use_our_freetype=yes
+      echo "bush/use/freetype : freetype2 not found."
+      exit
     fi
+  elif [ -d /usr/include/x86_64-linux-gnu/freetype2 ] ; then  #ostackess.
+    cppflags="${cppflags} -I/usr/include/freetype2"
+    if [ "${use_archive}" = "yes" ] ; then
+      libs="${libs} /usr/lib/x86_64-linux-gnu/libfreetype.a"
+    else	
+      libs="${libs} /usr/lib/x86_64-linux-gnu/libfreetype.so"
+    fi	
+  elif [ -d /usr/include/freetype2 ] ; then  #ostackc.
+    cppflags="${cppflags} -I/usr/include/freetype2"
+    if [ "${use_archive}" = "yes" ] ; then
+      if [ -f /usr/lib64/libfreetype.a ] ; then
+        libs="${libs} /usr/lib64/libfreetype.a"
+      else	
+        echo "bush/use/freetype : use_archive requested but /usr/lib64/libfreetype.a not found, use .so"
+        libs="${libs} /usr/lib64/libfreetype.so"
+      fi	
+    else	
+      libs="${libs} /usr/lib64/libfreetype.so"
+    fi	
   else
-    use_our_freetype=yes
+    echo "bush/use/freetype : freetype2 not found."
+    exit
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_FREETYPE"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_FREETYPE"
 fi
 
 if [ "${use_our_freetype}" = "yes" ] ; then
@@ -30,7 +59,7 @@ if [ "${use_our_freetype}" = "yes" ] ; then
     echo 'bush/use/freetype : variable ourex_home not defined.';exit
   fi
   freetype_home=${ourex_home}/freetype
-  
+
   ourex_pack_name=freetype
   . ${bush_home}/use/ourex_use
 fi

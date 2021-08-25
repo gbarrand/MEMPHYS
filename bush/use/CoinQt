@@ -21,7 +21,11 @@ if [ "${use_our_CoinQt}" = "yes" ] ; then
     echo 'bush/use/CoinQt : variable ourex_home not defined.';exit
   fi
   CoinQt_home=${ourex_home}/CoinQt
-  
+
+  if [ ${build_visual} = "yes" ] ; then
+    cppflags="${cppflags} -DSOQT_DLL"
+  fi
+
   ourex_pack_name=CoinQt
   . ${bush_home}/use/ourex_use
 fi

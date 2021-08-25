@@ -12,14 +12,24 @@ fi
 fi
 
 if [ "${use_sys_zlib}" = "yes" ] ; then
-  if [ ! -e /usr/include/zlib.h ] ; then
-    echo "bush/use/zlib : /usr/include/zlib.h not found."
+  if [ -e /usr/include/zlib.h ] ; then
+    ccflags="${ccflags} -I/usr/include"
+    cppflags="${cppflags} -I/usr/include"
+    libs="${libs} -lz"
+  elif [ -e /opt/local/include/zlib.h ] ; then
+    ccflags="${ccflags} -I/opt/local"
+    cppflags="${cppflags} -I/opt/local"
+    if [ "${use_archive}" = "yes" ] ; then
+      libs="${libs} /opt/local/lib/libz.a"
+    else	
+      libs="${libs} /opt/local/lib/libz.dylib"
+    fi	
+  else
+    echo "bush/use/zlib : zlib.h not found."
     exit
   fi
   ccflags="${ccflags} -DEXLIB_USE_NATIVE_ZLIB"
   cppflags="${cppflags} -DEXLIB_USE_NATIVE_ZLIB"
-  #cppflags="${cppflags} -I/usr/include"
-  libs="${libs} -lz"
 fi
 
 if [ "${use_our_zlib}" = "yes" ] ; then

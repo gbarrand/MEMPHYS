@@ -15,13 +15,15 @@ fi
 if [ "${use_sys_cfitsio}" = "yes" ] ; then
   cfitsio_sys_home=/usr/local/cfitsio/3.25
  #cfitsio_sys_home=/usr/local/cfitsio/3.380
-  if [ ! -d ${cfitsio_sys_home} ] ; then
-    echo "bush/use/cfitsio : ${cfitsio_sys_home} not found. Use ourex cfitsio."
-    use_our_cfitsio=yes
-  else
+  if [ -d ${cfitsio_sys_home} ] ; then
     cppflags="${cppflags} -I${cfitsio_sys_home}/include"
     libs="${libs} -L${cfitsio_sys_home}/lib -lcfitsio"
+  else
+    echo "bush/use/cfitsio : ${cfitsio_sys_home} not found."
+    exit
   fi
+  ccflags="${ccflags} -DEXLIB_USE_NATIVE_CFITSIO"
+  cppflags="${cppflags} -DEXLIB_USE_NATIVE_CFITSIO"
 fi
 
 if [ "${use_our_cfitsio}" = "yes" ] ; then
@@ -29,7 +31,7 @@ if [ "${use_our_cfitsio}" = "yes" ] ; then
     echo 'bush/use/cfitsio : variable ourex_home not defined.';exit
   fi
   cfitsio_home=${ourex_home}/cfitsio
-  
+
   ourex_pack_name=cfitsio
   . ${bush_home}/use/ourex_use
   cppflags="${cppflags} -D_REENTRANT"
