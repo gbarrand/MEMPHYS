@@ -258,8 +258,7 @@ static const int FARDATA png_pass_width[7] = {8, 4, 4, 2, 2, 1, 1};
 #if defined(PNG_MMX_CODE_SUPPORTED)
 /* djgpp, Win32, Cygwin, and OS2 add their own underscores to global variables,
  * so define them without: */
-#if defined(__DJGPP__) || defined(WIN32) || defined(__CYGWIN__) || \
-    defined(__OS2__)
+#if defined(__DJGPP__) || defined(WIN32) || defined(__CYGWIN__) || defined(__OS2__)
 #  define _mmx_supported  mmx_supported
 #  define _const4         const4
 #  define _const6         const6

@@ -186,7 +186,19 @@ png_set_gAMA_fixed(png_structp png_ptr, png_infop info_ptr, png_fixed_point
    if (png_ptr == NULL || info_ptr == NULL)
       return;
 
-   if (int_gamma > (png_fixed_point) PNG_UINT_31_MAX)
+#if defined(ANDROID) && ((ULONG_MAX) == (UINT_MAX)) /*G.Barrand*/
+   /*G.Barrand : Android : 32 bits : to remove the warning :
+     comparison 'png_fixed_point' (aka 'long') > 2147483647 is always false [-Wtautological-constant-compare] 
+   */
+     if (int_gamma < 0)
+     {
+       png_warning(png_ptr, "Setting negative gamma to zero");
+       gamma=0;
+     }
+     else
+       gamma=int_gamma;
+#else
+   if (int_gamma > (png_fixed_point) PNG_UINT_31_MAX)  /*G.Barrand : it is always false on 32 bits.*/
    {
      png_warning(png_ptr, "Limiting gamma to 21474.83");
      gamma=PNG_UINT_31_MAX;
@@ -201,6 +213,7 @@ png_set_gAMA_fixed(png_structp png_ptr, png_infop info_ptr, png_fixed_point
      else
        gamma=int_gamma;
    }
+#endif /*ANDROID*/   
 #ifdef PNG_FLOATING_POINT_SUPPORTED
    info_ptr->gamma = (float)(gamma/100000.);
 #endif

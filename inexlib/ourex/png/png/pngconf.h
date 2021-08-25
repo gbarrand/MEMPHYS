@@ -35,7 +35,7 @@
 #ifdef PNG_CONFIGURE_LIBPNG
 #ifdef HAVE_CONFIG_H
 /*G.Barrand #include "config.h" */
-#include "png_config.h" /*G.Barrand*/
+/*#include "png_config.h"*/ /*G.Barrand*/
 #endif
 #endif
 
@@ -208,6 +208,12 @@
 #      endif  
 #    endif  
 #  endif
+#endif
+
+#if (defined(__CYGWIN__) && defined(__GNUC__))  //G.Barrand.
+#ifndef PNG_NO_MMX_CODE
+#define PNG_NO_MMX_CODE
+#endif
 #endif
 
 /* This protects us against compilers that run on a windowing system
