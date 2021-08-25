@@ -10,7 +10,7 @@ echo "whoami : `whoami`"
 echo "pwd : `pwd`"
 
 . ../gcc_493_setup.sh
-. ../run_g410x_setup.sh
+. ../setenv_g4data.sh
 
 # build output root file name :
 if [ "${SLURM_ARRAY_JOB_ID}" = "" ] ; then
