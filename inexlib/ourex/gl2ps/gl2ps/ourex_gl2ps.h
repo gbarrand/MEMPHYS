@@ -211,7 +211,8 @@
 #define gl2psTEX ourex_gl2psTEX
 #define gl2psbackends ourex_gl2psbackends
 
-#define gl2ps ourex_gl2ps
+/*global object :*/
+#define gl2ps ourex_gl2ps   
 
 #include "_gl2ps.h"
 

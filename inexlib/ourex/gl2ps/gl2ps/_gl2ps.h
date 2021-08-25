@@ -67,7 +67,7 @@ typedef unsigned short gl2ps_ushort;
 #define gl2ps_GLushort gl2ps_ushort
 #define gl2ps_GLsizei  int
 #define GL2PS_GL_RGBA  0x1908
-/*G.Barrand : end*/
+/*G.Barrand : end.*/
 
 /* Support for compressed PostScript/PDF/SVG and for embedded PNG
    images in SVG */
@@ -79,7 +79,7 @@ typedef unsigned short gl2ps_ushort;
 #    define GL2PS_HAVE_LIBPNG
 #  endif
 #endif
-/*G.Barrand : end*/
+/*G.Barrand : end.*/
 
 /* Version number */
 
@@ -204,4 +204,30 @@ GL2PSDLL_API gl2ps_GLint gl2psSetBackgroundColor(float r,float g,float b);
 }
 #endif
 
+/*G.Barrand : begin :*/
+typedef unsigned char  gl2ps_GLboolean;
+
+typedef struct {
+  gl2ps_GLboolean (*m_glIsEnabled)      (gl2ps_GLenum);
+  void            (*m_glBegin)          (gl2ps_GLenum);
+  void            (*m_glEnd)            ();
+  void            (*m_glGetFloatv)      (gl2ps_GLenum,gl2ps_GLfloat*);
+  void            (*m_glVertex3f)       (gl2ps_GLfloat,gl2ps_GLfloat,gl2ps_GLfloat);
+  void            (*m_glGetBooleanv)    (gl2ps_GLenum,gl2ps_GLboolean*);
+  void            (*m_glGetIntegerv)    (gl2ps_GLenum,gl2ps_GLint*);
+  gl2ps_GLint     (*m_glRenderMode)     (gl2ps_GLenum);
+  void            (*m_glFeedbackBuffer) (gl2ps_GLsizei,gl2ps_GLenum,gl2ps_GLfloat*);
+  void            (*m_glPassThrough)    (gl2ps_GLfloat);
+} gl2ps_gl_funcs_t;
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+GL2PSDLL_API void gl2ps_set_gl_funcs(gl2ps_gl_funcs_t*);
+GL2PSDLL_API void gl2ps_reset_gl_funcs();
+#if defined(__cplusplus)
+}
+#endif
+/*G.Barrand : end.*/
+  
 #endif /* __GL2PS_H__ */

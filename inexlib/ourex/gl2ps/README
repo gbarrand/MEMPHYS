@@ -4,12 +4,6 @@
  to use gl2ps without having at hand the FEEDBACK buffer
  way of doing which is not available with OpenGL-ES.
  
-  To compile and link with an OpenGL-ES, we have put a :
-    #ifdef EXLIB_GL_GLES
- in gl2ps.h in order to "dummy #define" some GL_ cpp macros
- and have dummy versions of some gl functions not available
- in OpenGL-ES.
-
   We have made public, the functions :
  - gl2psAddPolyPrimitive
  in order to feed gl2ps (then without using the not available

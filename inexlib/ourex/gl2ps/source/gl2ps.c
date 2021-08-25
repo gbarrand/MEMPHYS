@@ -82,15 +82,8 @@
 #endif
 
 /*G.Barrand : begin :*/
-#include "gldum_gldef.h"
-#include "rename_gl.ic"
-
-#define GLint    int
-#define GLfloat  float
-#define GLenum   gl2ps_uint
-#define GLshort  short
-#define GLushort gl2ps_ushort
-#define GLsizei  int
+#include "gldef.h"
+#include "set_gl.ic"
 /*G.Barrand : end*/
 
 /********************************************************************* 
@@ -3878,6 +3871,7 @@ static int gl2psPDFgroupListWriteXObjectResources(void)
       if(GL_RGBA == p->data.image->format)  /* reserve one object for image mask */
         gl2ps->objects_stack++;
       offs += fprintf(gl2ps->stream, "/Im%d %d 0 R\n", gro->imno, gro->imobjno);
+      break; /*G.Barrand : add this break.*/
     case GL2PS_TRIANGLE:
       if(gro->trgroupno >=0)
         offs += fprintf(gl2ps->stream, "/TrG%d %d 0 R\n", gro->trgroupno, gro->trgroupobjno);
@@ -6044,6 +6038,3 @@ GL2PSDLL_API const char *gl2psGetFormatDescription(GLint format)
   else
     return "Unknown format";
 }
-
-#include "renamed_gl.ic" /*G.Barrand*/
-
