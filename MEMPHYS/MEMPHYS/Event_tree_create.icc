@@ -1,0 +1,43 @@
+
+  m_Event_tree = new inlib::wroot::tree(m_file->dir(),"Event","MEMPHYS WC Event");
+  m_Event_tree->create_leaf_ref<int>("eventId",m_Event_eventId);
+  m_Event_tree->create_leaf_ref<int>("inputEvtId",m_Event_inputEvtId);
+  m_Event_tree->create_leaf_ref<int>("interMode",m_Event_interMode);
+  m_Event_tree->create_leaf_ref<int>("vtxVol",m_Event_vtxVol);
+  m_Event_tree->create_std_vector_leaf_ref<double>("vtxPos",m_Event_vtxPos_vec);
+  m_Event_tree->create_leaf_ref<int>("nPart",m_Event_nPart);
+  m_Event_tree->create_leaf_ref<int>("leptonIndex",m_Event_leptonIndex);
+  m_Event_tree->create_leaf_ref<int>("protonIndex",m_Event_protonIndex);
+    
+    m_Event_track_tree = new inlib::wroot::tree(m_file->dir(),"track","track",false); //false=not managed.
+    m_Event_track_tree->create_leaf_ref<int>("pId",m_Event_track_pId);
+    m_Event_track_tree->create_leaf_ref<int>("parent",m_Event_track_parent);
+    m_Event_track_tree->create_leaf_ref<float>("timeStart",m_Event_track_timeStart);
+    m_Event_track_tree->create_std_vector_leaf_ref<double>("direction",m_Event_track_direction_vec);
+    m_Event_track_tree->create_leaf_ref<double>("mass",m_Event_track_mass);
+    m_Event_track_tree->create_leaf_ref<double>("pTot",m_Event_track_pTot);
+    m_Event_track_tree->create_leaf_ref<double>("ETot",m_Event_track_ETot);
+    m_Event_track_tree->create_std_vector_leaf_ref<double>("momentum",m_Event_track_momentum_vec);
+    m_Event_track_tree->create_std_vector_leaf_ref<double>("startPos",m_Event_track_startPos_vec);
+    m_Event_track_tree->create_std_vector_leaf_ref<double>("stopPos",m_Event_track_stopPos_vec);
+    m_Event_track_tree->create_leaf_ref<int>("startVol",m_Event_track_startVol);
+    m_Event_track_tree->create_leaf_ref<int>("stopVol",m_Event_track_stopVol);
+  m_Event_tree->create_leaf("track",*m_Event_track_tree);
+    
+  m_Event_tree->create_leaf_ref<int>("nHits",m_Event_nHits);
+    
+    m_Event_hit_tree = new inlib::wroot::tree(m_file->dir(),"hit","hit",false); //false=not managed.
+    m_Event_hit_tree->create_leaf_ref<int>("tubeId",m_Event_hit_tubeId);
+    m_Event_hit_tree->create_leaf_ref<int>("totalPE",m_Event_hit_totalPE);
+    m_Event_hit_tree->create_std_vector_leaf_ref<float>("pe",m_Event_hit_pe_vec);
+  m_Event_tree->create_leaf("hit",*m_Event_hit_tree);
+    
+  m_Event_tree->create_leaf_ref<int>("nDigits",m_Event_nDigits);
+  m_Event_tree->create_leaf_ref<double>("sumPE",m_Event_sumPE);
+    
+    m_Event_digit_tree = new inlib::wroot::tree(m_file->dir(),"digit","digit",false); //false=not managed.
+    m_Event_digit_tree->create_leaf_ref<int>("tubeId",m_Event_digit_tubeId);
+    m_Event_digit_tree->create_leaf_ref<double>("pe",m_Event_digit_pe);
+    m_Event_digit_tree->create_leaf_ref<double>("time",m_Event_digit_time);
+  m_Event_tree->create_leaf("digit",*m_Event_digit_tree);
+    

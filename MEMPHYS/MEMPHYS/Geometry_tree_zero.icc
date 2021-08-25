@@ -1,0 +1,9 @@
+
+  ,m_Geometry_tree(0)
+  ,m_Geometry_wcRadius(0)
+  ,m_Geometry_wcLength(0)
+  ,m_Geometry_pmtRadius(0)
+  ,m_Geometry_nPMTs(0)
+    ,m_Geometry_pmtInfos_tree(0)
+    ,m_Geometry_pmtInfos_pmtId(0)
+    ,m_Geometry_pmtInfos_pmtLocation(0)
