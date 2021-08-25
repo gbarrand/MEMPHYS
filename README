@@ -1,6 +1,6 @@
 
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
- /// build by using the default inexlib/ourex/geant4 : /////////////////////////////////////////////////
+ /// build by using the default geant4 found under inexlib/ourex: //////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
   To build :
     UNIX> cd MEMPHYS/mgr
@@ -8,7 +8,7 @@
   ( UNIX> ./build -v  # to see built files.)
   ( UNIX> ./build -x  # for a full trace.)
 
- (here UNIX is for Linux, macOS, Windows-10/cygwin)
+ (here UNIX is for Linux, macOS, Windows-10/cygwin, Windows-10/WSL)
 
   If the GNU parallel application is known from your prompt, you can use
  the "-parallel" option so that C and C++ file compilations are distributed
@@ -23,7 +23,7 @@
     bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
 
  If wanting to run from this build area :
-    UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+    UNIX> <in setenv_g4data[.sh,.csh] edit the g4data_home variable to point to the geant4 data directories>
     UNIX> cd ../exa_run
     UNIX> ../mgr/<bin_dir>/MEMPHYS_sim  # it produces a MEMPHYS.root file.
     
@@ -33,7 +33,7 @@
  To build the MEMPHYS_sim program against an already installed geant4 and by using cmake :
     UNIX> cd <install_path>/MEMPHYS/MEMPHYS/cmake
     UNIX> <read README for instructions to build and run>
- (UNIX here is for Linux, macOS. Not tested or Windows-10/cygwin).
+ (UNIX here is for Linux, macOS. Not tested or Windows-10/cygwin, Windows-10/WSL).
 
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@
     bin_<config>/distrib/MEMPHYS-<version>-<platform>.zip
 
  If wanting to run from this build area :
-    UNIX> <in run_g410x_setup[.sh,.csh] edit the g4data_home variable to point to the geant4 10.x data>
+    UNIX> <in setenv_g4data[.sh,.csh] edit the g4data_home variable to point to the geant4 data directories>
     UNIX> cd ../exa_run
     UNIX> ../mgr/<bin_dir>/MEMPHYS_sim  # it produces a MEMPHYS.root file.
     
@@ -75,8 +75,10 @@
     UNIX> <in cern_root_setup[.sh,.csh] edit root_home to point to your CERN-ROOT installation>
       sh> . ./cern_root_setup.sh
    ( csh> source ./cern_root_setup.csh )
-    UNIX> ./build_app_read_plot_ROOT  # do some plotting on a MEMPHYS.root data file, by using CERN-ROOT plotting.
-    UNIX> ./build_app_geomt_ROOT      # dump PMTs in a MEMPHYS.root data file, by using CERN-ROOT to read the file.
+    UNIX> ./build_app_read_plot_ROOT  # do some plotting on a MEMPHYS.root data file
+                                      # by using CERN-ROOT plotting.
+    UNIX> ./build_app_geomt_ROOT      # dump PMTs in a MEMPHYS.root data file, by using CERN-ROOT
+                                      # to read the file.
 
  If these programs are built build_distrib script will include them in the distribution file.
 
