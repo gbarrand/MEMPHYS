@@ -143,7 +143,7 @@ inline bool process_tracks(inlib::rroot::tree& a_tree,bool a_verbose) {
 //////////////////////////////////////////////////////////////////////////////
 #include <inlib/rroot/file>
 #include <inlib/rroot/fac>
-#include <inlib/file>
+#include <inlib/fileis>
 
 #include <exlib/zlib>
 
@@ -169,7 +169,7 @@ inline bool read_data(std::ostream& a_out,
 
   std::string stree("Event");
   inlib::rroot::fac fac(a_out);
-  inlib::rroot::tree* tree = inlib::rroot::find_tree(rfile,fac,stree);      
+  inlib::rroot::tree* tree = inlib::rroot::find_tree(rfile,fac,stree,true);
   if(!tree) {
     a_out << "tree " << stree << " not found." << std::endl;
     return false;

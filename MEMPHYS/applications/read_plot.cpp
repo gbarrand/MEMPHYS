@@ -32,23 +32,23 @@ inline bool plot(std::ostream& a_out,
   plotter.plots().view_border = false;
 
   if(plotter.plots().set_current_plotter(0)) {
-    inlib::sg::plotter& sgp = plotter.plots().current_plotter();
-    set_region_style(sgp,a_ttf);
-    sgp.x_axis().title = "time";
-    sgp.y_axis().title = "Entries";
+    inlib::sg::plotter& _plotter = plotter.plots().current_plotter();
+    set_region_style(_plotter,a_ttf);
+    _plotter.x_axis().title = "time";
+    _plotter.y_axis().title = "Entries";
     inlib::sg::plottable* ptb = new inlib::sg::h1d2plot(aHisto1D);
     ptb->set_name(aHisto1D.title());
-    sgp.add_plottable(ptb);
+    _plotter.add_plottable(ptb);
   }
 
   if(plotter.plots().set_current_plotter(1)) {
-    inlib::sg::plotter& sgp = plotter.plots().current_plotter();
-    set_region_style(sgp,a_ttf);
-    sgp.x_axis().title = "time";
-    sgp.y_axis().title = "PE";
+    inlib::sg::plotter& _plotter = plotter.plots().current_plotter();
+    set_region_style(_plotter,a_ttf);
+    _plotter.x_axis().title = "time";
+    _plotter.y_axis().title = "PE";
     inlib::sg::plottable* ptb = new inlib::sg::h2d2plot(aHisto2D);
     ptb->set_name(aHisto2D.title());
-    sgp.add_plottable(ptb);
+    _plotter.add_plottable(ptb);
   }
 
   plotter.show();

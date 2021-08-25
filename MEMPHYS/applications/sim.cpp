@@ -7,14 +7,12 @@
 //MEMPHYS:
 #include "../MEMPHYS/Analysis.hh"
 #include "../MEMPHYS/DetectorConstruction.hh"
-#include "../MEMPHYS/PhysicsMessenger.hh"
 #include "../MEMPHYS/PrimaryGeneratorAction.hh"
 #include "../MEMPHYS/EventAction.hh"
 #include "../MEMPHYS/RunAction.hh"
 #include "../MEMPHYS/StackingAction.hh"
 #include "../MEMPHYS/TrackingAction.hh"
 #include "../MEMPHYS/SteppingAction.hh"
-
 #include "../MEMPHYS/PhysicsList.hh"
 
 #ifdef INLIB_MEM
@@ -95,6 +93,8 @@ int main(int a_argc,char** a_argv) {
   //Book all the histo, tuple 
   MEMPHYS::Analysis* analysis = new MEMPHYS::Analysis(root_file,true); //true=handle MEMPHYS.root file.
 
+  G4Random::setTheEngine(new CLHEP::RanecuEngine);
+    
   // Construct the default run manager
   G4RunManager* runManager = new G4RunManager;
   

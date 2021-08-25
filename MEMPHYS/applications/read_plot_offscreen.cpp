@@ -9,19 +9,17 @@
 #include <inlib/histo/h2d>
 
 #include <inlib/viewplot>
+#include <inlib/sg/zb_action>
+#include <inlib/wps>
+#include <inlib/path_env>
 
 #include <exlib/sg/text_freetype>
 
+//
 #define MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_PNG
-#define MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_GL2PS
 
 #ifdef MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_PNG
-#include <inlib/sg/zb_action>
 #include <exlib/png>
-#endif
-#ifdef MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_GL2PS
-#include <inlib/wps>
-#include <exlib/sg/gl2ps_action>
 #endif
 
 inline bool plot(std::ostream& a_out,
@@ -56,35 +54,29 @@ inline bool plot(std::ostream& a_out,
   viewer.set_cols_rows(1,2);
 
   if(viewer.plots().set_current_plotter(0)) {
-    inlib::sg::plotter& sgp = viewer.plots().current_plotter();
-    set_region_style(sgp,a_ttf);
-    sgp.x_axis().title = "time";
-    sgp.y_axis().title = "Entries";
+    inlib::sg::plotter& _plotter = viewer.plots().current_plotter();
+    set_region_style(_plotter,a_ttf);
+    _plotter.x_axis().title = "time";
+    _plotter.y_axis().title = "Entries";
     inlib::sg::plottable* ptb = new inlib::sg::h1d2plot(aHisto1D);
     ptb->set_name(aHisto1D.title());
-    sgp.add_plottable(ptb);
+    _plotter.add_plottable(ptb);
   }
 
   if(viewer.plots().set_current_plotter(1)) {
-    inlib::sg::plotter& sgp = viewer.plots().current_plotter();
-    set_region_style(sgp,a_ttf);
-    sgp.x_axis().title = "time";
-    sgp.y_axis().title = "PE";
+    inlib::sg::plotter& _plotter = viewer.plots().current_plotter();
+    set_region_style(_plotter,a_ttf);
+    _plotter.x_axis().title = "time";
+    _plotter.y_axis().title = "PE";
     inlib::sg::plottable* ptb = new inlib::sg::h2d2plot(aHisto2D);
     ptb->set_name(aHisto2D.title());
-    sgp.add_plottable(ptb);
+    _plotter.add_plottable(ptb);
   }
 
   viewer.write_page();
   
   viewer.close_file();
 
-#if defined(MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_PNG) || defined(MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_GL2PS)
-  bool do_png = true;
-  std::string png_file = "read_plot_offscreen.png";
-  bool do_zb_ps = true;
-  std::string zb_ps_file = "read_plot_offscreen_zb.ps";
-  
   inlib::sg::zb_manager mgr;
   inlib::sg::zb_action action(mgr,a_out,ww,wh);
 
@@ -94,37 +86,33 @@ inline bool plot(std::ostream& a_out,
   action.zbuffer().clear_depth_buffer();  
 
   viewer.sg().render(action);
-#endif
   
 #ifdef MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_PNG
-  if(do_png) {
-    size_t sz;
-    unsigned char* buffer = action.get_rgbas(sz);
-    if(!buffer) {
-      a_out << "can't get rgba image." << std::endl;
-    } else {
-      unsigned int bpp = 4;
-      exlib::png::write(a_out,png_file,buffer,ww,wh,bpp);
-      delete [] buffer;
-    }
-  }
-#endif  
-#ifdef MEMPHYS_READ_PLOT_OFFSCREEN_USE_ZB_GL2PS
-  if(do_zb_ps) {
-    inlib::wps wps(a_out);
-    if(!wps.open_file(zb_ps_file)) {
-      a_out << "can't open " << zb_ps_file << "." << std::endl;
-    } else {
-      wps.PS_BEGIN_PAGE();
-      wps.PS_PAGE_SCALE(float(ww),float(wh));
-      // put zbuffer in out.ps. The get_rgb function is the bridge
-      // between zb_action and wps.
-      wps.PS_IMAGE(ww,wh,inlib::wps::rgb_4,inlib::sg::zb_action::get_rgb,&action);
-      wps.PS_END_PAGE();
-      wps.close_file();  
-    }
-  }
+ {std::string png_file = "read_plot_offscreen.png";
+  size_t sz;
+  unsigned char* buffer = action.get_rgbas(sz);
+  if(!buffer) {
+    a_out << "can't get rgba image." << std::endl;
+  } else {
+    unsigned int bpp = 4;
+    exlib::png::write(a_out,png_file,buffer,ww,wh,bpp);
+    delete [] buffer;
+  }}
 #endif
+ 
+ {std::string zb_ps_file = "read_plot_offscreen_zb.ps";
+  inlib::wps wps(a_out);
+  if(!wps.open_file(zb_ps_file)) {
+    a_out << "can't open " << zb_ps_file << "." << std::endl;
+  } else {
+    wps.PS_BEGIN_PAGE();
+    wps.PS_PAGE_SCALE(float(ww),float(wh));
+    // put zbuffer in out.ps. The get_rgb function is the bridge
+    // between zb_action and wps.
+    wps.PS_IMAGE(ww,wh,inlib::wps::rgb_4,inlib::sg::zb_action::get_rgb,&action);
+    wps.PS_END_PAGE();
+    wps.close_file();  
+  }}
   
   return true;
 }
