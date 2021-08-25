@@ -11,13 +11,14 @@
 #include <inlib/sg/pick_action>
 #include <inlib/sg/bbox_action>
 #include <inlib/sg/enums>
-#include <inlib/vec3d>
-#include <inlib/fmanip>
+#include <inlib/lina/vec3d>
+#include <inlib/find_file>
 #include <inlib/nostream>
-#include <inlib/box_3f>
+#include <inlib/lina/box_3f>
 
 // font_pixmap :
 #include <inlib/sg/group>
+#include <inlib/sg/blend>
 #include <inlib/sg/tex_quadrilateral>
 #include <inlib/platform> //for APPLE TargetConditionals.h
 
@@ -26,38 +27,7 @@
 #include <map> //for errors
 
 #ifndef SWIG
-#ifdef EXLIB_USE_NATIVE_FREETYPE
-#include <ft2build.h>
-#else
-#include <ourex_ft2build.h>
-
-/*
-#ifdef INLIB_MEM
-// the below coworks with raising cpp INLIB_MEM in
-//   ourex/freetype/src/builds/unix/ftsystem.c
-#include <inlib/mem>
-extern "C" {
-  typedef void* __FT_Memory;
-  void* ft_alloc(__FT_Memory,long size){
-    inlib::mem::increment(inlib::s_malloc().c_str());
-    return ::malloc(size);
-  }
-  void* ft_realloc(__FT_Memory,long,long new_size,void* block){
-    if(block==NULL) inlib::mem::increment(inlib::s_malloc().c_str());
-    return ::realloc(block,new_size);
-  }
-  void ft_free(__FT_Memory,void* block){
-    if(block!=NULL) inlib::mem::decrement(inlib::s_malloc().c_str());
-    ::free(block);
-  }
-}
-#endif
-*/
-
-#endif
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_OUTLINE_H
+#include "../freetype"
 #endif
 
 //#define EXLIB_SG_TEXT_FREETYPE_DEBUG
@@ -103,7 +73,7 @@ protected: //gstos
       size_t sz = gsto_data.size();
       gsto_data.resize(sz+ngsto);
       float* pxyz = inlib::vec_data<float>(gsto_data)+sz;
-  
+
       inlib::gl::line_strip_to_lines_2to3(num,data,pxyz);
     }}
 
@@ -132,8 +102,8 @@ protected: //gstos
         size_t sz = gsto_data.size();
         gsto_data.resize(sz+ngsto);
         float* pxyz = inlib::vec_data<float>(gsto_data)+sz;
-  
-        inlib::gl::cvt_2to3(num,data,pxyz);  
+
+        inlib::gl::cvt_2to3(num,data,pxyz);
 
       } else if((*it).first==inlib::gl::triangle_fan()) {
 
@@ -143,7 +113,7 @@ protected: //gstos
         size_t sz = gsto_data.size();
         gsto_data.resize(sz+ngsto);
         float* pxyz = inlib::vec_data<float>(gsto_data)+sz;
-  
+
         inlib::gl::triangle_fan_to_triangles_2to3(num,data,pxyz);
 
       } else if((*it).first==inlib::gl::triangle_strip()) {
@@ -154,7 +124,7 @@ protected: //gstos
         size_t sz = gsto_data.size();
         gsto_data.resize(sz+ngsto);
         float* pxyz = inlib::vec_data<float>(gsto_data)+sz;
-  
+
         inlib::gl::triangle_strip_to_triangles_2to3(num,data,pxyz);
 
       } else {
@@ -264,7 +234,7 @@ public:
     a_action.set_line_smooth(state.m_GL_LINE_SMOOTH);
     a_action.set_polygon_offset(state.m_GL_POLYGON_OFFSET_FILL);
     a_action.set_winding(state.m_winding);
-    
+
     ///////////////////////////////////////////////////////////
     /// bitmap ////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////
@@ -312,9 +282,9 @@ public:
         a_action.set_done(true);
         a_action.set_node(this);
         return;
-      }          
+      }
     }
-    return;    
+    return;
 */
 
     ///////////////////////////////////////////////////////////
@@ -366,7 +336,7 @@ public:
         py = *pos;pos++;
         pz = 0;
         a_action.add_one_point(px,py,pz);
-      }  
+      }
 
     }}
 
@@ -385,7 +355,7 @@ public:
         py = *pos;pos++;
         pz = 0;
         a_action.add_one_point(px,py,pz);
-      }  
+      }
     }}
 
     ///////////////////////////////////////////////////////////
@@ -455,7 +425,7 @@ public: //inlib::sg::base_text :
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     self().m_face = 0;
-#endif    
+#endif
     return value;
   }
 
@@ -468,7 +438,7 @@ public: //inlib::sg::base_text :
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     self().m_face = 0;
-#endif    
+#endif
     return value;
   }
 
@@ -481,7 +451,7 @@ public: //inlib::sg::base_text :
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     self().m_face = 0;
-#endif    
+#endif
     return value;
   }
 
@@ -495,11 +465,11 @@ public: //inlib::sg::base_text :
       if(!get_bounds(out,self().m_face,a_height,strings.values(),a_mn_x,a_mn_y,a_mn_z,a_mx_x,a_mx_y,a_mx_z)) return;
     } else if(unitext.values().size()) {
       if(!get_bounds(out,self().m_face,a_height,unitext.values(),a_mn_x,a_mn_y,a_mn_z,a_mx_x,a_mx_y,a_mx_z)) return;
-    }    
+    }
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     self().m_face = 0;
-#endif    
+#endif
   }
 
   virtual bool truncate(const std::string& a_string,float a_height,float a_cut_width,std::string& a_out) const {
@@ -511,7 +481,7 @@ public: //inlib::sg::base_text :
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     self().m_face = 0;
-#endif    
+#endif
     return true;
   }
 
@@ -524,7 +494,7 @@ public: //inlib::sg::base_text :
       //a_out << line << std::endl;
       inlib_vforcit(unichar,line,it) {
         a_out << ((unsigned int)*it) << std::endl;
-      }  
+      }
       a_out << "end line." << std::endl;
     }
   }
@@ -574,7 +544,7 @@ protected:
     m_front_color = a_state.m_color;
     return true;
   }
-  
+
   bool char_height_touched(const inlib::sg::state& a_state) {
     if(modeling!=inlib::sg::font_pixmap) return false;
 
@@ -590,7 +560,7 @@ protected:
     if(a_state.m_wh) screen_height *= a_state.m_wh; else screen_height = 100;
 
     //::printf("debug : char_height_touched %g\n",screen_height);
-    
+
     if(screen_height==m_char_height) return false;
     m_char_height = screen_height;
     return true;
@@ -623,11 +593,14 @@ protected:
     m_triangles.clear();
     m_bitmaps.clear();
     m_tqs.clear();
-    
+
     m_wndg = wndg_not_done;
 
-    if(modeling==inlib::sg::font_pixmap) {    
+    if(modeling==inlib::sg::font_pixmap) {
       if(m_char_height<=0) return;
+      inlib::sg::blend* blend = new inlib::sg::blend;
+      blend->on = true; //to handle background transparency.
+      m_bitmaps.add(blend);
       if(!bitmap_2_gl(a_out)) {m_bitmaps.clear();m_tqs.clear();return;}
     } else {
       update_what _what = lines;
@@ -659,7 +632,7 @@ protected:
         float* data = inlib::vec_data<float>(m_xys)+pos+1;
         for(size_t i=0;i<npt;i++,data+=2) *data -= 0.5F * szy;
       }}
-      
+
      {inlib_vforcit(inlib::sg::tex_quadrilateral*,m_tqs,itqs) {
         std::vector<inlib::vec3f>& vcs = (*itqs)->corners.values();
         for(size_t i=0;i<4;i++) vcs[i][1] -= 0.5f * szy;
@@ -695,11 +668,11 @@ protected:
     }
 
     m_tqs.clear();
-    
+
 #ifdef EXLIB_DONE_FACE
     ::FT_Done_Face(m_face);
     m_face = 0;
-#endif    
+#endif
   }
 
   void outline_lines_2_gl(std::ostream& a_out) {
@@ -753,7 +726,7 @@ protected:
         size_t ibeg = m_lines.size(); //for hjust.
         inlib_vforcit(unichar,line,it) {
           if(!char_outline_2_gl(a_out,*it)) return;
-        }  
+        }
         yline += -float(face_height)*m_scale; //height>0
 
        {float sx = m_trans_x;
@@ -786,13 +759,13 @@ protected:
     //NOTE : if not found -> glyph_index = 0 which is the "missing glyph".
     if((FT_Long)glyph_index>=m_face->num_glyphs) {
       a_out << "exlib::sg::text_freetype::char_outline_2_gl :"
-            << " FT_Get_Char_Index : failed for char : " << a_unichar 
+            << " FT_Get_Char_Index : failed for char : " << a_unichar
             << std::endl;
       ::FT_Done_Face(m_face);
       m_face = 0;
       return false;
     }
-  
+
    {FT_Error error = ::FT_Load_Glyph(m_face,glyph_index,load_flags());
     if(error) {
       a_out << "exlib::sg::text_freetype::char_outline_2_gl :"
@@ -803,7 +776,7 @@ protected:
       m_face = 0;
       return false;
     }}
-  
+
     //FT_GlyphSlot FT_Face.glyph;
     if(m_face->glyph->format!=FT_GLYPH_FORMAT_OUTLINE) {
       a_out << "exlib::sg::text_freetype::char_outline_2_gl :"
@@ -815,9 +788,9 @@ protected:
       m_face = 0;
       return false;
     }
-  
+
     FT_Outline outline = m_face->glyph->outline;
-  
+
    {FT_Error error = ::FT_Outline_Decompose(&outline,&m_funcs,this);
     if(error) {
       a_out << "exlib::sg::text_freetype::char_outline_2_gl :"
@@ -828,9 +801,9 @@ protected:
       m_face = 0;
       return false;
     }}
-  
+
     flush_line();
-  
+
     m_trans_x += float(m_face->glyph->advance.x)*m_scale;
     m_trans_y += float(m_face->glyph->advance.y)*m_scale;
 
@@ -863,11 +836,24 @@ protected:
     FT_Pos face_height = m_face->size->metrics.height; //FT_Pos (long)
 
     m_tobj = gluNewTess();
+
+#ifdef EXLIB_USE_NATIVE_GLUTESS
     ::gluTessCallback(m_tobj,(GLUenum)GLU_TESS_BEGIN_DATA,  (Func)begin_cbk);
     ::gluTessCallback(m_tobj,(GLUenum)GLU_TESS_END_DATA,    (Func)end_cbk);
     ::gluTessCallback(m_tobj,(GLUenum)GLU_TESS_VERTEX_DATA, (Func)vertex_cbk);
     ::gluTessCallback(m_tobj,(GLUenum)GLU_TESS_COMBINE_DATA,(Func)combine_cbk);
     ::gluTessCallback(m_tobj,(GLUenum)GLU_TESS_ERROR_DATA,  (Func)error_cbk);
+#else
+    // NOTE : the gluTessCallback_<enum>() functions are inlib/glutess specific.
+    //        They had been introduced to avoid g++-8.1.0 warnings :
+    //          warnings : cast between incompatible function types.
+    ::gluTessCallback_GLU_TESS_BEGIN_DATA   (m_tobj,begin_cbk);
+    ::gluTessCallback_GLU_TESS_END_DATA     (m_tobj,end_cbk);
+    ::gluTessCallback_GLU_TESS_VERTEX_DATA  (m_tobj,vertex_cbk);
+    ::gluTessCallback_GLU_TESS_COMBINE_DATA (m_tobj,combine_cbk);
+    ::gluTessCallback_GLU_TESS_ERROR_DATA   (m_tobj,error_cbk);
+#endif
+
     ::gluTessProperty(m_tobj,(GLUenum)GLU_TESS_WINDING_RULE,GLU_TESS_WINDING_ODD);
 
     //::gluTessProperty(m_tobj, GLU_TESS_TOLERANCE, 0);
@@ -884,10 +870,10 @@ protected:
         inlib_sforcit(line,it) {
           if(!char_triangles_2_gl(a_out,*it + m_encoding_offset)) {
             ::gluDeleteTess(m_tobj);
-            m_tobj = 0;  
+            m_tobj = 0;
             return;
-          }  
-        }  
+          }
+        }
         yline += -float(face_height)*m_scale; //height>0
 
        {float sx = m_trans_x;
@@ -899,7 +885,7 @@ protected:
             size_t npt = item.second.second;
             float* data = inlib::vec_data<float>(m_xys)+pos;
             for(size_t i=0;i<npt;i++,data+=2) *data -= sx*0.5f;
-          } 
+          }
         } else if(hjust==inlib::sg::right) {
           size_t num = m_triangles.size();
           for(size_t index=ibeg;index<num;index++) {
@@ -908,7 +894,7 @@ protected:
             size_t npt = item.second.second;
             float* data = inlib::vec_data<float>(m_xys)+pos;
             for(size_t i=0;i<npt;i++,data+=2) *data -= sx;
-          } 
+          }
         }}
       }
     } else if(unitext.values().size()) {
@@ -922,10 +908,10 @@ protected:
         inlib_vforcit(unichar,line,it) {
           if(!char_triangles_2_gl(a_out,*it)) {
             ::gluDeleteTess(m_tobj);
-            m_tobj = 0;  
+            m_tobj = 0;
             return;
           }
-        }  
+        }
         yline += -float(face_height)*m_scale; //height>0
 
        {float sx = m_trans_x;
@@ -937,7 +923,7 @@ protected:
             size_t npt = item.second.second;
             float* data = inlib::vec_data<float>(m_xys)+pos;
             for(size_t i=0;i<npt;i++,data+=2) *data -= sx*0.5f;
-          } 
+          }
         } else if(hjust==inlib::sg::right) {
           size_t num = m_triangles.size();
           for(size_t index=ibeg;index<num;index++) {
@@ -946,13 +932,13 @@ protected:
             size_t npt = item.second.second;
             float* data = inlib::vec_data<float>(m_xys)+pos;
             for(size_t i=0;i<npt;i++,data+=2) *data -= sx;
-          } 
+          }
         }}
       }
     }
 
     ::gluDeleteTess(m_tobj);
-    m_tobj = 0;  
+    m_tobj = 0;
   }
 
   bool char_triangles_2_gl(std::ostream& a_out,unsigned int a_unichar) {
@@ -973,7 +959,7 @@ protected:
       m_face = 0;
       return false;
     }
-  
+
    {FT_Error error = ::FT_Load_Glyph(m_face,glyph_index,load_flags());
     if(error) {
       a_out << "exlib::sg::text_freetype::char_triangles_2_gl :"
@@ -984,7 +970,7 @@ protected:
       m_face = 0;
       return false;
     }}
-  
+
     //FT_GlyphSlot FT_Face.glyph;
     if(m_face->glyph->format!=FT_GLYPH_FORMAT_OUTLINE) {
       a_out << "exlib::sg::text_freetype::char_triangles_2_gl :"
@@ -996,7 +982,7 @@ protected:
       m_face = 0;
       return false;
     }
-  
+
     FT_Outline outline = m_face->glyph->outline;
 
     m_glutess_trids_num = 0;
@@ -1016,11 +1002,11 @@ protected:
       m_face = 0;
       return false;
     }}
-  
+
     if(m_contour_open) {
       ::gluTessEndContour(m_tobj);
       m_contour_open = false;
-    }  
+    }
 
     ::gluTessEndPolygon(m_tobj); //triggers callbacks and fill m_triangles.
 
@@ -1058,7 +1044,7 @@ protected:
       m_face = 0;
       return false;
     }
-    m_scale = height.value()/float(wchar);
+    m_scale = height.value()/float(hchar);
 
     FT_Pos face_height = m_face->size->metrics.height; //FT_Pos (long)
     //::printf("debug : face_height %lu\n",face_height);
@@ -1072,22 +1058,22 @@ protected:
         size_t ibeg = m_tqs.size(); //for hjust.
         inlib_sforcit(line,it) {
           if(!char_2_bitmap(a_out,*it + m_encoding_offset)) return false;
-        }  
+        }
         yline += -float(face_height)*m_scale; //height>0
-	
+
        {float sx = m_trans_x;
         if(hjust==inlib::sg::center) {
           size_t num = m_tqs.size();
           for(size_t index=ibeg;index<num;index++) {
             std::vector<inlib::vec3f>& vcs = m_tqs[index]->corners.values();
             for(size_t i=0;i<4;i++) vcs[i][0] -= sx*0.5f;
-          } 
+          }
         } else if(hjust==inlib::sg::right) {
           size_t num = m_tqs.size();
           for(size_t index=ibeg;index<num;index++) {
             std::vector<inlib::vec3f>& vcs = m_tqs[index]->corners.values();
             for(size_t i=0;i<4;i++) vcs[i][0] -= sx;
-          } 
+          }
         }}
       }
     } else if(unitext.values().size()) {
@@ -1109,14 +1095,14 @@ protected:
           for(size_t index=ibeg;index<num;index++) {
             std::vector<inlib::vec3f>& vcs = m_tqs[index]->corners.values();
             for(size_t i=0;i<4;i++) vcs[i][0] -= sx*0.5f;
-          } 
+          }
         } else if(hjust==inlib::sg::right) {
           size_t num = m_tqs.size();
           for(size_t index=ibeg;index<num;index++) {
             std::vector<inlib::vec3f>& vcs = m_tqs[index]->corners.values();
             for(size_t i=0;i<4;i++) vcs[i][0] -= sx;
-          } 
-        }}	
+          }
+        }}
       }
     }
     return true;
@@ -1140,7 +1126,7 @@ protected:
       m_face = 0;
       return false;
     }
-  
+
    {FT_Error error = ::FT_Load_Glyph(m_face,glyph_index,load_flags());
     if(error) {
       a_out << "exlib::sg::text_freetype::char_2_bitmap :"
@@ -1151,7 +1137,7 @@ protected:
       m_face = 0;
       return false;
     }}
-  
+
     FT_Glyph glyph;
    {FT_Error error = ::FT_Get_Glyph(m_face->glyph,&glyph);
     if (error) {
@@ -1206,7 +1192,7 @@ protected:
       ::FT_Done_Face(m_face);
       m_face = 0;
       return false;
-    } 
+    }
 
     if(bitmap->bitmap.pitch<0) {
       a_out << "exlib::sg::text_freetype::char_2_bitmap :"
@@ -1218,7 +1204,7 @@ protected:
       ::FT_Done_Face(m_face);
       m_face = 0;
       return false;
-    } 
+    }
 
     unsigned int img_w = 0;
     unsigned int img_h = 0;
@@ -1227,7 +1213,7 @@ protected:
 
     if(bitmap->bitmap.pixel_mode==ft_pixel_mode_mono) {
       a_out << "exlib::sg::text_freetype::char_2_bitmap : mode_mono : not yet handled." << std::endl;
-      
+
       //img_grays = 1;
       img_h = bitmap->bitmap.rows;
       //WARNING : bitmap->bitmap.pitch != int((bitmap->bitmap.width+7)/8) !!!
@@ -1251,7 +1237,7 @@ protected:
         ::FT_Done_Face(m_face);
         m_face = 0;
         return false;
-      } 
+      }
       img_w = bitmap->bitmap.width;
       img_h = bitmap->bitmap.rows;
       img_sz = img_w * img_h * img_bpp;
@@ -1272,7 +1258,7 @@ protected:
         ::FT_Done_Face(m_face);
         m_face = 0;
         return false;
-      }  
+      }
       // The bitmap is upside down for OpenGL.
       float a,b;
       inlib::colorf back_color = inlib::colorf_white();
@@ -1296,7 +1282,7 @@ protected:
       //float _width  = float(_bbox.xMax)-float(_bbox.xMin);
       //float _height = float(_bbox.yMax)-float(_bbox.yMin);
       //aAdvance = int(face->glyph->advance.x/64);
-      
+
       std::vector<inlib::vec3f> vcs;
       //::printf("debug : box : %d %d %d %d\n",_bbox.xMin,_bbox.xMax,_bbox.yMin,_bbox.yMax);
       float scale = height.value()/m_char_height;
@@ -1306,12 +1292,12 @@ protected:
       float y_max = float(_bbox.yMax)*scale+m_trans_y;
       //::printf("debug : scale %g, trans %g %g\n",m_scale,m_trans_x,m_trans_y);
       //::printf("debug : corners %g %g %g %g\n",x_min,x_max,y_min,y_max);
-      
+
       vcs.push_back(inlib::vec3f(x_min,y_min,0));
       vcs.push_back(inlib::vec3f(x_max,y_min,0));
       vcs.push_back(inlib::vec3f(x_max,y_max,0));
       vcs.push_back(inlib::vec3f(x_min,y_max,0));
-      
+
       inlib::sg::tex_quadrilateral* _node = new inlib::sg::tex_quadrilateral;
       _node->img.value().set(img_w,img_h,img_bpp,img_buffer,true);
       _node->expand = true;
@@ -1319,10 +1305,10 @@ protected:
       _node->back_color.value().set_a(0);        //transparent background.
       //_node->nearest = false;                    //to have antialiasing on texture.
       _node->corners.set_values(vcs);
-      
+
       m_bitmaps.add(_node);
       m_tqs.push_back(_node);
-  
+
       /*
       if(bitmap->bitmap.pixel_mode==ft_pixel_mode_mono) {
         if((aChar=='T')||(aChar=='a')||(aChar=='o')||(aChar=='L')) {
@@ -1350,7 +1336,7 @@ protected:
       }*/
 
     }
-    
+
     m_trans_x += float(m_face->glyph->advance.x)*m_scale;
     m_trans_y += float(m_face->glyph->advance.y)*m_scale;
 
@@ -1470,7 +1456,7 @@ protected:
     float gx,gy;
     self.set_g(gx,gy,float(a_to->x),float(a_to->y));
 
-    if(self.m_tobj) {      
+    if(self.m_tobj) {
       double* v = self.add_glutess_vec3d(gx,gy,0);
       ::gluTessVertex(self.m_tobj,v,v);
     } else {
@@ -1597,7 +1583,7 @@ protected:
     // logic taken from OGLFT.
 
     //OPTIMIZE :
-    //a = -from + 3 * ctrl1 - 3 * ctrl2 + to;  
+    //a = -from + 3 * ctrl1 - 3 * ctrl2 + to;
     //b = 3 * from - 6 * ctrl1 + 3 * ctrl2;
     //c = -3 * from + 3 * ctrl1;
     //df = c * self.m_delta + b * self.m_delta2 + a * self.m_delta3;
@@ -1658,7 +1644,7 @@ protected:
       ::gluTessVertex(self.m_tobj,v,v);
     } else {
       self.add_xy(gx,gy);
-    }  
+    }
 
     //self.m_last = to;
     self.m_last_x = tox;
@@ -1674,7 +1660,7 @@ public:
     typedef std::map<int,std::string> parent;
   public:
     serrors(){
-#undef __FTERRORS_H__                                           
+#undef __FTERRORS_H__
 #define FT_ERROR_START_LIST
 #define FT_ERROR_END_LIST
 #define FT_ERRORDEF( e, v, s )  parent::operator[](e) = s;
@@ -1685,7 +1671,7 @@ public:
     serrors(const serrors& a_from):parent(a_from) {}
     serrors& operator=(const serrors&){return *this;}
   };
-  static std::string serror(int a_FT_Error) {    
+  static std::string serror(int a_FT_Error) {
     static const serrors errs;
     std::map<int,std::string>::const_iterator it = errs.find(a_FT_Error);
     if(it!=errs.end()) return (*it).second;
@@ -1764,15 +1750,15 @@ protected:
             << std::endl;
       return;
     }
-    
+
     std::string file;
-    
+
     //if(inlib::file::exists(font.value())) { //look in current directory.
     //  file = font.value(); //ok
     //} else if(!inlib::find_with_dirs(a_out,font_dirs.values(),font.value(),file,false)) {
       if(!inlib::find_with_env(a_out,s_EXLIB_FONT_PATH(),font.value(),file,false)) {
         a_out << "exlib::sg::text_freetype::load_face :"
-              << " font file not found for font " 
+              << " font file not found for font "
               << inlib::sout(font.value()) << "."
               << std::endl;
         return;
@@ -1786,7 +1772,7 @@ protected:
     }
 
     FT_Error error = ::FT_New_Face(m_library,file.c_str(),0,&m_face);
-    if(error) { 
+    if(error) {
       a_out << "exlib::sg::text_freetype::load_face :"
             << " FT_New_Face : error : " << serror(error) << "."
             << " for font file " << inlib::sout(file) << "."
@@ -1881,7 +1867,7 @@ protected:
       if((FT_Long)glyph_index>=a_face->num_glyphs) {
 #ifdef EXLIB_SG_TEXT_FREETYPE_DEBUG
         m_out << "exlib::sg::text_freetype::truncate :"
-              << " FT_Get_Char_Index : failed for char : " << *it 
+              << " FT_Get_Char_Index : failed for char : " << *it
               << std::endl;
 #endif
         a_sout.clear();
@@ -1889,7 +1875,7 @@ protected:
         a_face = 0;
         return false;
       }
-  
+
      {FT_Error error = ::FT_Load_Glyph(a_face,glyph_index,load_flags());
       if(error) {
 #ifdef EXLIB_SG_TEXT_FREETYPE_DEBUG
@@ -1943,14 +1929,14 @@ protected:
           a_face = 0;
           return false;
         }
-    
+
        {FT_Error error = ::FT_Load_Glyph(a_face,glyph_index,load_flags());
         if(error) {
           ::FT_Done_Face(a_face);
           a_face = 0;
           return false;
         }}
-    
+
         //float cwidth = float(a_face->glyph->metrics.width)*scale;
         float advance = float(a_face->glyph->advance.x)*scale;
         width += advance;
@@ -1962,7 +1948,7 @@ protected:
     FT_Pos ascent = a_face->size->metrics.ascender; //FT_Pos (long)
     FT_Pos descent = a_face->size->metrics.descender; //FT_Pos (long) //<0
     FT_Pos face_height = a_face->size->metrics.height; //FT_Pos (long)
-  
+
     float ymn = -float(face_height)*scale*(a_text.size()-1) //height>0
                 +float(descent)*scale;
 
@@ -1972,7 +1958,7 @@ protected:
     a_mx_x = xmx;
     a_mx_y = float(ascent)*scale;
     a_mx_z = 0;
-  
+
     return true;
   }
 
@@ -2003,14 +1989,14 @@ protected:
           a_face = 0;
           return false;
         }
-    
+
        {FT_Error error = ::FT_Load_Glyph(a_face,glyph_index,load_flags());
         if(error) {
           ::FT_Done_Face(a_face);
           a_face = 0;
           return false;
         }}
-    
+
         //float cwidth = float(a_face->glyph->metrics.width)*scale;
         float advance = float(a_face->glyph->advance.x)*scale;
         width += advance;
@@ -2022,7 +2008,7 @@ protected:
     FT_Pos ascent = a_face->size->metrics.ascender; //FT_Pos (long)
     FT_Pos descent = a_face->size->metrics.descender; //FT_Pos (long) //<0
     FT_Pos face_height = a_face->size->metrics.height; //FT_Pos (long)
-  
+
     float ymn = -float(face_height)*scale*(a_text.size()-1) //height>0
                 +float(descent)*scale;
 
@@ -2032,7 +2018,7 @@ protected:
     a_mx_x = xmx;
     a_mx_y = float(ascent)*scale;
     a_mx_z = 0;
-  
+
     return true;
   }
 

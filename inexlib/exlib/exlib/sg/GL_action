@@ -4,15 +4,18 @@
 #ifndef exlib_sg_GL_action
 #define exlib_sg_GL_action
 
+#include "GL_manager"
+
 #include <inlib/sg/render_action>
 
-#include "GL_manager"
+//#include <inlib/mathf>
+//#include <inlib/lina/matout>
 
 namespace exlib {
 namespace sg {
 
 class GL_action : public inlib::sg::render_action {
-  typedef inlib::sg::render_action parent;
+  INLIB_ACTION(GL_action,exlib::sg::GL_action,inlib::sg::render_action)
 public:
   virtual void draw_vertex_array(inlib::gl::mode_t a_mode,size_t a_floatn,const float* a_xyzs){
     size_t num = a_floatn/3;
@@ -206,7 +209,7 @@ public:
 
     case inlib::sg::gsto_gl_list:{
 #ifdef EXLIB_HAS_GL_LIST
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       if(m_gl_id && m_created) {
@@ -221,7 +224,7 @@ public:
       }break;
 
     case inlib::sg::gsto_memory:{
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       _draw_v(a_mode,a_elems,pos_xyzs);
@@ -241,7 +244,7 @@ public:
 
     case inlib::sg::gsto_gl_list:{
 #ifdef EXLIB_HAS_GL_LIST
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       void* pos_rgbas = (char*)buffer+a_pos_rgbas;
@@ -259,7 +262,7 @@ public:
       }break;
 
     case inlib::sg::gsto_memory:{
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       void* pos_rgbas = (char*)buffer+a_pos_rgbas;
@@ -280,7 +283,7 @@ public:
 
     case inlib::sg::gsto_gl_list:{
 #ifdef EXLIB_HAS_GL_LIST
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       //void* pos_nms = (char*)buffer+a_pos_nms;
@@ -296,7 +299,7 @@ public:
       }break;
 
     case inlib::sg::gsto_memory:{
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       void* pos_nms = (char*)buffer+a_pos_nms;
@@ -317,7 +320,7 @@ public:
 
     case inlib::sg::gsto_gl_list:{
 #ifdef EXLIB_HAS_GL_LIST
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       void* pos_rgbas = (char*)buffer+a_pos_rgbas;
@@ -339,7 +342,7 @@ public:
       }break;
 
     case inlib::sg::gsto_memory:{
-      float* buffer = m_mgr.gsto_data(m_gsto);      
+      float* buffer = m_mgr.gsto_data(m_gsto);
       if(!buffer) return;
       void* pos_xyzs = (char*)buffer+a_pos_xyzs;
       void* pos_rgbas = (char*)buffer+a_pos_rgbas;
@@ -363,7 +366,7 @@ public:
   virtual void line_width(float a_v){::glLineWidth(a_v);}
   virtual void point_size(float a_v){::glPointSize(a_v);}
   virtual void set_polygon_offset(bool a_v) {
-    if(a_v) ::glEnable(GL_POLYGON_OFFSET_FILL);	
+    if(a_v) ::glEnable(GL_POLYGON_OFFSET_FILL);
     else    ::glDisable(GL_POLYGON_OFFSET_FILL);
     ::glPolygonOffset(1.,1.);
   }
@@ -376,6 +379,13 @@ public:
       ::glFrontFace(GL_CCW);
     else
       ::glFrontFace(GL_CW);
+  }
+
+  virtual void set_shade_model(inlib::sg::shade_type a_v) {
+    if(a_v==inlib::sg::shade_smooth)
+      ::glShadeModel(GL_SMOOTH);
+    else
+      ::glShadeModel(GL_FLAT);
   }
 
   virtual void set_cull_face(bool a_on) {
@@ -399,13 +409,32 @@ public:
   }
 
   virtual void load_proj_matrix(const inlib::mat4f& a_mtx) {
-    ::glMatrixMode(GL_PROJECTION); 
+    ::glMatrixMode(GL_PROJECTION);
     ::glLoadMatrixf(a_mtx.data());
   }
 
   virtual void load_model_matrix(const inlib::mat4f& a_mtx) {
-    ::glMatrixMode(GL_MODELVIEW); 
+    ::glMatrixMode(GL_MODELVIEW);
     ::glLoadMatrixf(a_mtx.data());
+/*
+    inlib::mat4f tmp(a_mtx);
+    tmp.no_translate();
+    inlib::mat4f normal_matrix;
+    if(!tmp.invert(normal_matrix)) {
+      m_out << "exlib::sg::GL_action::render::load_model_matrix :"
+            << " can't invert model matrix."
+            << std::endl;
+    }
+    normal_matrix.transpose();
+
+    inlib::mat4f to_check(a_mtx);
+    to_check.no_translate();
+    float fepsilon = 1e-10;
+    if(!normal_matrix.equal_prec(to_check,fepsilon,inlib::ffabs)) {
+      mat_dump(m_out,"problem with normal_matrix ",normal_matrix);
+      mat_dump(m_out,"expected",to_check);
+    }
+*/
   }
 
   virtual unsigned int max_lights() {return GL_MAX_LIGHTS;}
@@ -458,55 +487,73 @@ public:
     if(a_on) ::glEnable(GL_LIGHTING);
     else     ::glDisable(GL_LIGHTING);
   }
+  virtual void set_blend(bool a_on) {
+    if(a_on) ::glEnable(GL_BLEND);
+    else     ::glDisable(GL_BLEND);
+  }
 
   virtual void restore_state(unsigned int a_ret_num_light) {
-    ::glMatrixMode(GL_PROJECTION); 
-    ::glLoadMatrixf(m_state.m_proj.data());
-  
-    ::glMatrixMode(GL_MODELVIEW); 
-    ::glLoadMatrixf(m_state.m_model.data());
+    const inlib::sg::state& _state = state();
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadMatrixf(_state.m_proj.data());
 
-    if(m_state.m_GL_LIGHTING) ::glEnable(GL_LIGHTING);
-    else                      ::glDisable(GL_LIGHTING);
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadMatrixf(_state.m_model.data());
 
-    if(m_state.m_GL_DEPTH_TEST) ::glEnable(GL_DEPTH_TEST);
-    else                        ::glDisable(GL_DEPTH_TEST);
+    if(_state.m_GL_LIGHTING) ::glEnable(GL_LIGHTING);
+    else                     ::glDisable(GL_LIGHTING);
 
-    if(m_state.m_GL_CULL_FACE) ::glEnable(GL_CULL_FACE);
-    else                       ::glDisable(GL_CULL_FACE);
+    if(_state.m_GL_DEPTH_TEST) ::glEnable(GL_DEPTH_TEST);
+    else                       ::glDisable(GL_DEPTH_TEST);
 
-    if(m_state.m_GL_POINT_SMOOTH) ::glEnable(GL_POINT_SMOOTH);
-    else                          ::glDisable(GL_POINT_SMOOTH);
+    if(_state.m_GL_CULL_FACE) ::glEnable(GL_CULL_FACE);
+    else                      ::glDisable(GL_CULL_FACE);
 
-    if(m_state.m_GL_LINE_SMOOTH) ::glEnable(GL_LINE_SMOOTH);
-    else                         ::glDisable(GL_LINE_SMOOTH);
+    if(_state.m_GL_POINT_SMOOTH) ::glEnable(GL_POINT_SMOOTH);
+    else                         ::glDisable(GL_POINT_SMOOTH);
 
-    if(m_state.m_GL_POLYGON_OFFSET_FILL) ::glEnable(GL_POLYGON_OFFSET_FILL);
-    else                                 ::glDisable(GL_POLYGON_OFFSET_FILL);
+    if(_state.m_GL_LINE_SMOOTH) ::glEnable(GL_LINE_SMOOTH);
+    else                        ::glDisable(GL_LINE_SMOOTH);
 
-    if(m_state.m_GL_TEXTURE_2D) ::glEnable(GL_TEXTURE_2D);
-    else                        ::glDisable(GL_TEXTURE_2D);
+    if(_state.m_GL_POLYGON_OFFSET_FILL) ::glEnable(GL_POLYGON_OFFSET_FILL);
+    else                                ::glDisable(GL_POLYGON_OFFSET_FILL);
 
-    if(m_state.m_winding==inlib::sg::winding_ccw) {
+    if(_state.m_GL_TEXTURE_2D) ::glEnable(GL_TEXTURE_2D);
+    else                       ::glDisable(GL_TEXTURE_2D);
+
+    if(_state.m_GL_BLEND) ::glEnable(GL_BLEND);
+    else                  ::glDisable(GL_BLEND);
+
+    if(_state.m_winding==inlib::sg::winding_ccw) {
       ::glFrontFace(GL_CCW);
     } else {
       ::glFrontFace(GL_CW);
     }
 
-    ::glColor4f(m_state.m_color.r(),
-                m_state.m_color.g(),
-                m_state.m_color.b(),
-                m_state.m_color.a());
+    if(_state.m_shade_model==inlib::sg::shade_smooth)
+      ::glShadeModel(GL_SMOOTH);
+    else
+      ::glShadeModel(GL_FLAT);
+
+    ::glColor4f(_state.m_color.r(),
+                _state.m_color.g(),
+                _state.m_color.b(),
+                _state.m_color.a());
+
+    ::glNormal3f(_state.m_normal.x(),
+                 _state.m_normal.y(),
+                 _state.m_normal.z());
 
     // The "return of separator" state had ret_num_light.
     // The restored state has m_light.
     // We have to glDisable lights with index in [m_light,ret_num_light-1]
-    for(unsigned int index=m_state.m_light;index<a_ret_num_light;index++) {
+    for(unsigned int index=_state.m_light;index<a_ret_num_light;index++) {
       ::glDisable(GL_LIGHT0+index);
     }
 
-    ::glLineWidth(m_state.m_line_width);
-    ::glPointSize(m_state.m_point_size);
+    ::glLineWidth(_state.m_line_width);
+
+    ::glPointSize(_state.m_point_size);
 
 #if TARGET_OS_IPHONE
 // GL-ES
@@ -600,7 +647,7 @@ protected:
   }
 
 protected:
-  GL_manager& m_mgr;  
+  GL_manager& m_mgr;
   gstoid m_gsto;
 #ifdef EXLIB_HAS_GL_LIST
   bool m_created;

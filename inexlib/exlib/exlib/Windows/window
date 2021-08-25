@@ -45,10 +45,11 @@ public:
     ::PostQuitMessage(0);
   }
 public:
-  window(unsigned int a_w,unsigned int a_h,unsigned int a_mask = WS_OVERLAPPEDWINDOW)
+  window(const char* a_title,int a_x,int a_y,unsigned int a_w,unsigned int a_h,unsigned int a_mask = WS_OVERLAPPEDWINDOW)
   :m_hwnd(0)
   ,m_key_shift(false)
   ,m_key_ctrl(false)
+  ,m_focus_hwnd(0)
   {
     // WARNING : given a_w,a_h may not be the client area because of various decorations.
     //           See set_client_area_size() method to enforce a client area size.
@@ -56,12 +57,13 @@ public:
     m_hwnd = ::CreateWindow(s_class().c_str(),
                               NULL,
                               a_mask,
-                              CW_USEDEFAULT,CW_USEDEFAULT, 
+                              a_x,a_y,
                               a_w,a_h,
                               NULL,NULL,
                               ::GetModuleHandle(NULL),
                               NULL);
     if(!m_hwnd) return;
+    ::SetWindowText(m_hwnd,a_title);
     ::SetWindowLongPtr(m_hwnd,GWLP_USERDATA,LONG_PTR(this));
   }
   virtual ~window(){
@@ -71,12 +73,14 @@ public:
       m_hwnd = 0;
     }
   }
-public:
+protected:
   window(const window& a_from)
   :m_hwnd(0)
   ,m_key_shift(a_from.m_key_shift)
   ,m_key_ctrl(a_from.m_key_ctrl)
+  ,m_focus_hwnd(0)
   {
+  /*
     if(!a_from.m_hwnd) return;
     int w,h;
     get_size(a_from.m_hwnd,w,h);
@@ -84,13 +88,14 @@ public:
     m_hwnd = ::CreateWindow(s_class().c_str(),
                               NULL,
                               WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT,CW_USEDEFAULT, 
+                              CW_USEDEFAULT,CW_USEDEFAULT,
                               w,h,
                               NULL,NULL,
                               ::GetModuleHandle(NULL),
                               NULL);
     if(!m_hwnd) return;
     ::SetWindowLongPtr(m_hwnd,GWLP_USERDATA,LONG_PTR(this));
+    */
   }
   window& operator=(const window& a_from){
     m_key_shift = a_from.m_key_shift;
@@ -104,28 +109,36 @@ public:
   HWND hwnd() const {return m_hwnd;}
 
   void set_client_area_size(unsigned int a_w,unsigned int a_h) {
-    unsigned ww,wh;
-   {RECT rect;
-    ::GetWindowRect(m_hwnd,&rect);
-    ww = rect.right-rect.left;
-    wh = rect.bottom-rect.top;}
+    if(!m_hwnd) return;
+    RECT wrect;
+    ::GetWindowRect(m_hwnd,&wrect);
+    unsigned int ww = wrect.right-wrect.left;
+    unsigned int wh = wrect.bottom-wrect.top;
 
-    unsigned int cw,ch;
-   {RECT rect;
-    ::GetClientRect(m_hwnd,&rect);
-    cw = rect.right-rect.left;
-    ch = rect.bottom-rect.top;}
+    RECT carect;
+    ::GetClientRect(m_hwnd,&carect);
+    unsigned int cw = carect.right-carect.left;
+    unsigned int ch = carect.bottom-carect.top;
 
     unsigned int woffset = ww-cw;
     unsigned int hoffset = wh-ch;
 
+    ::MoveWindow(m_hwnd,wrect.left,wrect.top,a_w+woffset,a_h+hoffset,TRUE);
+  }
+  void move(unsigned int a_x,unsigned int a_y) {
+    if(!m_hwnd) return;
     RECT rect;
     ::GetWindowRect(m_hwnd,&rect);
-    ::MoveWindow(m_hwnd,rect.left,rect.top,a_w+woffset,a_h+hoffset,TRUE);
+    unsigned int w = rect.right-rect.left;
+    unsigned int h = rect.bottom-rect.top;
+    ::MoveWindow(m_hwnd,a_x,a_y,w,h,TRUE);
   }
+  
+  void set_focus_hwnd(HWND a_hwnd) {m_focus_hwnd = a_hwnd;}
+  HWND focus_hwnd() const {return m_focus_hwnd;}
 protected:
   static LRESULT CALLBACK proc(HWND a_hwnd,UINT a_msg,WPARAM a_wparam,LPARAM a_lparam) {
-    switch (a_msg) { 
+    switch (a_msg) {
     // Else :
     case WM_SIZE:{ // Assume one child window ! FIXME : have a message if not.
       int width = LOWORD(a_lparam);
@@ -133,6 +146,14 @@ protected:
       HWND hwnd = GetFirstChild(a_hwnd);
       if(hwnd) {
         ::MoveWindow(hwnd,0,0,width,height,TRUE);
+      }
+    }return 0;
+
+    case WM_SETFOCUS:{
+      window* _this = (window*)::GetWindowLongPtr(a_hwnd,GWLP_USERDATA);
+      if(_this) {
+        HWND hwnd = _this->focus_hwnd();
+	if(hwnd) ::SetFocus(hwnd);
       }
     }return 0;
     
@@ -200,7 +221,7 @@ protected:
     }
     return (DefWindowProc(a_hwnd,a_msg,a_wparam,a_lparam));
   }
-  static void wm__destroy(HWND a_hwnd) { 
+  static void wm__destroy(HWND a_hwnd) {
     window* _this = (window*)::GetWindowLongPtr(a_hwnd,GWLP_USERDATA);
     if(_this) { //How to be sure that we have a window* ???
       if(_this->m_hwnd!=a_hwnd) {
@@ -221,6 +242,7 @@ protected:
   HWND m_hwnd;
   bool m_key_shift;
   bool m_key_ctrl;
+  HWND m_focus_hwnd;
 };
 
 }}

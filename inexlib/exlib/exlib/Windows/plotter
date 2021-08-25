@@ -4,21 +4,21 @@
 #ifndef exlib_Windows_plotter
 #define exlib_Windows_plotter
 
-#include "session"
-#include "window"
-#include "glarea"
+#include "sg_viewer"
 
-#include <inlib/sg/noderef>
+#include "../sg/text_freetype"
+
 #include <inlib/sg/ortho>
-#include <inlib/sg/h2plot>
+
 #include <inlib/sg/h2plot_cp>
 #include <inlib/sg/f2plot>
 #include <inlib/sg/xy2plot>
 #include <inlib/sg/fit2plot>
+#include <inlib/sg/cloud2plot_cp>
 #include <inlib/sg/plots>
 
-#include "../sg/viewer"
-#include "../sg/text_freetype"
+#include <inlib/sys/dir>
+#include <inlib/path_env>
 
 // disable the warning about the usage of "this" in the constructor.
 #pragma warning(disable:4355)
@@ -26,156 +26,46 @@
 namespace exlib {
 namespace Windows {
 
-class plotter : public window, public sg::viewer  {
-  typedef window parent_window;
-  typedef sg::viewer parent_viewer;
+class plotter : public sg_viewer  {
+  typedef sg_viewer parent;
+protected:
+  virtual void set_size(unsigned int a_width,unsigned int a_height) {
+    parent::set_size(a_width,a_height);
+    m_plots.adjust_size(a_width,a_height);
+  }
 public:
   plotter(session& a_session,
           unsigned int a_cols = 1,unsigned int a_rows = 1,
           int a_x = 0,int a_y = 0,
           unsigned int a_width = 500,unsigned int a_height = 500,
-          const std::string& /*a_win_title*/ = "")
-  :parent_window(a_width,a_height)
-  ,parent_viewer(a_session.out(),a_width,a_height)
-  ,m_session(a_session)
+          const std::string& a_win_title = "")
+  :parent(a_session,a_x,a_y,a_width,a_height,a_win_title)
   ,m_ttf() //before m_plots.
   ,m_plots(m_ttf)
-  ,m_glarea(m_hwnd,*this,m_plots)
   {
-    //////////////////////////////////////////////////////////
-    /// windowing ////////////////////////////////////////////
-    //////////////////////////////////////////////////////////
-    if(!m_hwnd) return; //throw
-
-    //////////////////////////////////////////////////////////
-    /// scene graph //////////////////////////////////////////
-    //////////////////////////////////////////////////////////
-    inlib::sg::separator* sep = new inlib::sg::separator;
-
-    // camera set below.
-    m_camera.height = 1;
-    float z = 4*1; //plotter.depth = 1;
-    m_camera.znear = 0.1f*z;
-    m_camera.zfar = 10*z; //100*z induces problems with lego rendering.
-    m_camera.position = inlib::vec3f(0,0,z);
-    m_camera.orientation = inlib::rotf(inlib::vec3f(0,0,1),0);
-    m_camera.focal = z;
-    sep->add(new inlib::sg::noderef(m_camera));
-
-    m_plots.cols = a_cols;
-    m_plots.rows = a_rows;
-    m_plots.adjust_size(a_width,a_height);
-
-    sep->add(new inlib::sg::noderef(m_plots));
-
-    sg().add(sep); //give sep ownership to the viewer.
+#include "../plotter_sg_common.icc"
   }
   virtual ~plotter() {}
 protected:
   plotter(const plotter& a_from)
-  :parent_window(a_from)
-  ,parent_viewer(a_from)
-  ,m_session(a_from.m_session)
+  :parent(a_from)
   ,m_camera(a_from.m_camera)
   ,m_plots(a_from.m_plots)
-  ,m_glarea(a_from.m_glarea)
   {}
   plotter& operator=(const plotter& a_from){
-    window::operator=(a_from);
+    parent::operator=(a_from);
     m_camera = a_from.m_camera;
     m_plots = a_from.m_plots;
     return *this;
   }
 public:
-  bool has_window() const {return m_hwnd?true:false;} //for SWIG
-
-  HWND window() const {return m_hwnd;}
-
-  bool show() {
-    if(!m_hwnd) return false;
-    m_session.show_window(m_hwnd);
-    return true;
-  }
-
+  bool steer() {return m_session.steer();}
 public:
-  inlib::sg::plots& plots() {return m_plots;}
-  const inlib::sg::plots& plots() const {return m_plots;}
-
-  void add_plottable(inlib::sg::plottable* a_plottable) {
-    m_plots.current_plotter().add_plottable(a_plottable); //it takes ownership.
-  }
-  
-  inlib::sg::plottable* plot(const inlib::histo::h1d& a_histo) {
-    inlib::sg::plottable* p = new inlib::sg::h1d2plot(a_histo);
-    m_plots.current_plotter().add_plottable(p); //it takes ownership.
-    return p;
-  }
-
-  inlib::sg::plottable* plot(const inlib::histo::h2d& a_histo) {
-    inlib::sg::plottable* p = new inlib::sg::h2d2plot(a_histo);
-    m_plots.current_plotter().add_plottable(p); //it takes ownership.
-    return p;
-  }
-
-  inlib::sg::plottable* plot_cp(const inlib::histo::h1d& a_histo) {
-    inlib::sg::plottable* p = new inlib::sg::h1d2plot_cp(a_histo);
-    m_plots.current_plotter().add_plottable(p); //it takes ownership.
-    return p;
-  }
-
-  inlib::sg::plottable* plot_cp(const inlib::histo::h2d& a_histo) {
-    inlib::sg::plottable* p = new inlib::sg::h2d2plot_cp(a_histo);
-    m_plots.current_plotter().add_plottable(p); //it takes ownership.
-    return p;
-  }
-
-  template <class T>
-  inlib::sg::plottable* plot(const T& a_func) {
-    inlib::sg::plottable* p = new inlib::sg::f1d2plot<T>(a_func);
-    m_plots.current_plotter().add_plottable(p);
-    return p;
-  }
-
-  template <class T>
-  inlib::sg::plottable* plot(const std::vector<T>& a_xs,const std::vector<T>& a_ys) {
-    inlib::sg::plottable* p = new inlib::sg::xy2plot<T>(a_xs,a_ys);
-    m_plots.current_plotter().add_plottable(p);
-    return p;
-  }
-
-  inlib::sg::plottable* plot_fit(const std::vector<std::string>& a_names,const std::vector<double>& a_output) {
-    inlib::sg::plottable* p = new inlib::sg::fit2plot(a_names,a_output);
-    m_plots.current_plotter().add_plottable(p);
-    return p;
-  }
-
+#include <inlib/plotter_common.icc>
 protected:
-  class _glarea : public glarea {
-  public:
-    virtual void paint(unsigned int a_w,unsigned int a_h) {
-      m_plots.adjust_size(a_w,a_h);
-      m_viewer.set_size(a_w,a_h);
-      m_viewer.render();
-    }
-  public:
-    _glarea(HWND a_parent,
-            parent_viewer& a_viewer,
-            inlib::sg::plots& a_plots)
-    :glarea(a_parent)
-    ,m_viewer(a_viewer)
-    ,m_plots(a_plots)
-    {}
-  protected:
-    parent_viewer& m_viewer;
-    inlib::sg::plots& m_plots;
-  };
-    
-protected:
-  session& m_session;
   inlib::sg::ortho m_camera;
   sg::text_freetype m_ttf;
   inlib::sg::plots m_plots;
-  _glarea m_glarea;
 };
 
 }}

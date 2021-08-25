@@ -5,13 +5,14 @@
 #define exlib_sg_GL_manager
 
 #include "gl"
+#include "../glbuf"
 
 #include <inlib/sg/render_manager>
 #include <inlib/mapmanip>
+#include <inlib/carray>
+#include <inlib/num2s>
 
 #include <cmath> //::sqrt
-
-#include "../glbuf"
 
 #ifdef INLIB_MEM
 #include <inlib/mem>
@@ -27,11 +28,11 @@ public:
   virtual void* cast(const std::string& a_class) const {
     if(void* p = inlib::cmp_cast<GL_manager>(this,a_class)) {return p;}
     else return 0;
-  }  
+  }
 public:
   virtual bool begin_render(int a_x,int a_y,unsigned int a_ww,unsigned int a_wh,
                             float a_r,float a_g,float a_b,float a_a,bool a_clear = true) {
-    gl::clear_errors();
+    gl_clear_errors();
 
 #if TARGET_OS_IPHONE
 #elif defined(ANDROID)
@@ -58,7 +59,7 @@ public:
 #elif defined(ANDROID)
     ::glEnable(GL_MULTISAMPLE);
 #elif _WIN32
-#elif __APPLE__	
+#elif __APPLE__
     ::glEnable(GL_MULTISAMPLE); //Cocoa
 #else
 #endif
@@ -74,7 +75,7 @@ public:
     ::glReadBuffer(GL_FRONT);
 
     NOTE : GL_POLYGON_SMOOTH is here on Cocoa/AGL, Windows/WGL but it
-           does nothing.           
+           does nothing.
     */
 
 #if TARGET_OS_IPHONE
@@ -85,15 +86,55 @@ public:
     ::glDisable(GL_POLYGON_STIPPLE); //CoinGL : reading a .wrl having Material::transparency may enable GL_POLYGON_STIPPLE.
 #endif
 
+/*
+    ::printf("debug : is enabled %d\n",::glIsEnabled(GL_COLOR_MATERIAL));
+   {GLfloat v[4];
+    ::glGetMaterialfv(GL_FRONT,GL_AMBIENT,v);
+    ::printf("debug : ambient : %g %g %g %g\n",v[0],v[1],v[2],v[3]);}
+   {GLfloat v[4];
+    ::glGetMaterialfv(GL_FRONT,GL_DIFFUSE,v);
+    ::printf("debug : diffuse : %g %g %g %g\n",v[0],v[1],v[2],v[3]);}
+   {GLfloat v[4];
+    ::glGetMaterialfv(GL_FRONT,GL_SPECULAR,v);
+    ::printf("debug : specular : %g %g %g %g\n",v[0],v[1],v[2],v[3]);}
+   {GLfloat v[4];
+    ::glGetMaterialfv(GL_FRONT,GL_EMISSION,v);
+    ::printf("debug : emission : %g %g %g %g\n",v[0],v[1],v[2],v[3]);}
+   {GLfloat shine;
+    ::glGetMaterialfv(GL_FRONT,GL_SHININESS,&shine);
+    ::printf("debug : shine : %g\n",shine);}
+debug : is enabled 0
+debug : ambient : 0.2 0.2 0.2 1
+debug : diffuse : 0.8 0.8 0.8 1
+debug : specular : 0 0 0 1
+debug : emission : 0 0 0 1
+debug : shine : 0
+*/
+
     ::glEnable(GL_NORMALIZE);
     ::glShadeModel(GL_FLAT);
-    //::glShadeModel(GL_SMOOTH); //Gouraud
+    //::glShadeModel(GL_SMOOTH);
     // GL-ES : ::glMaterialfv does not work. We then use :
     //         ::glEnable(GL_COLOR_MATERIAL) and ::glColor.
+    //::glColorMaterial(GL_FRONT, GL_DIFFUSE);  //?
     ::glEnable(GL_COLOR_MATERIAL);
-  
+
+/*
+debug : is enabled 1
+debug : ambient : 1 1 1 1
+debug : diffuse : 1 1 1 1
+debug : specular : 0 0 0 1
+debug : emission : 0 0 0 1
+debug : shine : 0
+*/
+
     // to handle transparency (same as SoGLRenderAction::SCREEN_DOOR ?) :
-    ::glEnable(GL_BLEND);
+    //::glEnable(GL_BLEND);
+    // NOTE : with Cocoa+AppleGL on macOS-10.14 (Mojave), it appears that points are blended ! (Even if alpha color is 1).
+    //        Seen with some simulated catalog of galaxies done for LSST/DC2.
+    //        To master this, we disable GL_BLEND by default. Then people wanting some transparency have to
+    //        use the inlib::sg::blend node in their scene graph.
+    ::glDisable(GL_BLEND); //must be in sync with inlib::sg::state.m_GL_BLEND and sg::blend node default.
     ::glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
     //WARNING : the below glEnable/glDisable corresponds
@@ -102,7 +143,7 @@ public:
     ::glDisable(GL_LIGHTING);
     ::glFrontFace(GL_CCW);
     ::glEnable(GL_CULL_FACE);
-    ::glDisable(GL_POLYGON_OFFSET_FILL);	
+    ::glDisable(GL_POLYGON_OFFSET_FILL);
     ::glDisable(GL_TEXTURE_2D);
 
     ::glDisable(GL_POINT_SMOOTH);
@@ -118,7 +159,7 @@ public:
    //        (But the clear color should be the same for both views).
    //::glEnable(GL_SCISSOR_TEST);
    //::glScissor(a_x,a_y,a_ww,a_wh);
-  
+
     //NOTE : a=0 coworks with the below logic to handle transparent background.
     if(a_clear) {
       ::glClearColor(a_r,a_g,a_b,0);
@@ -127,9 +168,9 @@ public:
     }
 
     //WARNING : Android, iPhone : only one glPushMatrix ok !
-    ::glMatrixMode(GL_PROJECTION); 
+    ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-  
+
     //WARNING : we take the convention that the current mode is MODELVIEW
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
@@ -156,13 +197,13 @@ public:
     ::glDrawArrays(GL_TRIANGLE_FAN,0,4);
     ::glDisableClientState(GL_VERTEX_ARRAY);
     ::glEnable(GL_DEPTH_TEST);}
-  
+
     return true;
   }
 
   virtual void end_render() {
-    ::glFinish();
-    gl::dump_if_errors(m_out,"exlib::sg::GL_manager::end_render :");
+    //::glFinish();
+    gl_dump_if_errors(m_out,"exlib::sg::GL_manager::end_render :");
   }
 
   ////////////////////////////////////////////////
@@ -190,14 +231,14 @@ public:
     inlib::img_byte res;
     if(!sz) {
       m_out << "exlib::sg::gl::tex_img : warning : GL_MAX_TEXTURE_SIZE is zero." << std::endl;
-      status = gl::tex_img(m_out,a_img);
+      status = gl_tex_img(m_out,a_img);
     } else {
     if(a_img.check_gl_limit(sz,res)) {
       if(res.is_empty()) { //a_img does not exceed.
-        status = gl::tex_img(m_out,a_img);
+        status = gl_tex_img(m_out,a_img);
       } else {
         m_out << "exlib::sg::gl::tex_img : warning : img size > GL_MAX_TEXTURE_SIZE (" << sz << ")." << std::endl;
-        status = gl::tex_img(m_out,res);
+        status = gl_tex_img(m_out,res);
         gsto_size = res.size();
       }
     } else {
@@ -217,23 +258,23 @@ public:
     ::glBindTexture(GL_TEXTURE_2D,0);
 
     if(!status) {
-      gl::dump_if_errors(m_out,"exlib::sg::GL_manager::create_texture (1) :");
-      ::glDeleteTextures(1,&gl_id);    
+      gl_dump_if_errors(m_out,"exlib::sg::GL_manager::create_texture (1) :");
+      ::glDeleteTextures(1,&gl_id);
 #ifdef INLIB_MEM
       inlib::mem::decrement(inlib::s_tex().c_str());
 #endif
       gl_id = 0;
-      gl::clear_errors();
+      gl_clear_errors();
       return 0;
     }
 
-    if(gl::dump_if_errors(m_out,"exlib::sg::GL_manager::create_texture (2) :")) {
-      ::glDeleteTextures(1,&gl_id);    
+    if(gl_dump_if_errors(m_out,"exlib::sg::GL_manager::create_texture (2) :")) {
+      ::glDeleteTextures(1,&gl_id);
 #ifdef INLIB_MEM
       inlib::mem::decrement(inlib::s_tex().c_str());
 #endif
       gl_id = 0;
-      gl::clear_errors();
+      gl_clear_errors();
       return 0;
     }
 
@@ -268,14 +309,14 @@ public:
                      a_floatn*sizeof(float),a_data,
                      GL_STATIC_DRAW);
       ::glBindBuffer(GL_ARRAY_BUFFER,0);
-  
-      if(gl::dump_if_errors(m_out,"exlib::sg::GL_manager::create_gsto_from_data :")) {
+
+      if(gl_dump_if_errors(m_out,"exlib::sg::GL_manager::create_gsto_from_data :")) {
         ::glDeleteBuffers(1,&gl_id);
 #ifdef INLIB_MEM
         inlib::mem::decrement(inlib::s_gsto().c_str());
 #endif
         gl_id = 0;
-        gl::clear_errors();
+        gl_clear_errors();
         return 0;
       }
 
@@ -415,6 +456,31 @@ public:
     return sz;
   }
 
+  virtual bool get_infos(const std::string& a_what,std::string& a_value) const {
+    if(a_what=="GL_VERSION") {
+      const char* _cs = (const char*)::glGetString(GL_VERSION);\
+      if(!_cs) {a_value.clear();return false;}
+      a_value = _cs;
+      return true;
+    } else if(a_what=="GL_VENDOR") {
+      const char* _cs = (const char*)::glGetString(GL_VENDOR);\
+      if(!_cs) {a_value.clear();return false;}
+      a_value = _cs;
+      return true;
+    } else if(a_what=="GL_RENDERER") {
+      const char* _cs = (const char*)::glGetString(GL_RENDERER);\
+      if(!_cs) {a_value.clear();return false;}
+      a_value = _cs;
+      return true;
+    } else if(a_what=="GL_MAX_TEXTURE_SIZE") {
+      GLint iv;
+      ::glGetIntegerv(GL_MAX_TEXTURE_SIZE, &iv);
+      if(!inlib::num2s(iv,a_value)) {a_value.clear();return false;}
+      return true;
+    }
+    a_value.clear();
+    return false;
+  }
 public:
   GL_manager(std::ostream& a_out)
   :m_out(a_out)
@@ -463,14 +529,46 @@ public:
 
   static unsigned char* get_rgbas(unsigned int a_w,unsigned int a_h) {
     //WARNING : it does OpenGL. Under Android it should be executed
-    //          in the OpenGL thread. 
+    //          in the OpenGL thread.
     //NOTE : Android, iOS : RGB produces a black image.
     unsigned char* rgbas = new unsigned char[4 * a_w * a_h];
     if(!rgbas) return 0;
     ::glPixelStorei(GL_PACK_ALIGNMENT,1); //needed with Cocoa.
     ::glReadPixels(0,0,a_w,a_h,GL_RGBA,GL_UNSIGNED_BYTE,rgbas);
+ /*{size_t number = 4 * a_w * a_h;
+    size_t count_not_255 = 0;
+    for(size_t item=3;item<number;item+=4) {
+      unsigned char a = rgbas[item];
+      if(a!=255) {
+        ::printf("%lu : %d\n",item,a);
+        count_not_255++;
+	rgbas[item] = 255;
+      }
+    }
+    ::printf("not_255 : %lu\n",count_not_255);}*/
     return rgbas;
   }
+
+#if defined(TARGET_OS_IPHONE) || defined(ANDROID)
+  static unsigned char* get_rgbs(unsigned int a_w,unsigned int a_h) {
+    unsigned char* rgbas = get_rgbas(a_w,a_h);
+    if(!rgbas) return 0;
+    unsigned char* rgbs = inlib::_4s_to_3s<unsigned char,unsigned int>(rgbas,a_w,a_h);
+    delete [] rgbas;
+    return rgbs;
+  }
+#else
+  static unsigned char* get_rgbs(unsigned int a_w,unsigned int a_h) {
+    //WARNING : it does OpenGL. Under Android it should be executed
+    //          in the OpenGL thread.
+    //NOTE : Android, iOS : RGB produces a black image.
+    unsigned char* rgbs = new unsigned char[3 * a_w * a_h];
+    if(!rgbs) return 0;
+    ::glPixelStorei(GL_PACK_ALIGNMENT,1); //needed with Cocoa.
+    ::glReadPixels(0,0,a_w,a_h,GL_RGB,GL_UNSIGNED_BYTE,rgbs);
+    return rgbs;
+  }
+#endif
 
 protected:
   std::ostream& m_out;
@@ -523,7 +621,7 @@ protected:
 #ifdef INLIB_MEM
           inlib::mem::decrement(inlib::s_gsto().c_str());
 #endif
-#endif          
+#endif
         }
       }
 
@@ -536,7 +634,7 @@ protected:
 #ifdef INLIB_MEM
       inlib::mem::decrement(s_class().c_str());
 #endif
-    }    
+    }
   private:
     gsto_t(const gsto_t& a_from)
     :m_gl_id(a_from.m_gl_id)
@@ -608,7 +706,7 @@ protected:
     unsigned int m_gl_id;
     kind m_kind;
     size_t m_size;
-    float* m_data;    
+    float* m_data;
   };
 
   std::map<unsigned int,gsto_t*> m_gstos;

@@ -13,16 +13,16 @@
 
 namespace exlib {
 namespace sg {
-namespace gl {
+//namespace gl : no, problem with g4tools.
 
-inline void clear_errors() {   
+inline void gl_clear_errors() {
   GLenum glerror = ::glGetError();
   while(glerror!=GL_NO_ERROR) {
     glerror = ::glGetError();
   }
 }
 
-inline bool dump_if_errors(std::ostream& a_out,const std::string& a_head) {   
+inline bool gl_dump_if_errors(std::ostream& a_out,const std::string& a_head) {
   bool retval = false;
   GLenum glerror = ::glGetError();
   if(glerror!=GL_NO_ERROR) {
@@ -49,7 +49,7 @@ inline bool dump_if_errors(std::ostream& a_out,const std::string& a_head) {
   return retval;
 }
 
-inline void dump_infos(std::ostream& a_out) {
+inline void gl_dump_infos(std::ostream& a_out) {
     std::string gl_version;
    {const char* _sv = (const char*)::glGetString(GL_VERSION);
     if(_sv) gl_version = _sv;}
@@ -81,8 +81,8 @@ inline void dump_infos(std::ostream& a_out) {
     //a_out << " GL_BUFFER_SIZE " << gl_buffer_size << std::endl;
 }
 
-inline bool tex_img(std::ostream& a_out,const inlib::img_byte& a_img) {
-    if(a_img.bpp()==1) { 
+inline bool gl_tex_img(std::ostream& a_out,const inlib::img_byte& a_img) {
+    if(a_img.bpp()==1) {
       //to pass eiffel-tower.png
 #if defined(ANDROID) || TARGET_OS_IPHONE
       inlib::img_byte res;
@@ -90,22 +90,14 @@ inline bool tex_img(std::ostream& a_out,const inlib::img_byte& a_img) {
         a_out << "exlib::sg::gl::tex_img : inlib::img.bw2x() failed." << std::endl;
         return false;
       }
-      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,
-                     res.width(),res.height(),
-                     0,GL_RGB,GL_UNSIGNED_BYTE,res.buffer());      
+      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,res.width(),res.height(),0,GL_RGB,GL_UNSIGNED_BYTE,res.buffer());
 #else
-      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,
-                     a_img.width(),a_img.height(),
-                     0,GL_LUMINANCE,GL_UNSIGNED_BYTE,a_img.buffer());
+      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,a_img.width(),a_img.height(),0,GL_LUMINANCE,GL_UNSIGNED_BYTE,a_img.buffer());
 #endif
     } else if(a_img.bpp()==3) {
-      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,
-                     a_img.width(),a_img.height(),
-                     0,GL_RGB,GL_UNSIGNED_BYTE,a_img.buffer());
+      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,a_img.width(),a_img.height(),0,GL_RGB,GL_UNSIGNED_BYTE,a_img.buffer());
     } else if(a_img.bpp()==4) {
-      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,
-                     a_img.width(),a_img.height(),
-                     0,GL_RGBA,GL_UNSIGNED_BYTE,a_img.buffer());
+      ::glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,a_img.width(),a_img.height(),0,GL_RGBA,GL_UNSIGNED_BYTE,a_img.buffer());
     } else {
       a_out << "exlib::sg::gl::tex_img : img.bpp() " << a_img.bpp() << " not treated." << std::endl;
       return false;
@@ -113,7 +105,7 @@ inline bool tex_img(std::ostream& a_out,const inlib::img_byte& a_img) {
     return true;
 }
 
-}}}
+}}
 
 //exlib_build_use inlib GL
 

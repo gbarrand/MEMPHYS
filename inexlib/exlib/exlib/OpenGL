@@ -21,8 +21,12 @@
 #elif _WIN32
 #include <windows.h>
 #include <GL/gl.h>
-#elif __APPLE__	
-#include <OpenGL/gl.h> //Cocoa
+#elif __APPLE__
+#ifdef EXLIB_USE_GL_GL_H
+#include <GL/gl.h>  //Macports X11 GL.
+#else
+#include <OpenGL/gl.h> //Apple/OpenGL.
+#endif
 #else
 #include <GL/gl.h>
 #endif
