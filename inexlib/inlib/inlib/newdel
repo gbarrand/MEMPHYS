@@ -38,8 +38,8 @@ namespace inlib {
 
 template <class T>
 inline bool mrealloc(T*& a_pointer,size_t a_new_size,size_t a_old_size,bool a_init = false) {
-  if(!a_new_size) { 
-    mdel(a_pointer); 
+  if(!a_new_size) {
+    mdel(a_pointer);
     return true;
   }
   if(!a_pointer) {
@@ -49,13 +49,13 @@ inline bool mrealloc(T*& a_pointer,size_t a_new_size,size_t a_old_size,bool a_in
   if(a_old_size==a_new_size) return true;
   T* pointer = mnew<T>(a_new_size);
   if(!pointer) {
-    mdel(a_pointer); 
+    mdel(a_pointer);
     return false;
   }
   if(a_new_size>a_old_size) {
     ::memcpy(pointer,a_pointer,a_old_size*sizeof(T));
     if(a_init){
-      size_t num = a_new_size-a_old_size;   
+      size_t num = a_new_size-a_old_size;
       T* pos = pointer+a_old_size;
       for(size_t i=0;i<num;i++,pos++) *pos = T();
     }

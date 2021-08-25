@@ -1,3 +1,4 @@
+
 // Copyright (C) 2010, Guy Barrand. All rights reserved.
 // See the file inlib.license for terms.
 
@@ -14,7 +15,7 @@ namespace rroot {
 
 inline const std::string& TTree_cls(){
   static const std::string s_v("TTree");
-  return s_v;  
+  return s_v;
 }
 
 class tree : public virtual iobject {
@@ -23,6 +24,7 @@ public:
     static const std::string s_v("inlib::rroot::tree");
     return s_v;
   }
+  virtual const std::string& s_cls() const {return s_class();}
 public: //iobject
   virtual const std::string& name() const {return m_name;}
   virtual const std::string& title() const {return m_title;}
@@ -37,7 +39,7 @@ public:
   ,m_out(a_file.out())
   ,m_name("")
   ,m_title("")
-  ,m_branches(a_fac,true,true)
+  ,m_branches(a_fac)
   ,m_entries(0)
   {
 #ifdef INLIB_MEM
@@ -55,12 +57,12 @@ protected:
   ,m_file(a_from.m_file)
   ,m_fac(a_from.m_fac)
   ,m_out(a_from.m_out)
-  ,m_branches(m_fac,false,true)
+  ,m_branches(m_fac)
   {}
   tree& operator=(const tree&){return *this;}
 public:
   std::ostream& out() const {return m_out;}
-  
+
   ifile& file() {return m_file;}
   ifac& fac() {return m_fac;}
 
@@ -89,27 +91,33 @@ public:
           << std::endl;
     _dump_branches(a_out,m_branches,a_spaces+a_indent,a_indent);
   }
- 
+
   branch* find_branch(const std::string& a_name,bool a_recursive = false) const {
     return _find_branch(m_branches,a_name,a_recursive);
+  }
+
+  branch_element* find_branch_element(const std::string& a_name,bool a_recursive = false) const {
+    branch* b = _find_branch(m_branches,a_name,a_recursive);
+    if(!b) return 0;
+    return id_cast<branch,branch_element>(*b);
   }
 
   base_leaf* find_leaf(const std::string& a_name,bool a_recursive = false) const {
     return _find_leaf(m_branches,a_name,a_recursive);
   }
- 
+
   void find_leaves(std::vector<base_leaf*>& a_leaves) const {
     a_leaves.clear();
     _find_leaves(m_branches,a_leaves);
   }
- 
+
   void find_branches(std::vector<branch*>& a_branches) const {
     a_branches.clear();
     _find_branches(m_branches,a_branches);
   }
- 
+
   branch* find_leaf_branch(const base_leaf& a_leaf) const {return _find_leaf_branch(m_branches,a_leaf);}
- 
+
   bool show(std::ostream& a_out,uint64 a_entry){
     a_out << "======> EVENT:" << a_entry << std::endl;
     inlib_vforit(branch*,m_branches,it) {
@@ -263,6 +271,10 @@ public:
       if(vers>=18) {
         if(!a_buffer.read(dummy_int)) return false; //fDefaultEntryOffsetLen
       }
+      int fNClusterRange;
+      if(vers>=20) {
+        if(!a_buffer.read(fNClusterRange)) return false; //fNClusterRange
+      }
 
       if(!a_buffer.read(dummy_int64)) return false; //fMaxEntries
       if(!a_buffer.read(dummy_int64)) return false; //fMaxEntryLoop
@@ -274,6 +286,19 @@ public:
         if(!a_buffer.read(dummy_int64)) return false; //fAutoFlush
       }
       if(!a_buffer.read(dummy_int64)) return false; //fEstimate
+      if(vers>=20) {
+        int64* fClusterRangeEnd = 0;       ///<[fNClusterRange] Last entry of a cluster range.
+        if(!fixed_array_stream<int64>(a_buffer,fNClusterRange,fClusterRangeEnd)) return false;
+        delete [] fClusterRangeEnd;
+        int64* fClusterSize = 0;           ///<[fNClusterRange] Number of entries in each cluster for a given range.
+        if(!fixed_array_stream<int64>(a_buffer,fNClusterRange,fClusterSize)) return false;
+        delete [] fClusterSize;
+        dummy _dummy;
+        if(!_dummy.stream(a_buffer)) { //TIOFeatures fIOFeatures
+          m_out << "inlib::rroot::tree::stream : can't read (dummy) TIOFeatures." << std::endl;
+          return false;
+        }
+      }
     }
 
     //FIXME if (fEstimate <= 10000) fEstimate = 1000000;
@@ -292,10 +317,10 @@ public:
 
     //TObjArray
     // We read leaves in order to keep streaming synchronisation.
-    // In fact m_leaves are references to existing leaves read by 
+    // In fact m_leaves are references to existing leaves read by
     // the branches in the upper line of code.
-    //::printf("debug : tree : read leaves : begin\n");    
-   {obj_array<base_leaf> m_leaves(m_fac,a_buffer.map_objs()?false:true,true);
+    //::printf("debug : tree : read leaves : begin\n");
+   {obj_array<base_leaf> m_leaves(m_fac);
     //branch b(m_out,m_fac);
     ifac::args args;
     //args[ifac::arg_branch()] = &b;
@@ -315,7 +340,7 @@ public:
               << std::endl;
         return false;
       }
-    } 
+    }
 
     //m_saved_bytes = m_tot_bytes;
    {std::vector<double> v;
@@ -342,8 +367,8 @@ public:
               << std::endl;
         return false;
       }
-    } 
-    
+    }
+
     if(vers>=16) {
       //TList* fUserInfo
       if(!dummy_TXxx_pointer_stream(a_buffer,m_fac)) {
@@ -359,12 +384,12 @@ public:
               << std::endl;
         return false;
       }
-    } 
-    
+    }
+
     if(!a_buffer.check_byte_count(s,c,TTree_cls())) return false;
 
     return true;
-  }    
+  }
 protected:
   void _dump_branches(std::ostream& a_out,
                              const std::vector<branch*>& a_bs,
@@ -391,8 +416,8 @@ protected:
               << " entry_number=" << (*it)->entry_number()
               << std::endl;
       }
-  
-  
+
+
      {const std::vector<base_leaf*>& lvs = (*it)->leaves();
       inlib_vforcit(base_leaf*,lvs,itl) {
         a_out << a_spaces << a_indent

@@ -6,7 +6,7 @@
 
 #include "node"
 #include "sf_mat4f"
-#include "../mat4f"
+#include "../lina/mat4f"
 #include "render_action"
 #include "pick_action"
 #include "bbox_action"
@@ -107,6 +107,7 @@ public:
   void mul_rotate(float a_x,float a_y,float a_z,float a_angle) {mtx.mul_rotate(a_x,a_y,a_z,a_angle);}
 
   void mul_rotate(const vec3f& a_v,float a_angle) {mtx.mul_rotate(a_v,a_angle);}
+  void mul_rotate(const vec4f& a_v) {mtx.mul_rotate(a_v.v0(),a_v.v1(),a_v.v2(),a_v.v3());}
 
   void left_mul_rotate(float a_x,float a_y,float a_z,float a_angle) {mtx.left_mul_rotate(a_x,a_y,a_z,a_angle);}
 

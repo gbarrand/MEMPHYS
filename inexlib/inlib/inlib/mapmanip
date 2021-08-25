@@ -17,7 +17,7 @@ inline void safe_clear(std::map<K,V*>& a_m){
     it_t it = a_m.begin();
     V* entry  = (*it).second;
     a_m.erase(it);
-    delete entry;    
+    delete entry;
   }
 }
 
@@ -42,13 +42,14 @@ template <class K,class V> inline void clear(std::map<K,V*>& a_m){safe_clear<K,V
 #endif
 
 template <class K,class V>
-inline void delete_key(std::map<K,V*>& a_m,const K& a_key){
+inline bool delete_key(std::map<K,V*>& a_m,const K& a_key){
   typedef typename std::map<K,V*>::iterator it_t;
   it_t it = a_m.find(a_key);
-  if(it==a_m.end()) return;
+  if(it==a_m.end()) return false;
   V* obj = (*it).second;
   a_m.erase(it);
   delete obj;
+  return true;
 }
 
 template <class K,class V>
@@ -87,6 +88,14 @@ inline bool find(const std::map<K,V>& a_map,const K& a_key,V& a_value) {
   it_t it = a_map.find(a_key);
   if(it==a_map.end()) {a_value = V();return false;}
   a_value = (*it).second;
+  return true;
+}
+
+template <class K,class V>
+inline bool is_key(const std::map<K,V>& a_map,const K& a_key) {
+  typedef typename std::map<K,V>::const_iterator it_t;
+  it_t it = a_map.find(a_key);
+  if(it==a_map.end()) return false;
   return true;
 }
 

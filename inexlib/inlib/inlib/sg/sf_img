@@ -39,12 +39,14 @@ public:
       mem::decrement(s_new().c_str());
 #endif
     }
-    return true;    
+    return true;
   }
   virtual bool dump(std::ostream&) {
     //a_out << parent::m_value << std::endl;
     return true;
   }
+  virtual bool s_value(std::string& a_s) const {a_s.clear();return false;}
+  virtual bool s2value(const std::string&) {return false;}
 public:
   sf_img():parent(){}
   sf_img(const img<T>& a_value):parent(a_value){}

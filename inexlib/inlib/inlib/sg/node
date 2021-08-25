@@ -28,21 +28,28 @@ namespace sg {
 class node {
 public:
   INLIB_SCLASS(inlib::sg::node)
+//public:
+//  static bool is_a(const std::string& a_class) {return rcmp(a_class,s_class());}
+// in a derived class:
+//  static bool is_a(const std::string& a_class) {
+//    if(rcmp(a_class,s_class())) return true;
+//    return parent::is_a(a_class);
+//  }
   virtual void* cast(const std::string& a_class) const {
-    if(void* p = cmp_cast<node>(this,a_class)) {return p;}
-    else return 0;
+    if(void* p = cmp_cast<node>(this,a_class)) return p;
+    return 0;
   }
   virtual const std::string& s_cls() const = 0;
 public:
   virtual node* copy() const = 0;
 
   virtual unsigned int cls_version() const {return 1;}
-  
+
   virtual const desc_fields& node_desc_fields() const {
     static const desc_fields s_v;
     return s_v;
   }
-  
+
   virtual void render(render_action&) {}
   virtual void pick(pick_action&) {}
   virtual void bbox(bbox_action&) {}
@@ -56,21 +63,21 @@ public:
       if(this==a_action.node()){
         a_action.path_push(this); //ending node in the path.
         a_action.set_done(true);
-      } 
+      }
     } else if(a_action.what()==search_action::search_path_to_node_of_class) {
       if(cast(a_action.sclass())) {
         search_action::path_t path = a_action.path();
         path.push_back(this);
-        a_action.add_path(path);        
+        a_action.add_path(path);
         if(a_action.stop_at_first()) a_action.set_done(true);
-      } 
+      }
     }
   }
   virtual void get_matrix(get_matrix_action& a_action) {
     if(this==a_action.node()){
       a_action.set_found_model(a_action.model_matrix());
       a_action.set_done(true);
-    } 
+    }
   }
   virtual bool write(write_action& a_action) {
     if(!a_action.beg_node(*this)) return false;
@@ -81,10 +88,24 @@ public:
   virtual void event(event_action&) {}
   virtual bool read(read_action& a_action) {return read_fields(a_action);}
   virtual void is_visible(visible_action&) {}
-  
+
   virtual void protocol_one_fields(std::vector<field*>& a_fields) const {a_fields = m_fields;}
+
+  virtual bool draw_in_frame_buffer() const {return false;}  // marker nodes return true.
+  virtual void clear_gstos() {}
 public:
-  node(){
+  virtual bool touched() { //virtual for plotter.
+    inlib_vforcit(field*,m_fields,it) {
+      if((*it)->touched()) return true;
+    }
+    return false;
+  }
+  virtual void reset_touched() {
+    inlib_vforcit(field*,m_fields,it) (*it)->reset_touched();
+  }
+public:
+  node()
+  {
 #ifdef INLIB_MEM
     mem::increment(s_class().c_str());
 #endif
@@ -95,21 +116,18 @@ public:
 #endif
   }
 protected:
-  node(const node&){
+  node(const node&)
+  {
 #ifdef INLIB_MEM
     mem::increment(s_class().c_str());
 #endif
   }
-  node& operator=(const node&){return *this;}
+  node& operator=(const node&){
+    return *this;
+  }
 protected:
   void add_field(field* a_field) {
     m_fields.push_back(a_field); //it does not take ownerhship.
-  }
-  bool touched() {
-    inlib_vforcit(field*,m_fields,it) {
-      if((*it)->touched()) return true;
-    }
-    return false;
   }
   //INLIB_CLASS_STRING(fields_end) //for write_bsg, sg::rbsg
   bool write_fields(write_action& a_action) {
@@ -217,9 +235,6 @@ public:
     if(m_fields.empty()) return;
     m_fields.front()->touch();
   }
-  void reset_touched() {
-    inlib_vforcit(field*,m_fields,it) (*it)->reset_touched();
-  }
 /*
   bool equal(const node& a_node) const {
     if(m_fields.size()!=a_node.m_fields.size()) return false;
@@ -236,6 +251,30 @@ public:
     //WARNING : touchy.
     return *((field*)((char*)this+a_desc.offset()));
   }
+  void dump_field_descs(std::ostream& a_out) const {
+    a_out << "field descs of node class " << s_cls() << " :" << std::endl;
+    const std::vector<field_desc>& fds = node_desc_fields();
+    inlib_vforcit(field_desc,fds,itd) {
+      a_out << "name " << (*itd).name()
+            << ", class " << (*itd).cls()
+            << ", offset " << (*itd).offset()
+            << std::endl;
+    }
+  }
+  field* find_field_by_name(const std::string& a_name) const {
+    // a_name is of the form <class>.<field>. For example for color on sg::text, there are :
+    //   inlib::sg::back_area.color
+    //   inlib::sg::text.color
+    const std::vector<field_desc>& fds = node_desc_fields();
+    inlib_vforcrit(field_desc,fds,it) {
+      if((*it).name()==a_name) {
+        inlib_vforcit(field*,m_fields,itf) {
+          if(field_offset(*itf)==(*it).offset()) return (*itf);
+        }
+      }
+    }
+    return 0;
+  }
 protected:
   field_desc::offset_t field_offset(const field* a_field) const {
     //WARNING : touchy.
@@ -243,15 +282,6 @@ protected:
   }
 
   field* find_field(const field_desc& a_rdesc) const {
-/*
-    //WARNING : must not use field name since, through inheritance, a node can have two field with same name.
-    //          (For exa sg::text has one field "color" and another one coming from back_area).
-    //::printf("debug : find_field : %s ...\n",a_rdesc.name().c_str());
-    inlib_vforcit(field*,m_fields,it) {
-      //::printf("debug : find_field :   look : %s\n",field_name(*(*it)).c_str());
-      if(field_offset(*it)==a_rdesc.offset()) return (*it);
-    }
-*/
     const std::vector<field_desc>& fds = node_desc_fields();
     inlib_vforcit(field_desc,fds,it) {
       if((*it).name()==a_rdesc.name()) {
@@ -262,17 +292,6 @@ protected:
       }
     }
     return 0;
-  }
-
-  void dump_field_descs(std::ostream& a_out) const {
-    a_out << "field descs of node class " << s_cls() << " :" << std::endl;
-    const std::vector<field_desc>& fds = node_desc_fields();
-    inlib_vforcit(field_desc,fds,itd) {
-      a_out << "name " << (*itd).name()
-            << ", class " << (*itd).cls()
-            << ", offset " << (*itd).offset()
-            << std::endl;
-    }
   }
 
   void check_fields(std::ostream& a_out) const {

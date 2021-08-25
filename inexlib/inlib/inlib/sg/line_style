@@ -4,7 +4,7 @@
 #ifndef inlib_sg_line_style
 #define inlib_sg_line_style
 
-#include "../vec3f"
+#include "../lina/vec3f"
 
 #include "sf_vec"
 #include "node"
@@ -76,21 +76,21 @@ public:
     sp.visible(visible.value());
     sp.color(color.value());
   //sp.transparency(transparency.value());
-    sp.line_width(width.value());
-    sp.line_pattern(pattern.value());
+    sp.width(width.value());
+    sp.pattern(pattern.value());
 
     if(!sp.parse(a_out,a_cmaps,a_s)) {
       a_out << "inlib::sg::line_style::from_string :"
             << " parse failed."
             << std::endl;
-      return false;    
+      return false;
     }
 
     visible.value(sp.visible());
     color.value(sp.color());
   //transparency.value(sp.transparency());
-    width.value(sp.line_width());
-    pattern.value(sp.line_pattern());
+    width.value(sp.width());
+    pattern.value(sp.pattern());
 
     return true;
   }

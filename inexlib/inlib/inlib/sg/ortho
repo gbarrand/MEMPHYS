@@ -91,6 +91,8 @@ protected:
   }
 };
 
+inline ortho* cast_ortho(base_camera& a_bcam) {return safe_cast<base_camera,ortho>(a_bcam);}
+
 }}
 
 #endif

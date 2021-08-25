@@ -27,33 +27,39 @@ class text : public back_area {
 public:
   mf_string strings;
   sf<bool> confine;
- 
+
   sf_vec<colorf,float> color;
   sf_string font;
   sf_enum<sg::font_modeling> font_modeling;
-  
-  sf_string encoding; 
+
+  sf_string encoding;
   sf<float> line_width; // for text_hershey.
   sf_enum<winding_type> front_face; //no more used.
 
-  sf<bool> back_visible;  
+  sf<bool> back_visible;
 
   sf<bool> enforce_front_height;
   sf<float> front_height;
+  sf<bool> enforce_front_width;
+  sf<float> front_width;
+
   sf<float> wmargin_factor;
   sf<float> hmargin_factor;
   sf_enum<sg::hjust> hjust;
+  sf_enum<sg::vjust> vjust;
 public:
   virtual const desc_fields& node_desc_fields() const {
     INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::text)
-    static const desc_fields s_v(parent::node_desc_fields(),14, //WARNING : have the right count.
+    static const desc_fields s_v(parent::node_desc_fields(),17, //WARNING : have the right count.
       INLIB_ARG_FIELD_DESC(strings),
       INLIB_ARG_FIELD_DESC(confine),
 
       INLIB_ARG_FIELD_DESC(color),
 
-      INLIB_ARG_FIELD_DESC_OPTS_BEG(font,8)
+      INLIB_ARG_FIELD_DESC_OPTS_BEG(font,10)
         font_hershey().c_str(),
+        font_lato_regular_ttf().c_str(),
+        font_roboto_bold_ttf().c_str(),
         font_arial_ttf().c_str(),
         font_arialbd_ttf().c_str(),
         font_timesbd_ttf().c_str(),
@@ -62,16 +68,16 @@ public:
         font_helvetica_ttf().c_str(),
         font_times_roman_ttf().c_str()
       INLIB_ARG_FIELD_DESC_OPTS_END,
-      
+
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(font_modeling,3)
         INLIB_ARG_ENUM(font_outline),
         INLIB_ARG_ENUM(font_filled),
         INLIB_ARG_ENUM(font_pixmap)
       INLIB_ARG_FIELD_DESC_ENUMS_END,
-      
+
       INLIB_ARG_FIELD_DESC(encoding),
       INLIB_ARG_FIELD_DESC(line_width),
-      
+
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(front_face,2)
         INLIB_ARG_ENUM(winding_ccw),
         INLIB_ARG_ENUM(winding_cw)
@@ -81,13 +87,21 @@ public:
 
       INLIB_ARG_FIELD_DESC(enforce_front_height),
       INLIB_ARG_FIELD_DESC(front_height),
+      INLIB_ARG_FIELD_DESC(enforce_front_width),
+      INLIB_ARG_FIELD_DESC(front_width),
       INLIB_ARG_FIELD_DESC(wmargin_factor),
       INLIB_ARG_FIELD_DESC(hmargin_factor),
-      
+
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(hjust,3)
         INLIB_ARG_ENUM(left),
         INLIB_ARG_ENUM(center),
         INLIB_ARG_ENUM(right)
+      INLIB_ARG_FIELD_DESC_ENUMS_END,
+
+      INLIB_ARG_FIELD_DESC_ENUMS_BEG(vjust,3)
+        INLIB_ARG_ENUM(bottom),
+        INLIB_ARG_ENUM(middle),
+        INLIB_ARG_ENUM(top)
       INLIB_ARG_FIELD_DESC_ENUMS_END
     );
     return s_v;
@@ -100,7 +114,7 @@ private:
     add_field(&color);
     add_field(&font);
     add_field(&font_modeling);
-    add_field(&encoding); 
+    add_field(&encoding);
     add_field(&line_width);
     add_field(&front_face);
 
@@ -108,9 +122,13 @@ private:
 
     add_field(&enforce_front_height);
     add_field(&front_height);
+    add_field(&enforce_front_width);
+    add_field(&front_width);
+
     add_field(&wmargin_factor);
     add_field(&hmargin_factor);
     add_field(&hjust);
+    add_field(&vjust);
   }
 public:
   virtual void render(render_action& a_action) {
@@ -132,12 +150,12 @@ public:
     //m_sep.pick(a_action);
   }
   virtual void search(search_action& a_action) {
-    node::search(a_action);
-    if(a_action.done()) return;
     if(touched()) {
       update_sg();
       reset_touched();
     }
+    parent::search(a_action);
+    if(a_action.done()) return;
     if(a_action.do_path()) a_action.path_push(this);
     if(back_visible.value()) {
       m_back_sep.search(a_action);
@@ -172,9 +190,14 @@ public:
 
   ,enforce_front_height(false)
   ,front_height(1)
+  ,enforce_front_width(false)
+  ,front_width(1)
+
   ,wmargin_factor(0.9f)
   ,hmargin_factor(0.9f)
-  ,hjust(left)
+  ,hjust(left)    // same default as base_text.
+  ,vjust(middle)  // not same default as base_text (which is bottom). We take middle for backcomp of confined text.
+                  // Note that text_hershey, text_freetype is (left,bottom) justified.
 
   ,m_base_text(0)
   ,m_TT_text(base_freetype::create(a_ttf))
@@ -201,9 +224,13 @@ public:
 
   ,enforce_front_height(a_from.enforce_front_height)
   ,front_height(a_from.front_height)
+  ,enforce_front_width(a_from.enforce_front_width)
+  ,front_width(a_from.front_width)
+
   ,wmargin_factor(a_from.wmargin_factor)
   ,hmargin_factor(a_from.hmargin_factor)
   ,hjust(a_from.hjust)
+  ,vjust(a_from.vjust)
 
   ,m_base_text(0)
   ,m_TT_text(base_freetype::create(*a_from.m_TT_text))
@@ -228,9 +255,13 @@ public:
 
     enforce_front_height = a_from.enforce_front_height;
     front_height = a_from.front_height;
+    enforce_front_width = a_from.enforce_front_width;
+    front_width = a_from.front_width;
+
     wmargin_factor = a_from.wmargin_factor;
     hmargin_factor = a_from.hmargin_factor;
     hjust = a_from.hjust;
+    vjust = a_from.vjust;
 
     m_base_text = 0;
 
@@ -244,6 +275,21 @@ public:
     if(!m_base_text) return 0;
     return m_base_text->height;
   }
+/*bool get_bounds(float a_height,
+                  float& a_mn_x,float& a_mn_y,float& a_mn_z,
+                  float& a_mx_x,float& a_mx_y,float& a_mx_z) const {
+    if(!m_base_text) {
+      a_mn_x = 0;
+      a_mn_y = 0;
+      a_mn_z = 0;
+      a_mx_x = 0;
+      a_mx_y = 0;
+      a_mx_z = 0;
+      return false;
+    }
+    m_base_text->get_bounds(m_base_text->height,a_mn_x,a_mn_y,a_mn_z,a_mx_x,a_mx_y,a_mx_z);
+    return true;
+  }*/
   bool is_empty() const {
     inlib_vforcit(std::string,strings.values(),it) {
       const std::string& line = *it;
@@ -272,6 +318,7 @@ public:
     m_sep.add(tsf);
 
     float fw = width * wmargin_factor;
+    float fh = height * hmargin_factor;
 
     //sf<float> zfront ?
     float zz = back_visible.value()?0.01f:0;
@@ -279,7 +326,7 @@ public:
     if(font==font_hershey()) {
 
       draw_style* ds = new draw_style;
-      ds->style = draw_style::lines;
+      ds->style = draw_lines;
       ds->line_width = line_width;
       m_sep.add(ds);
 
@@ -305,6 +352,7 @@ public:
     }
 
     if(enforce_front_height) {
+
       m_base_text->height = front_height;
 
       float mn_x,mn_y,mn_z;
@@ -312,25 +360,78 @@ public:
       m_base_text->get_bounds(front_height,mn_x,mn_y,mn_z,mx_x,mx_y,mx_z);
 
       float bxw = mx_x-mn_x;
-      float xtrans = -fw*0.5f+bxw*0.5f; //left justified
+      float xtrans = 0;
       if(hjust==center) {
         xtrans = 0;
+      } else if(hjust==left) {
+        xtrans = -fw*0.5f+bxw*0.5f;
       } else if(hjust==right) {
         xtrans = fw*0.5f-bxw*0.5f;
       }
+
+      float bxh = mx_y-mn_y;
+      float ytrans = 0;
+      if(vjust==middle) {
+        ytrans = 0;
+      } else if(vjust==bottom) {
+        ytrans = -fh*0.5f+bxh*0.5f;
+      } else if(vjust==top) {
+        ytrans = fh*0.5f-bxh*0.5f;
+      }
+
       float xx = -(mn_x+mx_x)*0.5F+xtrans;
-      float yy = -(mn_y+mx_y)*0.5F;
+      float yy = -(mn_y+mx_y)*0.5F+ytrans;
+      tsf->set_translate(xx,yy,zz);
+      return;
+    }
+
+    if(enforce_front_width) {
+
+      float th = fh;
+      float mn_x,mn_y,mn_z;
+      float mx_x,mx_y,mx_z;
+      m_base_text->get_bounds(th,mn_x,mn_y,mn_z,mx_x,mx_y,mx_z);
+      float bxw = mx_x-mn_x;
+
+      // adjust box width :
+      // th -> bxw then to have front_width:
+      if(bxw>0) {
+        th = th*front_width/bxw;
+        m_base_text->get_bounds(th,mn_x,mn_y,mn_z,mx_x,mx_y,mx_z);
+      }
+
+      bxw = mx_x-mn_x;
+      float xtrans = 0;
+      if(hjust==center) {
+        xtrans = 0;
+      } else if(hjust==left) {
+        xtrans = -fw*0.5f+bxw*0.5f;
+      } else if(hjust==right) {
+        xtrans = fw*0.5f-bxw*0.5f;
+      }
+
+      float bxh = mx_y-mn_y;
+      float ytrans = 0;
+      if(vjust==middle) {
+        ytrans = 0;
+      } else if(vjust==bottom) {
+        ytrans = -fh*0.5f+bxh*0.5f;
+      } else if(vjust==top) {
+        ytrans = fh*0.5f-bxw*0.5f;
+      }
+
+      float xx = -(mn_x+mx_x)*0.5F+xtrans;
+      float yy = -(mn_y+mx_y)*0.5F+ytrans;
       tsf->set_translate(xx,yy,zz);
 
+      m_base_text->height = bxh; //=th?
       return;
-    } 
+    }
 
     //various automatic text height strategies :
 
     if(confine) {
       // code common to freetype and hershey :
-
-      float fh = height * hmargin_factor;
 
       // try to adjust text within fw x fh (by attempting to be smart !).
       // the below assumes that text bounds are linear according
@@ -369,20 +470,33 @@ public:
 
       //bxw = box.mx()[0]-box.mn()[0];
       bxw = mx_x-mn_x;
-      float xtrans = -fw*0.5f+bxw*0.5f; //left justified
+      float xtrans = 0;
       if(hjust==center) {
         xtrans = 0;
+      } else if(hjust==left) {
+        xtrans = -fw*0.5f+bxw*0.5f;
       } else if(hjust==right) {
         xtrans = fw*0.5f-bxw*0.5f;
       }
+
+      bxh = mx_y-mn_y;
+      float ytrans = 0;
+      if(vjust==middle) {
+        ytrans = 0;
+      } else if(vjust==bottom) {
+        ytrans = -fh*0.5f+bxh*0.5f;
+      } else if(vjust==top) {
+        ytrans = fh*0.5f-bxw*0.5f;
+      }
+
       float xx = -(mn_x+mx_x)*0.5F+xtrans;
-      float yy = -(mn_y+mx_y)*0.5F;
+      float yy = -(mn_y+mx_y)*0.5F+ytrans;
+
       tsf->set_translate(xx,yy,zz);
 
       }
 
-   } else {
-      float fh = height * hmargin_factor;
+    } else {
 
       // we arrange yy so that two aside texts
       // with same height will have their text base lines aligned.
@@ -414,18 +528,32 @@ public:
      {float mn_x,mn_y,mn_z;
       float mx_x,mx_y,mx_z;
       m_base_text->get_bounds(th,mn_x,mn_y,mn_z,mx_x,mx_y,mx_z);
+
       float bxw = mx_x-mn_x;
-      float xtrans = -fw*0.5f+bxw*0.5f; //left justified
+      float xtrans = 0;
       if(hjust==center) {
         xtrans = 0;
+      } else if(hjust==left) {
+        xtrans = -fw*0.5f+bxw*0.5f;
       } else if(hjust==right) {
         xtrans = fw*0.5f-bxw*0.5f;
       }
+/*
+      float bxh = mx_y-mn_y;
+      float ytrans = 0;
+      if(vjust==middle) {
+        ytrans = 0;
+      } else if(vjust==bottom) {
+        ytrans = -fh*0.5f+bxh*0.5f;
+      } else if(vjust==top) {
+        ytrans = fh*0.5f-bxw*0.5f;
+      }
+*/
       float xx = -(mn_x+mx_x)*0.5F+xtrans;
       tsf->set_translate(xx,yy,zz);}
 
       // truncate text at right if out of border :
-     {std::vector<std::string> labcut; 
+     {std::vector<std::string> labcut;
       inlib_vforcit(std::string,strings.values(),it) {
         std::string scut;
         m_base_text->truncate(*it,th,fw,scut);
@@ -433,7 +561,19 @@ public:
       }
       m_base_text->strings = labcut;}
     }
+  }
 
+  void map_back_area_to_text() {
+    if(!m_base_text) return;
+    
+    float mn_x,mn_y,mn_z;
+    float mx_x,mx_y,mx_z;
+    m_base_text->get_bounds(front_height,mn_x,mn_y,mn_z,mx_x,mx_y,mx_z);
+
+    float bxw = mx_x-mn_x;
+    float bxh = mx_y-mn_y;
+    parent::width = bxw/wmargin_factor;
+    parent::height = bxh/hmargin_factor;
   }
 
 protected:

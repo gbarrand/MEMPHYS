@@ -21,6 +21,61 @@ public:
   virtual ival_func* copy() const = 0;
 };
 
+class ival_func_1d {
+public:
+  virtual bool value(double a_x,double& a_value) {
+    if(m_ival_func.number_of_arguments()!=1) {a_value = 0;return false;}
+    m_args[0].set(a_x);
+    if(!m_ival_func.eval(m_args,m_vr,m_serr)) {a_value = 0;return false;}
+    if(!m_vr.to_double(m_dr)) {a_value = 0;return false;}
+    a_value = m_dr;
+    return true;
+  }
+public:
+  ival_func_1d(ival_func& a_func):m_ival_func(a_func) {
+    m_args.resize(1);
+  }
+  virtual ~ival_func_1d(){}
+public:
+  ival_func_1d(const ival_func_1d& a_from):m_ival_func(a_from.m_ival_func) {
+    m_args.resize(1);
+  }
+protected:  
+  ival_func_1d& operator=(const ival_func_1d&){return *this;}
+public:
+  ival_func& m_ival_func;
+private: //opt:
+  std::vector<inlib::value> m_args;
+  inlib::value m_vr;
+  std::string m_serr;
+  double m_dr;
+};
+
+inline bool get_integral(ival_func& a_func,double a_xmin,double a_xmax,size_t a_steps,
+                         std::vector<double>& a_integral) { 
+  a_integral.clear();
+  a_integral.push_back(0);
+  double step = (a_xmax-a_xmin)/a_steps;
+  ival_func_1d f1d(a_func);
+  for(size_t index=0;index<a_steps;index++) {
+    double x = a_xmin+index*step;
+    double h;
+    if(!f1d.value(x,h)) {
+      a_integral.clear();
+      return false;
+    }
+    a_integral.push_back(h+a_integral.back());
+  }
+  // normalize integral to 1 :
+  double w = a_integral.back();
+  if(w==0) return false;
+  std::vector<double>::iterator it;
+  for(it=a_integral.begin();it!=a_integral.end();++it){
+    *it /= w;
+  }
+  return true;
+}
+
 }
 
 #endif

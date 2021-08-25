@@ -6,10 +6,10 @@
 
 #include <string>
 
-#include "../rotf"  //m_camera_orientation
-#include "../mat4f"
-#include "../vec3f"
-#include "../vec4f"
+#include "../lina/rotf"  //m_camera_orientation
+#include "../lina/mat4f"
+#include "../lina/vec3f"
+#include "../lina/vec4f"
 #include "../colorf"
 
 #ifdef INLIB_MEM
@@ -39,12 +39,18 @@ public:
   ,m_GL_TEXTURE_2D(false)
   ,m_GL_POINT_SMOOTH(false)
   ,m_GL_LINE_SMOOTH(false)
+  ,m_GL_BLEND(false)
 
   ,m_use_gsto(false)
 
   ,m_winding(winding_ccw)
+  ,m_color(1,1,1,1)
+  ,m_normal(0,0,1)
 
   ,m_light(0)
+
+  ,m_draw_type(sg::draw_filled)
+  ,m_shade_model(sg::shade_flat)
 
   ,m_line_width(1)
   ,m_line_pattern(sg::line_solid)
@@ -84,13 +90,18 @@ public:
   ,m_GL_TEXTURE_2D(a_from.m_GL_TEXTURE_2D)
   ,m_GL_POINT_SMOOTH(a_from.m_GL_POINT_SMOOTH)
   ,m_GL_LINE_SMOOTH(a_from.m_GL_LINE_SMOOTH)
+  ,m_GL_BLEND(a_from.m_GL_BLEND)
 
   ,m_use_gsto(a_from.m_use_gsto)
 
   ,m_winding(a_from.m_winding)
   ,m_color(a_from.m_color)
+  ,m_normal(a_from.m_normal)
 
   ,m_light(a_from.m_light)
+
+  ,m_draw_type(a_from.m_draw_type)
+  ,m_shade_model(a_from.m_shade_model)
 
   ,m_line_width(a_from.m_line_width)
   ,m_line_pattern(a_from.m_line_pattern)
@@ -122,13 +133,18 @@ public:
     m_GL_TEXTURE_2D = a_from.m_GL_TEXTURE_2D;
     m_GL_POINT_SMOOTH = a_from.m_GL_POINT_SMOOTH;
     m_GL_LINE_SMOOTH = a_from.m_GL_LINE_SMOOTH;
+    m_GL_BLEND = a_from.m_GL_BLEND;
 
     m_use_gsto = a_from.m_use_gsto;
 
     m_winding = a_from.m_winding;
     m_color = a_from.m_color;
+    m_normal = a_from.m_normal;
 
     m_light = a_from.m_light;
+
+    m_draw_type = a_from.m_draw_type;
+    m_shade_model = a_from.m_shade_model;
 
     m_line_width = a_from.m_line_width;
     m_line_pattern = a_from.m_line_pattern;
@@ -155,7 +171,7 @@ public:
     a_z /= a_w;
     return true;
   }
-  
+
   void screen2ndc(int a_x,int a_y, //signed because of wall.
                   float& a_wcx,float& a_wcy,float& a_wcz,float& a_wcw) const {
     // a proj point in near plane has (z,w) :
@@ -172,17 +188,17 @@ public:
       float t = m_camera_znear;
       a_wcx *= t;
       a_wcy *= t;
-      a_wcz *= t; 
+      a_wcz *= t;
       a_wcw = t;
     }
-  }  
+  }
 
   bool screen2wc(int a_x,int a_y, //signed because of wall.
                  float& a_wcx,float& a_wcy,float& a_wcz) const {
     mat4f mtx = m_proj;
     mtx.mul_mtx(m_model);
     mat4f inv;
-    if(!mtx.invert(inv)) {a_wcx = 0;a_wcy = 0;a_wcz = 0;return false;}  
+    if(!mtx.invert(inv)) {a_wcx = 0;a_wcy = 0;a_wcz = 0;return false;}
     float w;
     screen2ndc(a_x,a_y,a_wcx,a_wcy,a_wcz,w);
     inv.mul_4f(a_wcx,a_wcy,a_wcz,w);
@@ -191,13 +207,13 @@ public:
     a_wcy /= w;
     a_wcz /= w;
     return true;
-  }  
+  }
   bool screen2pwc(int a_x,int a_y, //signed because of wall.
                   float& a_wcx,float& a_wcy,float& a_wcz) const {
     mat4f mtx = m_proj;
     //mtx.mul_mtx(m_model);
     mat4f inv;
-    if(!mtx.invert(inv)) {a_wcx = 0;a_wcy = 0;a_wcz = 0;return false;}  
+    if(!mtx.invert(inv)) {a_wcx = 0;a_wcy = 0;a_wcz = 0;return false;}
     float w;
     screen2ndc(a_x,a_y,a_wcx,a_wcy,a_wcz,w);
     inv.mul_4f(a_wcx,a_wcy,a_wcz,w);
@@ -206,7 +222,7 @@ public:
     a_wcy /= w;
     a_wcz /= w;
     return true;
-  }  
+  }
   void camera_proj_only(mat4f& a_mtx) const {
     float l = m_camera_lrbt[0];
     float r = m_camera_lrbt[1];
@@ -235,13 +251,18 @@ public:
   bool m_GL_TEXTURE_2D;
   bool m_GL_POINT_SMOOTH;
   bool m_GL_LINE_SMOOTH;
+  bool m_GL_BLEND;
 
   bool m_use_gsto;
 
   winding_type m_winding;
   colorf m_color;
+  vec3f m_normal;
 
   unsigned int m_light;
+
+  draw_type m_draw_type;
+  shade_type m_shade_model;
 
   float m_line_width;
   unsigned short m_line_pattern;

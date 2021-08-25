@@ -25,9 +25,9 @@ public:
 #ifdef INLIB_SG_GROUP_DEBUG
     std::ostream& out = a_action.out();
     inlib_vforcit(node*,m_children,it) {
-      out << "debug : inlib::sg::group::render : children : " << (*it)->s_cls() << " begin : " << std::endl;   
+      out << "debug : inlib::sg::group::render : children : " << (*it)->s_cls() << " begin : " << std::endl;
       (*it)->render(a_action);
-      out << "debug : inlib::sg::group::render : children : " << (*it)->s_cls() << " end," << std::endl;   
+      out << "debug : inlib::sg::group::render : children : " << (*it)->s_cls() << " end," << std::endl;
     }
 #else
     inlib_vforcit(node*,m_children,it) (*it)->render(a_action);
@@ -37,7 +37,7 @@ public:
     inlib_vforcit(node*,m_children,it) {
       (*it)->pick(a_action);
       if(a_action.done()) break;
-    }    
+    }
   }
   virtual void bbox(bbox_action& a_action) {
     inlib_vforcit(node*,m_children,it) (*it)->bbox(a_action);
@@ -49,6 +49,8 @@ public:
     }
   }
   virtual void search(search_action& a_action) {
+    parent::search(a_action);
+    if(a_action.done()) return;
     if(a_action.do_path()) a_action.path_push(this);
     inlib_vforcit(node*,m_children,it) {
       (*it)->search(a_action);
@@ -72,6 +74,11 @@ public:
   virtual void is_visible(visible_action& a_action) {
     inlib_vforcit(node*,m_children,it) {
       (*it)->is_visible(a_action);
+    }
+  }
+  virtual void clear_gstos() {
+    inlib_vforcit(node*,m_children,it) {
+      (*it)->clear_gstos();
     }
   }
 public:
@@ -109,8 +116,8 @@ public:
     inlib_vforit(node*,m_children,it) {
       if((*it)==a_from) {
         node* old = *it;
-        (*it) = a_to; 
-        if(a_del) delete old; 
+        (*it) = a_to;
+        if(a_del) delete old;
         return true;
       }
     }
@@ -183,7 +190,7 @@ public:
   bool remove_index(unsigned int a_index){
     //NOTE : no delete on node at a_index is performed.
     std::vector<node*>::iterator it = m_children.begin();
-    it += a_index; 
+    it += a_index;
     if(it>=m_children.end()) return false;
     m_children.erase(it);
     return true;
@@ -191,7 +198,7 @@ public:
 
   bool delete_from(const node* a_node,bool a_inc_a_node = true){
     bool found = false;
-    std::vector<node*>::iterator it;    
+    std::vector<node*>::iterator it;
     for(it=m_children.begin();it!=m_children.end();) {
       if(!found) {
         if(*it==a_node) {
@@ -213,7 +220,7 @@ public:
   void transfer(group& a_from) {
     if(&a_from==this) return;
     clear();
-    m_children.resize(a_from.size());        
+    m_children.resize(a_from.size());
     std::vector<node*>::iterator it  = m_children.begin();
     std::vector<node*>::iterator fit = a_from.m_children.begin();
     for(;fit!=a_from.m_children.end();++it,++fit) {
@@ -232,19 +239,22 @@ public:
 //void clear() {safe_clear<node>(m_children);}
   void clear() {safe_reverse_clear<node>(m_children);}
 
-  void raw_clear(){ //used for sg coming from exlib/rroot/vis_volume.
+  void raw_clear() { //used for sg coming from exlib/rroot/vis_volume.
     inlib::raw_clear<node>(m_children); //inlib:: is needed.
   }
+
+//void children_clear() {m_children.clear();} //warning : nodes are not deleted. Used in [hep_]cone_anim.
+
   size_t size() const {return m_children.size();}
   bool empty() const {return m_children.size()?false:true;}
   node* operator[](size_t a_index) const{
     //WARNING : no check is done on a_index.
-    return m_children[a_index];    
+    return m_children[a_index];
   }
   const std::vector<node*>& children() const {return m_children;}
   std::vector<node*>& children() {return m_children;}
 
-  bool insert(unsigned int a_index,node* a_new){ //iv2sg    
+  bool insert(unsigned int a_index,node* a_new){ //iv2sg
     if(a_index==m_children.size()) {
       m_children.push_back(a_new);
       return true;

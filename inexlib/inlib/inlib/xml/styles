@@ -9,6 +9,7 @@
 #include "../smatch"
 #include "../sout"
 #include "../forit"
+#include "../sbeg"
 
 namespace inlib {
 namespace xml {
@@ -33,6 +34,9 @@ public:
 public:
   std::ostream& out() const {return m_out;}
 
+  const sg::cmaps_t& cmaps() const {return m_cmaps;}
+  sg::cmaps_t& cmaps() {return m_cmaps;}
+
   typedef std::pair<std::string,std::string> style_item_t;
   typedef std::vector<style_item_t> style_t;
   typedef std::pair<std::string,style_t> named_style_t;
@@ -50,6 +54,25 @@ public:
     }
     return 0;
   }
+  
+  style_t* find_style_not_const(const std::string& a_name) {
+    inlib_vforit(named_style_t,m_named_styles,it){
+      if((*it).first==a_name) return &((*it).second);
+    }
+    return 0;
+  }
+  
+/*
+  style_t* find_style(const std::string& a_name) {
+    inlib_vforit(named_style_t,m_named_styles,it){
+      if((*it).first==a_name) return &((*it).second);
+    }
+    return 0;
+  }
+  void remove_item_in_style(style_t& a_style,const std::string& a_item) {
+    remove<std::string,std::string>(a_style,a_item);
+  }
+*/
 
   void find_styles(const std::string& a_pattern,std::vector<std::string>& a_v) const {
     a_v.clear();
@@ -61,11 +84,24 @@ public:
   void add_style(const std::string& a_name,const style_t& a_style) {
     inlib_vforit(named_style_t,m_named_styles,it){
       if((*it).first==a_name) { //override
+        //::printf("debug : styles::add_style : override : \"%s\"\n",a_name.c_str());
         (*it).second = a_style;
         return;
       }
     }
+    //::printf("debug : styles::add_style : push_back \"%s\"\n",a_name.c_str());
     m_named_styles.push_back(named_style_t(a_name,a_style));
+  }
+
+  void remove(const std::string& a_name) {
+    std::vector<named_style_t>::iterator it;
+    for(it=m_named_styles.begin();it!=m_named_styles.end();) {
+      if((*it).first==a_name) {
+        it = m_named_styles.erase(it);
+      } else {
+        it++;
+      }
+    }
   }
 
   void remove_styles(const std::string& a_pattern) {
@@ -80,7 +116,9 @@ public:
   }
 
   void append(const styles& a_from) {
+    //::printf("debug : styles::append ...\n");
     inlib_vforcit(named_style_t,a_from.m_named_styles,it) {
+      //::printf("debug : styles::append \"%s\"\n",(*it).first.c_str());
       m_named_styles.push_back(*it);
     }
   }
@@ -98,7 +136,7 @@ public:
     std::map<std::string,style_t>::const_iterator it = m_styles.find(a_style);
     if(it==m_styles.end()) {a_v.clear();return false;}
     const style_t& sty = (*it).second;
-    if(!find(sty,a_key,a_v)) {a_v.clear();return false;}   
+    if(!find(sty,a_key,a_v)) {a_v.clear();return false;}
     return true;
   }
 */
@@ -123,7 +161,7 @@ public:
             << " in style " << sout(a_msg) << "."
             << " can't convert " << sout(_s) << " to value."
             << std::endl;
-      return false;   
+      return false;
     }
     a_v = v;
     return true;
@@ -209,7 +247,7 @@ public:
             << " in style " << sout(a_msg) << "."
             << " can't convert " << sout(s) << " to bool."
             << std::endl;
-      return false;   
+      return false;
     }
     a_v = v;
     return true;
@@ -235,7 +273,7 @@ public:
 
   // for plotter :
   template <class T> //T = [style,text_style,line_style]
-  bool res_sg_style(const std::string& a_style,T& a_sg_style) const {   
+  bool res_sg_style(const std::string& a_style,T& a_sg_style) const {
     //NOTE : a_sg_style is changed according to what is found.
     //       Then it is not fully reset by this method.
     const style_t* sty = find_style(a_style);
@@ -302,6 +340,32 @@ public:
 
     }
   }
+
+  bool print_plotter_style(std::ostream& a_out,const std::string& a_style) {
+    std::string _beg = a_style+".";
+    bool found = false;
+    inlib_vforcit(named_style_t,m_named_styles,it) {
+      const std::string& _name = (*it).first;
+      if((_name==a_style)||is_beg(_name,_beg)) {
+        found = true;
+        a_out << (*it).first << " :" << std::endl;
+        const style_t& sty = (*it).second;
+        inlib_vforcit(style_item_t,sty,vit) {
+          if((*vit).first=="tag") continue;
+          a_out << " " << (*vit).first << " " << (*vit).second << std::endl;
+        }
+      }
+    }
+    return found;
+  }
+
+  void list_plotter_styles(std::ostream& a_out) {
+    inlib_vforcit(named_style_t,m_named_styles,it) {
+      const style_t& sty = (*it).second;
+      if(!styles::is_plotter_style(sty)) continue;
+      a_out << (*it).first << std::endl;
+    }
+  }
 protected:
   std::ostream& m_out;
   //styles :
@@ -327,7 +391,7 @@ inline void load_style(styles& a_styles,const tree& a_tree) {
           << " <style> without name."
           << std::endl;
     return;
-  }  
+  }
 
   styles::style_t sty;
 
@@ -343,7 +407,7 @@ inline void load_style(styles& a_styles,const tree& a_tree) {
                          << " <copy> without from."
                          << std::endl;
           return;
-        } 
+        }
 
         const styles::style_t* csty = a_styles.find_style(from);
         if(!csty) {
@@ -360,7 +424,7 @@ inline void load_style(styles& a_styles,const tree& a_tree) {
       }
 
   }}
-  
+
   if(sty.size()) a_styles.add_style(name,sty);
 }
 
@@ -372,7 +436,7 @@ inline void load_plotter_style(styles& a_styles,const tree& a_tree) {
           << " <plotter_style> without name."
           << std::endl;
     return;
-  }  
+  }
 
  {styles::style_t sty;
   sty.push_back(styles::style_item_t("tag","plotter_style"));
@@ -389,7 +453,7 @@ inline void load_plotter_style(styles& a_styles,const tree& a_tree) {
                 << " <copy> without from."
                 << std::endl;
           return;
-        } 
+        }
 
         const styles::style_t* csty = a_styles.find_style(from);
         if(!csty) {
@@ -407,16 +471,13 @@ inline void load_plotter_style(styles& a_styles,const tree& a_tree) {
 
           styles sts(a_styles.out());
 
-          const std::vector<styles::named_style_t>& nss =
-            a_styles.named_styles();
+          const std::vector<styles::named_style_t>& nss = a_styles.named_styles();
           inlib_vforcit(styles::named_style_t,nss,it){
             const std::string& name = (*it).first;
             if(name.substr(0,l)==head) {
               std::string tail = name.substr(l,name.size()-l);
               const styles::style_t& ssty = (*it).second;
-              if(ssty.size()) {
-                sts.add_style(pname+"."+tail,ssty);
-              }
+              if(ssty.size()) sts.add_style(pname+"."+tail,ssty);
             }
           }
 
@@ -447,12 +508,31 @@ inline void load_plotter_style(styles& a_styles,const tree& a_tree) {
                 << std::endl;
           return;
         }
-  
+
        {styles::style_t sty;
 
        {looper _for2(*_tree);
         while(element* _elem = _for2.next_element()) {
-          sty.push_back(styles::style_item_t(_elem->name(),_elem->value()));
+          if(_elem->name()=="copy") {
+            std::string from;
+            _elem->attribute_value("from",from); //expect another style name.
+            if(from.empty()) {
+              a_styles.out() << "exlib::sg::gui_viewer::load_plotter_style : (2) :"
+                             << " <copy> without from."
+                             << std::endl;
+              return;
+            }
+            const styles::style_t* csty = a_styles.find_style(from);
+            if(!csty) {
+              a_styles.out() << "exlib::sg::gui_viewer::load_plotter_style : (2) :"
+                             << " <copy> : from " << sout(from) << " not found."
+                            << std::endl;
+              return;
+            }
+            append(sty,*csty);
+          } else {
+            sty.push_back(styles::style_item_t(_elem->name(),_elem->value()));
+          }
         }}
 
         if(sty.size()) {
@@ -473,7 +553,7 @@ inline void load_plotter_style(styles& a_styles,const tree& a_tree) {
 inline bool scan_style_tree(styles& a_styles,const tree& a_tree) {
 
   if(a_tree.tag_name()!="styles") return false;
-  
+
   // look for aliases :
  {looper _for(a_tree);
   while(element* _elem = _for.next_element()) {
@@ -494,14 +574,14 @@ inline bool scan_style_tree(styles& a_styles,const tree& a_tree) {
   while(tree* _tree = _for.next_tree()) {
 
       const std::string& tag = _tree->tag_name();
-      if(tag=="style") {   
+      if(tag=="style") {
         load_style(a_styles,*_tree);
-      } else if(tag=="plotter_style") {   
+      } else if(tag=="plotter_style") {
         load_plotter_style(a_styles,*_tree);
       }
 
   }}
-  
+
   return true;
 }
 }}

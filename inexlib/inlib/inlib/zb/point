@@ -3,7 +3,7 @@
 
 #ifndef inlib_zb_point
 #define inlib_zb_point
- 
+
 namespace inlib {
 namespace zb {
 

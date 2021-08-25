@@ -16,77 +16,31 @@
 #include <string>
 #include <vector>
 #include <ostream>
-
-// in INLIB_STL, we don't have (yet) a performant map.
-
-#ifdef inlib_stl_vector
-#define INLIB_RROOT_OBJ_MAP_HASH_TABLE
-//#define INLIB_RROOT_OBJ_MAP_OMAP
-#else
-#define INLIB_RROOT_OBJ_MAP_STD_MAP
-#endif
-
-#ifdef INLIB_RROOT_OBJ_MAP_STD_MAP
 #include <map>
-#endif
-#ifdef INLIB_RROOT_OBJ_MAP_OMAP
-#include "../omap"
-#endif
-#ifdef INLIB_RROOT_OBJ_MAP_HASH_TABLE
-#include "../hash_table"
-#include "../hash"
-#endif
 
 namespace inlib {
 namespace rroot {
 
 class buffer : public rbuf {
   typedef rbuf parent;
-
   static const std::string& s_class() {
     static const std::string s_v("inlib::rroot::buffer");
     return s_v;
   }
-
-#ifdef INLIB_RROOT_OBJ_MAP_STD_MAP
+private:
   typedef std::map<uint32,iro*> obj_map;
-#endif
-#ifdef INLIB_RROOT_OBJ_MAP_OMAP
-  typedef omap<uint32,iro*> obj_map;
-#endif
-#ifdef INLIB_RROOT_OBJ_MAP_HASH_TABLE
-  class obj_map : public hash_table<uint32,iro*> {
-    typedef hash_table<uint32,iro*> parent;
-  protected:
-    virtual unsigned int hash(const uint32& a_key) {
-      return hash(&a_key,sizeof(uint32));
-    }
-    virtual bool cmp(const uint32& a_key1,const uint32& a_key2) {
-      return a_key1==a_key2?true:false;
-    }
-  public:
-    obj_map():parent(){}
-    virtual ~obj_map(){}
-  private:
-    obj_map(const obj_map& a_from):parent(a_from){}
-    obj_map& operator=(const obj_map& a_from){
-      parent::operator=(a_from);
-      return *this;
-    }
-  };
-#endif
-
 public:
-  buffer(std::ostream& a_out,bool a_byte_swap,
-         uint32 a_size,char* a_buffer,uint32 a_klen,bool a_verbose)
+  buffer(std::ostream& a_out,bool a_byte_swap,uint32 a_size,char* a_buffer,uint32 a_klen,bool a_verbose)
   :parent(a_out,a_byte_swap,a_buffer+a_size,m_pos)
   ,m_byte_swap(a_byte_swap)
   ,m_verbose(a_verbose)
+  //,m_verbose(true)
   ,m_size(a_size)     //expect a not zero size.
   ,m_buffer(a_buffer) //don't get ownership.
   ,m_pos(a_buffer)
   ,m_klen(a_klen) //to compute refs (used in read_class, read_object)
-  ,m_map_objs(false)
+//,m_map_objs(false)
+  ,m_map_objs(true)
   {
 #ifdef INLIB_MEM
     mem::increment(s_class().c_str());
@@ -174,9 +128,9 @@ protected:
 
       std::ios::fmtflags old_flags = m_out.flags();
       m_out << "inlib::rroot::read_class_tag :"
-            << " tag unknown case ! "  
+            << " tag unknown case ! "
             << tag << " hex " << std::hex << tag
-            << std::endl;             
+            << std::endl;
       m_out.flags(old_flags);
 
       return false;
@@ -220,7 +174,7 @@ protected:
       //     if(!write((clIdx | Rio_kClassMask))) return false;
       //   or
       //     if(!write(Rio_kNewClassTag)) return false;
-      // + write object 
+      // + write object
       // + set byte cnt (cnt|kByteCountMask()) at skipped int.
 
       if(m_verbose) {
@@ -253,7 +207,7 @@ protected:
       }
 
       return true;
-            
+
     } else {
       if(m_verbose) {
         std::ios::fmtflags old_flags = m_out.flags();
@@ -268,9 +222,9 @@ protected:
       a_class.clear();
       return true;
     }
-    
+
     return false;
-  }  
+  }
 public:
   void remove_in_map(iro* a_obj) {
 #ifdef INLIB_RROOT_OBJ_MAP_HASH_TABLE
@@ -282,6 +236,8 @@ public:
   bool read_object(ifac& a_fac,const ifac::args& a_args,iro*& a_obj,bool& a_created){
     a_obj = 0;
     a_created = false;
+
+    //m_out << "debug : inlib::rroot::buffer::read_object : begin :" << std::endl;
 
     // before reading object save start position
     uint32 startpos = (uint32)(m_pos-m_buffer);
@@ -298,24 +254,30 @@ public:
 
     if(m_verbose) {
       m_out << "inlib::rroot::buffer::read_object :"
-            << " class " << sout(sclass)
-            << " bcnt " << bcnt
+            << " class " << sout(sclass) << ", is_ref " << is_ref
+            << ", bcnt " << bcnt
             << std::endl;
     }
 
-    if(is_ref) {
-      //bcnt is the position toward an object or an object ref.
-      //m_out << "inlib::rroot::buffer::read_object :"
-      //      << " is_ref : bcnt " << bcnt
-      //      << std::endl;
+    if(is_ref) { //bcnt is the position toward an object or an object ref.
+      //m_out << "debug : inlib::rroot::buffer::read_object : is_ref : bcnt " << bcnt << std::endl;
 
       unsigned int obj_offset = bcnt;
       obj_offset -= kMapOffset();
       obj_offset -= m_klen;
 
+      if(!m_map_objs) {
+        m_out << "inlib::rroot::buffer::read_object : warning :"
+              << " class " << sout(sclass) << ", is_ref but map objs is not enabled on this buffer."
+              << std::endl;
+      }
+
       if(m_map_objs) {
 #ifdef INLIB_RROOT_OBJ_MAP_HASH_TABLE
-        if(m_objs.find(obj_offset,a_obj)) return true;
+        if(m_objs.find(obj_offset,a_obj)) {
+          //m_out << "debug : inlib::rroot::buffer::read_object : found object in map." << bcnt << std::endl;
+          return true;
+        }
 #else
         obj_map::const_iterator it = m_objs.find(obj_offset);
         if(it!=m_objs.end()) {
@@ -332,10 +294,16 @@ public:
       m_pos = m_buffer + obj_offset;
 
       uint32 first_int;
-      if(!parent::read(first_int)) return false;
+      if(!parent::read(first_int)) {
+        m_out << "inlib::rroot::buffer::read_object : parent::read(first_int) failed." << std::endl;
+        return false;
+      }
       if(first_int & kByteCountMask()) {
         std::string scls;
-        if(!read_class_tag(scls)) return false;
+        if(!read_class_tag(scls)) {
+          m_out << "inlib::rroot::buffer::read_object : read_class_tag() failed." << std::endl;
+          return false;
+	}
         if(scls.empty()) {
           m_out << "inlib::rroot::buffer::read_object :"
                 << " read_class_tag did not find a class name."
@@ -348,7 +316,11 @@ public:
         //      << std::endl;
 
         iro* obj = a_fac.create(scls,a_args);
-        if(!obj) return false;
+        if(!obj) {
+          m_out << "inlib::rroot::buffer::read_object : is_ref : creation of object"
+                << " of class " << sout(sclass) << " failed." << std::endl;
+	  return false;
+	}
 
         if(m_map_objs) {
           //must be done before stream()
@@ -368,8 +340,8 @@ public:
                 << " is_ref : streamed failed for class " << sout(scls)
                 << std::endl;
           //restore a good buffer position :
-          //m_pos = m_buffer+startpos+sizeof(unsigned int); 
-          a_fac.destroy(obj);
+          //m_pos = m_buffer+startpos+sizeof(unsigned int);
+          delete obj;
           return false;
         }
 
@@ -390,21 +362,20 @@ public:
 
       // in principle at this point m_pos should be
       //   m_buffer+startpos+sizeof(unsigned int)
-      // but enforce it anyway : 
-      m_pos = m_buffer+startpos+sizeof(unsigned int); 
+      // but enforce it anyway :
+      m_pos = m_buffer+startpos+sizeof(unsigned int);
       //check_byte_count(startpos,0,sclass) would always be ok.
 
       //a_obj = ???
 
     } else {
       if(sclass.empty()) {
-        //m_out << "inlib::rroot::buffer::read_object :"
-        //      << " found empty class name."
-        //      << std::endl;
+        //m_out << "debug : inlib::rroot::buffer::read_object : found empty class name." << std::endl;
 
-        m_pos = m_buffer+startpos+bcnt+sizeof(unsigned int); 
+        m_pos = m_buffer+startpos+bcnt+sizeof(unsigned int);
 
       } else {
+        //m_out << "debug : inlib::rroot::buffer::read_object : not a ref, create object." << std::endl;
 
         // Being not a ref, it must NOT be in the map.
         // We gain a lot by not doing the below find.
@@ -415,7 +386,7 @@ public:
 #else
           obj_map::const_iterator it = m_objs.find(startpos);
           if(it!=m_objs.end()) {
-            a_obj = (*it).second;	
+            a_obj = (*it).second;
             ::printf("debug : find xxx : %d %lu\n",startpos,a_obj);
             //stay at current m_pos ?
             return true;
@@ -425,7 +396,12 @@ public:
 */
 
         iro* obj = a_fac.create(sclass,a_args);
-        if(!obj) return false;
+        if(!obj) {
+          m_out << "inlib::rroot::buffer::read_object : creation of object"
+                << " of class " << sout(sclass) << " failed." << std::endl;
+          return false;
+        }
+        //m_out << "debug : inlib::rroot::buffer::read_object : object created." << std::endl;
 
         if(m_map_objs) {
           //must be done before stream()
@@ -444,9 +420,11 @@ public:
 
         //NOTE : if class ref, "up there"-startpos = 8.
         if(!obj->stream(*this)) {
+          m_out << "inlib::rroot::buffer::read_object : object.stream() failed"
+                << " for object of class " << sout(sclass) << "." << std::endl;
           //restore a good buffer position :
           //m_pos = m_buffer+startpos+bcnt+sizeof(unsigned int);
-          a_fac.destroy(obj);
+          delete obj;
           return false;
         }
 
@@ -456,9 +434,9 @@ public:
         if(!check_byte_count(startpos,bcnt,sclass)) {
           m_out << "inlib::rroot::buffer::read_object :"
                 << " check_byte_count failed "
-                << "for object of class " 
+                << "for object of class "
                 << sout(sclass) << "." << std::endl;
-          a_fac.destroy(obj);
+          delete obj;
           return false;
         }
 
@@ -469,9 +447,7 @@ public:
     }
 
     if(m_verbose) {
-      m_out << "inlib::rroot::buffer::read_object :"
-            << " end : "
-            << std::endl;
+      m_out << "inlib::rroot::buffer::read_object : end." << std::endl;
     }
 
     return true;
@@ -484,13 +460,13 @@ public:
     short version = 0;
     // not interested in byte count
     if(!parent::read(version)) return false;
-      
+
     // if this is a byte count, then skip next short and read version
     if(version & kByteCountVMask()) {
       if(!parent::read(version)) return false;
       if(!parent::read(version)) return false;
     }
-    
+
     a_version = version;
     return true;
   }
@@ -506,7 +482,7 @@ public:
 
     // before reading object save start position
     uint32 startpos = (uint32)(m_pos-m_buffer);
-      
+
     // read byte count (older files don't have byte count)
     // byte count is packed in two individual shorts, this to be
     // backward compatible with old files that have at this location
@@ -523,7 +499,7 @@ public:
       if(!parent::read(v.vers[0])) return false;
       if(!parent::read(v.vers[1])) return false;
     }
-    
+
     // no bytecount, backup and read version
     uint32 bcnt = 0;
     if(v.cnt & kByteCountMask()) {
@@ -534,36 +510,34 @@ public:
     if(!parent::read(version)) return false;
     //printf("Reading version=%d at pos=%d, bytecount=%d\n",
     //version,*startpos,*bcnt);
-    
+
     a_version = version;
     a_start_pos = startpos;
     a_byte_count = bcnt;
-  
+
     return true;
   }
 
-  bool check_byte_count(uint32 a_start_pos,
-                        uint32 a_byte_count,
-                        const std::string& a_store_cls){
+  bool check_byte_count(uint32 a_start_pos,uint32 a_byte_count,const std::string& a_store_cls){
     if(!a_byte_count) return true;
 
     size_t len = a_start_pos + a_byte_count + sizeof(unsigned int);
 
-    size_t diff = size_t(m_pos-m_buffer);  
+    size_t diff = size_t(m_pos-m_buffer);
 
     if(diff==len) return true;
 
     if(diff<len) {
       m_out << "inlib::rroot::buffer::check_byte_count :"
             << " object of class " << sout(a_store_cls)
-            << " read too few bytes (" 
+            << " read too few bytes ("
             << long_out(long(len-diff)) << " missing)."
             << std::endl;
     }
     if(diff>len) {
       m_out << "inlib::rroot::buffer::check_byte_count :"
             << " object of class " << sout(a_store_cls)
-            << " read too many bytes (" 
+            << " read too many bytes ("
             << long_out(long(diff-len)) << " in excess)." << std::endl;
     }
 
@@ -571,7 +545,7 @@ public:
           << " " << sout(a_store_cls)
           << " streamer not in sync with data on file, fix streamer."
           << std::endl;
-    
+
     m_pos = m_buffer+len;
 
     return false;
@@ -607,18 +581,15 @@ protected:
   obj_map m_objs;
 };
 
-inline bool dummy_TXxx_pointer_stream(buffer& a_buffer,ifac& a_fac,bool a_del = true) {
+inline bool dummy_TXxx_pointer_stream(buffer& a_buffer,ifac& a_fac) {
   ifac::args args;
   iro* obj;
   bool created;
   bool status = a_buffer.read_object(a_fac,args,obj,created);
-  if(obj && a_del) {
+  if(obj) {
     if(created) {
       if(a_buffer.map_objs()) a_buffer.remove_in_map(obj);
       delete obj;
-    } else {
-      a_buffer.out() << "dummy_TXxx_pointer_stream : warning : ask to delete an object of class " << sout(obj->s_cls())
-                     << " not created here." << std::endl;
     }
   }
   return status;
@@ -628,16 +599,17 @@ template <class T>
 inline bool pointer_stream(buffer& a_buffer,
                            ifac& a_fac,ifac::args& a_args,
                            const std::string& a_T_class,
-                           T*& a_obj){
+                           T*& a_obj,bool& a_created){
   iro* obj;
-  bool created;
-  if(!a_buffer.read_object(a_fac,a_args,obj,created)) {
+  if(!a_buffer.read_object(a_fac,a_args,obj,a_created)) {
     a_buffer.out() << "inlib::rroot::pointer_stream : read_object failed." << std::endl;
     a_obj = 0;
+    a_created = false;
     return false;
   }
   if(!obj) {
     a_obj = 0;
+    a_created = false;
   } else {
     a_obj = (T*)obj->cast(a_T_class);
     if(!a_obj) {
@@ -645,6 +617,8 @@ inline bool pointer_stream(buffer& a_buffer,
                      << " inlib::cast to " << a_T_class << " failed."
                      << ". Object is a " << obj->s_cls() << "."
                      << std::endl;
+      if(a_created) delete obj;
+      a_created = false;
       return false;
     }
   }
@@ -655,16 +629,17 @@ template <class T>
 inline bool pointer_stream(buffer& a_buffer,
                            ifac& a_fac,ifac::args& a_args,
                            cid a_T_class,
-                           T*& a_obj){
+                           T*& a_obj,bool& a_created){
   iro* obj;
-  bool created;
-  if(!a_buffer.read_object(a_fac,a_args,obj,created)) {
+  if(!a_buffer.read_object(a_fac,a_args,obj,a_created)) {
     a_buffer.out() << "inlib::rroot::pointer_stream : read_object failed." << std::endl;
     a_obj = 0;
+    a_created = false;
     return false;
   }
   if(!obj) {
     a_obj = 0;
+    a_created = false;
   } else {
     a_obj = (T*)obj->cast(a_T_class);
     if(!a_obj) {
@@ -672,6 +647,8 @@ inline bool pointer_stream(buffer& a_buffer,
                      << " inlib::cast to " << a_T_class << " failed."
                      << ". Object is a " << obj->s_cls() << "."
                      << std::endl;
+      if(a_created) delete obj;
+      a_created = false;
       return false;
     }
   }
@@ -679,10 +656,9 @@ inline bool pointer_stream(buffer& a_buffer,
 }
 
 template <class T>
-inline bool pointer_stream(buffer& a_buffer,
-                           ifac& a_fac,ifac::args& a_args,T*& a_obj){
-  //return pointer_stream(a_buffer,a_fac,a_args,T::s_class(),a_obj);
-  return pointer_stream(a_buffer,a_fac,a_args,T::id_class(),a_obj);
+inline bool pointer_stream(buffer& a_buffer,ifac& a_fac,ifac::args& a_args,T*& a_obj,bool& a_created){
+  //return pointer_stream(a_buffer,a_fac,a_args,T::s_class(),a_obj,a_created);
+  return pointer_stream(a_buffer,a_fac,a_args,T::id_class(),a_obj,a_created);
 }
 
 template <class T>

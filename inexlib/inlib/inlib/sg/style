@@ -24,15 +24,17 @@ public:
   sf_vec<colorf,float> back_color;
   sf<float> line_width;
   sf<float> marker_size;
+  sf<float> point_size;
   sf<float> font_size;
   sf_enum<sg::font_modeling> font_modeling;
+  sf_enum<winding_type> front_face;
   sf<lpat> line_pattern;
   sf_enum<sg::marker_style> marker_style;
   sf_enum<sg::area_style> area_style;
-  sf_string modeling; 
-  sf_string light_model; 
-  sf_string tick_modeling; 
-  sf_string encoding; 
+  sf_string modeling;
+  sf_string light_model;
+  sf_string tick_modeling;
+  sf_string encoding;
   sf<bool> smoothing;
   sf<bool> hinting;
   sf_string cut;
@@ -52,23 +54,30 @@ public:
   sf<float> bar_offset;
   sf<float> bar_width;
   sf<bool> editable;
+  sf<bool> pickable;
   sf<bool> automated;
   sf_string options;
   sf_string color_mapping;
   sf<bool> enforced;
   sf_vec3f translation;
+  sf_string coloring;
+  sf_string title;
+  sf<bool> back_visible;
 public:
   virtual const desc_fields& node_desc_fields() const {
     INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::style)
-    static const desc_fields s_v(parent::node_desc_fields(),38, //WARNING : take care of count.
-      INLIB_ARG_FIELD_DESC(color),
+    static const desc_fields s_v(parent::node_desc_fields(),44, //WARNING : take care of count.
+      INLIB_ARG_FIELD_DESC(color),  //1
       INLIB_ARG_FIELD_DESC(highlight_color),
       INLIB_ARG_FIELD_DESC(back_color),
       INLIB_ARG_FIELD_DESC(line_width),
       INLIB_ARG_FIELD_DESC(marker_size),
+      INLIB_ARG_FIELD_DESC(point_size),
       INLIB_ARG_FIELD_DESC(font_size),
       INLIB_ARG_FIELD_DESC(font_modeling),
-      INLIB_ARG_FIELD_DESC(line_pattern),
+      INLIB_ARG_FIELD_DESC(front_face),
+      INLIB_ARG_FIELD_DESC(line_pattern),   //10
+
       INLIB_ARG_FIELD_DESC(marker_style),
       INLIB_ARG_FIELD_DESC(area_style),
       INLIB_ARG_FIELD_DESC(modeling),
@@ -78,7 +87,8 @@ public:
       INLIB_ARG_FIELD_DESC(smoothing),
       INLIB_ARG_FIELD_DESC(hinting),
       INLIB_ARG_FIELD_DESC(cut),
-      INLIB_ARG_FIELD_DESC(painting),
+      INLIB_ARG_FIELD_DESC(painting),  //20
+
       INLIB_ARG_FIELD_DESC(hatching),
       INLIB_ARG_FIELD_DESC(projection),
       INLIB_ARG_FIELD_DESC(font),
@@ -88,17 +98,23 @@ public:
       INLIB_ARG_FIELD_DESC(spacing),
       INLIB_ARG_FIELD_DESC(angle),
       INLIB_ARG_FIELD_DESC(scale),
-      INLIB_ARG_FIELD_DESC(offset),
+      INLIB_ARG_FIELD_DESC(offset),  //30
+
       INLIB_ARG_FIELD_DESC(strip_width),
       INLIB_ARG_FIELD_DESC(visible),
       INLIB_ARG_FIELD_DESC(bar_offset),
       INLIB_ARG_FIELD_DESC(bar_width),
       INLIB_ARG_FIELD_DESC(editable),
+      INLIB_ARG_FIELD_DESC(pickable),
       INLIB_ARG_FIELD_DESC(automated),
       INLIB_ARG_FIELD_DESC(options),
       INLIB_ARG_FIELD_DESC(color_mapping),
-      INLIB_ARG_FIELD_DESC(enforced),
-      INLIB_ARG_FIELD_DESC(translation)
+      INLIB_ARG_FIELD_DESC(enforced),   //40
+
+      INLIB_ARG_FIELD_DESC(translation),
+      INLIB_ARG_FIELD_DESC(coloring),
+      INLIB_ARG_FIELD_DESC(title),
+      INLIB_ARG_FIELD_DESC(back_visible)
     );
     return s_v;
   }
@@ -109,14 +125,16 @@ private:
     add_field(&back_color);
     add_field(&line_width);
     add_field(&marker_size);
+    add_field(&point_size);
     add_field(&font_size);
     add_field(&font_modeling);
+    add_field(&front_face);
     add_field(&line_pattern);
     add_field(&marker_style);
     add_field(&area_style);
     add_field(&modeling);
-    add_field(&light_model); 
-    add_field(&tick_modeling); 
+    add_field(&light_model);
+    add_field(&tick_modeling);
     add_field(&encoding);
     add_field(&smoothing);
     add_field(&hinting);
@@ -137,11 +155,15 @@ private:
     add_field(&bar_offset);
     add_field(&bar_width);
     add_field(&editable);
+    add_field(&pickable);
     add_field(&automated);
     add_field(&options);
     add_field(&color_mapping);
     add_field(&enforced);
     add_field(&translation);
+    add_field(&coloring);
+    add_field(&title);
+    add_field(&back_visible);
   }
 public:
   style()
@@ -151,8 +173,10 @@ public:
   ,back_color(colorf_white())
   ,line_width(1)
   ,marker_size(1)
+  ,point_size(1)
   ,font_size(10)
   ,font_modeling(font_filled)
+  ,front_face(winding_ccw)
   ,line_pattern(line_solid)
   ,marker_style(marker_dot)
   ,area_style(area_solid)
@@ -162,7 +186,7 @@ public:
   ,encoding(encoding_none())
   ,smoothing(false)
   ,hinting(false)
-  ,cut("")
+  ,cut()
   ,painting(painting_uniform)
   ,hatching(hatching_none)
   ,projection(projection_none)
@@ -179,11 +203,15 @@ public:
   ,bar_offset(0.25F)
   ,bar_width(0.5F)
   ,editable(false)
+  ,pickable(false)
   ,automated(true)
-  ,options("")
-  ,color_mapping("")
+  ,options()
+  ,color_mapping()
   ,enforced(false)
   ,translation(vec3f(0,0,0))
+  ,coloring()
+  ,title()
+  ,back_visible(true)
   {
     add_fields();
   }
@@ -196,8 +224,10 @@ public:
   ,back_color(a_from.back_color)
   ,line_width(a_from.line_width)
   ,marker_size(a_from.marker_size)
+  ,point_size(a_from.point_size)
   ,font_size(a_from.font_size)
   ,font_modeling(a_from.font_modeling)
+  ,front_face(a_from.front_face)
   ,line_pattern(a_from.line_pattern)
   ,marker_style(a_from.marker_style)
   ,area_style(a_from.area_style)
@@ -224,11 +254,15 @@ public:
   ,bar_offset(a_from.bar_offset)
   ,bar_width(a_from.bar_width)
   ,editable(a_from.editable)
+  ,pickable(a_from.pickable)
   ,automated(a_from.automated)
   ,options(a_from.options)
   ,color_mapping(a_from.color_mapping)
   ,enforced(a_from.enforced)
   ,translation(a_from.translation)
+  ,coloring(a_from.coloring)
+  ,title(a_from.title)
+  ,back_visible(a_from.back_visible)
   {
     add_fields();
   }
@@ -240,8 +274,10 @@ public:
     back_color = a_from.back_color;
     line_width = a_from.line_width;
     marker_size = a_from.marker_size;
+    point_size = a_from.point_size;
     font_size = a_from.font_size;
     font_modeling = a_from.font_modeling;
+    front_face = a_from.front_face;
     line_pattern = a_from.line_pattern;
     marker_style = a_from.marker_style;
     area_style = a_from.area_style;
@@ -268,17 +304,67 @@ public:
     bar_offset = a_from.bar_offset;
     bar_width = a_from.bar_width;
     editable = a_from.editable;
+    pickable = a_from.pickable;
     automated = a_from.automated;
     options = a_from.options;
     color_mapping = a_from.color_mapping;
     enforced = a_from.enforced;
     translation = a_from.translation;
+    coloring = a_from.coloring;
+    title = a_from.title;
+    back_visible = a_from.back_visible;
 
     return *this;
   }
 public:
-  bool from_string(std::ostream& a_out,const cmaps_t& a_cmaps,
-                          const std::string& a_s){
+  void reset() {
+    color = colorf_black();
+    highlight_color = colorf_black();
+    back_color = colorf_white();
+    line_width = 1;
+    marker_size = 1;
+    point_size = 1;
+    font_size = 10;
+    font_modeling = font_filled;
+    front_face = winding_ccw;
+    line_pattern = line_solid;
+    marker_style = marker_dot;
+    area_style = area_solid;
+    modeling = modeling_boxes();
+    light_model = light_model_phong();
+    tick_modeling = tick_modeling_hippo();
+    encoding = encoding_none();
+    smoothing = false;
+    hinting = false;
+    cut = "";
+    painting = painting_uniform;
+    hatching = hatching_none;
+    projection = projection_none;
+    font = font_hershey();
+    multi_node_limit = style_parser::no_limit();
+    divisions = 510;
+    rotation_steps = 24;
+    spacing = 0.05F;
+    angle = fpi()/4.0F;
+    scale = 1;
+    offset = 0;
+    strip_width = 0;
+    visible = true;
+    bar_offset = 0.25F;
+    bar_width = 0.5F;
+    editable = false;
+    pickable = false;
+    automated = true;
+    options = "";
+    color_mapping = "";
+    enforced = false;
+    translation = vec3f(0,0,0);
+    coloring = "";
+    title = "";
+    back_visible = true;
+  }
+
+  bool from_string(std::ostream& a_out,const cmaps_t& a_cmaps,const std::string& a_s) {
     style_parser sp;
 
     sp.color(color.value());
@@ -286,8 +372,10 @@ public:
     sp.back_color(back_color.value());
     sp.line_width(line_width.value());
     sp.marker_size(marker_size.value());
+    sp.point_size(point_size.value());
     sp.font_size(font_size.value());
     sp.font_modeling(font_modeling.value());
+    sp.front_face(front_face.value());
     sp.line_pattern(line_pattern.value());
     sp.marker_style(marker_style.value());
     sp.area_style(area_style.value());
@@ -316,20 +404,24 @@ public:
     sp.bar_offset(bar_offset.value());
     sp.bar_width(bar_width.value());
     sp.editable(editable.value());
+    sp.pickable(pickable.value());
     sp.automated(automated.value());
     sp.options(options.value());
     sp.color_mapping(color_mapping.value());
     sp.enforced(enforced.value());
     sp.translation(translation.value());
+    sp.coloring(coloring.value());
+    sp.title(title.value());
+    sp.back_visible(back_visible.value());
 
-    //if(!sp.parse(a_s,style_parser::def_error_func)) 
+    //if(!sp.parse(a_s,style_parser::def_error_func))
     //  return false;
 
     if(!sp.parse(a_out,a_cmaps,a_s)) {
       a_out << "inlib::sg::style::from_string :"
             << " parse failed."
             << std::endl;
-      return false;    
+      return false;
     }
 
     color.value(sp.color());
@@ -337,8 +429,10 @@ public:
     back_color.value(sp.back_color());
     line_width.value(sp.line_width());
     marker_size.value(sp.marker_size());
+    point_size.value(sp.point_size());
     font_size.value(sp.font_size());
     font_modeling.value(sp.font_modeling());
+    front_face = sp.front_face();
     line_pattern.value(sp.line_pattern());
     marker_style.value(sp.marker_style());
     area_style.value(sp.area_style());
@@ -367,11 +461,15 @@ public:
     bar_offset.value(sp.bar_offset());
     bar_width.value(sp.bar_width());
     editable.value(sp.editable());
+    pickable.value(sp.pickable());
     automated.value(sp.automated());
     options.value(sp.options());
     color_mapping.value(sp.color_mapping());
     enforced.value(sp.enforced());
     translation.value(sp.translation());
+    coloring.value(sp.coloring());
+    title.value(sp.title());
+    back_visible.value(sp.back_visible());
 
     return true;
   }

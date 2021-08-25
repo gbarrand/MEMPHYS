@@ -867,7 +867,7 @@ inline GLUmesh *__gl_meshUnion( GLUmesh *mesh1, GLUmesh *mesh2 )
 }
 
 
-#ifdef DELETE_BY_ZAPPING
+#ifdef INLIB_GLUTESS_DELETE_BY_ZAPPING
 
 /* __gl_meshDeleteMesh( mesh ) will free all storage for any valid mesh.
  */

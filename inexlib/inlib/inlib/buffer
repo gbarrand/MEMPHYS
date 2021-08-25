@@ -53,7 +53,7 @@ inline bool is_gzip(unsigned int a_sz,const char* a_buffer,bool& a_is){
   if(((unsigned char)a_buffer[1])!=139) {a_is = false;return true;}
 //if(((unsigned char)a_buffer[2])!=8)   {a_is = false;return true;}
 //if(((unsigned char)a_buffer[3])!=8)   {a_is = false;return true;}
-  a_is = true;  
+  a_is = true;
   return true;
 }
 

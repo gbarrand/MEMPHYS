@@ -74,6 +74,9 @@ public:
   virtual void render(render_action& a_action) {
     _mult_matrix(a_action);
     set_state(a_action);
+ //{mat4f& _mtx = a_action.projection_matrix();
+ // a_action.out() << "debug : inlib::sg::base_camera::render : proj :" << std::endl;
+ // a_action.out() << _mtx << std::endl;}
     a_action.load_proj_matrix(a_action.projection_matrix());
     a_action.load_model_matrix(a_action.model_matrix());
   }
@@ -163,11 +166,18 @@ public:
     orientation.value().mul_vec(vec3f(0,0,-1),a_dir);
   }
 
-  void rotate_around_direction(float a_delta) { //used in exlib/examples/iOS/sg.
-    vec3f dir;
-    orientation.value().mul_vec(vec3f(0,0,-1),dir);
-    //_MSC_VER : does not compile : orientation = rotf(dir,a_delta) * orientation;
-    orientation.value(rotf(dir,a_delta) * orientation.value());
+  void rotate_around_direction(float a_delta) {
+  //vec3f dir;
+  //orientation.value().mul_vec(vec3f(0,0,-1),dir);
+  //orientation.value(rotf(dir,a_delta) * orientation.value());
+    orientation.value(rotf(vec3f(0,0,-1),a_delta) * orientation.value());
+  }
+
+  void rotate_around_z(float a_delta) {
+  //vec3f z;
+  //orientation.value().mul_vec(vec3f(0,0,1),z);
+  //orientation.value(rotf(z,a_delta) * orientation.value());
+    orientation.value(rotf(vec3f(0,0,1),a_delta) * orientation.value());
   }
 
   void rotate_around_up(float a_delta){
@@ -179,14 +189,8 @@ public:
     orientation.value(orientation.value() * rotf(up,a_delta));
   }
 
-  void rotate_around_y_at_focal(float a_delta){
-    //from coin SoGuiExaminerViewerP::rotYWheelMotion.
-    vec3f dir;
-    orientation.value().mul_vec(vec3f(0,0,-1),dir);
-    vec3f focalpoint = position.value() + focal * dir;
-    orientation.value(rotf(vec3f(0,1,0),a_delta) * orientation.value());
-    orientation.value().mul_vec(vec3f(0,0,-1),dir);
-    position = focalpoint - focal * dir;
+  void rotate_around_x(float a_delta){
+    orientation.value(rotf(vec3f(1,0,0),a_delta) * orientation.value());
   }
 
   void rotate_around_x_at_focal(float a_delta){
@@ -199,8 +203,28 @@ public:
     position = focalpoint - focal * dir;
   }
 
+  void rotate_around_y_at_focal(float a_delta){
+    //from coin SoGuiExaminerViewerP::rotYWheelMotion.
+    vec3f dir;
+    orientation.value().mul_vec(vec3f(0,0,-1),dir);
+    vec3f focalpoint = position.value() + focal * dir;
+    orientation.value(rotf(vec3f(0,1,0),a_delta) * orientation.value());
+    orientation.value().mul_vec(vec3f(0,0,-1),dir);
+    position = focalpoint - focal * dir;
+  }
+
+  void rotate_around_z_at_focal(float a_delta){
+    //from coin SoGuiExaminerViewerP::rotYWheelMotion.
+    vec3f dir;
+    orientation.value().mul_vec(vec3f(0,0,-1),dir);
+    vec3f focalpoint = position.value() + focal * dir;
+    orientation.value(rotf(vec3f(0,0,1),a_delta) * orientation.value());
+    orientation.value().mul_vec(vec3f(0,0,-1),dir);
+    position = focalpoint - focal * dir;
+  }
+
   void rotate_to_dir(const vec3f& a_dir) {
-    //rotate around up so that a_dir is in (dir,up) plane 
+    //rotate around up so that a_dir is in (dir,up) plane
 
     //NOTE : it is the invert of orientation which is used
     //       in projection matrix.
@@ -210,7 +234,7 @@ public:
     vec3f up;
     orientation.value().mul_vec(vec3f(0,1,0),up);
     vec3f side;dir.cross(up,side);
-    vec3f v = side * (side.dot(a_dir)) + dir * (dir.dot(a_dir));    
+    vec3f v = side * (side.dot(a_dir)) + dir * (dir.dot(a_dir));
     if(v.normalize()) orientation.value(orientation.value()*rotf(dir,v));}
 
     //rotate around dir^up so that a_dir matches dir.
@@ -221,7 +245,7 @@ public:
 /*
     //check that dir is on a_dir :
    {vec3f dir;
-    orientation.value().mul_vec(vec3f(0,0,-1),dir); 
+    orientation.value().mul_vec(vec3f(0,0,-1),dir);
     float cos_angle; //it should be 1
     if(!dir.cos_angle(a_dir,cos_angle)) {
       ::printf("debug : can't get angle\n");
@@ -271,6 +295,38 @@ public:
     position.value(pos);
   }
 
+  bool look_at(const vec3f& a_dir,const vec3f& a_up) {
+    vec3f z = -a_dir;
+    vec3f y = a_up;
+    vec3f x;y.cross(z,x);
+
+    // recompute y to create a valid coordinate system
+    z.cross(x,y);
+
+    // normalize x and y to create an orthonormal coord system
+    if(!x.normalize()) return false;
+    if(!y.normalize()) return false;
+    if(!z.normalize()) return false;
+
+    // create a rotation matrix
+    mat4f rot;
+    rot.set_identity();
+    rot.set_value(0,0,x[0]);
+    rot.set_value(1,0,x[1]);
+    rot.set_value(2,0,x[2]);
+
+    rot.set_value(0,1,y[0]);
+    rot.set_value(1,1,y[1]);
+    rot.set_value(2,1,y[2]);
+
+    rot.set_value(0,2,z[0]);
+    rot.set_value(1,2,z[1]);
+    rot.set_value(2,2,z[2]);
+
+    orientation.value().set_value(rot);
+    return true;
+  }
+
   //NOTE : print is a Python keyword.
   void dump(std::ostream& a_out) {
     a_out << " znear " << znear.value() << std::endl;
@@ -299,7 +355,7 @@ public:
 
     // Arrange so that camera points toward x with up along +z :
     rotf r(vec3f::s_y(),-fhalf_pi());
-    r *= rotf(vec3f::s_x(),fhalf_pi());    
+    r *= rotf(vec3f::s_x(),fhalf_pi());
     // Now -y is at right.
 
     // Then rotate it so that it points toward given (ra,dec) by keeping up upward +z direction.
@@ -320,6 +376,100 @@ public:
     focal = a_center.length();
     da = 0.017f/100; //1/100 of a degree
 */
+  }
+
+  bool update_motion(int a_move) {
+    float _dx = dx;
+    float _da = da;
+    float _ds = ds;
+
+    if(a_move==move_rotate_right) { //should match camera_yaw().
+      rotate_around_up(_da);
+      return true;
+    }
+    if(a_move==move_rotate_left) {
+      rotate_around_up(-_da);
+      return true;
+    }
+
+    if(a_move==move_rotate_up) {  //should match camera_pitch().
+      rotate_around_x(_da);
+      return true;
+    }
+    if(a_move==move_rotate_down) {
+      rotate_around_x(-_da);
+      return true;
+    }
+
+    if(a_move==move_roll_plus) {  //should match camera_roll().
+      rotate_around_direction(-_da);  //direction = -z, then the minus.
+      return true;
+    }
+    if(a_move==move_roll_minus) {
+      rotate_around_direction(_da);
+      return true;
+    }
+
+    if(a_move==move_translate_right) {
+      translate_along_side(_dx);
+      return true;
+    }
+    if(a_move==move_translate_left) {
+      translate_along_side(-_dx);
+      return true;
+    }
+
+    if(a_move==move_up) {
+      translate_along_up(_dx);
+      return true;
+    }
+    if(a_move==move_down) {
+      translate_along_up(-_dx);
+      return true;
+    }
+    if(a_move==move_forward) {
+      translate_along_dir(_dx);
+      return true;
+    }
+    if(a_move==move_backward) {
+      translate_along_dir(-_dx);
+      return true;
+    }
+    if(a_move==move_zoom_in) {
+      zoom(_ds);
+      return true;
+    }
+    if(a_move==move_zoom_out) {
+      zoom(1.0f/_ds);
+      return true;
+    }
+
+    if(a_move==move_rotate_around_focal_right) {  //yaw around focal.
+      rotate_around_y_at_focal(_da);
+      return true;
+    }
+    if(a_move==move_rotate_around_focal_left) {
+      rotate_around_y_at_focal(-_da);
+      return true;
+    }
+    if(a_move==move_rotate_around_focal_up) {  //pitch around focal.
+      rotate_around_x_at_focal(_da);
+      return true;
+    }
+    if(a_move==move_rotate_around_focal_down) {
+      rotate_around_x_at_focal(-_da);
+      return true;
+    }
+    if(a_move==move_roll_around_focal_plus) {
+      rotate_around_z_at_focal(_da);
+      return true;
+    }
+    if(a_move==move_roll_around_focal_minus) {
+      rotate_around_z_at_focal(-_da);
+      return true;
+    }
+
+    return false;
   }
 protected:
   void update_sg(std::ostream& a_out) {
@@ -344,7 +494,7 @@ protected:
       rinv.value(mtx);
       m_proj.mul_mtx(mtx,m_tmp);
     } else {
-      a_out << "base_camera::update_sg :"
+      a_out << "update_sg :"
             << " get orientation inverse failed."
             << std::endl;
     }}
@@ -362,9 +512,9 @@ protected:
     if(touched()||m_lrbt.touched()) {
       update_sg(a_action.out());
       reset_touched();
-      m_lrbt.reset_touched(); 
+      m_lrbt.reset_touched();
     }
-    
+
     a_action.projection_matrix().mul_mtx(m_proj,m_tmp);
   }
 

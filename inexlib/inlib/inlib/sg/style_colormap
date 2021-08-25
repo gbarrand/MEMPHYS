@@ -71,9 +71,9 @@ public:
 
     char ss[192]; //3*64 = 192
     snpf(ss,sizeof(ss),"%g %g %g",c[0],c[1],c[2]);
-    a_s = std::string(ss);  
+    a_s = std::string(ss);
     return true;
-  } 
+  }
 public:
   void add(const style_color& a_color) {
     (*this)[uint32((*this).size())] = a_color;
@@ -95,7 +95,7 @@ public:
     tmp.set_name(#a__name);\
     set_color_##a__name(tmp);\
     add(tmp);
-  
+
   style_default_colormap() {
     style_color tmp;
     STYLE_COLORMAP_ADD(aquamarine)
@@ -119,7 +119,7 @@ public:
     STYLE_COLORMAP_ADD(coral)
     STYLE_COLORMAP_ADD(cyan)
     STYLE_COLORMAP_ADD(firebrick)
-      
+
     STYLE_COLORMAP_ADD(brown)
     STYLE_COLORMAP_ADD(gold)
     STYLE_COLORMAP_ADD(goldenrod)
@@ -130,7 +130,7 @@ public:
     STYLE_COLORMAP_ADD(limegreen)
     STYLE_COLORMAP_ADD(mediumseagreen)
     STYLE_COLORMAP_ADD(mediumspringgreen)
-      
+
     STYLE_COLORMAP_ADD(palegreen)
     STYLE_COLORMAP_ADD(seagreen)
     STYLE_COLORMAP_ADD(springgreen)
@@ -141,7 +141,7 @@ public:
     STYLE_COLORMAP_ADD(grey)
     STYLE_COLORMAP_ADD(khaki)
     STYLE_COLORMAP_ADD(magenta)
-      
+
     STYLE_COLORMAP_ADD(maroon)
     STYLE_COLORMAP_ADD(orange)
     STYLE_COLORMAP_ADD(orchid)
@@ -152,7 +152,7 @@ public:
     STYLE_COLORMAP_ADD(red)
     STYLE_COLORMAP_ADD(indianred)
     STYLE_COLORMAP_ADD(mediumvioletred)
-      
+
     STYLE_COLORMAP_ADD(orangered)
     STYLE_COLORMAP_ADD(violetred)
     STYLE_COLORMAP_ADD(salmon)
@@ -163,7 +163,7 @@ public:
     STYLE_COLORMAP_ADD(darkturquoise)
     STYLE_COLORMAP_ADD(mediumturquoise)
     STYLE_COLORMAP_ADD(violet)
-      
+
     STYLE_COLORMAP_ADD(blueviolet)
     STYLE_COLORMAP_ADD(wheat)
     STYLE_COLORMAP_ADD(white)
@@ -244,17 +244,22 @@ public:
     new_TColor(29,0.69,0.81,0.78,"Color29");
 
     // Initialize some additional greyish non saturated colors
-    new_TColor(8, 0.35,0.83,0.33,"Color8");
-    new_TColor(9, 0.35,0.33,0.85,"Color9");
-    new_TColor(12,.3,.3,.3,"grey12");
-    new_TColor(13,.4,.4,.4,"grey13");
-    new_TColor(14,.5,.5,.5,"grey14");
-    new_TColor(15,.6,.6,.6,"grey15");
-    new_TColor(16,.7,.7,.7,"grey16");
-    new_TColor(17,.8,.8,.8,"grey17");
-    new_TColor(18,.9,.9,.9,"grey18");
-    new_TColor(19,.95,.95,.95,"grey19");
-    new_TColor(50, 0.83,0.35,0.33,"Color50");
+#define INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(a__i,a__name) \
+    new_TColor(a__i,get_color_ROOT_##a__name<colorf>(),#a__name);
+
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR( 8,Color8)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR( 9,Color9)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(12,grey12)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(13,grey13)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(14,grey14)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(15,grey15)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(16,grey16)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(17,grey17)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(18,grey18)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(19,grey19)
+    INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR(50,Color50)
+
+#undef INLIB_SG_STYLE_COLORMAP_ADD_TCOLOR
 
     // Initialize the Pretty Palette Spectrum Violet->Red
     //   The color model used here is based on the HLS model which
@@ -277,9 +282,9 @@ public:
       new_TColor(i+51, r, g, b,head,i+51);
     }}
 
-    double h,l,s,r,g,b;    
+    double h,l,s,r,g,b;
 
-    // dark colors (index 101 to 150) :     
+    // dark colors (index 101 to 150) :
     // NOTE : 100 = "dark black" would overlap with "pretty 49" !
     //        then start to 1+100.
    {for(unsigned int i=1 ; i<=50 ; i++) {
@@ -291,8 +296,8 @@ public:
       hls_to_rgb<double>(h,0.7*l,s, r, g, b);
       new_TColor(i+100, r, g, b, nam+"_dark");
     }}
-    
-    // bright colors (index 151 to 200) :     
+
+    // bright colors (index 151 to 200) :
     // NOTE : 150 = "bright black" would overlap with "dark 50" !
     //        then start to 1+150.
    {for(unsigned int i=1 ; i<=50 ; i++) {
@@ -304,7 +309,7 @@ public:
       hls_to_rgb<double>(h,1.2*l,s, r, g, b);
       new_TColor(i+150, r, g, b, nam+"_bright");
     }}
-    
+
     // Initialize special colors for x3d
     // from 201 to 228=200+4*7 : 7*4 = 28.
    {std::string head("Color");
@@ -362,12 +367,15 @@ protected:
     if(!num2s(a_index,stmp)) {}
     new_TColor(a_i,a_r,a_g,a_b,a_head+stmp);
   }
+  void new_TColor(unsigned int a_i,const colorf& a_color,const std::string& a_n) {
+    (*this)[a_i] = style_color(a_n,a_color.r(),a_color.g(),a_color.b());
+  }
 
   void create_colors_circle(unsigned int a_offset,
                             const std::string& a_name,
                             unsigned char a_rgb[]) {
     // Create the "circle" colors in the Color Wheel
-    for(unsigned int n=0;n<15;n++) {      
+    for(unsigned int n=0;n<15;n++) {
       int colorn = a_offset+n-10;
       if(colorn<0) continue;
       if(n>10) {
@@ -538,91 +546,94 @@ inline bool to_ulong(const std::string& a_s,unsigned long& a_v){
   return true;
 }
 
-inline bool find_color(const cmaps_t& a_cmaps,
-                       const std::string& a_s,colorf& a_col){
-    //NOTE : if ret false, we do not set a_col to something.
+inline bool find_color(const cmaps_t& a_cmaps,const std::string& a_s,colorf& a_col){
+  //NOTE : if ret false, we do not set a_col to something.
 
-    std::string::size_type pos_slash = a_s.rfind('/');
-    if(pos_slash!=std::string::npos) { //<cmap>/<color name>
-      std::string cmap = a_s.substr(0,pos_slash);
-      std::string cnam = a_s.substr(pos_slash+1,a_s.size()-(pos_slash+1));
-      cmaps_t::const_iterator it = a_cmaps.find(cmap);
-      if(it==a_cmaps.end()) return false;
-      return (*it).second.get_color(cnam,a_col);
-      
-    } else {
+  std::string::size_type pos_slash = a_s.rfind('/');
+  if(pos_slash!=std::string::npos) { //<cmap>/<color name>
+    std::string cmap = a_s.substr(0,pos_slash);
+    std::string cnam = a_s.substr(pos_slash+1,a_s.size()-(pos_slash+1));
+    cmaps_t::const_iterator it = a_cmaps.find(cmap);
+    if(it==a_cmaps.end()) return false;
+    return (*it).second.get_color(cnam,a_col);
+
+  } else {
 
     if( (a_s.size()==7) && (a_s[0]=='#') ) {
       // #RRGGBB format :
       //  1 3 5
       unsigned long rr,gg,bb;
-  
+
      {std::string s("0x");
       s += a_s.substr(1,2);
       if(!to_ulong(s,rr)) return false;}
-  
+
      {std::string s("0x");
       s += a_s.substr(3,2);
       if(!to_ulong(s,gg)) return false;}
-  
+
      {std::string s("0x");
       s += a_s.substr(5,2);
       if(!to_ulong(s,bb)) return false;}
-  
+
       a_col = colorf(((float)rr)/255,((float)gg)/255,((float)bb)/255);
       return true;
-    } 
-  
+    }
+
     //a_s of the form : <real:r> <real:g> <real:b>
     //a_s of the form : <real:r> <real:g> <real:b> <real:a>
-    //a_s of the form : <real:r> <real:g> <real:b> <string:name> 
-    //a_s of the form : <real:r> <real:g> <real:b> <real:a> <string:name> 
+    //a_s of the form : <real:r> <real:g> <real:b> <string:name>          (output of a sg::entries::color)
+    //a_s of the form : <real:r> <real:g> <real:b> <real:a> <string:name> (output of a sg::entries::color)
 
    {std::vector<std::string> ws;
     words(a_s," ",false,ws);
     if(ws.size()==3) {
       float r,g,b;
-      if( to<float>(ws[0],r) &&
-          to<float>(ws[1],g) &&
-          to<float>(ws[2],b) ){
+      if( to<float>(ws[0],r) && ((0<=r)&&(r<=1)) &&
+          to<float>(ws[1],g) && ((0<=g)&&(g<=1)) &&
+          to<float>(ws[2],b) && ((0<=b)&&(b<=1)) ){
         a_col = colorf(r,g,b);
         return true;
       }
 
     } else if(ws.size()==4) {
       float r,g,b,a;
-      if( to<float>(ws[0],r) &&
-          to<float>(ws[1],g) &&
-          to<float>(ws[2],b) ){
-
-        if(to<float>(ws[3],a)) {
-          a_col = colorf(r,g,b,a);
-        } else {
-          a_col = colorf(r,g,b,1);
-        }
-        return true;
-      }
-
-    } else if(ws.size()==5) {
-      float r,g,b,a;
-      if( to<float>(ws[0],r) &&
-          to<float>(ws[1],g) &&
-          to<float>(ws[2],b) &&
-          to<float>(ws[3],a) ){
+      if( to<float>(ws[0],r) && ((0<=r)&&(r<=1)) &&
+          to<float>(ws[1],g) && ((0<=g)&&(g<=1)) &&
+          to<float>(ws[2],b) && ((0<=b)&&(b<=1)) &&
+          to<float>(ws[3],a) && ((0<=a)&&(a<=1)) ){
         a_col = colorf(r,g,b,a);
         return true;
       }
-
+      //a_s of the form : <real:r> <real:g> <real:b> <string:name>
+      if( to<float>(ws[0],r) && ((0<=r)&&(r<=1)) &&
+          to<float>(ws[1],g) && ((0<=g)&&(g<=1)) &&
+          to<float>(ws[2],b) && ((0<=b)&&(b<=1)) &&
+         !to<float>(ws[3],a) ){
+        a_col = colorf(r,g,b,1);
+        return true;
+      }
+      
+    } else if(ws.size()==5) {  //a_s of the form : <real:r> <real:g> <real:b> <real:a> <string:name>
+      float r,g,b,a;
+      if( to<float>(ws[0],r) && ((0<=r)&&(r<=1)) &&
+          to<float>(ws[1],g) && ((0<=g)&&(g<=1)) &&
+          to<float>(ws[2],b) && ((0<=b)&&(b<=1)) &&
+          to<float>(ws[3],a) && ((0<=a)&&(a<=1)) ){
+        a_col = colorf(r,g,b,a);
+        return true;
+      }
     }}
 
+    // search in default colormap :
    {cmaps_t::const_iterator it = a_cmaps.find(style_default_colormap::s_default());
     if(it!=a_cmaps.end()) {
       if((*it).second.get_color(a_s,a_col)) return true;
-    }}      
+    }}
 
-    }
-  
-    return false;
+  }
+
+  return false;
 }
 
 }}

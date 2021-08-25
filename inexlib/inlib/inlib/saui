@@ -109,16 +109,16 @@ inline bool window_size_from_args(const args& a_args,unsigned int& a_ww,unsigned
   } else {
     if(a_args.find<unsigned int>("-ww",a_ww)) {
       if(a_args.find<unsigned int>("-wh",a_wh)) return true;
-      //A4 : we have ww but not wh :
-      a_wh = (unsigned int)(a_ww*(29.7f/21.0f)); //29.7/21 = 1.414
+      //A4 : we have ww but not wh. Have wh in order to have A4 landscape :
+      a_wh = (unsigned int)(a_ww*(21.0f/29.7f)); //29.7/21 = 0.707
     } else { //we don't have ww.
       if(a_args.find<unsigned int>("-wh",a_wh)) {
-        //A4 : we have wh but not ww :
-        a_ww = (unsigned int)(a_wh*(21.0f/29.7f));
+        //A4 : we have wh but not ww. Have ww in order to have A4 landscape :
+        a_ww = (unsigned int)(a_wh*(29.7f/21.0f));
       } else {
-        //we have nothing. Take a ww of 700. With A4 wh is then 990.
-        a_ww = 700;
-        a_wh = (unsigned int)(a_ww*(29.7f/21.0f)); //29.7/21 = 1.414
+        //we have nothing. Take a ww of 1000 and wh (707) so that to have A4 landscape :
+        a_ww = 1000;
+        a_wh = (unsigned int)(a_ww*(21.0f/29.7f)); // have A4 landscape.
 	status = false;
       }
     }
@@ -137,6 +137,38 @@ inline bool window_size_from_args(const args& a_args,unsigned int& a_ww,unsigned
   }
   return status;
 }
+
+/*
+inline void args_to_window_size(const args& a_args,unsigned int& a_ww,unsigned int& a_wh) {
+  // used in insh_window_set_size.
+  if(a_args.find<unsigned int>("-width",a_ww)) {
+    if(a_args.find<unsigned int>("-height",a_wh)) return;
+    //A4 : we have ww but not wh. Have wh in order to have A4 landscape :
+    a_wh = (unsigned int)(a_ww*(21.0f/29.7f)); //29.7/21 = 0.707
+  } else { //we don't have ww.
+    if(a_args.find<unsigned int>("-height",a_wh)) {
+      //A4 : we have wh but not ww. Have ww in order to have A4 landscape :
+      a_ww = (unsigned int)(a_wh*(29.7f/21.0f));
+    } else {
+      //we have nothing. Take a ww of 1000 and wh (707) so that to have A4 landscape :
+      a_ww = 1000;
+      a_wh = (unsigned int)(a_ww*(21.0f/29.7f)); // have A4 landscape.
+    }
+  }
+  if(a_args.is_arg("-landscape")){
+    unsigned int _ww = a_ww;
+    unsigned int _wh = a_wh;
+    a_ww = mx(_ww,_wh);
+    a_wh = mn(_ww,_wh);
+  }
+  if(a_args.is_arg("-portrait")){
+    unsigned int _ww = a_ww;
+    unsigned int _wh = a_wh;
+    a_ww = mn(_ww,_wh);
+    a_wh = mx(_ww,_wh);
+  }
+}
+*/
 
 inline void remove_window_size_args(args& a_args) {
   //use with Wt apps.

@@ -52,6 +52,12 @@ inline const std::string& s_font_outline() {static const std::string s_v("font_o
 inline const std::string& s_font_filled()  {static const std::string s_v("font_filled");return s_v;}
 inline const std::string& s_font_pixmap()  {static const std::string s_v("font_pixmap");return s_v;}
 
+inline const std::string& s_anim_mode_0()  {static const std::string s_v("anim_mode_0");return s_v;}
+inline const std::string& s_anim_mode_1()  {static const std::string s_v("anim_mode_1");return s_v;}
+inline const std::string& s_anim_mode_2()  {static const std::string s_v("anim_mode_2");return s_v;}
+inline const std::string& s_anim_mode_3()  {static const std::string s_v("anim_mode_3");return s_v;}
+inline const std::string& s_anim_mode_4()  {static const std::string s_v("anim_mode_4");return s_v;}
+
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -128,6 +134,39 @@ inline const std::string& modeling_plus() {
   static const std::string s_v("plus");
   return s_v;
 }
+inline const std::string& modeling_markers() { //used in sg::plotter.
+  static const std::string s_v("markers");
+  return s_v;
+}
+
+///////////////////////////////////////////////////////////////
+/// EsbRootView : /////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+inline const std::string& modeling_arrow() {
+  static const std::string s_v("arrow");
+  return s_v;
+}
+inline const std::string& modeling_cube() {
+  static const std::string s_v("cube");
+  return s_v;
+}
+inline const std::string& modeling_cone() { //used in EsbRootView.
+  static const std::string s_v("cone");
+  return s_v;
+}
+inline const std::string& modeling_cone_detector() { //used in EsbRootView.
+  static const std::string s_v("cone_detector");
+  return s_v;
+}
+inline const std::string& modeling_detector() { //used in EsbRootView.
+  static const std::string s_v("detector");
+  return s_v;
+}
+inline const std::string& modeling_firework() { //used in EsbRootView.
+  static const std::string s_v("firework");
+  return s_v;
+}
 
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -164,6 +203,10 @@ INLIB_FONT_TTF(courbd)
 INLIB_FONT_TTF(couri)
 INLIB_FONT_TTF(courbi)
 INLIB_FONT_TTF(lucidagrandebd)
+
+INLIB_FONT_TTF(roboto_bold)    //free replacement of arialbd
+INLIB_FONT_TTF(lato_regular)   //free replacement of helvetica
+INLIB_FONT_TTF(lato_bold)      //free replacement of helveticabd
 
 #undef INLIB_FONT_TTF
 
@@ -225,12 +268,17 @@ INLIB_GLOBAL_STRING(movable)
 
 INLIB_GLOBAL_STRING(1D)
 INLIB_GLOBAL_STRING(2D)
+INLIB_GLOBAL_STRING(3D)
 
 //INLIB_GLOBAL_STRING(whole)
 INLIB_GLOBAL_STRING(col)
 INLIB_GLOBAL_STRING(row)
 
 INLIB_GLOBAL_STRING_VALUE(white_jpg,white.jpg)
+
+// for <scenario> EsbRootView.scenarios
+INLIB_GLOBAL_STRING(rotation)
+INLIB_GLOBAL_STRING(translation)
 
 //slides :
 INLIB_GLOBAL_STRING(pos_x_wcam)
@@ -247,6 +295,62 @@ INLIB_GLOBAL_STRING(class)
 INLIB_GLOBAL_STRING(camera_height)
 
 INLIB_GLOBAL_STRING(none)
+
+INLIB_GLOBAL_STRING(placement)
+// send sg options :
+INLIB_GLOBAL_STRING_VALUE(send_placement,placement)
+INLIB_GLOBAL_STRING_VALUE(placement_static,static)
+INLIB_GLOBAL_STRING_VALUE(placement_dynamic,dynamic)
+INLIB_GLOBAL_STRING_VALUE(placement_static_blend,static_blend)
+INLIB_GLOBAL_STRING_VALUE(placement_screen,screen)
+INLIB_GLOBAL_STRING_VALUE(send_radius,radius)
+INLIB_GLOBAL_STRING_VALUE(send_scale,scale)
+INLIB_GLOBAL_STRING_VALUE(send_clear,clear)
+//INLIB_GLOBAL_STRING_VALUE(send_height,height)
+
+INLIB_GLOBAL_STRING_VALUE(protocol_start,start)
+INLIB_GLOBAL_STRING_VALUE(protocol_disconnect,disconnect)
+INLIB_GLOBAL_STRING_VALUE(protocol_zdoc,zdoc)
+INLIB_GLOBAL_STRING_VALUE(protocol_get_wall_params,get_wall_params)
+
+INLIB_GLOBAL_STRING_VALUE(protocol_arg_sep,;)
+
+INLIB_GLOBAL_STRING_VALUE(protocol_rwc,rwc)
+INLIB_GLOBAL_STRING_VALUE(protocol_set_params,rwc_set_params)
+INLIB_GLOBAL_STRING_VALUE(protocol_set_camera,rwc_set_camera)
+INLIB_GLOBAL_STRING_VALUE(protocol_clear_static_sg,rwc_clear_static_scene)
+INLIB_GLOBAL_STRING_VALUE(protocol_clear_dynamic_sg,rwc_clear_dynamic_scene)
+INLIB_GLOBAL_STRING_VALUE(protocol_clear_screen_sg,rwc_clear_screen_scene)
+
+INLIB_GLOBAL_STRING(protocol_view_all)
+INLIB_GLOBAL_STRING(protocol_set_background_black)
+INLIB_GLOBAL_STRING(protocol_set_background_white)
+INLIB_GLOBAL_STRING(protocol_disable_anim)
+INLIB_GLOBAL_STRING(protocol_reset_camera)
+
+/* if adding protocols, think to declare corresponding methods to SWIG.
+protocol_set_plane_viewer(bool)
+protocol_set_scene_light_on(bool)
+protocol_hide_main_menu
+protocol_hide_meta_zone
+protocol_show_camera_menu
+*/
+
+INLIB_GLOBAL_STRING_VALUE(dir_diaporama,diaporama)
+
+// sg_serv params :
+INLIB_GLOBAL_STRING_VALUE(sg_serv_ww,ww)
+INLIB_GLOBAL_STRING_VALUE(sg_serv_wh,wh)
+INLIB_GLOBAL_STRING_VALUE(sg_serv_bw,bw)
+INLIB_GLOBAL_STRING_VALUE(sg_serv_bh,bh)
+INLIB_GLOBAL_STRING_VALUE(sg_serv_cols,cols)
+INLIB_GLOBAL_STRING_VALUE(sg_serv_rows,rows)
+
+
+// view_evd insh commands :
+INLIB_GLOBAL_STRING_VALUE(insh_clear_static_scene,clear_static_scene)
+INLIB_GLOBAL_STRING_VALUE(insh_clear_dynamic_scene,clear_dynamic_scene)
+INLIB_GLOBAL_STRING_VALUE(insh_clear_screen_scene,clear_screen_scene)
 
 }}
 

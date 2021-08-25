@@ -50,6 +50,9 @@ inline void style_from_res(const xml::styles& a_styles,const std::string& a_path
   a_styles.res_sg_style<style>(a_path+".errors_style.0",a_plotter.errors_style(0));
   a_styles.res_sg_style<style>(a_path+".func_style.0",a_plotter.func_style(0));
   a_styles.res_sg_style<style>(a_path+".points_style.0",a_plotter.points_style(0));
+  a_styles.res_sg_style<style>(a_path+".legend_style.0",a_plotter.legend_style(0));
+  a_styles.res_sg_style<style>(a_path+".left_hatch_style.0",a_plotter.left_hatch_style(0));
+  a_styles.res_sg_style<style>(a_path+".right_hatch_style.0",a_plotter.right_hatch_style(0));
 
   a_styles.res_sg_style<style>(a_path+".background_style",a_plotter.background_style());
   a_styles.res_sg_style<text_style>(a_path+".title_style",a_plotter.title_style());
@@ -57,6 +60,7 @@ inline void style_from_res(const xml::styles& a_styles,const std::string& a_path
   a_styles.res_sg_style<text_style>(a_path+".title_box_style",a_plotter.title_box_style());
   a_styles.res_sg_style<style>(a_path+".inner_frame_style",a_plotter.inner_frame_style());
   a_styles.res_sg_style<style>(a_path+".grid_style",a_plotter.grid_style());
+  a_styles.res_sg_style<style>(a_path+".wall_style",a_plotter.wall_style());
 
   style_from_res(a_styles,a_path+".x_axis",a_plotter.x_axis(),a_verbose);
   style_from_res(a_styles,a_path+".y_axis",a_plotter.y_axis(),a_verbose);

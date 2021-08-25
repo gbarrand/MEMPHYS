@@ -25,11 +25,11 @@ typedef unsigned __int64 uint64;
 inline const char* uint32_format() {static const char s[] = "%u";return s;}
 inline const char* uint64_format() {static const char s[] = "%lu";return s;}
 
-#ifdef _WIN64
-typedef unsigned long long diff_pointer_t;
-#else
-typedef unsigned long diff_pointer_t;
-#endif
+//#ifdef _WIN64
+//typedef unsigned long long diff_pointer_t;
+//#else
+//typedef unsigned long diff_pointer_t;
+//#endif
 
 #ifdef _WIN64
 typedef unsigned long long upointer;
@@ -41,7 +41,7 @@ inline const char* upointer_format() {static const char s[] = "%lu";return s;}
 inline const char* upointer_format_x() {static const char s[] = "0x%lx";return s;}
 #endif
 
-#elif defined(_LP64) 
+#elif defined(_LP64)
 
 // 64 Bit Platforms
 typedef int int32;
@@ -54,13 +54,13 @@ typedef unsigned long uint64;
 inline const char* uint32_format() {static const char s[] = "%u";return s;}
 inline const char* uint64_format() {static const char s[] = "%lu";return s;}
 
-typedef unsigned long diff_pointer_t;
+//typedef unsigned long diff_pointer_t;
 
 typedef unsigned long upointer;
 inline const char* upointer_format() {static const char s[] = "%lu";return s;}
 inline const char* upointer_format_x() {static const char s[] = "0x%lx";return s;}
 
-#else 
+#else
 
 // 32-Bit Platforms
 typedef int int32;
@@ -73,7 +73,7 @@ typedef unsigned long long uint64;
 inline const char* uint32_format() {static const char s[] = "%u";return s;}
 inline const char* uint64_format() {static const char s[] = "%llu";return s;}
 
-typedef unsigned long diff_pointer_t;
+//typedef unsigned long diff_pointer_t;
 
 typedef unsigned long upointer;
 inline const char* upointer_format() {static const char s[] = "%lu";return s;}
@@ -83,13 +83,13 @@ inline const char* upointer_format_x() {static const char s[] = "0x%lx";return s
 
 inline uint32 uint32_mx() { //4 294 967 295
   uint32 n = 0;
-  for(unsigned int i=0;i<32;i++)  n += 1<<i;  
+  for(unsigned int i=0;i<32;i++)  n += 1<<i;
   return n;
 }
 inline uint64 uint64_mx() { //18 446 744 073 709 551 615
   uint64 one = 1;
   uint64 n = 0;
-  for(unsigned int i=0;i<64;i++)  n += one<<i;  
+  for(unsigned int i=0;i<64;i++)  n += one<<i;
   return n;
 }
 
@@ -127,6 +127,8 @@ inline const char* type_format(unsigned char)  {static const char s[] = "%u";ret
 inline const char* type_format(unsigned short) {static const char s[] = "%u";return s;}
 inline const char* type_format(unsigned int)   {static const char s[] = "%u";return s;}
 inline const char* type_format(uint64)         {return uint64_format();}
+
+typedef unsigned int key_code;
 
 }
 

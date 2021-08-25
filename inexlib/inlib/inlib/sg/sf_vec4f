@@ -6,7 +6,7 @@
 
 #include "sf_vec"
 
-#include "../vec4f"
+#include "../lina/vec4f"
 #include "../HEADER"
 
 namespace inlib {
@@ -25,6 +25,8 @@ public:
     parent::operator=(a_from);
     return *this;
   }
+public:
+  sf_vec4f& operator+=(const vec4f& a_value) {parent::operator+=(a_value);return *this;}
 public:
   void set_value(float a_0,float a_1,float a_2,float a_3) {
     value(vec4f(a_0,a_1,a_2,a_3));

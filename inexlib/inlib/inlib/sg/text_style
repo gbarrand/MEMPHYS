@@ -4,7 +4,7 @@
 #ifndef inlib_sg_text_style
 #define inlib_sg_text_style
 
-#include "../vec3f"
+#include "../lina/vec3f"
 
 #include "sf_vec3f"
 #include "sf_string"
@@ -24,11 +24,11 @@ public:
   sf_vec<colorf,float> back_color;
   sf<float> back_shadow;
 
-  sf_string modeling; 
+  sf_string modeling;
   sf_string font;
   sf<float> font_size;
   sf_enum<sg::font_modeling> font_modeling;
-  sf_string encoding; 
+  sf_string encoding;
   sf<bool> smoothing;
   sf<bool> hinting;
   sf_enum<sg::hjust> hjust;
@@ -86,11 +86,11 @@ private:
     add_field(&visible);
     add_field(&color);
 
-    add_field(&modeling); 
+    add_field(&modeling);
     add_field(&font);
     add_field(&font_size);
     add_field(&font_modeling);
-    add_field(&encoding); 
+    add_field(&encoding);
     add_field(&smoothing);
     add_field(&hinting);
     add_field(&hjust);
@@ -210,11 +210,13 @@ public:
     sp.encoding(encoding.value());
     sp.smoothing(smoothing.value());
     sp.hinting(hinting.value());
+    sp.hjust(hjust.value());
+    sp.vjust(vjust.value());
     sp.scale(scale.value());
     //sp.angle(angle.value());
-    //sp.x_orientation(x_orientation.value());
-    //sp.y_orientation(y_orientation.value());
-    //sp.rotated(rotated.value());
+    sp.x_orientation(x_orientation.value());
+    sp.y_orientation(y_orientation.value());
+    sp.rotated(rotated.value());
     sp.line_width(line_width.value());
     sp.line_pattern(line_pattern.value());
     sp.enforced(enforced.value());
@@ -226,7 +228,7 @@ public:
       a_out << "inlib::sg::text_style::from_string :"
             << " parse failed."
             << std::endl;
-      return false;    
+      return false;
     }
 
     visible.value(sp.visible());
@@ -242,11 +244,13 @@ public:
     encoding.value(sp.encoding());
     smoothing.value(sp.smoothing());
     hinting.value(sp.hinting());
+    hjust.value(sp.hjust());
+    vjust.value(sp.vjust());
     scale.value(sp.scale());
     //angle.value(sp.angle());
-    //x_orientation.value(sp.x_orientation());
-    //y_orientation.value(sp.y_orientation());
-    //rotated.value(sp.rotated());
+    x_orientation.value(sp.x_orientation());
+    y_orientation.value(sp.y_orientation());
+    rotated.value(sp.rotated());
     line_width.value(sp.line_width());
     line_pattern.value(sp.line_pattern());
     enforced.value(sp.enforced());

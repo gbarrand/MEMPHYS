@@ -35,12 +35,13 @@ public:
   virtual void available_not_memory_gsto_mode(std::string&) const = 0;
   virtual size_t used_texture_memory() const = 0;
   virtual size_t gstos_size() const = 0;
+  virtual bool get_infos(const std::string&,std::string& a_value) const {a_value.clear();return false;}
 public:
   virtual ~render_manager(){}
 public:
   unsigned int create_gsto_from_data(const std::vector<float>& a_xyzs){
     const float* _xyzs = vec_data<float>(a_xyzs);
-    return create_gsto_from_data(a_xyzs.size(),_xyzs);    
+    return create_gsto_from_data(a_xyzs.size(),_xyzs);
   }
 };
 

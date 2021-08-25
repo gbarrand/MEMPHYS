@@ -26,6 +26,9 @@ inline bool strip(std::string& a_string,what a_type = both,char a_char = ' '){
         return (i?true:false); //i=0 : same string.
       }
     }
+    // all chars are a_char :
+    a_string.clear();
+    return true;
     }break;
   case trailing:{
     char* pos = (char*)a_string.c_str();
@@ -38,6 +41,9 @@ inline bool strip(std::string& a_string,what a_type = both,char a_char = ' '){
         return (i==(l-1)?false:true); //i==l-1 : same string.
       }
     }
+    // all chars are a_char :
+    a_string.clear();
+    return true;
     }break;
   case both:{
     bool stat_lead = strip(a_string,leading,a_char);
