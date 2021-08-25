@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_cern_root_arte}" = "yes" ] ; then
+  use_our_cern_root_arte=yes
+fi
+
+if [ "${use_our_cern_root_arte}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/cern_root_arte : variable ourex_home not defined.';exit
+  fi
+  cern_root_arte_home=${ourex_home}/cern_root_arte
+
+  if [ ${build_visual} = "yes" ] ; then
+    if [ "`uname -n`" = "PC-PANO" ] ; then
+      echo 'c++14 not available on this machine.'
+      exit
+    fi
+  fi
+
+  if [ ${build_gnu} = "yes" ] ; then
+    version="`g++ -dumpversion`"
+    . ${bush_home}/vertoks
+    if [ "${version_major}" = "3"  -o "${version_major}" = "4" ] ; then
+      echo "bush/use/cern_root_arte : g++ version ${version} does not support -std=c++14."
+      exit
+    fi
+  fi
+
+  cppflags="${cppflags} -I${cern_root_arte_home}"
+  cppflags="${cppflags} -std=c++14"
+
+ #ourex_pack_name=cern_root_arte
+ #. ${bush_home}/use/ourex_use
+
+fi

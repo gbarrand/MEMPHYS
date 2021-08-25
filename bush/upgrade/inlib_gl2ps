@@ -1,0 +1,54 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`/..
+
+gl2ps_dir=${bush_home}/../inexlib/ourex_zips/gl2ps-1.4.0-source
+
+
+cat <<END_0 > ./gl2ps
+#ifndef inlib_gl2ps
+#define inlib_gl2ps
+
+//
+//  Pure header version of gl2ps-1.4.0 done automatically from
+// the original source by using the bush/upgrade/inlib_gl2ps script.
+//  The code had been "namespace protected" by changing :
+//    gl2ps_<xxx> to inlib_gl2ps_<xxx>
+// and :
+//    GL2PS_<xxx> to INLIB_GL2PS_<xxx>
+//
+//    Guy Barrand. 05/July/2019
+//
+
+END_0
+
+/bin/cat ${gl2ps_dir}/gl2ps.c >> gl2ps
+/bin/cp ${bush_home}/upgrade/gl2ps_begin.icc gl2ps_begin.icc
+/bin/cp ${bush_home}/upgrade/gl2ps_end.icc   gl2ps_end.icc
+/bin/cp ${bush_home}/upgrade/gl2ps_def.h     gl2ps_def.h
+
+_upgrade -orders=${bush_home}/upgrade/gl2ps.upgrade gl2ps
+_upgrade -orders=${bush_home}/upgrade/gl2ps.upgrade gl2ps_begin.icc
+_upgrade -orders=${bush_home}/upgrade/gl2ps.upgrade gl2ps_end.icc
+_upgrade -orders=${bush_home}/upgrade/gl2ps.upgrade gl2ps_def.h
+
+cat <<END_1 >> ./gl2ps
+
+#include "gl2ps_end.icc"
+#endif /*inlib_gl2ps*/
+END_1
+
+grep '#define ' gl2ps | awk '{print "#undef " $2;}' > ./tmp_0
+grep '#define INLIB_GL_' gl2ps_begin.icc | awk '{print "#undef " $2;}' >> ./tmp_0
+grep -v '#undef inlib_gl2ps' ./tmp_0 | grep -v '#undef INLIB_GL_RGBA' > ./tmp_1
+sed -e 's:(arg)::g' ./tmp_1 > ./tmp_2
+/bin/cat ./tmp_2 >> gl2ps_end.icc
+
+/bin/rm -f ./tmp_0 ./tmp_1 ./tmp_2
+
+grep static gl2ps | grep '(' | grep -v inlib_gl
+grep API gl2ps | grep '(' | grep -v inlib_gl
+

@@ -1,0 +1,11 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ `uname` = Darwin ] ; then
+  find . -type f -print0 | xargs -0 stat -f%z | awk '{b+=$1} END {print b}'
+else
+  echo 'not available on this platform.'
+fi
+

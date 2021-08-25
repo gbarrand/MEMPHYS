@@ -1,0 +1,12 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`
+
+${bush_home}/check_app _strip_trailing '_strip_trailing program not found.'
+build_status=$?;if [ ${build_status} != 0 ] ; then exit ${build_status};fi
+
+# warning : have to avoid .git files :
+find . -name '*' -type f -not -path '*/\.*' -exec _strip_trailing {} \;

@@ -1,0 +1,12 @@
+
+replace\nstatic inlib_GL2PScontext *inlib_gl2ps_context = NULL;\nsta_tic inlib_GL2PScontext *inlib_gl2ps_context = NULL;
+replace\nstatic inlib_GL2PSbackend\nsta_tic inlib_GL2PSbackend
+
+replace\nstatic void inlib\ninline void inlib
+replace\nstatic void *inlib\ninline void *inlib
+replace\nstatic const char *inlib\ninline const char *inlib
+replace\nstatic int inlib\ninline int inlib
+replace\nstatic inlib_GL\ninline inlib_GL
+#replace\ninlib_gl2ps_context->\ninlib_gl2ps_context()->
+
+replace\nsta_tic\nstatic

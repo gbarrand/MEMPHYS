@@ -1,0 +1,30 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_GLUX}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo 'bush/use/GLUX : not available with visual.'
+    exit
+  fi
+  
+  if [ `uname` = Darwin ] ; then
+    # WARNING : the below must not be used if working with Apple/OpenGL.
+    cppflags="${cppflags} -I/opt/local/include"
+    ccflags="${ccflags} -I/opt/local/include"
+    libs="${libs} /opt/local/lib/libGLU.dylib"
+
+  elif [ "`uname -r | grep Microsoft`" != "" ] ; then  #WSL
+    ccflags="${ccflags} -I/usr/include"
+    cppflags="${cppflags} -I/usr/include"
+    libs="${libs} /usr/lib/x86_64-linux-gnu/libGLU.so"
+
+  else
+    inc_dirs="/usr/include"
+    inc_to_find=GL/glu.h
+    . ${bush_home}/find_inc
+
+    lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=GLU
+    . ${bush_home}/find_lib
+  fi
+fi

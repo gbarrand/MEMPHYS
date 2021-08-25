@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_Xi}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/Xi : cl.exe : Xi not supported."
+    exit
+  fi
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  if [ `uname` = Darwin ] ; then
+    inc_dirs="/opt/local/include"
+  else
+    inc_dirs="/usr/X11R6/include /usr/include"
+  fi
+  inc_to_find=X11/extensions/XInput.h
+  . ${bush_home}/find_inc
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  if [ `uname` = Darwin ] ; then
+    libs="${libs} /opt/local/lib/libXi.dylib"
+  else
+    lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=Xi
+    . ${bush_home}/find_lib
+  fi
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+
+fi

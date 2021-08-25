@@ -1,0 +1,2 @@
+
+export DISPLAY=192.168.1.19:0

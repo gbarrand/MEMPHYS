@@ -1,0 +1,9 @@
+
+# cd to Microsoft/ubuntu from cygwin. It must be sourced.
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+cd /cygdrive/c/Users/barrand/AppData/Local/Packages/CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc/LocalState/rootfs/home/barrand
+
+

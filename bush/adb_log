@@ -1,0 +1,20 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+bush_home=`dirname $0`
+
+${bush_home}/check_app adb 'adb program not found.'
+build_status=$?;if [ ${build_status} != 0 ] ; then exit ${build_status};fi
+
+app="`${bush_home}/app_name`"
+
+pid=`adb shell pidof fr.in2p3.lal.${app}`
+
+if [ "${pid}" = "" ] ; then
+  echo "You have to launch ${app} on the device."
+  exit
+fi
+
+adb logcat | grep -F ${pid}

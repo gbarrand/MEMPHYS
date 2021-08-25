@@ -1,0 +1,21 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# WSL : used in vc++ to find absolute file path.
+
+if [ $# -ne 1 ] ; then
+  echo 'bush/wslpath : one arguments expected.'
+  exit
+fi
+
+#echo "$1" | sed 's/^\///' | sed 's/\//\\/g'
+#    | sed 's/^./\0:/'
+
+if [ "`echo $1 | sed -e 's#/mnt/c##g'`" != "$1" ] ; then
+  path_1="`echo $1 | sed -e 's#/mnt/c#C:#g'`"
+  echo "${path_1}"
+else
+  echo "$1"
+fi

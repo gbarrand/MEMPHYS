@@ -1,0 +1,17 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# -L is to find under /tmp which is a symlink on a Mac.
+
+find -L . -name '*' -type f -print > ./tmp_find_rm_0
+grep -v '\.git' ./tmp_find_rm_0 > ./tmp_find_rm_1
+#exit
+
+for file in $(cat ./tmp_find_rm_1) ; do
+  #echo "bush/find_rm : rm ${file}"
+  /bin/rm -f ${file}
+done
+/bin/rm -f ./tmp_find_rm_0 ./tmp_find_rm_1
+

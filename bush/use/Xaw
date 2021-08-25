@@ -1,0 +1,39 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_Xaw}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/Xaw : cl.exe : Xaw not supported."
+    exit
+  fi
+
+  # WARNING : it must be consitent with X11. Else you may have at app startup :
+  #             Error : Unresolved inheritance operation
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  if [ `uname` = Darwin ] ; then
+    inc_dirs="/opt/local/include"
+  else
+    inc_dirs="/usr/X11R6/include /usr/include"
+  fi
+  inc_to_find=X11/Xaw/XawInit.h
+  . ${bush_home}/find_inc
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  if [ `uname` = Darwin ] ; then
+    libs="${libs} /opt/local/lib/libXaw.dylib"
+  else
+    lib_dirs="/usr/X11R6/${lib} /usr/${lib} /usr/lib/x86_64-linux-gnu"
+    lib_to_find=Xaw
+    . ${bush_home}/find_lib
+  fi
+
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+  #//////////////////////////////////////////////
+
+fi

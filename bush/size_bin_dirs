@@ -1,0 +1,27 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ `uname` = Darwin ] ; then
+  /bin/rm -f ./tmp_0
+  find . -name 'bin_*' -type d -print >& ./tmp_0
+  /bin/rm -f ./tmp_1
+  for item in $(cat ./tmp_0) ; do
+    find ${item} -type f -print0 | xargs -0 stat -f%z | awk '{b+=$1} END {print b}' >> ./tmp_1
+  done
+  nums="`wc -l ./tmp_1 | awk '{print $1}'`"
+  echo "number of bin_dir ${nums}"
+  awk '{ sum += $1 } END { print sum }' ./tmp_1
+  /bin/rm -f ./tmp_0 ./tmp_1
+else
+  du_opts='-s'
+  while test $# -ge 1 ; do
+    case $1 in
+      -k) du_opts='-ks';;
+    esac
+    shift
+  done
+  find . -name 'bin_*' -exec du ${du_opts} {} \; | awk '{ sum += $1 } END { print sum }'
+fi
+

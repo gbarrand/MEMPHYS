@@ -1,0 +1,38 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_glfw}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/glfw : cl.exe : glfw not yet supported."
+    exit
+  fi
+
+  if [ `uname` = Darwin ] ; then
+    # sudo ./port install glfw
+
+    if [ ! -d /opt/local/include/GLFW ] ; then
+      echo 'bush/use/glfw : GLFW not found under /opt/local/include.'
+      exit
+    fi
+
+    ccflags="${ccflags} -I/opt/local/include"
+    cppflags="${cppflags} -I/opt/local/include"
+
+    libs="${libs} /opt/local/lib/libglfw.dylib"
+
+  else
+
+    glfw_home=/usr
+    if [ ! -f ${glfw_home}/include/GLFW/glfw3.h ] ; then
+      echo "bush/use/glfw : ${glfw_home}/include/GLFW/glfw3.h not found."
+      exit
+    fi
+
+    ccflags="${ccflags} -I${glfw_home}/include"
+    cppflags="${cppflags} -I${glfw_home}/include"
+
+    libs="${libs} -L${glfw_home}/${lib} -lglfw"
+
+  fi
+
+fi

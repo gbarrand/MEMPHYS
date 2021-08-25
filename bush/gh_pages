@@ -1,0 +1,6 @@
+#!/bin/sh -f
+
+git branch gh-pages
+git checkout gh-pages
+git branch
+

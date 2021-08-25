@@ -1,0 +1,4 @@
+# Remove ^M
+tr -d '\r' < $1 > xxx;/bin/mv xxx $1
+# Remove ^L
+tr -d '\f' < $1 > xxx;/bin/mv xxx $1

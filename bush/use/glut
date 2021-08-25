@@ -1,0 +1,19 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_glut}" = "yes" ] ; then
+  if [ `uname` = Darwin ] ; then
+   # sudo port install freeglut
+   cppflags="${cppflags} -I/opt/local/include"
+   ccflags="${ccflags} -I/opt/local/include"
+   libs="${libs} /opt/local/lib/libglut.dylib"
+  else
+    inc_dirs="/usr/X11R6/include"
+    inc_to_find=GL/glut.h
+    . ${bush_home}/find_inc
+
+    lib_dirs="/usr/X11R6/${lib}"
+    lib_to_find=glut
+    . ${bush_home}/find_lib
+  fi
+fi

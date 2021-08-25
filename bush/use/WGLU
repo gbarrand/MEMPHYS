@@ -1,0 +1,8 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_WGLU}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    libs="${libs} glu32.lib"
+  fi
+fi

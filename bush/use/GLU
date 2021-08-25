@@ -1,0 +1,26 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_GLU}" = "yes" ] ; then
+
+  if [ ${build_enforce_glx} = yes ] ; then
+    use_GLUX=yes
+  elif [ ${build_enforce_agl} = yes ] ; then
+    use_AGLU=yes
+  elif [ ${build_enforce_wgl} = yes ] ; then
+    use_WGLU=yes
+  else
+    if [ ${build_visual} = "yes" ] ; then
+      use_WGLU=yes
+    elif [ `uname` = Darwin ] ; then
+      use_AGLU=yes
+    else
+      use_GLUX=yes
+    fi
+  fi
+
+  . ${bush_home}/use/GLUX
+  . ${bush_home}/use/WGLU
+  . ${bush_home}/use/AGLU
+
+fi

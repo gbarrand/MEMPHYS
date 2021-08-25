@@ -1,0 +1,46 @@
+#  std::string    m_name;
+#  int            m_pdg_code;                    // PDG code of the particle
+# double         m_mass;                       // particle mass in GeV
+#  double         m_charge;                     // charge in units of |e|/3
+#  double         m_life_time;                   // proper lifetime in seconds
+#  double         m_width;                      // total width in GeV
+#  int            m_parity;
+#  double         m_spin;
+#  double         m_isospin;                    // isospin
+#  double         m_I3;                         // i3
+#  int            m_strangeness;                // flavours are defined if i3 != -1
+#  int            m_charm;                      // 1 or -1 for C-particles,
+#                                                // 0 for others
+#  int            m_beauty;                     //
+#  int            m_top;                        //
+#  int            m_Y;                          // X,Y: quantum numbers for the 4-th generation
+# int            m_X;                          //
+#  bool           m_stable;                     // true if stable, false otherwise
+#  std::string    m_particle_class;              // lepton, meson etc
+#  int            m_tracking_code;               // G3 tracking code of the particle
+
+#  std::vector<decay_channel> m_decays;     // array of decay channels
+#  bool           m_has_anti;
+#  std::string    m_anti_particle;
+
+replace\nm_value_dx\nm_value_name
+replace\nm_value_dy\nm_value_code
+replace\nm_value_dz\nm_value_mass
+replace\nm_value_x\nm_value_charge
+replace\nm_value_y\nm_value_life_time
+replace\nm_value_z\nm_value_width
+replace\nm_value_time_stamp_error\nm_value_spin
+replace\nm_value_time_stamp\nm_value_parity
+replace\nm_value_detector_id\nm_value_isospin
+replace\nm_value_mppcx\nm_value_I3
+replace\nm_value_mppcy\nm_value_strangeness
+replace\nm_value_mppcz\nm_value_charm
+replace\nm_value_photoEx\nm_value_beauty
+replace\nm_value_photoEy\nm_value_top
+replace\nm_value_photoEz\nm_value_Y
+replace\nm_value_photoE\nm_value_X
+replace\nm_value_absorbed\nm_value_stable
+replace\nm_value_duplicates\nm_value_particle_class
+replace\nm_value_container_index\nm_value_tracking_code
+
+

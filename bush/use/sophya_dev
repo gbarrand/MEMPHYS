@@ -1,0 +1,47 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_sophya_dev}" = "yes" ] ; then
+if [ "${build_use_not_our_sophya_dev}" = "yes" ] ; then
+  use_sys_sophya_dev=yes
+  use_our_sophya_dev=no
+else
+  use_sys_sophya_dev=no
+  use_our_sophya_dev=yes
+fi
+fi
+
+if [ "${use_sys_sophya_dev}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/sophya_dev : headers do not compile with cl.exe."
+    exit
+  fi
+
+  sophya_dev_sys_home=/usr/local/sophya_dev/2.125
+  if [ -d ${sophya_dev_sys_home} ] ; then
+    cppflags="${cppflags} -I${sophya_dev_sys_home}/include"
+    libs="${libs} -L${sophya_dev_sys_home}/lib -lBaseTools -lSUtils -lHiStats"
+    libs="${libs} -lTArray -lNTools"
+    libs="${libs} -lFitsIOServer"
+    #-lSysTools -lTArray -lNTools -lSkyMap -lSamba -lSkyT"
+    #-lcfitsio -lfftw3 -lfftw3f -llapack -lblas
+    #-lPI -lPIext -lPIGcont
+  else
+    echo "bush/use/sophya_dev : ${sophya_dev_sys_home} not found."
+    exit
+  fi
+fi
+
+if [ "${use_our_sophya_dev}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/sophya_dev : variable ourex_home not defined.';exit
+  fi
+  sophya_dev_home=${ourex_home}/sophya_dev
+
+  if [ ${build_visual} = "yes" ] ; then
+    cppflags="${cppflags} -I${bush_home}/visual"
+  fi
+  ourex_pack_name=sophya_dev
+  . ${bush_home}/use/ourex_use
+fi
+

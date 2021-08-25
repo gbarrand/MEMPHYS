@@ -1,0 +1,17 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_readline}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo 'bush/use/readline : not found.'
+    exit
+  fi
+
+  inc_dirs="/usr/include /opt/local/include"
+  inc_to_find=readline/readline.h
+  . ${bush_home}/find_inc
+
+  lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu /opt/local/lib"
+  lib_to_find=readline
+  . ${bush_home}/find_lib
+fi

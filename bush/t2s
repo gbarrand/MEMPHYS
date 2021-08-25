@@ -1,0 +1,4 @@
+# Remove ^M
+#tr '\t' ' ' < $1 > xxx;/bin/mv xxx $1
+tab=`echo a | tr 'a' '\t'`
+sed -e "s:${tab}:  :g" $1 > ./tmp_0;/bin/mv ./tmp_0 $1

@@ -1,0 +1,47 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_g4vis}" = "yes" ] ; then
+  use_our_g4vis=yes
+fi
+
+if [ "${use_our_g4vis}" = "yes" ] ; then
+  # g4vis from ourex/g4vis.10.03.p01.
+
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/g4vis_10_03_p01 : variable ourex_home not defined.';exit
+  fi
+
+  g4vis_home=${ourex_home}/g4vis.10.03.p01
+
+  if [ ! -d ${g4vis_home}/include ] ; then
+    echo "bush/use/g4vis_10_03_p01 : ${g4vis_home}/include not found."
+    exit
+  fi
+
+  cppflags="${cppflags} -I${g4vis_home}/include/Geant4"
+
+  if [ ${build_visual} = "yes" ] ; then
+    cppflags="${cppflags} -DWIN32"  # for G4Threading.h
+  fi
+
+  g4vis_build_dir="${g4vis_home}/${build_dir}"
+
+  if [ ! -d ${g4vis_build_dir} ] ; then
+    g4vis_old_dir=`pwd`
+    cd ${g4vis_home}
+    ./build ${ourex_args}
+    cd ${g4vis_old_dir}
+  fi
+
+  if [ "${use_archive}" = "yes" ] ; then
+    g4vis_libs="${g4vis_build_dir}/libourex_g4vis.a"
+  else
+    g4vis_libs="-L${g4vis_build_dir} -lourex_g4vis"
+  fi
+
+  libs="${libs} ${g4vis_libs}"
+
+  g4vis_ld_library_path="${g4vis_build_dir}"
+
+fi

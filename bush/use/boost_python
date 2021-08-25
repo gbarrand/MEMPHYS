@@ -1,0 +1,45 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_boost_python}" = "yes" ] ; then
+  use_sys_boost_python=yes
+fi
+
+if [ "${use_sys_boost_python}" = "yes" ] ; then
+  if [ "${build_visual}" = "yes" ] ; then
+    echo "bush/use/boost_python : cl.exe : not supported."
+    exit
+  fi
+
+  if [ "`uname -n | grep lal.in2p3.fr | grep lx`" != "" ] ; then
+    boost_python_home=/exp/si/barrand/usr/local/boost/1.52.0
+  elif [ `uname` = Darwin ] ; then
+    boost_python_home=/opt/local
+    cppflags="${cppflags} -DBOOST_SIGNALS_NO_DEPRECATION_WARNING"
+  else
+#    boost_python_home=/home/barrand/usr/local/boost/1.55.0
+    boost_python_home=/usr
+  fi
+
+  if [ ! -d ${boost_python_home}/include/boost ] ; then
+    echo "bush/use/boost_python : ${boost_python_home}/include/boost not found."
+    exit
+  fi
+
+  cppflags="${cppflags} -I${boost_python_home}/include"
+
+  libs="${libs} -L${boost_python_home}/lib"
+
+  /bin/rm -f ./tmp_0
+  find ${boost_python_home}/lib -name 'libboost*.dylib' -print > ./tmp_0
+  for file in $(cat ./tmp_0) ; do
+    boost_python_lib=`echo ${file} | sed -e "s:${boost_python_home}/lib/lib:-l:g"`
+    boost_python_lib=`echo ${boost_python_lib} | sed -e 's:\.dylib::g'`
+    #echo ${boost_python_lib}
+    libs="${libs} ${boost_python_lib}"
+  done
+  /bin/rm -f ./tmp_0
+
+  libs="${libs} -lpthread"
+fi
+

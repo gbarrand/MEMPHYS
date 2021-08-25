@@ -1,0 +1,13 @@
+
+GL2PSDLL_API GLint gl2psSetBackgroundColor(float a_r,float a_g,float a_b)
+{
+  if(!gl2ps) return GL2PS_UNINITIALIZED;
+
+  gl2ps->bgcolor[0] = a_r;
+  gl2ps->bgcolor[1] = a_g;
+  gl2ps->bgcolor[2] = a_b;
+  gl2ps->bgcolor[3] = 1.0F;
+
+  return GL2PS_SUCCESS;
+}
+

@@ -1,0 +1,36 @@
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+if [ "${use_shapelib}" = "yes" ] ; then
+if [ "${build_use_not_our_shapelib}" = "yes" ] ; then
+  use_sys_shapelib=yes
+  use_our_shapelib=no
+else
+  use_sys_shapelib=no
+  use_our_shapelib=yes
+fi
+fi
+
+if [ "${use_sys_shapelib}" = "yes" ] ; then
+  if [ ${build_visual} = "yes" ] ; then
+    echo "bush/use/shapelib : cl.exe : shapelib not yet supported."
+    exit
+  fi
+  shapelib_home=/usr/local/shapelib/1.5.0
+  if [ ! -f ${shapelib_home}/include/shapefil.h ] ; then
+    echo "bush/use/shapelib : ${shapelib_home}/include/shapefil.h not found."
+    exit
+  fi
+  ccflags="${ccflags} -I${shapelib_home}/include"
+  cppflags="${cppflags} -I${shapelib_home}/include"
+  libs="${libs} -L${shapelib_home}/lib -lshp"
+fi
+
+if [ "${use_our_shapelib}" = "yes" ] ; then
+  if [ "${ourex_home}" = "" ] ; then
+    echo 'bush/use/shapelib : variable ourex_home not defined.';exit
+  fi
+  shapelib_home=${ourex_home}/shapelib
+  ourex_pack_name=shapelib
+  . ${bush_home}/use/ourex_use
+fi

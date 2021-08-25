@@ -1,0 +1,153 @@
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# to be sourced from another build script.
+
+if [ "${bush_home}" = "" ] ; then
+  echo "bush/app_wasm : variable bush_home not defined."
+  exit
+fi
+
+if [ "${app_src}" = "" ] ; then
+  echo "bush/app_wasm : variable app_src not defined."
+  exit
+fi
+
+if [ "${app_wasm_src}" = "" ] ; then
+  echo "bush/app_wasm : variable app_wasm_src not defined."
+  exit
+fi
+
+if [ ${build_verbose} = yes ] ; then
+  echo "bush/app_wasm : build wasm for ${app_src} ..."
+fi
+
+inlib_home=${bush_home}/../inexlib/inlib
+exlib_home=${bush_home}/../inexlib/exlib
+ourex_home=${bush_home}/../inexlib/ourex
+
+opts="-I${inlib_home} -I${exlib_home}"
+opts="${opts} -I${ourex_home}/zlib/include"
+opts="${opts} -I${ourex_home}/expat/include"
+#opts="${opts} -I${ourex_home}/freetype/include"
+opts="${opts} -I${ourex_home}/png/png"
+opts="${opts} -I${ourex_home}/jpeg/jpeg"
+
+wasm_funcs="${wasm_funcs}\"_app_initialize\""
+wasm_funcs="${wasm_funcs},\"_app_win_render\""
+wasm_funcs="${wasm_funcs},\"_app_after_render\""
+wasm_funcs="${wasm_funcs},\"_app_set_size\""
+wasm_funcs="${wasm_funcs},\"_app_do_works\""
+wasm_funcs="${wasm_funcs},\"_app_button_down\""
+wasm_funcs="${wasm_funcs},\"_app_button_up\""
+wasm_funcs="${wasm_funcs},\"_app_button_move\""
+wasm_funcs="${wasm_funcs},\"_app_upload_file\""
+wasm_funcs="${wasm_funcs},\"_app_open_doc_file\""
+wasm_funcs="${wasm_funcs},\"_app_upload_buffer\""
+wasm_funcs="${wasm_funcs},\"_app_get_file_size\""
+wasm_funcs="${wasm_funcs},\"_app_get_file\""
+wasm_funcs="${wasm_funcs},\"_app_source_insh\""
+wasm_funcs="${wasm_funcs},\"_app_upload_rgbas\""
+wasm_funcs="${wasm_funcs},\"_app_delete_buffer\""
+wasm_funcs="${wasm_funcs},\"_app_map_warn\""
+wasm_funcs="${wasm_funcs},\"_app_pop_list\""
+wasm_funcs="${wasm_funcs},\"_app_doc_files_to_ui\""
+wasm_funcs="${wasm_funcs},\"_app_enable_terminal\""
+wasm_funcs="${wasm_funcs},\"_app_disable_terminal\""
+wasm_funcs="${wasm_funcs},\"_app_tab\""
+wasm_funcs="${wasm_funcs},\"_app_tab_completion\""
+#echo ${wasm_funcs}
+
+cppflags="${cppflags} -s ALLOW_MEMORY_GROWTH=1"
+cppflags="${cppflags} --no-heap-copy"
+cppflags="${cppflags} -s WASM=1"
+cppflags="${cppflags} -s EXPORTED_FUNCTIONS='[${wasm_funcs}]'"
+cppflags="${cppflags} -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\"]'"
+cppflags="${cppflags} --emrun"
+
+if [ -f ${exlib_home}/exlib/wasm/post.js ] ; then
+  cppflags="${cppflags} --post-js ${exlib_home}/exlib/wasm/post.js"
+else
+  echo "bush/app_wasm : ${exlib_home}/exlib/wasm/post.js not found."
+fi
+
+# In ourex/freetype/src/sfnt/ttcmap0.c/tt_face_build_cmaps, there is a crashy ft_setjmp.
+# We use the emcc freetype.
+cppflags="${cppflags} -DEXLIB_USE_NATIVE_FREETYPE"
+cppflags="${cppflags} -s USE_FREETYPE=1"
+
+if [ -d ../comres ] ; then
+  /bin/rm -R -f ./res
+  /bin/mkdir res
+  find ../comres -name '*' -type f -exec /bin/cp {} ./res/. \;
+  if [ -x ./wasm_res ] ; then
+    . ./wasm_res
+  fi
+  cppflags="${cppflags} --preload-file ./res"
+  to_rm_dir="${to_rm_dir} ./res"
+fi
+
+cppflags="${cppflags} --use-preload-plugins"
+
+eval em++ -x c++ ${opts} ${cppflags} -o ${build_path}/renderer.js ${app_src} ${objs} ${libs}
+
+find ${exlib_home}/exlib/wasm -maxdepth 1 -name '*.js'     -exec /bin/cp {} ${build_path}/. \;
+
+if [ -f ${app_wasm_src}/index.html ] ; then
+  /bin/cp ${app_wasm_src}/index.html  ${build_path}/.
+else
+  echo "bush/app_wasm : ${app_wasm_src}/index.html not found."
+fi
+
+if [ -d ${ourex_home}/xterm_js/xterm ] ; then
+  /bin/cp -R ${ourex_home}/xterm_js/xterm ${build_path}/.
+else
+  echo "bush/app_wasm : ${ourex_home}/xterm_js/xterm not found."
+fi
+
+if [ -f ../icons/icon_32.png ] ; then
+  /bin/cp ../icons/icon_32.png ${build_path}/.
+fi
+
+if [ -f ../icons/icon_114.png ] ; then
+  /bin/cp ../icons/icon_114.png ${build_path}/.
+fi
+
+#/////////////////////////////////////////////////
+#/////////////////////////////////////////////////
+#/////////////////////////////////////////////////
+#cppflags="${cppflags} -s GL_MAX_TEMP_BUFFER_SIZE=1000000000"  # default is 2097152
+#cppflags="${cppflags} -Werror -s ASSERTIONS=2"
+#cppflags="${cppflags} -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1"
+#cppflags="${cppflags} -s ERROR_ON_UNDEFINED_SYMBOLS=0"
+#cppflags="${cppflags} -s NO_EXIT_RUNTIME=1"
+#cppflags="${cppflags} -s NO_EXIT_RUNTIME=0"
+#cppflags="${cppflags} -s VERBOSE"
+#cppflags="${cppflags} -s TOTAL_MEMORY=134217728"
+#cppflags="${cppflags} -s INLINING_LIMIT=1"
+#cppflags="${cppflags} -O3"
+#cppflags="${cppflags} -s USE_WEBGL2=1"
+#cppflags="${cppflags} -s FULL_ES3=1"
+#cppflags="${cppflags} -s GL_UNSAFE_OPTS=0"
+#cppflags="${cppflags} -g -g4"
+#cppflags="${cppflags} -s DEMANGLE_SUPPORT=1"
+#cppflags="${cppflags} -O3 -g0"
+#cppflags="${cppflags} -s ASSERTIONS=1"
+
+#cppflags="${cppflags} -s EMTERPRETIFY=1 -s EMTERPRETIFY_ASYNC=1"  # if using emscripten_wget_data.
+#cppflags="${cppflags} -s EMTERPRETIFY_FILE=app.binary"
+#cppflags="${cppflags} -s EMTERPRETIFY_FILE=app.binary"
+
+#cppflags="${cppflags} -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2"
+#cppflags="${cppflags} -s LEGACY_GL_EMULATION=1"
+#cppflags="${cppflags} -s USE_SDL=2"
+
+#cppflags="${cppflags} -DEXLIB_USE_NATIVE_PNG"
+#cppflags="${cppflags} -s USE_LIBPNG=1"
+#cppflags="${cppflags} -DEXLIB_USE_NATIVE_JPEG"
+#cppflags="${cppflags} -s USE_LIBJPEG=1"
+
+#cppflags="${cppflags} -s FETCH=1"
+#cppflags="${cppflags} --proxy-to-worker"  # if app does sync request on the web.
+#cppflags="${cppflags} -s WASM_MEM_MAX=512MB"

@@ -1,0 +1,198 @@
+
+# used in use_cc, use_cpp, plugin.
+
+sdk_home=/usr/local/Android/android-sdk_r16-macosx
+
+# WARNING : must be in sync with use_cpp, plugin, use/Android.
+
+#build_ndk_vers=r15b
+#build_ndk_vers=r7
+#build_ndk_vers=r10e
+build_ndk_vers=r17
+
+ndk_home=/usr/local/Android/android-ndk-${build_ndk_vers}
+
+if [ ${build_ndk_vers} = r7 ] ; then
+  ndk_bin=${ndk_home}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin
+  ndk_platform="${ndk_home}/platforms/android-9/arch-arm"
+  ndk_cc_compiler=${ndk_bin}/arm-linux-androideabi-gcc
+  ndk_cpp_compiler=${ndk_bin}/arm-linux-androideabi-g++
+  ndk_distrib_platform=armeabi
+
+elif [ ${build_ndk_vers} = r10e ] ; then
+  ndk_bin=${ndk_home}/toolchains/arm-linux-androideabi-4.8/prebuilt/darwin-x86_64/bin
+  ndk_platform="${ndk_home}/platforms/android-9/arch-arm"
+  ndk_cc_compiler=${ndk_bin}/arm-linux-androideabi-gcc
+  ndk_cpp_compiler=${ndk_bin}/arm-linux-androideabi-g++
+  ndk_distrib_platform=armeabi
+
+elif [ ${build_ndk_vers} = r17 ] ; then
+  ndk_bin=${ndk_home}/toolchains/llvm/prebuilt/darwin-x86_64/bin
+  ndk_ar_bin="${ndk_home}/toolchains/x86_64-4.9/prebuilt/darwin-x86_64/bin"  # clang version 6.0.2, based on LLVM 6.0.2svn.
+ #ndk_platform="${ndk_home}/platforms/android-21/arch-x86_64"
+  ndk_platform="${ndk_home}/platforms/android-21/arch-arm64"  #APP_ABI := arm64-v8a # Galaxy Note 8.
+  ndk_cc_compiler=${ndk_bin}/clang
+  ndk_cpp_compiler=${ndk_bin}/clang++
+  ndk_distrib_platform=arm64-v8a
+
+else
+  echo "bush/use_android : ndk version ${build_ndk_vers} not yet supported."
+  exit
+fi
+
+#/////////////////////////////////////////////////////////////////////////////////
+#/// ccflags : ///////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////
+
+ndk_ccflags=
+if [ ${build_ndk_vers} = r17 ] ; then
+
+#-I${ndk_home}/sources/android/native_app_glue
+
+  ndk_ccflags="${ndk_ccflags} -gcc-toolchain ${ndk_home}/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64"
+  ndk_ccflags="${ndk_ccflags} -target aarch64-none-linux-android"
+  ndk_ccflags="${ndk_ccflags} -fpic"
+  ndk_ccflags="${ndk_ccflags} -isystem ${ndk_home}/sysroot/usr/include/aarch64-linux-android"
+
+ #ndk_ccflags="${ndk_ccflags} -gcc-toolchain ${ndk_home}/toolchains/x86_64-4.9/prebuilt/darwin-x86_64"
+ #ndk_ccflags="${ndk_ccflags} -target x86_64-none-linux-android"
+ #ndk_ccflags="${ndk_ccflags} -fPIC"
+ #ndk_ccflags="${ndk_ccflags} -isystem ${ndk_home}/sysroot/usr/include/x86_64-linux-android"
+
+  ndk_ccflags="${ndk_ccflags} -ffunction-sections -funwind-tables -fstack-protector-strong"
+  ndk_ccflags="${ndk_ccflags} -Wno-invalid-command-line-argument -Wno-unused-command-line-argument"
+  ndk_ccflags="${ndk_ccflags} -no-canonical-prefixes"
+  ndk_ccflags="${ndk_ccflags} -I${ndk_home}/sources/cxx-stl/llvm-libc++/include"
+  ndk_ccflags="${ndk_ccflags} -I${ndk_home}/sources/cxx-stl/llvm-libc++abi/include"
+  ndk_ccflags="${ndk_ccflags} -D__ANDROID_API__=21"
+  ndk_ccflags="${ndk_ccflags} -Wa,--noexecstack -Wformat -Werror=format-security"
+  ndk_ccflags="${ndk_ccflags} --sysroot ${ndk_home}/sysroot"
+
+else
+  ndk_ccflags="${ndk_ccflags} -fpic"
+  ndk_ccflags="${ndk_ccflags} -ffunction-sections -funwind-tables -fstack-protector"
+  ndk_ccflags="${ndk_ccflags} -fomit-frame-pointer -fno-strict-aliasing"
+  ndk_ccflags="${ndk_ccflags} -finline-limit=64"
+  ndk_ccflags="${ndk_ccflags} -mthumb"
+  ndk_ccflags="${ndk_ccflags} -Os"
+  ndk_ccflags="${ndk_ccflags} -march=armv5te -mtune=xscale -msoft-float"
+  ndk_ccflags="${ndk_ccflags} -Wno-psabi -Wa,--noexecstack"
+  ndk_ccflags="${ndk_ccflags} -I${ndk_platform}/usr/include"
+  if [ ${build_ndk_vers} = r7 ] ; then
+    ndk_ccflags="${ndk_ccflags} -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__"
+    ndk_ccflags="${ndk_ccflags} -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
+  elif [ ${build_ndk_vers} = r10e ] ; then
+    ndk_ccflags="${ndk_ccflags} -no-canonical-prefixes -Wformat -Werror=format-security"
+  fi
+
+fi
+
+#/////////////////////////////////////////////////////////////////////////////////
+#/// cppflags : //////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////
+
+ndk_cppflags=
+if [ ${build_ndk_vers} = r17 ] ; then
+  ndk_cppflags="${ndk_cppflags} -gcc-toolchain ${ndk_home}/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64"
+  ndk_cppflags="${ndk_cppflags} -target aarch64-none-linux-android"
+  ndk_cppflags="${ndk_cppflags} -fpic"
+  ndk_cppflags="${ndk_cppflags} -isystem ${ndk_home}/sysroot/usr/include/aarch64-linux-android"
+
+ #ndk_cppflags="${ndk_cppflags} -gcc-toolchain ${ndk_home}/toolchains/x86_64-4.9/prebuilt/darwin-x86_64"
+ #ndk_cppflags="${ndk_cppflags} -target x86_64-none-linux-android"
+ #ndk_cppflags="${ndk_cppflags} -fPIC"
+ #ndk_cppflags="${ndk_cppflags} -isystem ${ndk_home}/sysroot/usr/include/x86_64-linux-android"
+
+  ndk_cppflags="${ndk_cppflags} -ffunction-sections -funwind-tables -fstack-protector-strong"
+  ndk_cppflags="${ndk_cppflags} -Wno-invalid-command-line-argument -Wno-unused-command-line-argument"
+  ndk_cppflags="${ndk_cppflags} -no-canonical-prefixes"
+  ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/llvm-libc++/include"
+  ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/llvm-libc++abi/include"
+  ndk_cppflags="${ndk_cppflags} -D__ANDROID_API__=21"
+  ndk_cppflags="${ndk_cppflags} -Wa,--noexecstack -Wformat -Werror=format-security"
+  ndk_cppflags="${ndk_cppflags} --sysroot ${ndk_home}/sysroot"
+
+ #ndk_cppflags="${ndk_cppflags} -MMD -MP -MF"
+
+else
+  ndk_cppflags="${ndk_cppflags} -fpic"
+  ndk_cppflags="${ndk_cppflags} -ffunction-sections -funwind-tables -fstack-protector"
+  ndk_cppflags="${ndk_cppflags} -fomit-frame-pointer -fno-strict-aliasing"
+  ndk_cppflags="${ndk_cppflags} -finline-limit=64"
+  ndk_cppflags="${ndk_cppflags} -mthumb"
+  ndk_cppflags="${ndk_cppflags} -Os"
+  ndk_cppflags="${ndk_cppflags} -march=armv5te -mtune=xscale -msoft-float"
+  ndk_cppflags="${ndk_cppflags} -Wno-psabi -Wa,--noexecstack"
+  ndk_cppflags="${ndk_cppflags} -I${ndk_platform}/usr/include"
+  if [ ${build_ndk_vers} = r7 ] ; then
+    ndk_cppflags="${ndk_cppflags} -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__"
+    ndk_cppflags="${ndk_cppflags} -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
+    ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/gnu-libstdc++/include"
+    ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include"
+  elif [ ${build_ndk_vers} = r10e ] ; then
+    ndk_cppflags="${ndk_cppflags} -no-canonical-prefixes -Wformat -Werror=format-security"
+    ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/gnu-libstdc++/4.8/include"
+    ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/gnu-libstdc++/4.8/libs/armeabi/include"
+    ndk_cppflags="${ndk_cppflags} -I${ndk_home}/sources/cxx-stl/gnu-libstdc++/4.8/include/backward"
+  fi
+fi
+
+#/////////////////////////////////////////////////////////////////////////////////
+#/// to build .so : //////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////
+
+ndk_pgflags=
+ndk_pgflags="${ndk_pgflags} -shared"
+ndk_pgflags="${ndk_pgflags} -Wl,--no-undefined -Wl,-z,noexecstack"
+ndk_pgflags="${ndk_pgflags} --sysroot=${ndk_platform}"
+
+ndk_libs=
+
+if [ ${build_ndk_vers} = r7 ] ; then
+
+  ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/gnu-libstdc++/libs/armeabi/libgnustl_static.a"
+  ndk_libs="${ndk_libs} ${ndk_home}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/lib/gcc/arm-linux-androideabi/4.4.3/libgcc.a"
+	
+elif [ ${build_ndk_vers} = r10e ] ; then
+  ndk_pgflags="${ndk_pgflags} -Wl,-z,relro -Wl,-z,now -mthumb"
+
+  ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/gnu-libstdc++/4.8/libs/armeabi/libgnustl_static.a"
+  ndk_libs="${ndk_libs} ${ndk_home}/toolchains/arm-linux-androideabi-4.8/prebuilt/darwin-x86_64/lib/gcc/arm-linux-androideabi/4.8/libgcc.a"
+
+elif [ ${build_ndk_vers} = r17 ] ; then
+
+  ndk_pgflags="${ndk_pgflags} -gcc-toolchain ${ndk_home}/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64"
+  ndk_pgflags="${ndk_pgflags} -target aarch64-none-linux-android"
+  ndk_pgflags="${ndk_pgflags} -no-canonical-prefixes  -u ANativeActivity_onCreate"
+
+ #ndk_pgflags="${ndk_pgflags} -gcc-toolchain ${ndk_home}/toolchains/x86_64-4.9/prebuilt/darwin-x86_64"
+ #ndk_pgflags="${ndk_pgflags} -target x86_64-none-linux-android -no-canonical-prefixes"
+
+  ndk_pgflags="${ndk_pgflags} -lgcc -Wl,--exclude-libs,libgcc.a -latomic -Wl,--exclude-libs,libatomic.a"
+  ndk_pgflags="${ndk_pgflags} -Wl,--build-id -nostdlib++"
+  ndk_pgflags="${ndk_pgflags} -Wl,-z,relro -Wl,-z,now"
+  ndk_pgflags="${ndk_pgflags} -Wl,--warn-shared-textrel -Wl,--fatal-warnings"
+
+  ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/llvm-libc++/libs/arm64-v8a/libc++_static.a"
+  ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/arm64-v8a/libc++abi.a"
+
+ #ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++_static.a"
+ #ndk_libs="${ndk_libs} ${ndk_home}/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/x86_64/libc++abi.a"
+
+fi
+
+ndk_libs="${ndk_libs} -L${ndk_platform}/usr/lib"
+ndk_libs="${ndk_libs} -lGLESv1_CM"
+ndk_libs="${ndk_libs} -ldl -llog -lz -lc -lm"
+
+#/////////////////////////////////////////////////////////////////////////////////
+#/// for bush/archive : //////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////
+
+if [ ${build_ndk_vers} = r17 ] ; then
+  ndk_ar_cmd="${ndk_ar_bin}/x86_64-linux-android-ar"
+  ndk_ranlib_cmd="${ndk_ar_bin}/x86_64-linux-android-ranlib"
+else
+  ndk_ar_cmd=${ndk_bin}/arm-linux-androideabi-ar
+  ndk_ranlib_cmd=${ndk_bin}/arm-linux-androideabi-ranlib
+fi
